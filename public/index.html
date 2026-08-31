@@ -162,32 +162,15 @@
           </div>
         </div>
 
-        <!-- Controls: Filter tabs & Actions -->
-        <div class="flex items-center flex-wrap gap-2 text-xs">
-          <!-- Filter tabs for screeners -->
-          <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
-            <button data-category="all" class="cat-pill active px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">All</button>
-            <button data-category="Intraday" class="cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Intraday</button>
-            <button data-category="Breakout" class="cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Breakout</button>
-            <button data-category="Swing" class="cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Swing</button>
-            <button data-category="Momentum" class="cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Momentum</button>
-            <button data-category="Reversal" class="cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Reversal</button>
-            <button data-category="Custom" class="cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">My Custom</button>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <!-- Run All Screeners Button -->
-            <button id="btn-run-all" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Scan all screeners and show aggregated multi-screener confluence">
-              <i data-lucide="play-circle" class="w-3.5 h-3.5"></i>
-              <span>Run All</span>
-            </button>
-
-            <!-- Add Screener Button (Open modal for logged-in user or admin) -->
-            <button id="btn-open-add-modal" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Add a custom Chartink screener to your workspace">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-              <span>Add Screener</span>
-            </button>
-          </div>
+        <!-- Category Filter Tabs -->
+        <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
+          <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">All</button>
+          <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Intraday</button>
+          <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Breakout</button>
+          <button data-category="Swing" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Swing</button>
+          <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Momentum</button>
+          <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Reversal</button>
+          <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">My Custom</button>
         </div>
       </div>
 
