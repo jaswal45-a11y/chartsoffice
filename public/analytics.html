@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Breadth & Sector Analytics | Sangam_chartlinks</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Lightweight Charts 4.1.1 (TradingView Engine) -->
+  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            dark: {
+              bg: '#0b0f19',
+              card: '#111827',
+              border: '#1f293d',
+              accent: '#1e293b'
+            },
+            bull: '#10b981',
+            bear: '#ef4444'
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white transition-colors duration-200">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-dark-border bg-dark-card/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-6 py-3">
+    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i data-lucide="activity" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+              Sangam_chartlinks
+            </h1>
+            <span class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Analytics Hub
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Institutional Market Breadth, Sector Strength & Indices Deck</p>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs (Link across pages) -->
+      <div class="flex items-center p-1 bg-dark-bg/80 border border-dark-border rounded-xl text-xs shadow-inner">
+        <a href="/" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-white cursor-pointer" title="Go to Screener Scanner & Multi-Pane TV Visualizer">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+          <span>Screener & TV Charts</span>
+        </a>
+        <a href="/analytics" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 bg-emerald-600 text-white shadow-sm cursor-pointer" title="Market Breadth Diagnostics (20/50 SMA), Sector Rankings & Indices">
+          <i data-lucide="activity" class="w-3.5 h-3.5 text-white"></i>
+          <span>Market Breadth & Sectors</span>
+          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-white/20 text-white font-semibold uppercase tracking-wider">Active</span>
+        </a>
+      </div>
+
+      <!-- Right Header Actions & Auth Status -->
+      <div class="flex items-center gap-2.5">
+        
+        <!-- Customize Dashboard Button -->
+        <button onclick="openAnalyticsCustomizeModal()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer" title="Pin or unpin specific indices and sub-sectors">
+          <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>Customize</span>
+        </button>
+
+        <!-- Multi-User Auth Box / Login Trigger -->
+        <div id="auth-status-container" class="flex items-center gap-2">
+          <!-- Serious Admin Console Button (Visible strictly to Admin) -->
+          <button id="btn-admin-console" onclick="openAdminConsole()" class="hidden items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 text-amber-300 border border-amber-500/40 rounded-lg shadow-lg shadow-amber-950/30 active:scale-95 transition-all cursor-pointer" title="Open Master Admin Console & User Management Dashboard">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+            <span>Admin Console</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          </button>
+
+          <button id="btn-open-auth-modal" onclick="openAuthModal('login')" class="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-900/30 transition-all cursor-pointer">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+            <span>Login / Register</span>
+          </button>
+
+          <!-- Authenticated User Capsule -->
+          <div id="user-auth-box" class="hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-dark-bg border border-dark-border text-xs">
+            <div class="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs">
+              <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="flex flex-col">
+              <span id="user-badge-name" class="font-bold text-slate-200 leading-tight">User</span>
+              <span id="user-badge-role" class="text-[10px] text-slate-400 leading-tight">Member</span>
+            </div>
+            <button id="btn-logout" onclick="handleLogout()" class="p-1 text-slate-400 hover:text-rose-400 hover:bg-dark-accent rounded-md transition-colors ml-1 cursor-pointer" title="Logout">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Theme Toggle Button -->
+        <button id="btn-theme-toggle" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-amber-400 transition-colors cursor-pointer" title="Toggle Light/Dark Theme">
+          <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Analytics Workspace -->
+  <main class="flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
+    
+    <!-- AUTH GUARD SCREEN (Displayed when user is not logged in) -->
+    <div id="analytics-auth-guard" class="hidden flex-col items-center justify-center p-12 text-center bg-dark-card/70 border border-dark-border rounded-3xl shadow-2xl max-w-lg mx-auto my-auto py-16">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-5 shadow-lg shadow-emerald-500/10">
+        <i data-lucide="lock" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-2">User Login Required</h3>
+      <p class="text-xs text-slate-400 mb-6 leading-relaxed max-w-sm">
+        Market Breadth Diagnostics (20 & 50 SMA), Institutional Sector Rankings, and Sectoral Intelligence are reserved for registered users.
+      </p>
+      <button onclick="openAuthModal('login')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-lg shadow-emerald-900/30 transition-all flex items-center gap-2 cursor-pointer">
+        <i data-lucide="user" class="w-4 h-4"></i>
+        <span>Login / Register to Access Analytics</span>
+      </button>
+    </div>
+
+    <!-- AUTHENTICATED CONTENT (Displayed when user is logged in) -->
+    <div id="analytics-authenticated-content" class="flex flex-col gap-6 w-full">
+      
+      <!-- 1. MARKET BREADTH DIAGNOSTICS SECTION -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <i data-lucide="gauge" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-wide uppercase">Market Breadth Diagnostics</h2>
+              <p class="text-xs text-slate-400">20 SMA & 50 SMA institutional participation analysis across universe & sectors</p>
+            </div>
+          </div>
+
+          <!-- Sector Breadth Filter & Refresh -->
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-slate-400 font-medium" title="Filter breadth across universe or by specific sector">Filter Breadth:</label>
+            <select id="select-breadth-sector" onchange="handleBreadthSectorChange(this.value)" class="px-3 py-1.5 text-xs font-semibold bg-dark-bg border border-dark-border rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Select sector or universe">
+              <option value="all">Universe (All Stocks)</option>
+            </select>
+            <button onclick="loadAnalyticsData()" class="p-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer" title="Refresh Breadth Data">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Breadth Diagnostics 3-Card Matrix -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <!-- DIAL 1: 20 SMA Breadth -->
+          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-4" title="Percentage of stocks trading above their 20-day Simple Moving Average">
+            <div class="flex flex-col gap-1">
+              <span class="text-xs font-semibold text-slate-400">Stocks &gt; 20 SMA</span>
+              <span class="text-2xl font-mono font-bold text-blue-400" id="val-breadth-20sma">--%</span>
+              <span class="text-[11px] text-slate-500">Short-Term Momentum</span>
+            </div>
+            <div class="relative w-16 h-16 flex items-center justify-center">
+              <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="circle-breadth-20sma" class="text-blue-500 transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <i data-lucide="trending-up" class="w-4 h-4 text-blue-400 absolute"></i>
+            </div>
+          </div>
+
+          <!-- DIAL 2: 50 SMA Breadth -->
+          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-4" title="Percentage of stocks trading above their 50-day Simple Moving Average">
+            <div class="flex flex-col gap-1">
+              <span class="text-xs font-semibold text-slate-400">Stocks &gt; 50 SMA</span>
+              <span class="text-2xl font-mono font-bold text-emerald-400" id="val-breadth-50sma">--%</span>
+              <span class="text-[11px] text-slate-500">Intermediate Trend Health</span>
+            </div>
+            <div class="relative w-16 h-16 flex items-center justify-center">
+              <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="circle-breadth-50sma" class="text-emerald-500 transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <i data-lucide="activity" class="w-4 h-4 text-emerald-400 absolute"></i>
+            </div>
+          </div>
+
+          <!-- CARD 3: Market Sentiment & Advance/Decline -->
+          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2.5" title="Overall market momentum diagnosis and advance/decline ratio">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-semibold text-slate-400">Market Regime:</span>
+              <span id="badge-sentiment-status" class="px-2 py-0.5 rounded-md text-[11px] font-bold border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                Healthy Bullish ⚡
+              </span>
+            </div>
+            <p id="text-sentiment-desc" class="text-[11px] text-slate-400 line-clamp-1">
+              Strong participation above 20 & 50 SMAs. High probability pullback buys.
+            </p>
+            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1.5 border-t border-dark-border/40">
+              <span>A/D Ratio: <strong id="val-ad-ratio" class="text-emerald-400">2.95</strong></span>
+              <span>52W H/L: <strong id="val-high-low" class="text-white">42 / 8</strong></span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 2. STANDARD & SECTORAL INDICES RIBBON (CONTROLLED BY CUSTOMIZE & CATEGORY FILTERS) -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Standard & Sectoral Indices</h3>
+              <span class="text-xs text-slate-400">Live Quotes, 20/50 SMA Posture & Filtered by Customize Preferences</span>
+            </div>
+          </div>
+
+          <!-- Controls Toolbar: 1-Click Sort, Category Pills, Customize Button -->
+          <div class="flex items-center flex-wrap gap-2 text-xs">
+            <!-- 1-Click Sorting Buttons -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
+              <span class="px-2 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
+              <button onclick="handleIndicesSort('change')" id="btn-sort-idx-change" class="indices-sort-btn active px-2.5 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by % Change">Change ▾</button>
+              <button onclick="handleIndicesSort('name')" id="btn-sort-idx-name" class="indices-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort Alphabetically">A-Z</button>
+              <button onclick="handleIndicesSort('ltp')" id="btn-sort-idx-ltp" class="indices-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Price">Price</button>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="analytics-indices-filter-bar">
+              <button onclick="handleIndicesCategoryChange('all', this)" class="idx-cat-pill active px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-blue-600 text-white cursor-pointer" title="Show all pinned indices">All</button>
+              <button onclick="handleIndicesCategoryChange('Broad Market', this)" class="idx-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Broad Market Benchmarks">Broad Market</button>
+              <button onclick="handleIndicesCategoryChange('Sectoral', this)" class="idx-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Sectoral Indices">Sectoral</button>
+            </div>
+
+            <!-- Customize Indices & Sectors Modal Trigger -->
+            <button onclick="openAnalyticsCustomizeModal()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Pin or unpin specific indices and sub-sectors">
+              <i data-lucide="settings-2" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>Customize Indices & Sectors</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Horizontal Scrollable Indices Ribbon -->
+        <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1" id="indices-ribbon-container">
+          <!-- Populated dynamically with Index cards -->
+        </div>
+      </section>
+
+      <!-- 3. SUB-SECTORS RANKED BY GROWTH & THERMAL MOMENTUM -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>12 sub-sectors, ranked by growth · above ₹1,000 Cr</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Click any tile to inspect constituent stocks with QoQ/YoY Sales, EPS growth, and Operating Margins. Hover over "View Chart" for instant 6M 10/20/50 MA preview.
+            </p>
+          </div>
+
+          <!-- Filter & 1-Click Sort Toolbar -->
+          <div class="flex items-center flex-wrap gap-2 text-xs">
+            <!-- 1-Click Sorting Buttons -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
+              <span class="px-2 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
+              <button onclick="handleSubSectorSort('rank')" id="btn-sort-rank" class="subsector-sort-btn active px-2.5 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by Rank (#1-12)">Rank ▾</button>
+              <button onclick="handleSubSectorSort('pctGrowing')" id="btn-sort-pctGrowing" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by % of Stocks Growing">% Growing</button>
+              <button onclick="handleSubSectorSort('pe')" id="btn-sort-pe" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Median P/E Valuation">P/E</button>
+              <button onclick="handleSubSectorSort('roce')" id="btn-sort-roce" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Median ROCE %">ROCE</button>
+              <button onclick="handleSubSectorSort('breadth50Sma')" id="btn-sort-breadth50Sma" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by 50 SMA Breadth Strength">50 SMA</button>
+            </div>
+
+            <!-- Sector Category Filter Pills -->
+            <div class="flex items-center gap-1.5 text-xs overflow-x-auto pb-0.5" id="analytics-sector-filter-bar">
+              <button data-sector-cat="all" class="sector-cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-blue-600 text-white cursor-pointer" title="Show all sub-sectors">All</button>
+              <button data-sector-cat="Capex / Infra" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Capex and Infrastructure">Capex / Infra</button>
+              <button data-sector-cat="Electronics & AI" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Electronics and AI">Electronics & AI</button>
+              <button data-sector-cat="Power / Energy" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Power and Renewables">Power / Energy</button>
+              <button data-sector-cat="Healthcare" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Pharma and CDMO">Healthcare</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Sectors Grid (2 Columns layout with zero overlapping) -->
+        <div id="sub-sectors-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Populated dynamically with sub-sector strength cards -->
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Sector Constituents Drill-Down Modal                    -->
+  <!-- ============================================================== -->
+  <div id="sector-drilldown-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[88vh]">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
+        <div class="flex items-center gap-3">
+          <div id="modal-sector-rank" class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
+            #1
+          </div>
+          <div>
+            <h3 id="modal-sector-name" class="text-base font-bold text-white">AI Compute Hardware</h3>
+            <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+              <span id="modal-sector-pe" class="font-mono">P/E: 119.2</span>
+              <span>·</span>
+              <span id="modal-sector-roce" class="font-mono">ROCE: 34.8%</span>
+              <span>·</span>
+              <span id="modal-sector-thermal" class="px-2 py-0.2 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Super Hot 🔥</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="closeSectorDrilldownModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-dark-accent transition-colors cursor-pointer" title="Close modal">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Constituents Table (Clean, wide, non-overlapping format) -->
+      <div class="flex-1 overflow-x-auto overflow-y-auto p-4">
+        <table class="w-full text-left text-xs text-slate-300 border-collapse min-w-[780px]">
+          <thead class="text-[11px] uppercase bg-dark-bg/90 text-slate-400 sticky top-0 backdrop-blur z-10 border-b border-dark-border">
+            <tr>
+              <th onclick="handleConstituentSort('symbol')" class="py-2.5 px-3 font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Click to sort by Symbol">
+                <span>Symbol</span> <span id="sort-sym-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('name')" class="py-2.5 px-3 font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Click to sort by Name">
+                <span>Company Name</span> <span id="sort-name-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('mcap')" class="py-2.5 px-2 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Click to sort by Market Cap">
+                <span>M.Cap (₹ Cr)</span> <span id="sort-mcap-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('pe')" class="py-2.5 px-2 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Click to sort by P/E">
+                <span>P/E</span> <span id="sort-pe-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('salesIncQoQ')" class="py-2.5 px-2 text-center font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sales Growth Quarter-over-Quarter">
+                <span>Sales QoQ</span> <span id="sort-sqoq-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('salesIncYoY')" class="py-2.5 px-2 text-center font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sales Growth Year-over-Year">
+                <span>Sales YoY</span> <span id="sort-syoy-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('epsIncQoQ')" class="py-2.5 px-2 text-center font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="EPS Growth Quarter-over-Quarter">
+                <span>EPS QoQ</span> <span id="sort-eqoq-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('epsIncYoY')" class="py-2.5 px-2 text-center font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="EPS Growth Year-over-Year">
+                <span>EPS YoY</span> <span id="sort-eyoy-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('opmQoQ')" class="py-2.5 px-2 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Operating Profit Margin QoQ">
+                <span>OPM QoQ</span> <span id="sort-oqoq-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleConstituentSort('opmYoY')" class="py-2.5 px-2 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Operating Profit Margin YoY">
+                <span>OPM YoY</span> <span id="sort-oyoy-icon" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th class="py-2.5 px-3 text-center font-semibold whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+          <tbody id="modal-sector-tbody" class="divide-y divide-dark-border/40 font-mono">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 border-t border-dark-border bg-dark-bg/40 flex items-center justify-between text-xs text-slate-400">
+        <span>Click <strong>View Chart</strong> on any stock to open its dedicated candlestick visualizer & watchlist manager</span>
+        <button onclick="closeSectorDrilldownModal()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Simplified Stock Chart Modal for Analytics Tab          -->
+  <!-- ============================================================== -->
+  <div id="analytics-stock-chart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold font-mono text-xs shrink-0" id="asc-avatar">
+            STK
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 id="asc-symbol" class="text-base font-bold text-white font-mono">--</h3>
+              <span id="asc-ltp" class="text-base font-bold font-mono text-white">₹--</span>
+              <span id="asc-change" class="px-2 py-0.5 text-xs font-mono font-bold rounded border bg-slate-800 text-slate-300">--%</span>
+            </div>
+            <p id="asc-name" class="text-xs text-slate-400">Stock Name</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Add to Watchlist Dropdown -->
+          <div class="relative" id="asc-watchlist-wrapper">
+            <button id="btn-asc-watchlist-toggle" class="px-3 py-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-all cursor-pointer" title="Add or remove stock from your 5 watchlists">
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+              <span>Watchlist</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+            </button>
+            <div id="asc-watchlist-menu" class="hidden absolute right-0 mt-2 w-56 p-2 rounded-xl bg-dark-card border border-dark-border shadow-2xl z-50 text-xs flex flex-col gap-1">
+              <span class="text-[10px] text-slate-500 px-2 py-1 uppercase font-semibold">Select Watchlists</span>
+              <div id="asc-watchlist-checklist" class="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                <!-- Checkboxes populated dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <button onclick="closeAnalyticsChartModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-dark-accent transition-colors cursor-pointer" title="Close chart">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Chart Canvas (Clean Candlestick with 6M Default) -->
+      <div class="p-4 flex-1 flex flex-col min-h-[420px] relative bg-dark-bg/40">
+        <div id="asc-chart-container" class="w-full flex-1 min-h-[380px]"></div>
+        <div id="asc-loading" class="absolute inset-0 bg-dark-bg/80 backdrop-blur-xs flex items-center justify-center z-10 hidden">
+          <div class="flex items-center gap-2 text-xs font-medium text-slate-300">
+            <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <span>Loading 6M Candlestick Chart...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Analytics Dashboard Customization Modal                 -->
+  <!-- ============================================================== -->
+  <div id="analytics-customization-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <i data-lucide="settings-2" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Customize Analytics Dashboard</h3>
+            <p class="text-xs text-slate-400">Select which sectors and indices to display</p>
+          </div>
+        </div>
+        <button onclick="closeAnalyticsCustomizeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-dark-accent transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Customization Form Body -->
+      <div class="p-5 overflow-y-auto flex flex-col gap-5 text-xs">
+        <!-- Visible Sub-Sectors Checklist -->
+        <div>
+          <h4 class="font-bold text-slate-200 mb-2 flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Visible Sub-Sectors</span>
+          </h4>
+          <div id="customize-sectors-checklist" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-2 bg-dark-bg/50 rounded-xl border border-dark-border">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Pinned Indices Checklist with 1-Click Sorting -->
+        <div>
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-1">
+            <h4 class="font-bold text-slate-200 flex items-center gap-2">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>Pinned Indices (Ribbon)</span>
+            </h4>
+            <div class="flex items-center gap-1 font-mono text-[10px]">
+              <span class="text-slate-500">Sort:</span>
+              <button type="button" onclick="sortCustomizeIndices('name')" class="px-2 py-0.5 rounded bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 cursor-pointer">Name ⇅</button>
+              <button type="button" onclick="sortCustomizeIndices('change')" class="px-2 py-0.5 rounded bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 cursor-pointer">% Chg ⇅</button>
+              <button type="button" onclick="sortCustomizeIndices('ltp')" class="px-2 py-0.5 rounded bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 cursor-pointer">Price ⇅</button>
+            </div>
+          </div>
+          <div id="customize-indices-checklist" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-2 bg-dark-bg/50 rounded-xl border border-dark-border">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="p-4 border-t border-dark-border bg-dark-bg/40 flex items-center justify-end gap-2 text-xs">
+        <button onclick="closeAnalyticsCustomizeModal()" class="px-4 py-2 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button onclick="saveAnalyticsPreferences()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer">
+          Save Preferences
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Multi-User Authentication Modal                         -->
+  <!-- ============================================================== -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">User Authentication</h3>
+            <p class="text-xs text-slate-400">Login or create your account</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-dark-accent transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Auth Tab Switcher -->
+      <div class="flex border-b border-dark-border bg-dark-bg/40 text-xs">
+        <button id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-3 text-center font-bold border-b-2 border-emerald-500 text-emerald-400 transition-colors">
+          Login
+        </button>
+        <button id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-3 text-center font-bold text-slate-400 hover:text-white transition-colors">
+          Register New Account
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="p-5 flex flex-col gap-4 text-xs">
+        <div id="login-error-banner" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"></div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Username</label>
+          <input type="text" id="login-username" required class="w-full px-3.5 py-2.5 bg-dark-bg border border-dark-border rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" placeholder="Enter username">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Password</label>
+          <input type="password" id="login-password" required class="w-full px-3.5 py-2.5 bg-dark-bg border border-dark-border rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" placeholder="••••••••">
+        </div>
+
+        <button type="submit" id="btn-submit-login" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer">
+          Login
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="hidden p-5 flex flex-col gap-4 text-xs">
+        <div id="register-error-banner" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"></div>
+        <div id="register-success-banner" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium"></div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Username</label>
+          <input type="text" id="reg-username" required class="w-full px-3.5 py-2.5 bg-dark-bg border border-dark-border rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" placeholder="Choose a username">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Password</label>
+          <input type="password" id="reg-password" required class="w-full px-3.5 py-2.5 bg-dark-bg border border-dark-border rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" placeholder="Min 6 characters">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1.5">Confirm Password</label>
+          <input type="password" id="reg-confirm-password" required class="w-full px-3.5 py-2.5 bg-dark-bg border border-dark-border rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500" placeholder="Repeat password">
+        </div>
+
+        <button type="submit" id="btn-submit-register" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- POPUP: Responsive Hover Chart with Distinct Price & Volume Panes -->
+  <!-- ============================================================== -->
+  <div id="stock-hover-chart-popup" class="fixed z-50 hidden bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-2xl shadow-2xl p-4 w-[600px] max-w-[95vw] flex-col gap-2.5 transition-all duration-150 pointer-events-auto">
+    
+    <!-- Top Bar: Symbol, Star with Dropdown, Name, Change, MA Legend, 3M/6M Range Selector -->
+    <div class="flex items-center justify-between gap-3 border-b border-dark-border/60 pb-2.5 flex-wrap">
+      <div class="min-w-0 flex items-center gap-2 relative">
+        <!-- Quick Watchlist Star Icon -->
+        <button id="hover-chart-star-btn" onclick="toggleHoverStockWatchlist(event)" class="p-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border transition-colors cursor-pointer text-slate-400 hover:text-amber-400 flex items-center justify-center" title="Click to choose watchlist or toggle">
+          <i data-lucide="star" class="w-4 h-4" id="hover-star-icon"></i>
+        </button>
+
+        <!-- Star Watchlist Selection Dropdown Menu -->
+        <div id="hover-star-watchlist-dropdown" class="hidden absolute top-9 left-0 z-50 bg-dark-card border border-dark-border rounded-xl shadow-2xl p-2 w-52 flex-col gap-1 backdrop-blur-md">
+          <div class="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-dark-border/50 flex items-center justify-between">
+            <span>Select Watchlist</span>
+            <button type="button" onclick="closeHoverWatchlistDropdown(event)" class="text-slate-400 hover:text-white text-xs">✕</button>
+          </div>
+          <div id="hover-watchlist-items-list" class="flex flex-col gap-0.5 max-h-40 overflow-y-auto">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="hover-chart-symbol" class="font-bold font-mono text-white text-sm">--</span>
+            <span id="hover-chart-change" class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+0.00%</span>
+            <span id="hover-chart-ltp" class="text-xs font-mono font-bold text-slate-200">₹--</span>
+          </div>
+          <p id="hover-chart-name" class="text-[11px] text-slate-400 truncate max-w-[200px]">--</p>
+        </div>
+      </div>
+
+      <!-- Right: MA Legend & 3M / 6M Range Switcher -->
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <!-- MA & Vol Legend -->
+        <div class="flex items-center gap-1.5 text-[9px] font-mono shrink-0">
+          <span class="text-sky-400 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>10 MA</span>
+          <span class="text-blue-500 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>20 MA</span>
+          <span class="text-amber-500 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>50 MA</span>
+          <span class="text-emerald-400 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Vol</span>
+          <span class="text-amber-400 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Vol Avg</span>
+        </div>
+
+        <!-- 3M / 6M Range Buttons -->
+        <div class="flex items-center p-0.5 rounded-lg bg-dark-bg border border-dark-border text-[10px] font-mono font-bold">
+          <button type="button" onclick="setHoverChartRange('3mo', event)" id="btn-hover-range-3mo" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition-colors cursor-pointer">
+            3M
+          </button>
+          <button type="button" onclick="setHoverChartRange('6mo', event)" id="btn-hover-range-6mo" class="px-2 py-0.5 rounded bg-blue-600 text-white shadow-sm transition-colors cursor-pointer">
+            6M
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Dynamic Crosshair Tooltip Legend Bar -->
+    <div id="hover-chart-legend" class="flex items-center gap-3 text-[10px] font-mono text-slate-400 px-2 py-1 bg-dark-bg/40 rounded-lg border border-dark-border/40 overflow-x-auto whitespace-nowrap">
+      <span><strong class="text-slate-500 font-normal">O:</strong> <span id="hover-leg-open" class="text-slate-200">--</span></span>
+      <span><strong class="text-slate-500 font-normal">H:</strong> <span id="hover-leg-high" class="text-slate-200">--</span></span>
+      <span><strong class="text-slate-500 font-normal">L:</strong> <span id="hover-leg-low" class="text-slate-200">--</span></span>
+      <span><strong class="text-slate-500 font-normal">C:</strong> <span id="hover-leg-close" class="text-slate-200">--</span></span>
+      <span><strong class="text-slate-500 font-normal">Vol:</strong> <span id="hover-leg-vol" class="text-slate-200">--</span></span>
+    </div>
+
+    <!-- Multi-Pane Container (Separate Price Pane & Separate Volume Pane) -->
+    <div id="hover-chart-panes-wrapper" class="flex flex-col gap-1 w-full">
+      <!-- PANE 1: Price & MAs (Height 210px) -->
+      <div id="hover-chart-price-container" class="w-full h-52 relative bg-dark-bg/60 rounded-xl overflow-hidden"></div>
+      
+      <!-- PANE 2: Dedicated Volume Pane (Height 75px) -->
+      <div id="hover-chart-volume-container" class="w-full h-20 relative bg-dark-bg/60 rounded-xl overflow-hidden"></div>
+    </div>
+
+    <!-- Bottom Footer Meta -->
+    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+      <span id="hover-chart-meta">Daily Candlesticks · 10/20/50 MA & Dedicated Volume Pane</span>
+      <span class="text-slate-400">Click row for full chart modal</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Serious Master Admin Console & User Manager             -->
+  <!-- ============================================================== -->
+  <div id="admin-console-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-dark-card border border-amber-500/40 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Console Header -->
+      <div class="p-5 border-b border-dark-border flex items-center justify-between bg-gradient-to-r from-dark-bg/90 via-slate-900/80 to-amber-950/20">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/20 text-black">
+            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base font-bold text-white tracking-wide">Master Admin Console</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                Root Authority
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">User management, capacity controls, permissions, and system health diagnostics</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="loadAdminData()" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-colors cursor-pointer" title="Refresh Admin Data">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeAdminConsole()" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer" title="Close Console">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Console Body -->
+      <div class="p-5 overflow-y-auto flex-1 flex flex-col gap-5 text-xs">
+        
+        <!-- 4 KPI System Diagnostics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Card 1: User Capacity & Slots -->
+          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-semibold">User Capacity</span>
+              <span id="admin-kpi-slots" class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">-- slots</span>
+            </div>
+            <div class="flex items-baseline gap-1 font-mono">
+              <span id="admin-kpi-users-count" class="text-2xl font-bold text-white">0</span>
+              <span class="text-slate-500 font-medium">/ <span id="admin-kpi-max-users">10</span> Max</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div id="admin-capacity-bar" class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Card 2: System Screeners -->
+          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-semibold">System Screeners</span>
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-blue-400"></i>
+            </div>
+            <div class="text-2xl font-mono font-bold text-blue-400" id="admin-kpi-screeners">--</div>
+            <span class="text-[10px] text-slate-500">Live Chartink scanner pipelines</span>
+          </div>
+
+          <!-- Card 3: Watchlists & Stocks -->
+          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-semibold">Watchlists & Stocks</span>
+              <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-400"></i>
+            </div>
+            <div class="text-2xl font-mono font-bold text-amber-400" id="admin-kpi-watchlists">--</div>
+            <span class="text-[10px] text-slate-500">Custom user portfolios tracked</span>
+          </div>
+
+          <!-- Card 4: Server Health & Sessions -->
+          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-semibold">Server & Security</span>
+              <i data-lucide="server" class="w-3.5 h-3.5 text-emerald-400"></i>
+            </div>
+            <div class="text-sm font-mono font-bold text-emerald-400" id="admin-kpi-uptime">Online · Uptime: --</div>
+            <span class="text-[10px] text-slate-500" id="admin-kpi-sessions">Active sessions: --</span>
+          </div>
+        </div>
+
+        <!-- Section 2: Capacity Limit Management & Add User Toolbar -->
+        <div class="p-4 rounded-xl bg-dark-bg/50 border border-dark-border flex flex-wrap items-center justify-between gap-4">
+          <!-- Adjust Max Users -->
+          <form id="form-admin-capacity" onsubmit="handleAdminUpdateMaxUsers(event)" class="flex items-center gap-2 flex-wrap">
+            <label class="font-semibold text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Max Allowed Users Limit:</span>
+            </label>
+            <input type="number" id="input-admin-max-users" min="1" max="500" required
+              class="w-24 px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-100 font-mono font-bold text-xs focus:outline-none focus:border-amber-500">
+            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Update Limit</span>
+            </button>
+          </form>
+
+          <!-- Toggle Add User Panel Button -->
+          <button type="button" onclick="toggleAdminAddUserPanel()" id="btn-toggle-add-user" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow transition-all cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+            <span>Add New User Account</span>
+          </button>
+        </div>
+
+        <!-- Section 3: Add User Collapsible Panel -->
+        <div id="admin-add-user-panel" class="hidden p-4 rounded-xl bg-dark-bg border border-blue-500/30 animate-in fade-in duration-150">
+          <div class="flex items-center justify-between border-b border-dark-border/60 pb-2 mb-3">
+            <h4 class="font-bold text-white flex items-center gap-2">
+              <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
+              <span>Create New User Credentials</span>
+            </h4>
+            <button type="button" onclick="toggleAdminAddUserPanel()" class="text-slate-500 hover:text-white text-xs cursor-pointer">Close</button>
+          </div>
+          <form id="form-admin-add-user" onsubmit="handleAdminAddUser(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Username</label>
+              <input type="text" id="admin-new-username" placeholder="e.g. trader_john" required
+                class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Password</label>
+              <input type="password" id="admin-new-password" placeholder="Min 4 chars" required
+                class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Role</label>
+              <select id="admin-new-role" class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                <option value="user">Standard User (5 Watchlists)</option>
+                <option value="admin">Administrator (Full Access)</option>
+              </select>
+            </div>
+            <div>
+              <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Create User</span>
+              </button>
+            </div>
+          </form>
+          <div id="admin-add-user-banner" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+        </div>
+
+        <!-- Section 4: All Registered Users Table -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+              <i data-lucide="users-round" class="w-4 h-4 text-emerald-400"></i>
+              <span>Registered Accounts (<span id="admin-users-table-count">0</span>)</span>
+            </h4>
+            <div class="flex items-center gap-2">
+              <input type="text" id="admin-user-search" oninput="filterAdminUserTable(this.value)" placeholder="Search username / role..."
+                class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500 w-48">
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-dark-border overflow-x-auto bg-dark-bg/40">
+            <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+              <thead class="bg-dark-bg text-slate-400 font-semibold border-b border-dark-border uppercase text-[10px]">
+                <tr>
+                  <th class="py-2.5 px-3">User</th>
+                  <th class="py-2.5 px-3">Role</th>
+                  <th class="py-2.5 px-3">Registered Date</th>
+                  <th class="py-2.5 px-2 text-center">Screeners</th>
+                  <th class="py-2.5 px-2 text-center">Watchlists</th>
+                  <th class="py-2.5 px-2 text-center">Stocks Tracked</th>
+                  <th class="py-2.5 px-3 text-right">Administrative Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody" class="divide-y divide-dark-border/40 font-mono">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Console Footer -->
+      <div class="p-3.5 border-t border-dark-border bg-dark-bg/60 flex items-center justify-between text-xs text-slate-400">
+        <span>Logged in as <strong>admin (Superadmin)</strong> · All user accounts are isolated & secure</span>
+        <button onclick="closeAdminConsole()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
+          Exit Console
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Dedicated Analytics JS Script -->
+  <script src="analytics.js"></script>
+</body>
+</html>

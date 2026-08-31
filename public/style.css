@@ -1,0 +1,366 @@
+/* Custom FinTech & Terminal Stylesheet */
+
+:root {
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* =============================================================
+   1. Light Theme Overrides (High-Contrast, Crisp Day View)
+   ============================================================= */
+html:not(.dark) body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html:not(.dark) .bg-dark-bg {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .bg-dark-card {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+html:not(.dark) .bg-dark-accent {
+  background-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .border-dark-border {
+  border-color: #cbd5e1 !important;
+}
+
+/* High-Contrast Light Mode Typography */
+html:not(.dark) .text-white,
+html:not(.dark) .text-slate-100 {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .text-slate-300 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Light Mode Input & Select Controls */
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="search"],
+html:not(.dark) input[type="password"],
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light Mode Autocomplete & Dropdowns */
+html:not(.dark) #stock-autocomplete-dropdown,
+html:not(.dark) #chart-watchlist-menu,
+html:not(.dark) .dropdown-menu-card {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .stock-suggestion-item:hover {
+  background-color: #eff6ff !important;
+}
+
+/* Light Mode Screener Cards */
+html:not(.dark) .screener-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .screener-card:hover {
+  background-color: #f8fafc !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12) !important;
+}
+
+html:not(.dark) .screener-card.active {
+  background-color: #eff6ff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1px #2563eb, 0 4px 12px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Light Mode Category Pills */
+html:not(.dark) .cat-pill {
+  color: #475569;
+}
+
+html:not(.dark) .cat-pill:hover {
+  color: #0f172a;
+  background-color: #e2e8f0;
+}
+
+html:not(.dark) .cat-pill.active {
+  color: #0369a1;
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+/* Light Mode Category Badges */
+html:not(.dark) .badge-intraday {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fcd34d !important;
+}
+
+html:not(.dark) .badge-breakout {
+  background-color: #f3e8ff !important;
+  color: #7e22ce !important;
+  border-color: #d8b4fe !important;
+}
+
+html:not(.dark) .badge-swing {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+}
+
+html:not(.dark) .badge-momentum {
+  background-color: #fce7f3 !important;
+  color: #be185d !important;
+  border-color: #f472b6 !important;
+}
+
+html:not(.dark) .badge-reversal {
+  background-color: #ccfbf1 !important;
+  color: #0f766e !important;
+  border-color: #5eead4 !important;
+}
+
+html:not(.dark) .badge-default {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Light Mode Stock Results Table */
+html:not(.dark) .stock-row {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .stock-row:hover {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .stock-row.selected {
+  background-color: #eff6ff !important;
+  border-left: 3px solid #2563eb !important;
+}
+
+/* Light Mode Metric Pills */
+html:not(.dark) #pill-52w {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html:not(.dark) #pill-ath {
+  background-color: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+}
+
+/* Light Mode Resizer Dividers */
+html:not(.dark) .pane-resizer {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .pane-resizer:hover {
+  background-color: #93c5fd !important;
+}
+
+html:not(.dark) .pane-resizer > div {
+  background-color: #94a3b8 !important;
+}
+
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Category Filter Pills */
+.cat-pill {
+  color: #94a3b8;
+  background-color: transparent;
+  border: 1px solid transparent;
+}
+
+.cat-pill:hover {
+  color: #f1f5f9;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.cat-pill.active {
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  font-weight: 600;
+}
+
+/* Screener Button Card Styles */
+.screener-card {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.screener-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.15);
+}
+
+.screener-card.active {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 1px #3b82f6, 0 10px 25px -5px rgba(59, 130, 246, 0.2);
+}
+
+.screener-card.running {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.08);
+  animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  }
+}
+
+/* Category Badge Colors */
+.badge-intraday {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.badge-breakout {
+  background-color: rgba(168, 85, 247, 0.1);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.badge-swing {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.badge-momentum {
+  background-color: rgba(236, 72, 153, 0.1);
+  color: #f472b6;
+  border-color: rgba(236, 72, 153, 0.2);
+}
+
+.badge-reversal {
+  background-color: rgba(20, 184, 166, 0.1);
+  color: #2dd4bf;
+  border-color: rgba(20, 184, 166, 0.2);
+}
+
+.badge-default {
+  background-color: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+/* Table Row Highlights */
+.stock-row {
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.stock-row:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+.stock-row.selected {
+  background-color: rgba(59, 130, 246, 0.16) !important;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Toast Notification animations */
+.toast-enter {
+  animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-exit {
+  animation: slide-out 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+}
+
+/* Table Column Alignment & Non-Overlapping Rules */
+.table-fixed-wrap {
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-fixed-wrap th,
+.table-fixed-wrap td {
+  white-space: nowrap;
+}
+

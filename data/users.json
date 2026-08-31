@@ -1,0 +1,93 @@
+[
+  {
+    "id": "usr_admin",
+    "username": "admin",
+    "role": "admin",
+    "watchlists": [
+      {
+        "id": "wl_admin_1",
+        "name": "Watchlist 1",
+        "stocks": [
+          {
+            "symbol": "BDL",
+            "name": "BDL",
+            "addedAt": "2026-08-30T19:39:23.854Z"
+          }
+        ]
+      },
+      {
+        "id": "wl_admin_2",
+        "name": "Watchlist 2",
+        "stocks": []
+      },
+      {
+        "id": "wl_admin_3",
+        "name": "Watchlist 3",
+        "stocks": []
+      },
+      {
+        "id": "wl_admin_4",
+        "name": "Watchlist 4",
+        "stocks": []
+      },
+      {
+        "id": "wl_admin_5",
+        "name": "Watchlist 5",
+        "stocks": []
+      }
+    ],
+    "indicatorPreferences": {
+      "toggles": {
+        "ema10": true,
+        "ema20": true,
+        "ema50": true,
+        "ema150": false,
+        "ema200": true,
+        "volume": true,
+        "volAvg": true,
+        "vwap": false,
+        "pivots": false,
+        "darvas": true,
+        "rsi": true
+      },
+      "pivotType": "Fibonacci (D)"
+    },
+    "customScreeners": []
+  },
+  {
+    "id": "usr_mtg7og8l_atli",
+    "username": "abcd",
+    "passwordHash": "cb87d1861ae426f2dc1220eb7fc2f18eb560cdc23ea6446eb33e5567196e4fd84c07161505e83d1eddea747f4bebc188780281be8e025bef1c624ff40e158782",
+    "salt": "42a47a4ee8c4e2a7861cba3526177345",
+    "role": "user",
+    "createdAt": "2026-08-30T19:37:34.773Z",
+    "watchlists": [
+      {
+        "id": "wl_mtg7og8l_1",
+        "name": "Watchlist 1",
+        "stocks": []
+      },
+      {
+        "id": "wl_mtg7og8l_2",
+        "name": "Watchlist 2",
+        "stocks": []
+      },
+      {
+        "id": "wl_mtg7og8l_3",
+        "name": "Watchlist 3",
+        "stocks": []
+      },
+      {
+        "id": "wl_mtg7og8l_4",
+        "name": "Watchlist 4",
+        "stocks": []
+      },
+      {
+        "id": "wl_mtg7og8l_5",
+        "name": "Watchlist 5",
+        "stocks": []
+      }
+    ],
+    "customScreeners": []
+  }
+]
