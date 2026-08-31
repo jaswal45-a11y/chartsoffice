@@ -1050,6 +1050,20 @@ function renderChartWatchlistDropdown() {
   const activeSym = (state.selectedStock?.symbol || el.manualStockInput?.value || 'RELIANCE').toUpperCase().replace(/\.(NS|BO)$/, '');
   const activeName = state.selectedStock?.name || activeSym;
 
+  const anyWlHasStock = state.watchlists.some(wl => wl.stocks.some(s => (s.symbol || '').toUpperCase() === activeSym));
+  if (el.btnChartWatchlistToggle) {
+    if (anyWlHasStock) {
+      el.btnChartWatchlistToggle.className = 'p-2 rounded-xl bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
+      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-4 h-4 fill-black text-black"></i>`;
+      el.btnChartWatchlistToggle.title = `${activeSym} is in your watchlist (Click to manage)`;
+    } else {
+      el.btnChartWatchlistToggle.className = 'p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
+      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-4 h-4 fill-none text-amber-400"></i>`;
+      el.btnChartWatchlistToggle.title = `Add ${activeSym} to watchlist`;
+    }
+    lucide.createIcons();
+  }
+
   if (state.watchlists.length === 0) {
     el.chartWatchlistChecklist.innerHTML = `<div class="text-[11px] text-slate-500 py-1 px-2">No watchlists available</div>`;
     return;

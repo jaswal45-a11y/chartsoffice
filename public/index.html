@@ -412,12 +412,10 @@
 
             <!-- Chart Header Actions: Watchlist Selector & External Links -->
             <div class="flex items-center gap-2">
-              <!-- Add to Watchlist Dropdown Button -->
+              <!-- Add to Watchlist Dropdown Button (Star Icon Only) -->
               <div class="relative" id="chart-watchlist-wrapper">
-                <button id="btn-chart-watchlist-toggle" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 rounded-xl shadow-sm transition-all cursor-pointer select-none" title="Save stock to watchlists">
-                  <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-                  <span>Watchlist</span>
-                  <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                <button id="btn-chart-watchlist-toggle" class="p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center" title="Add / Remove stock from watchlists">
+                  <i data-lucide="star" class="w-4 h-4 fill-current"></i>
                 </button>
 
                 <!-- Watchlists Checklist Dropdown Menu -->
@@ -1037,6 +1035,6 @@
   <script src="libs/lightweight-charts.js"></script>
 
   <!-- Application Script -->
-  <script src="app.js?v=2.5.0"></script>
+  <script src="app.js?v=2.5.1"></script>
 </body>
 </html>
