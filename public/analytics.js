@@ -14,6 +14,16 @@ const state = {
   subSectors: [],
   activeSectorCategory: 'all',
   indicesData: [],
+  sectoralBreadthData: [],
+  activeSectoralCategory: 'all',
+  sectoralBreadthSortField: 'change',
+  sectoralBreadthSortAsc: false,
+  sectoralSearchQuery: '',
+  activeSectorModalData: null,
+  sectoralModalFilter: 'all',
+  sectoralModalSearch: '',
+  sectoralModalSortField: 'changePercent',
+  sectoralModalSortAsc: false,
   analyticsPreferences: {
     visibleSectorIds: [],
     pinnedIndexIds: []
@@ -317,19 +327,26 @@ async function handleLogout() {
 async function loadAnalyticsData() {
   if (!state.user && !state.isAdmin) return;
   try {
-    const [breadthRes, sectorsRes, indicesRes] = await Promise.all([
+    const [breadthRes, sectorsRes, indicesRes, sectoralBreadthRes] = await Promise.all([
       fetch(`/api/analytics/breadth?sector=${encodeURIComponent(state.activeBreadthSector || 'all')}`),
       fetch('/api/analytics/sectors', { headers: getAuthHeaders() }),
-      fetch('/api/analytics/indices')
+      fetch('/api/analytics/indices'),
+      fetch('/api/analytics/sectoral-breadth')
     ]);
 
     const breadthData = await breadthRes.json();
     const sectorsData = await sectorsRes.json();
     const indicesData = await indicesRes.json();
+    const sectoralBreadthData = await sectoralBreadthRes.json();
 
     if (breadthData.success) {
       state.breadthData = breadthData;
       renderBreadthDiagnostics(breadthData);
+    }
+
+    if (sectoralBreadthData.success) {
+      state.sectoralBreadthData = sectoralBreadthData.sectors || [];
+      renderSectoralBreadthGrid();
     }
 
     if (sectorsData.success) {
@@ -434,6 +451,547 @@ function renderBreadthDiagnostics(data) {
 
     selectSector.value = state.activeBreadthSector || 'all';
   }
+}
+
+// -------------------------------------------------------------
+// NSE Sectoral Indices Advance / Decline Donut Breadth Controller
+// -------------------------------------------------------------
+
+function renderSectoralBreadthGrid() {
+  const container = document.getElementById('sectoral-breadth-grid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  let sectors = [...(state.sectoralBreadthData || [])];
+
+  // 1. Filter by category
+  if (state.activeSectoralCategory && state.activeSectoralCategory !== 'all') {
+    sectors = sectors.filter(s => (s.category || '').toLowerCase().includes(state.activeSectoralCategory.toLowerCase()));
+  }
+
+  // 2. Filter by search query
+  if (state.sectoralSearchQuery) {
+    const q = state.sectoralSearchQuery.toLowerCase();
+    sectors = sectors.filter(s => 
+      s.name.toLowerCase().includes(q) || 
+      (s.category && s.category.toLowerCase().includes(q)) ||
+      (s.stocks && s.stocks.some(st => st.symbol.toLowerCase().includes(q) || (st.name || '').toLowerCase().includes(q)))
+    );
+  }
+
+  // 3. Sort sectors
+  sectors.sort((a, b) => {
+    let valA, valB;
+    switch (state.sectoralBreadthSortField) {
+      case 'change':
+        valA = a.changePercent || 0;
+        valB = b.changePercent || 0;
+        break;
+      case 'adRatio':
+        valA = a.adRatio || 0;
+        valB = b.adRatio || 0;
+        break;
+      case 'advances':
+        valA = a.advances || 0;
+        valB = b.advances || 0;
+        break;
+      case 'name':
+        return state.sectoralBreadthSortAsc 
+          ? a.name.localeCompare(b.name) 
+          : b.name.localeCompare(a.name);
+      default:
+        valA = a.changePercent || 0;
+        valB = b.changePercent || 0;
+    }
+    return state.sectoralBreadthSortAsc ? (valA - valB) : (valB - valA);
+  });
+
+  if (sectors.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full p-8 text-center bg-dark-bg/40 border border-dark-border rounded-2xl text-slate-400">
+        <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 text-slate-500"></i>
+        <p class="text-sm font-semibold">No sectoral indices match the selected filter</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  sectors.forEach(sec => {
+    const card = document.createElement('div');
+    card.className = 'group p-4 rounded-2xl bg-dark-bg/60 hover:bg-dark-bg/90 border border-dark-border hover:border-emerald-500/40 transition-all duration-200 flex flex-col justify-between gap-3 shadow-lg hover:shadow-emerald-950/20';
+
+    const isPositive = (sec.changePercent || 0) >= 0;
+    const chgClass = isPositive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+    const chgSign = isPositive ? '+' : '';
+
+    const donutSvg = generateSectorDonutSvg(sec.advances, sec.declines, sec.unchanged || 0, sec.totalConstituents, sec.id);
+
+    card.innerHTML = `
+      <!-- Card Header -->
+      <div class="flex items-start justify-between gap-2 cursor-pointer" onclick="openSectoralStocksModal('${sec.id}', 'all')">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors font-mono tracking-tight">${sec.name}</h4>
+          </div>
+          <span class="text-[11px] text-slate-400 line-clamp-1">${sec.category} · ${sec.totalConstituents} Stocks</span>
+        </div>
+        <div class="flex flex-col items-end shrink-0 font-mono">
+          <span class="text-xs font-bold text-slate-100">${fmt.currency(sec.ltp)}</span>
+          <span class="px-1.5 py-0.2 rounded text-[10px] font-bold border ${chgClass}">
+            ${chgSign}${Number(sec.changePercent || 0).toFixed(2)}%
+          </span>
+        </div>
+      </div>
+
+      <!-- Donut Chart & Visual Ratio -->
+      <div class="flex items-center justify-center py-1">
+        ${donutSvg}
+      </div>
+
+      <!-- Advance / Decline Interactive Pills & Strength -->
+      <div class="flex flex-col gap-1.5 pt-2 border-t border-dark-border/40 font-mono text-[11px]">
+        <div class="grid grid-cols-2 gap-1.5">
+          <!-- Advances Pill (Clickable) -->
+          <button onclick="event.stopPropagation(); openSectoralStocksModal('${sec.id}', 'advance')"
+            class="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/25 text-emerald-400 flex items-center justify-between transition-all cursor-pointer select-none"
+            title="Click to view all ${sec.advances} advancing stocks in ${sec.name}">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Adv:</span>
+            <strong class="font-bold">${sec.advances} (${sec.advancePercent}%)</strong>
+          </button>
+
+          <!-- Declines Pill (Clickable) -->
+          <button onclick="event.stopPropagation(); openSectoralStocksModal('${sec.id}', 'decline')"
+            class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/25 text-rose-400 flex items-center justify-between transition-all cursor-pointer select-none"
+            title="Click to view all ${sec.declines} declining stocks in ${sec.name}">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Dec:</span>
+            <strong class="font-bold">${sec.declines} (${sec.declinePercent}%)</strong>
+          </button>
+        </div>
+
+        <!-- Overall Sector Strength Badge & Inspect Trigger -->
+        <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-dark-card border border-dark-border text-slate-300">
+            ${sec.strength || 'Neutral ⚖️'}
+          </span>
+          <button onclick="openSectoralStocksModal('${sec.id}', 'all')" class="text-slate-400 hover:text-emerald-400 flex items-center gap-0.5 transition-colors cursor-pointer" title="Inspect all constituent stocks">
+            <span>Inspect</span>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  lucide.createIcons();
+}
+
+function generateSectorDonutSvg(advances, declines, unchanged, total, sectorId) {
+  const tot = total || (advances + declines + unchanged) || 1;
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius; // ~238.76
+
+  const advRatio = (advances || 0) / tot;
+  const decRatio = (declines || 0) / tot;
+  const unchRatio = (unchanged || 0) / tot;
+
+  const advDash = advRatio * circumference;
+  const decDash = decRatio * circumference;
+  const unchDash = unchRatio * circumference;
+
+  const offsetAdv = 0;
+  const offsetDec = -advDash;
+  const offsetUnch = -(advDash + decDash);
+
+  return `
+    <div class="relative w-28 h-28 flex items-center justify-center select-none group/donut">
+      <svg class="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+        <!-- Background Circle -->
+        <circle cx="50" cy="50" r="${radius}" stroke="#1e293b" stroke-width="10" fill="none" />
+        
+        <!-- Advances (Green) Segment -->
+        ${advDash > 0 ? `
+          <circle cx="50" cy="50" r="${radius}"
+            stroke="#10b981"
+            stroke-width="10"
+            stroke-dasharray="${advDash} ${circumference}"
+            stroke-dashoffset="${offsetAdv}"
+            stroke-linecap="butt"
+            fill="none"
+            class="cursor-pointer transition-all duration-300 hover:stroke-[13] hover:brightness-125"
+            onclick="event.stopPropagation(); openSectoralStocksModal('${sectorId}', 'advance')"
+          >
+            <title>🟢 Advances: ${advances} (${(advRatio * 100).toFixed(1)}%) - Click to view advancing stocks</title>
+          </circle>
+        ` : ''}
+
+        <!-- Declines (Red) Segment -->
+        ${decDash > 0 ? `
+          <circle cx="50" cy="50" r="${radius}"
+            stroke="#ef4444"
+            stroke-width="10"
+            stroke-dasharray="${decDash} ${circumference}"
+            stroke-dashoffset="${offsetDec}"
+            stroke-linecap="butt"
+            fill="none"
+            class="cursor-pointer transition-all duration-300 hover:stroke-[13] hover:brightness-125"
+            onclick="event.stopPropagation(); openSectoralStocksModal('${sectorId}', 'decline')"
+          >
+            <title>🔴 Declines: ${declines} (${(decRatio * 100).toFixed(1)}%) - Click to view declining stocks</title>
+          </circle>
+        ` : ''}
+
+        <!-- Unchanged (Gray) Segment -->
+        ${unchDash > 0 ? `
+          <circle cx="50" cy="50" r="${radius}"
+            stroke="#64748b"
+            stroke-width="10"
+            stroke-dasharray="${unchDash} ${circumference}"
+            stroke-dashoffset="${offsetUnch}"
+            stroke-linecap="butt"
+            fill="none"
+            class="cursor-pointer transition-all duration-300 hover:stroke-[13]"
+            onclick="event.stopPropagation(); openSectoralStocksModal('${sectorId}', 'unchanged')"
+          >
+            <title>⚪ Unchanged: ${unchanged} (${(unchRatio * 100).toFixed(1)}%)</title>
+          </circle>
+        ` : ''}
+      </svg>
+
+      <!-- Center Text Badge (Clickable) -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+        <span class="text-xs font-mono font-bold leading-tight">
+          <span class="text-emerald-400">${advances}</span><span class="text-slate-500">/</span><span class="text-rose-400">${declines}</span>
+        </span>
+        <span class="text-[9px] text-slate-400 font-mono leading-tight">A / D</span>
+      </div>
+    </div>
+  `;
+}
+
+function handleSectoralBreadthSort(field) {
+  if (state.sectoralBreadthSortField === field) {
+    state.sectoralBreadthSortAsc = !state.sectoralBreadthSortAsc;
+  } else {
+    state.sectoralBreadthSortField = field;
+    state.sectoralBreadthSortAsc = (field === 'name');
+  }
+
+  document.querySelectorAll('.sec-sort-btn').forEach(btn => {
+    btn.classList.remove('active', 'bg-emerald-600', 'text-white');
+    btn.classList.add('text-slate-400');
+  });
+  const mapBtn = {
+    change: 'btn-sort-sec-change',
+    adRatio: 'btn-sort-sec-ad',
+    advances: 'btn-sort-sec-adv',
+    name: 'btn-sort-sec-name'
+  };
+  const activeBtn = document.getElementById(mapBtn[field]);
+  if (activeBtn) {
+    activeBtn.classList.add('active', 'bg-emerald-600', 'text-white');
+    activeBtn.classList.remove('text-slate-400');
+  }
+
+  renderSectoralBreadthGrid();
+}
+
+function handleSectoralCategoryFilter(cat, btnEl) {
+  state.activeSectoralCategory = cat;
+  document.querySelectorAll('.sec-cat-pill').forEach(pill => {
+    pill.classList.remove('active', 'bg-emerald-600', 'text-white');
+    pill.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+  });
+  if (btnEl) {
+    btnEl.classList.add('active', 'bg-emerald-600', 'text-white');
+    btnEl.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+  }
+  renderSectoralBreadthGrid();
+}
+
+function handleSectorSearchInput(query) {
+  state.sectoralSearchQuery = (query || '').toLowerCase().trim();
+  renderSectoralBreadthGrid();
+}
+
+function openSectoralStocksModal(sectorId, filterType = 'all') {
+  const sector = (state.sectoralBreadthData || []).find(s => s.id === sectorId);
+  if (!sector) return;
+
+  state.activeSectorModalData = sector;
+  state.sectoralModalFilter = filterType;
+  state.sectoralModalSearch = '';
+
+  const inputSearch = document.getElementById('ssm-stock-search');
+  if (inputSearch) inputSearch.value = '';
+
+  if (filterType === 'advance') {
+    state.sectoralModalSortField = 'changePercent';
+    state.sectoralModalSortAsc = false;
+  } else if (filterType === 'decline') {
+    state.sectoralModalSortField = 'changePercent';
+    state.sectoralModalSortAsc = true;
+  } else {
+    state.sectoralModalSortField = 'changePercent';
+    state.sectoralModalSortAsc = false;
+  }
+
+  const elName = document.getElementById('ssm-sector-name');
+  const elLtp = document.getElementById('ssm-sector-ltp');
+  const elChg = document.getElementById('ssm-sector-change');
+  const elAd = document.getElementById('ssm-sector-ad');
+  const elStrength = document.getElementById('ssm-strength-badge');
+
+  if (elName) elName.textContent = sector.name;
+  if (elLtp) elLtp.textContent = fmt.currency(secLtp(sector));
+  if (elChg) {
+    const isPos = (sector.changePercent || 0) >= 0;
+    elChg.textContent = `${isPos ? '+' : ''}${Number(sector.changePercent || 0).toFixed(2)}% (${isPos ? '+' : ''}${fmt.currency(sector.pointChange || 0)} pts)`;
+    elChg.className = isPos ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+  }
+  if (elAd) elAd.textContent = sector.adRatio;
+  if (elStrength) elStrength.textContent = sector.strength || 'Neutral ⚖️';
+
+  const cntAll = document.getElementById('ssm-count-all');
+  const cntAdv = document.getElementById('ssm-count-advance');
+  const cntDec = document.getElementById('ssm-count-decline');
+  const cntUnch = document.getElementById('ssm-count-unchanged');
+
+  if (cntAll) cntAll.textContent = sector.totalConstituents;
+  if (cntAdv) cntAdv.textContent = sector.advances;
+  if (cntDec) cntDec.textContent = sector.declines;
+  if (cntUnch) cntUnch.textContent = sector.unchanged || 0;
+
+  updateSectoralModalTabStyles();
+  renderSectoralStockTable();
+
+  const modal = document.getElementById('sectoral-stocks-modal');
+  modal?.classList.remove('hidden');
+  modal?.classList.add('flex');
+}
+
+function secLtp(sec) {
+  return sec?.ltp || 0;
+}
+
+function closeSectoralStocksModal() {
+  const modal = document.getElementById('sectoral-stocks-modal');
+  modal?.classList.add('hidden');
+  modal?.classList.remove('flex');
+}
+
+function setSectoralStockFilter(filterType, btnEl) {
+  state.sectoralModalFilter = filterType;
+  updateSectoralModalTabStyles();
+  renderSectoralStockTable();
+}
+
+function updateSectoralModalTabStyles() {
+  const tabs = ['all', 'advance', 'decline', 'unchanged'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`ssm-tab-${t}`);
+    if (!btn) return;
+    if (t === state.sectoralModalFilter) {
+      if (t === 'advance') {
+        btn.className = 'ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-emerald-600 text-white shadow-sm transition-all cursor-pointer flex items-center gap-1';
+      } else if (t === 'decline') {
+        btn.className = 'ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-rose-600 text-white shadow-sm transition-all cursor-pointer flex items-center gap-1';
+      } else {
+        btn.className = 'ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-blue-600 text-white shadow-sm transition-all cursor-pointer flex items-center gap-1';
+      }
+    } else {
+      btn.className = 'ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-dark-bg border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1';
+    }
+  });
+
+  const badge = document.getElementById('ssm-filter-badge');
+  if (badge && state.activeSectorModalData) {
+    const sec = state.activeSectorModalData;
+    if (state.sectoralModalFilter === 'advance') {
+      badge.textContent = `🟢 Advancing Stocks (${sec.advances})`;
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+    } else if (state.sectoralModalFilter === 'decline') {
+      badge.textContent = `🔴 Declining Stocks (${sec.declines})`;
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+    } else if (state.sectoralModalFilter === 'unchanged') {
+      badge.textContent = `⚪ Unchanged Stocks (${sec.unchanged || 0})`;
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-500/20 text-slate-300 border border-slate-500/30';
+    } else {
+      badge.textContent = `All Constituents (${sec.totalConstituents})`;
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30';
+    }
+  }
+}
+
+function filterSectoralStockTable() {
+  const input = document.getElementById('ssm-stock-search');
+  state.sectoralModalSearch = (input?.value || '').toLowerCase().trim();
+  renderSectoralStockTable();
+}
+
+function handleSectoralStockSort(field) {
+  if (state.sectoralModalSortField === field) {
+    state.sectoralModalSortAsc = !state.sectoralModalSortAsc;
+  } else {
+    state.sectoralModalSortField = field;
+    state.sectoralModalSortAsc = (field === 'symbol' || field === 'name');
+  }
+  renderSectoralStockTable();
+}
+
+function renderSectoralStockTable() {
+  const tbody = document.getElementById('sectoral-stocks-tbody');
+  if (!tbody || !state.activeSectorModalData) return;
+  tbody.innerHTML = '';
+
+  let stocks = [...(state.activeSectorModalData.stocks || [])];
+
+  // 1. Filter by status (all / advance / decline / unchanged)
+  if (state.sectoralModalFilter && state.sectoralModalFilter !== 'all') {
+    stocks = stocks.filter(s => s.status === state.sectoralModalFilter);
+  }
+
+  // 2. Filter by search text
+  if (state.sectoralModalSearch) {
+    const q = state.sectoralModalSearch;
+    stocks = stocks.filter(s => s.symbol.toLowerCase().includes(q) || (s.name || '').toLowerCase().includes(q));
+  }
+
+  // 3. Sort stocks
+  stocks.sort((a, b) => {
+    let valA, valB;
+    switch (state.sectoralModalSortField) {
+      case 'rank':
+        valA = a.rank || 0;
+        valB = b.rank || 0;
+        break;
+      case 'symbol':
+        return state.sectoralModalSortAsc ? a.symbol.localeCompare(b.symbol) : b.symbol.localeCompare(a.symbol);
+      case 'name':
+        return state.sectoralModalSortAsc ? (a.name || '').localeCompare(b.name || '') : (b.name || '').localeCompare(a.name || '');
+      case 'ltp':
+        valA = a.ltp || 0;
+        valB = b.ltp || 0;
+        break;
+      case 'change':
+        valA = a.change || 0;
+        valB = b.change || 0;
+        break;
+      case 'changePercent':
+        valA = a.changePercent || 0;
+        valB = b.changePercent || 0;
+        break;
+      case 'volume':
+        valA = a.volume || 0;
+        valB = b.volume || 0;
+        break;
+      case 'mcap':
+        valA = a.mcap || 0;
+        valB = b.mcap || 0;
+        break;
+      default:
+        valA = a.changePercent || 0;
+        valB = b.changePercent || 0;
+    }
+    return state.sectoralModalSortAsc ? (valA - valB) : (valB - valA);
+  });
+
+  updateSectoralSortIcons();
+
+  if (stocks.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="py-8 text-center text-slate-500 font-sans">
+          <i data-lucide="inbox" class="w-6 h-6 mx-auto mb-1 text-slate-600"></i>
+          <span>No stocks found matching the criteria</span>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  stocks.forEach((stk, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-dark-accent/40 transition-colors group';
+
+    const isPos = (stk.changePercent || 0) >= 0;
+    const chgClass = isPos ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+    const chgSign = isPos ? '+' : '';
+
+    let volStr = '--';
+    if (stk.volume) {
+      if (stk.volume >= 10000000) volStr = `${(stk.volume / 10000000).toFixed(2)} Cr`;
+      else if (stk.volume >= 100000) volStr = `${(stk.volume / 100000).toFixed(2)} L`;
+      else volStr = stk.volume.toLocaleString('en-IN');
+    }
+
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 text-center text-slate-500 font-bold">${idx + 1}</td>
+      <td class="py-2.5 px-3 font-bold text-white">
+        <span class="px-2 py-0.5 rounded bg-dark-bg border border-dark-border text-blue-400">${stk.symbol}</span>
+      </td>
+      <td class="py-2.5 px-3 text-slate-300 font-sans font-medium text-xs">${stk.name || stk.symbol}</td>
+      <td class="py-2.5 px-3 text-right font-bold text-slate-100">${fmt.currency(stk.ltp)}</td>
+      <td class="py-2.5 px-3 text-right font-semibold ${isPos ? 'text-emerald-400' : 'text-rose-400'}">
+        ${chgSign}${fmt.currency(stk.change)}
+      </td>
+      <td class="py-2.5 px-3 text-right">
+        <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${chgClass}">
+          ${chgSign}${Number(stk.changePercent || 0).toFixed(2)}%
+        </span>
+      </td>
+      <td class="py-2.5 px-3 text-center text-[10px] text-slate-400">
+        <span>${fmt.currency(stk.dayLow)}</span> - <span class="text-slate-200">${fmt.currency(stk.dayHigh)}</span>
+      </td>
+      <td class="py-2.5 px-3 text-right text-slate-300">${volStr}</td>
+      <td class="py-2.5 px-3 text-right text-slate-400">${stk.mcap ? Number(stk.mcap).toLocaleString('en-IN') : '--'}</td>
+      <td class="py-2.5 px-3 text-center">
+        <button onclick="openAnalyticsStockChart('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}')"
+          class="px-2.5 py-1 text-[11px] font-semibold bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 rounded-lg transition-all flex items-center justify-center gap-1 mx-auto cursor-pointer shadow-sm"
+          title="See on 6M Candlestick Chart">
+          <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
+          <span>See on Chart</span>
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  const footerInfo = document.getElementById('ssm-footer-info');
+  if (footerInfo && state.activeSectorModalData) {
+    footerInfo.innerHTML = `Showing <strong>${stocks.length}</strong> of <strong>${state.activeSectorModalData.totalConstituents}</strong> stocks in <strong>${state.activeSectorModalData.name}</strong> • Click <strong>See on Chart</strong> to load candlestick visualizer`;
+  }
+
+  lucide.createIcons();
+}
+
+function updateSectoralSortIcons() {
+  const map = {
+    rank: 'ssm-sort-rank',
+    symbol: 'ssm-sort-sym',
+    name: 'ssm-sort-name',
+    ltp: 'ssm-sort-ltp',
+    change: 'ssm-sort-chg',
+    changePercent: 'ssm-sort-pct',
+    volume: 'ssm-sort-vol',
+    mcap: 'ssm-sort-mcap'
+  };
+
+  Object.keys(map).forEach(f => {
+    const elIcon = document.getElementById(map[f]);
+    if (!elIcon) return;
+    if (f === state.sectoralModalSortField) {
+      elIcon.textContent = state.sectoralModalSortAsc ? '▲' : '▼';
+      elIcon.className = 'text-[10px] text-emerald-400 font-bold';
+    } else {
+      elIcon.textContent = '⇅';
+      elIcon.className = 'text-[10px] text-slate-500';
+    }
+  });
 }
 
 function renderIndicesRibbon(indicesList = state.indicesData) {
@@ -2179,6 +2737,14 @@ window.addHoverStockToWatchlist = addHoverStockToWatchlist;
 window.handleIndicesCategoryChange = handleIndicesCategoryChange;
 window.handleIndicesSort = handleIndicesSort;
 window.sortCustomizeIndices = sortCustomizeIndices;
+window.handleSectoralBreadthSort = handleSectoralBreadthSort;
+window.handleSectoralCategoryFilter = handleSectoralCategoryFilter;
+window.handleSectorSearchInput = handleSectorSearchInput;
+window.openSectoralStocksModal = openSectoralStocksModal;
+window.closeSectoralStocksModal = closeSectoralStocksModal;
+window.setSectoralStockFilter = setSectoralStockFilter;
+window.filterSectoralStockTable = filterSectoralStockTable;
+window.handleSectoralStockSort = handleSectoralStockSort;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', async () => {

@@ -232,7 +232,57 @@
         </div>
       </section>
 
-      <!-- 2. STANDARD & SECTORAL INDICES RIBBON (CONTROLLED BY CUSTOMIZE & CATEGORY FILTERS) -->
+      <!-- 2. NSE SECTORAL INDICES MARKET BREADTH (INTERACTIVE ADVANCE / DECLINE DONUT CHARTS) -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4" id="sectoral-breadth-section">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <i data-lucide="pie-chart" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white tracking-wide uppercase">NSE Sectoral Indices Market Breadth</h2>
+              <p class="text-xs text-slate-400">Interactive Advance vs Decline Donut Charts. Click 🟢 Green or 🔴 Red slices to inspect constituent stocks.</p>
+            </div>
+          </div>
+
+          <!-- Controls Toolbar: 1-Click Sort, Category Pills, Search Box -->
+          <div class="flex items-center flex-wrap gap-2 text-xs">
+            <!-- Search Sector Box -->
+            <div class="relative flex items-center">
+              <input type="text" id="input-sector-search" oninput="handleSectorSearchInput(this.value)" placeholder="Search sector..." autocomplete="off"
+                class="w-32 sm:w-44 px-2.5 py-1 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
+              <i data-lucide="search" class="w-3 h-3 text-slate-500 absolute right-2.5 pointer-events-none"></i>
+            </div>
+
+            <!-- 1-Click Sorting Buttons -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
+              <span class="px-2 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
+              <button onclick="handleSectoralBreadthSort('change')" id="btn-sort-sec-change" class="sec-sort-btn active px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by % Change">Change ▾</button>
+              <button onclick="handleSectoralBreadthSort('adRatio')" id="btn-sort-sec-ad" class="sec-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by A/D Ratio">A/D Ratio</button>
+              <button onclick="handleSectoralBreadthSort('advances')" id="btn-sort-sec-adv" class="sec-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Advances Count">Advances</button>
+              <button onclick="handleSectoralBreadthSort('name')" id="btn-sort-sec-name" class="sec-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort Alphabetically">A-Z</button>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="sectoral-cat-filter-bar">
+              <button onclick="handleSectoralCategoryFilter('all', this)" class="sec-cat-pill active px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-emerald-600 text-white cursor-pointer">All (15)</button>
+              <button onclick="handleSectoralCategoryFilter('Banking', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Banking</button>
+              <button onclick="handleSectoralCategoryFilter('Technology', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">IT</button>
+              <button onclick="handleSectoralCategoryFilter('Automobile', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Auto</button>
+              <button onclick="handleSectoralCategoryFilter('Healthcare', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Pharma</button>
+              <button onclick="handleSectoralCategoryFilter('Metals & Mining', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Metals</button>
+              <button onclick="handleSectoralCategoryFilter('Energy', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Energy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sector Cards Grid -->
+        <div id="sectoral-breadth-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <!-- Populated dynamically with interactive Donut chart cards -->
+        </div>
+      </section>
+
+      <!-- 3. STANDARD & SECTORAL INDICES RIBBON (CONTROLLED BY CUSTOMIZE & CATEGORY FILTERS) -->
       <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-3">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
           <div class="flex items-center gap-2">
@@ -320,6 +370,122 @@
     </div>
 
   </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: Sectoral Constituents Advance/Decline Drill-Down Modal  -->
+  <!-- ============================================================== -->
+  <div id="sectoral-stocks-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-6xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-dark-border flex flex-wrap items-center justify-between gap-4 bg-dark-bg/60">
+        <div class="flex items-center gap-3">
+          <div id="ssm-avatar" class="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
+            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h3 id="ssm-sector-name" class="text-lg font-bold text-white">NIFTY BANK</h3>
+              <span id="ssm-filter-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                🟢 Advancing Stocks (8)
+              </span>
+              <span id="ssm-strength-badge" class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                Strong Bullish ⚡
+              </span>
+            </div>
+            <div class="flex items-center gap-3 mt-1 text-xs text-slate-400 font-mono">
+              <span>Index LTP: <strong id="ssm-sector-ltp" class="text-white">₹58,024.95</strong></span>
+              <span>·</span>
+              <span>Change: <strong id="ssm-sector-change" class="text-emerald-400">+0.89% (+512.40 pts)</strong></span>
+              <span>·</span>
+              <span>A/D Ratio: <strong id="ssm-sector-ad" class="text-amber-400">2.00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="closeSectoralStocksModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-dark-accent transition-colors cursor-pointer" title="Close modal">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Filter Toolbar -->
+      <div class="p-3 border-b border-dark-border bg-dark-bg/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <!-- Status Filter Tabs -->
+        <div class="flex items-center gap-1.5" id="ssm-status-tabs">
+          <button onclick="setSectoralStockFilter('all', this)" id="ssm-tab-all" class="ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-dark-bg border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer">
+            All (<span id="ssm-count-all">0</span>)
+          </button>
+          <button onclick="setSectoralStockFilter('advance', this)" id="ssm-tab-advance" class="ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-emerald-600 text-white shadow-sm transition-all cursor-pointer flex items-center gap-1">
+            <span>🟢 Advances</span> (<span id="ssm-count-advance">0</span>)
+          </button>
+          <button onclick="setSectoralStockFilter('decline', this)" id="ssm-tab-decline" class="ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-dark-bg border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1">
+            <span>🔴 Declines</span> (<span id="ssm-count-decline">0</span>)
+          </button>
+          <button onclick="setSectoralStockFilter('unchanged', this)" id="ssm-tab-unchanged" class="ssm-filter-tab px-3 py-1.5 rounded-xl font-semibold bg-dark-bg border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1">
+            <span>⚪ Unchanged</span> (<span id="ssm-count-unchanged">0</span>)
+          </button>
+        </div>
+
+        <!-- Search Stock Filter Box -->
+        <div class="relative flex items-center">
+          <input type="text" id="ssm-stock-search" oninput="filterSectoralStockTable()" placeholder="Search stock or symbol..." autocomplete="off"
+            class="w-48 sm:w-64 px-3 py-1.5 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute right-3 pointer-events-none"></i>
+        </div>
+      </div>
+
+      <!-- Constituents Table (Clean, wide, non-overlapping format) -->
+      <div class="flex-1 overflow-x-auto overflow-y-auto p-4">
+        <table class="w-full text-left text-xs text-slate-300 border-collapse min-w-[840px]">
+          <thead class="text-[11px] uppercase bg-dark-bg/90 text-slate-400 sticky top-0 backdrop-blur z-10 border-b border-dark-border font-mono">
+            <tr>
+              <th onclick="handleSectoralStockSort('rank')" class="py-2.5 px-3 font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors w-12 text-center" title="Sort by Rank">
+                <span>#</span> <span id="ssm-sort-rank" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleSectoralStockSort('symbol')" class="py-2.5 px-3 font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Symbol">
+                <span>Symbol</span> <span id="ssm-sort-sym" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleSectoralStockSort('name')" class="py-2.5 px-3 font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Company Name">
+                <span>Company Name</span> <span id="ssm-sort-name" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleSectoralStockSort('ltp')" class="py-2.5 px-3 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Last Price">
+                <span>LTP (₹)</span> <span id="ssm-sort-ltp" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleSectoralStockSort('change')" class="py-2.5 px-3 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Point Change">
+                <span>Change (₹)</span> <span id="ssm-sort-chg" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleSectoralStockSort('changePercent')" class="py-2.5 px-3 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by % Change">
+                <span>% Change</span> <span id="ssm-sort-pct" class="text-[10px] text-emerald-400 font-bold">▾</span>
+              </th>
+              <th class="py-2.5 px-3 text-center font-semibold whitespace-nowrap" title="Day Range (Low - High)">
+                <span>Day Range</span>
+              </th>
+              <th onclick="handleSectoralStockSort('volume')" class="py-2.5 px-3 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Volume">
+                <span>Volume</span> <span id="ssm-sort-vol" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th onclick="handleSectoralStockSort('mcap')" class="py-2.5 px-3 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Market Cap">
+                <span>M.Cap (₹ Cr)</span> <span id="ssm-sort-mcap" class="text-[10px] text-slate-500">⇅</span>
+              </th>
+              <th class="py-2.5 px-3 text-center font-semibold whitespace-nowrap w-28">Action</th>
+            </tr>
+          </thead>
+          <tbody id="sectoral-stocks-tbody" class="divide-y divide-dark-border/40 font-mono">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 border-t border-dark-border bg-dark-bg/40 flex items-center justify-between text-xs text-slate-400">
+        <span id="ssm-footer-info">Showing stocks • Click <strong>See on Chart</strong> to load candlestick visualizer</span>
+        <button onclick="closeSectoralStocksModal()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ============================================================== -->
   <!-- MODAL: Sector Constituents Drill-Down Modal                    -->
@@ -883,6 +1049,6 @@
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Dedicated Analytics JS Script -->
-  <script src="analytics.js?v=2.5.0"></script>
+  <script src="analytics.js?v=2.6.0"></script>
 </body>
 </html>

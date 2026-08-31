@@ -17,6 +17,7 @@ const DATA_FILE = path.join(__dirname, 'data', 'screeners.json');
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 const SECTORS_FILE = path.join(__dirname, 'data', 'sectors_data.json');
+const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // MIME types for static assets
@@ -1213,41 +1214,45 @@ async function fetchBatchQuotes(symbols) {
   }
 
   if (uncached.length > 0) {
-    const promises = uncached.map(async (s) => {
-      try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}.NS?range=5d&interval=1d`, {
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-          signal: AbortSignal.timeout(3500)
-        });
-        if (res.ok) {
-          const d = await res.json();
-          const meta = d.chart.result?.[0]?.meta;
-          if (meta && meta.regularMarketPrice) {
-            const ltp = Number(meta.regularMarketPrice.toFixed(2));
-            const prev = meta.chartPreviousClose || ltp;
-            const chg = prev ? ((ltp - prev) / prev) * 100 : 0;
-            const quote = {
-              symbol: s,
-              ltp,
-              changePercent: Number(chg.toFixed(2)),
-              dayHigh: meta.regularMarketDayHigh ? Number(meta.regularMarketDayHigh.toFixed(2)) : ltp,
-              dayLow: meta.regularMarketDayLow ? Number(meta.regularMarketDayLow.toFixed(2)) : ltp,
-              volume: meta.regularMarketVolume || 0,
-              exchange: 'NSE'
-            };
-            quotesCache.set(s, { timestamp: now, data: quote });
-            return quote;
+    const chunkSize = 25;
+    for (let i = 0; i < uncached.length; i += chunkSize) {
+      const batch = uncached.slice(i, i + chunkSize);
+      const promises = batch.map(async (s) => {
+        try {
+          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}.NS?range=5d&interval=1d`, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+            signal: AbortSignal.timeout(4000)
+          });
+          if (res.ok) {
+            const d = await res.json();
+            const meta = d.chart.result?.[0]?.meta;
+            if (meta && meta.regularMarketPrice) {
+              const ltp = Number(meta.regularMarketPrice.toFixed(2));
+              const prev = meta.chartPreviousClose || ltp;
+              const chg = prev ? ((ltp - prev) / prev) * 100 : 0;
+              const quote = {
+                symbol: s,
+                ltp,
+                changePercent: Number(chg.toFixed(2)),
+                dayHigh: meta.regularMarketDayHigh ? Number(meta.regularMarketDayHigh.toFixed(2)) : ltp,
+                dayLow: meta.regularMarketDayLow ? Number(meta.regularMarketDayLow.toFixed(2)) : ltp,
+                volume: meta.regularMarketVolume || 0,
+                exchange: 'NSE'
+              };
+              quotesCache.set(s, { timestamp: now, data: quote });
+              return quote;
+            }
           }
-        }
-      } catch (err) {}
+        } catch (err) {}
 
-      const fallbackQuote = { symbol: s, ltp: null, changePercent: 0, dayHigh: null, dayLow: null, volume: 0, exchange: 'NSE' };
-      quotesCache.set(s, { timestamp: now, data: fallbackQuote });
-      return fallbackQuote;
-    });
+        const fallbackQuote = { symbol: s, ltp: null, changePercent: 0, dayHigh: null, dayLow: null, volume: 0, exchange: 'NSE' };
+        quotesCache.set(s, { timestamp: now, data: fallbackQuote });
+        return fallbackQuote;
+      });
 
-    const fetched = await Promise.all(promises);
-    results.push(...fetched);
+      const fetched = await Promise.all(promises);
+      results.push(...fetched);
+    }
   }
 
   return results;
@@ -1325,26 +1330,33 @@ async function fetchBatchIndexQuotes(indicesList) {
       // Fallback realistic index estimates if symbol blocked or weekend/offline
       if (!ltp) {
         const fallbacks = {
-          '^NSEI': 24850.50,
-          '^NSEBANK': 51320.80,
-          'NIFTY_IT.NS': 42150.00,
-          'NIFTY_AUTO.NS': 25680.40,
-          'NIFTY_PHARMA.NS': 22890.10,
-          'NIFTY_METAL.NS': 9450.60,
-          'NIFTY_FMCG.NS': 62450.00,
-          'NIFTY_REALTY.NS': 1080.50,
-          'NIFTY_ENERGY.NS': 38900.20,
-          'NIFTY_INFRA.NS': 8850.40,
-          'NIFTY_PSUBANK.NS': 6920.00,
-          'NIFTY_MIDCAP_100.NS': 58920.00,
-          'NIFTY_SMALLCAP_100.NS': 18950.00,
+          '^NSEI': 24080.40,
+          '^NSEBANK': 58024.95,
+          '^CNXIT': 31191.45,
+          '^CNXAUTO': 28841.50,
+          '^CNXPHARMA': 27186.45,
+          '^CNXMETAL': 13193.90,
+          '^CNXFMCG': 46025.55,
+          '^CNXREALTY': 904.15,
+          '^CNXENERGY': 37949.25,
+          '^CNXINFRA': 9179.40,
+          '^CNXMEDIA': 1557.35,
+          '^CNXPSUBANK': 8609.55,
+          'NIFTY_PVT_BANK.NS': 28005.75,
+          'NIFTY_FIN_SERVICE.NS': 26293.65,
+          'NIFTY_HEALTHCARE.NS': 16941.50,
+          'NIFTY_OIL_AND_GAS.NS': 11103.80,
+          'NIFTY_CONSR_DURBL.NS': 40430.95,
+          'NIFTY_CHEMICALS.NS': 30028.80,
+          'NIFTY_MIDCAP_100.NS': 64224.75,
+          '^NSEMDCP50': 18491.45,
           'NIFTY_MIDSMALL_400.NS': 19480.00
         };
         ltp = fallbacks[idx.symbol] || 15000.00;
-        changePercent = Number(((Math.sin(idx.name.length) * 1.5) + 0.35).toFixed(2));
-        dayHigh = Number((ltp * 1.008).toFixed(2));
-        dayLow = Number((ltp * 0.992).toFixed(2));
-        sparkline = [Number((ltp * 0.985).toFixed(2)), Number((ltp * 0.99).toFixed(2)), Number((ltp * 0.995).toFixed(2)), Number((ltp * 1.002).toFixed(2)), ltp];
+        changePercent = 0.0;
+        dayHigh = ltp;
+        dayLow = ltp;
+        sparkline = [ltp, ltp, ltp, ltp, ltp];
       }
 
       const item = {
@@ -1500,6 +1512,154 @@ function calculateMarketBreadth(sectorFilter = 'all') {
     sectoralBreadth,
     indicesBreadth
   };
+}
+
+// -------------------------------------------------------------
+// Official NSE Sectoral Indices Advance / Decline Breadth Engine
+// -------------------------------------------------------------
+function readSectoralIndicesData() {
+  try {
+    if (!fs.existsSync(SECTORAL_DATA_FILE)) return [];
+    const content = fs.readFileSync(SECTORAL_DATA_FILE, 'utf8');
+    return JSON.parse(content || '[]');
+  } catch (err) {
+    console.error('Error reading sectoral indices data:', err);
+    return [];
+  }
+}
+
+// Cached Sectoral Breadth (30s TTL)
+let cachedSectoralBreadth = null;
+let lastSectoralBreadthTime = 0;
+
+async function computeSectoralIndicesBreadth() {
+  const now = Date.now();
+  if (cachedSectoralBreadth && (now - lastSectoralBreadthTime < 30000)) {
+    return cachedSectoralBreadth;
+  }
+
+  const sectors = readSectoralIndicesData();
+  if (!Array.isArray(sectors) || sectors.length === 0) {
+    return [];
+  }
+
+  // Gather all unique stock symbols across all sectors
+  const allStockSymbols = new Set();
+  sectors.forEach(s => {
+    (s.constituents || []).forEach(c => {
+      if (c.symbol) allStockSymbols.add(c.symbol.toUpperCase());
+    });
+  });
+
+  // Fetch index quotes and stock quotes in parallel batches
+  const [indexQuotesList, stockQuotesList] = await Promise.all([
+    fetchBatchIndexQuotes(sectors.map(s => ({ id: s.id, symbol: s.symbol, name: s.name, category: s.category }))),
+    fetchBatchQuotes(Array.from(allStockSymbols))
+  ]);
+
+  const indexQuoteMap = new Map(indexQuotesList.map(q => [q.id, q]));
+  const stockQuoteMap = new Map(stockQuotesList.map(q => [q.symbol.toUpperCase(), q]));
+
+  const enrichedSectors = sectors.map(sec => {
+    const idxQuote = indexQuoteMap.get(sec.id) || {};
+    const sectorFallbacks = {
+      'idx_nifty_bank': 58024.95,
+      'idx_nifty_it': 31191.45,
+      'idx_nifty_auto': 28841.50,
+      'idx_nifty_fmcg': 46025.55,
+      'idx_nifty_pharma': 27186.45,
+      'idx_nifty_metal': 13193.90,
+      'idx_nifty_realty': 904.15,
+      'idx_nifty_media': 1557.35,
+      'idx_nifty_psubank': 8609.55,
+      'idx_nifty_pvtbank': 28005.75,
+      'idx_nifty_fin_service': 26293.65,
+      'idx_nifty_healthcare': 16941.50,
+      'idx_nifty_oil_gas': 11103.80,
+      'idx_nifty_consumer_durables': 40430.95,
+      'idx_nifty_chemicals': 30028.80
+    };
+
+    const sectorLtp = idxQuote.ltp || sectorFallbacks[sec.id] || 15000.00;
+    const sectorChangePercent = idxQuote.changePercent !== undefined ? idxQuote.changePercent : 0.0;
+    const sectorPointChange = Number(((sectorLtp * sectorChangePercent) / 100).toFixed(2));
+
+    const constituents = (sec.constituents || []).map((stock, i) => {
+      const q = stockQuoteMap.get(stock.symbol.toUpperCase()) || {};
+      const ltp = q.ltp !== null && q.ltp !== undefined ? q.ltp : (stock.mcap ? Number((stock.mcap / 100).toFixed(2)) : 500.0);
+      const chgPct = q.changePercent !== undefined && q.ltp !== null ? q.changePercent : 0.0;
+      const ptChg = Number(((ltp * chgPct) / 100).toFixed(2));
+      const status = chgPct > 0 ? 'advance' : (chgPct < 0 ? 'decline' : 'unchanged');
+
+      return {
+        symbol: stock.symbol,
+        name: stock.name || stock.symbol,
+        sector: stock.sector || sec.category,
+        mcap: stock.mcap || 10000,
+        ltp,
+        change: ptChg,
+        changePercent: chgPct,
+        dayHigh: q.dayHigh || ltp,
+        dayLow: q.dayLow || ltp,
+        volume: q.volume || 0,
+        status
+      };
+    });
+
+    // Advance / Decline counts
+    const advances = constituents.filter(c => c.status === 'advance').length;
+    const declines = constituents.filter(c => c.status === 'decline').length;
+    const unchanged = constituents.filter(c => c.status === 'unchanged').length;
+    const total = constituents.length;
+
+    const advPct = total > 0 ? Number(((advances / total) * 100).toFixed(1)) : 0;
+    const decPct = total > 0 ? Number(((declines / total) * 100).toFixed(1)) : 0;
+    const unchPct = total > 0 ? Number(((unchanged / total) * 100).toFixed(1)) : 0;
+    const adRatio = declines > 0 ? Number((advances / declines).toFixed(2)) : advances;
+
+    let strength = 'Neutral ⚖️';
+    let strengthClass = 'neutral';
+    if (advPct >= 70) {
+      strength = 'Strong Bullish ⚡';
+      strengthClass = 'bullish-strong';
+    } else if (advPct >= 55) {
+      strength = 'Moderate Bullish 🟢';
+      strengthClass = 'bullish';
+    } else if (advPct <= 30) {
+      strength = 'Strong Bearish 🔻';
+      strengthClass = 'bearish-strong';
+    } else if (advPct <= 45) {
+      strength = 'Moderate Bearish 🔴';
+      strengthClass = 'bearish';
+    }
+
+    return {
+      id: sec.id,
+      name: sec.name,
+      symbol: sec.symbol,
+      nseSymbol: sec.nseSymbol || sec.name,
+      category: sec.category,
+      description: sec.description,
+      ltp: sectorLtp,
+      changePercent: sectorChangePercent,
+      pointChange: sectorPointChange,
+      totalConstituents: total,
+      advances,
+      declines,
+      unchanged,
+      advancePercent: advPct,
+      declinePercent: decPct,
+      unchangedPercent: unchPct,
+      adRatio,
+      strength,
+      strengthClass,
+      stocks: constituents
+    };
+  });
+
+  cachedSectoralBreadth = enrichedSectors;
+  lastSectoralBreadthTime = now;
+  return enrichedSectors;
 }
 
 function getUserAnalyticsPreferences(user) {
@@ -2549,6 +2709,16 @@ const server = http.createServer(async (req, res) => {
         const payload = await parseJsonBody(req);
         saveUserAnalyticsPreferences(authUser, payload);
         return sendJson(res, 200, { success: true, message: 'Dashboard preferences saved successfully' });
+      }
+
+      // 10f. GET /api/analytics/sectoral-breadth - Sectoral Indices Advance/Decline Breadth & Constituents
+      if (pathname === '/api/analytics/sectoral-breadth' && method === 'GET') {
+        const sectoralBreadth = await computeSectoralIndicesBreadth();
+        return sendJson(res, 200, {
+          success: true,
+          timestamp: new Date().toISOString(),
+          sectors: sectoralBreadth
+        });
       }
 
       return sendJson(res, 404, { success: false, error: 'API route not found' });
