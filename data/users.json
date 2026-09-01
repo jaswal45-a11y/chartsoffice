@@ -40,17 +40,31 @@
       "toggles": {
         "ema10": true,
         "ema20": true,
-        "ema50": true,
+        "ema50": false,
         "ema150": false,
-        "ema200": true,
+        "ema200": false,
         "volume": true,
         "volAvg": true,
-        "vwap": false,
+        "vwap": true,
         "pivots": false,
-        "darvas": true,
+        "darvas": false,
         "rsi": true
       },
-      "pivotType": "Fibonacci (D)"
+      "colors": {
+        "ema10": "#ff0055",
+        "ema20": "#85e0b9",
+        "ema50": "#f59e0b",
+        "ema150": "#9333ea",
+        "ema200": "#e11d48",
+        "volAvg": "#fbbf24",
+        "vwap": "#00ffcc",
+        "darvasTop": "#10b981",
+        "darvasBottom": "#ef4444",
+        "rsi": "#60a5fa",
+        "rsiSma": "#fbbf24",
+        "avwap": "#ffff00"
+      },
+      "pivotType": "Traditional (Auto)"
     },
     "customScreeners": []
   },

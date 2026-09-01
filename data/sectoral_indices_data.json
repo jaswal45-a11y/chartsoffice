@@ -34,7 +34,7 @@
       { "symbol": "HCLTECH", "name": "HCL Technologies Ltd", "sector": "IT Services", "mcap": 485000 },
       { "symbol": "WIPRO", "name": "Wipro Limited", "sector": "IT Services", "mcap": 285000 },
       { "symbol": "TECHM", "name": "Tech Mahindra Limited", "sector": "IT Services", "mcap": 162000 },
-      { "symbol": "OFSS", "name": "Oracle Financial Services Software", "sector": "IT Products", "mcap": 108000 },
+      { "symbol": "LTIM", "name": "LTIMindtree Limited", "sector": "IT Consulting & Services", "mcap": 168000 },
       { "symbol": "PERSISTENT", "name": "Persistent Systems Ltd", "sector": "IT Consulting", "mcap": 88500 },
       { "symbol": "COFORGE", "name": "Coforge Limited", "sector": "IT Solutions", "mcap": 52400 },
       { "symbol": "LTTS", "name": "L&T Technology Services Ltd", "sector": "ER&D Services", "mcap": 58600 },
@@ -49,7 +49,7 @@
     "category": "Automobile",
     "description": "15 leading automakers and auto ancillary giants",
     "constituents": [
-      { "symbol": "TMPV", "name": "Tata Motors Passenger Vehicles Ltd", "sector": "Automobiles", "mcap": 365000 },
+      { "symbol": "TATAMOTORS", "name": "Tata Motors Passenger Vehicles Ltd", "sector": "Automobiles", "mcap": 365000 },
       { "symbol": "M&M", "name": "Mahindra & Mahindra Ltd", "sector": "Automobiles", "mcap": 345000 },
       { "symbol": "MARUTI", "name": "Maruti Suzuki India Limited", "sector": "Passenger Cars", "mcap": 395000 },
       { "symbol": "BAJAJ-AUTO", "name": "Bajaj Auto Limited", "sector": "Two Wheelers", "mcap": 275000 },
@@ -61,8 +61,8 @@
       { "symbol": "MOTHERSON", "name": "Samvardhana Motherson Intl Ltd", "sector": "Auto Components", "mcap": 118000 },
       { "symbol": "BOSCHLTD", "name": "Bosch Limited", "sector": "Auto Ancillary", "mcap": 102000 },
       { "symbol": "TIINDIA", "name": "Tube Investments of India Ltd", "sector": "Auto Components", "mcap": 78500 },
-      { "symbol": "MRF", "name": "MRF Limited", "sector": "Tyres", "mcap": 58500 },
-      { "symbol": "BALKRISIND", "name": "Balkrishna Industries Ltd", "sector": "Tyres", "mcap": 56400 },
+      { "symbol": "UNOMINDA", "name": "Uno Minda Limited", "sector": "Auto Components", "mcap": 62500 },
+      { "symbol": "SONACOMS", "name": "Sona BLW Precision Forgings Ltd", "sector": "EV Drivetrain", "mcap": 39500 },
       { "symbol": "EXIDEIND", "name": "Exide Industries Limited", "sector": "Auto Batteries", "mcap": 42500 }
     ]
   },
@@ -84,11 +84,11 @@
       { "symbol": "MARICO", "name": "Marico Limited", "sector": "Edible Oils / Care", "mcap": 82500 },
       { "symbol": "VBL", "name": "Varun Beverages Limited", "sector": "Beverages", "mcap": 195000 },
       { "symbol": "COLPAL", "name": "Colgate-Palmolive (India) Ltd", "sector": "Oral Care", "mcap": 85400 },
-      { "symbol": "PGHH", "name": "Procter & Gamble Hygiene & HC Ltd", "sector": "Personal Care", "mcap": 52800 },
+      { "symbol": "MCDOWELL-N", "name": "United Spirits Limited (Diageo)", "sector": "Distilleries", "mcap": 118000 },
       { "symbol": "RADICO", "name": "Radico Khaitan Limited", "sector": "Distilleries", "mcap": 28500 },
       { "symbol": "UBL", "name": "United Breweries Limited", "sector": "Breweries", "mcap": 52400 },
-      { "symbol": "EMAMILTD", "name": "Emami Limited", "sector": "Personal Care", "mcap": 31200 },
-      { "symbol": "BALRAMCHIN", "name": "Balrampur Chini Mills Ltd", "sector": "Sugar / Ethanol", "mcap": 12800 }
+      { "symbol": "PATANJALI", "name": "Patanjali Foods Limited", "sector": "Edible Oils / FMCG", "mcap": 58500 },
+      { "symbol": "PGHH", "name": "Procter & Gamble Hygiene & HC Ltd", "sector": "Personal Care", "mcap": 52800 }
     ]
   },
   {
@@ -109,16 +109,16 @@
       { "symbol": "MANKIND", "name": "Mankind Pharma Limited", "sector": "Domestic Formulations", "mcap": 95400 },
       { "symbol": "AUROPHARMA", "name": "Aurobindo Pharma Limited", "sector": "Generics / API", "mcap": 82500 },
       { "symbol": "ALKEM", "name": "Alkem Laboratories Limited", "sector": "Pharma Formulations", "mcap": 68500 },
+      { "symbol": "ABBOTINDIA", "name": "Abbott India Limited", "sector": "Pharmaceuticals", "mcap": 58500 },
       { "symbol": "BIOCON", "name": "Biocon Limited", "sector": "Biologics", "mcap": 42500 },
       { "symbol": "GLENMARK", "name": "Glenmark Pharmaceuticals Ltd", "sector": "Dermatology / Resp", "mcap": 44800 },
       { "symbol": "IPCALAB", "name": "IPCA Laboratories Limited", "sector": "API / Formulations", "mcap": 38200 },
       { "symbol": "LAURUSLABS", "name": "Laurus Labs Limited", "sector": "CDMO & API", "mcap": 25800 },
       { "symbol": "JBCHEPHARM", "name": "J.B. Chemicals & Pharma Ltd", "sector": "Formulations", "mcap": 29500 },
       { "symbol": "GLAND", "name": "Gland Pharma Limited", "sector": "Injectables", "mcap": 28400 },
+      { "symbol": "AJANTPHARM", "name": "Ajanta Pharma Limited", "sector": "Specialty Generics", "mcap": 34500 },
       { "symbol": "NATCOPHARM", "name": "Natco Pharma Limited", "sector": "Oncology / Generics", "mcap": 26800 },
-      { "symbol": "GRANULES", "name": "Granules India Limited", "sector": "Paracetamol / API", "mcap": 14200 },
-      { "symbol": "SANOFI", "name": "Sanofi India Limited", "sector": "MNC Pharma", "mcap": 16500 },
-      { "symbol": "PFIZER", "name": "Pfizer Limited", "sector": "MNC Pharma", "mcap": 24800 }
+      { "symbol": "GRANULES", "name": "Granules India Limited", "sector": "Paracetamol / API", "mcap": 14200 }
     ]
   },
   {
@@ -134,16 +134,16 @@
       { "symbol": "HINDALCO", "name": "Hindalco Industries Limited", "sector": "Aluminium / Copper", "mcap": 158000 },
       { "symbol": "VEDL", "name": "Vedanta Limited", "sector": "Diversified Mining", "mcap": 178000 },
       { "symbol": "JINDALSTEL", "name": "Jindal Steel & Power Ltd", "sector": "Steel & Pellets", "mcap": 98500 },
-      { "symbol": "COALINDIA", "name": "Coal India Limited", "sector": "Coal Mining", "mcap": 315000 },
+      { "symbol": "ADANIENT", "name": "Adani Enterprises Limited", "sector": "Metals & Mining", "mcap": 315000 },
       { "symbol": "NMDC", "name": "NMDC Limited", "sector": "Iron Ore Mining", "mcap": 68500 },
       { "symbol": "SAIL", "name": "Steel Authority of India Ltd", "sector": "PSU Steel", "mcap": 58400 },
       { "symbol": "NATIONALUM", "name": "National Aluminium Co Ltd", "sector": "Alumina / Aluminium", "mcap": 38500 },
       { "symbol": "HINDCOPPER", "name": "Hindustan Copper Limited", "sector": "Copper Mining", "mcap": 29500 },
       { "symbol": "HINDZINC", "name": "Hindustan Zinc Limited", "sector": "Zinc & Lead", "mcap": 215000 },
       { "symbol": "APLAPOLLO", "name": "APL Apollo Tubes Limited", "sector": "Structural Steel Tubes", "mcap": 42500 },
+      { "symbol": "JSL", "name": "Jindal Stainless Limited", "sector": "Stainless Steel", "mcap": 61200 },
       { "symbol": "RATNAMANI", "name": "Ratnamani Metals & Tubes Ltd", "sector": "Stainless Steel Pipes", "mcap": 24800 },
-      { "symbol": "WELCORP", "name": "Welspun Corp Limited", "sector": "Line Pipes", "mcap": 18500 },
-      { "symbol": "JSL", "name": "Jindal Stainless Limited", "sector": "Stainless Steel", "mcap": 61200 }
+      { "symbol": "WELCORP", "name": "Welspun Corp Limited", "sector": "Line Pipes", "mcap": 18500 }
     ]
   },
   {
@@ -163,7 +163,7 @@
       { "symbol": "BRIGADE", "name": "Brigade Enterprises Limited", "sector": "Real Estate Dev", "mcap": 28500 },
       { "symbol": "SOBHA", "name": "Sobha Limited", "sector": "Contractual & Dev", "mcap": 19500 },
       { "symbol": "SIGNATURE", "name": "Signatureglobal (India) Ltd", "sector": "Affordable Housing", "mcap": 21800 },
-      { "symbol": "SUNTECK", "name": "Sunteck Realty Limited", "sector": "Premium Housing", "mcap": 8450 }
+      { "symbol": "ANANTRAJ", "name": "Anant Raj Limited", "sector": "Real Estate / Data Centers", "mcap": 24500 }
     ]
   },
   {
@@ -181,9 +181,9 @@
       { "symbol": "TIPSMUSIC", "name": "Tips Music Limited", "sector": "Music & Entertainment", "mcap": 8450 },
       { "symbol": "SAREGAMA", "name": "Saregama India Limited", "sector": "Music & Audio", "mcap": 10500 },
       { "symbol": "NAZARA", "name": "Nazara Technologies Ltd", "sector": "Gaming / Esports", "mcap": 7850 },
-      { "symbol": "DISHTV", "name": "Dish TV India Limited", "sector": "DTH / Satellite", "mcap": 2450 },
       { "symbol": "HATHWAY", "name": "Hathway Cable & Datacom Ltd", "sector": "Cable / Broadband", "mcap": 4120 },
-      { "symbol": "NDTV", "name": "New Delhi Television Ltd", "sector": "News Media", "mcap": 1480 }
+      { "symbol": "DBCORP", "name": "D.B. Corp Limited (Dainik Bhaskar)", "sector": "Print & Digital Media", "mcap": 6850 },
+      { "symbol": "PFOCUS", "name": "Prime Focus Limited", "sector": "VFX & Post Production", "mcap": 4850 }
     ]
   },
   {
@@ -245,6 +245,7 @@
       { "symbol": "KOTAKBANK", "name": "Kotak Mahindra Bank Ltd", "sector": "Banking", "mcap": 358000 },
       { "symbol": "CHOLAFIN", "name": "Cholamandalam Inv & Fin Co", "sector": "Vehicle / Home Finance", "mcap": 128000 },
       { "symbol": "SHRIRAMFIN", "name": "Shriram Finance Limited", "sector": "Commercial Vehicle Fin", "mcap": 124000 },
+      { "symbol": "JIOFIN", "name": "Jio Financial Services Ltd", "sector": "Digital Financial", "mcap": 215000 },
       { "symbol": "HDFCLIFE", "name": "HDFC Life Insurance Co Ltd", "sector": "Life Insurance", "mcap": 158000 },
       { "symbol": "SBILIFE", "name": "SBI Life Insurance Co Ltd", "sector": "Life Insurance", "mcap": 172000 },
       { "symbol": "ICICIPRULI", "name": "ICICI Prudential Life Ins", "sector": "Life Insurance", "mcap": 98500 },
@@ -254,8 +255,7 @@
       { "symbol": "RECLTD", "name": "REC Limited", "sector": "Power Infra Lending", "mcap": 152000 },
       { "symbol": "HDFCAMC", "name": "HDFC Asset Management Co", "sector": "Mutual Funds", "mcap": 94800 },
       { "symbol": "SBICARD", "name": "SBI Cards & Payment Services", "sector": "Credit Cards", "mcap": 74500 },
-      { "symbol": "LICHSGFIN", "name": "LIC Housing Finance Ltd", "sector": "Housing Finance", "mcap": 38500 },
-      { "symbol": "IEX", "name": "Indian Energy Exchange Ltd", "sector": "Power Exchange", "mcap": 18200 }
+      { "symbol": "LICHSGFIN", "name": "LIC Housing Finance Ltd", "sector": "Housing Finance", "mcap": 38500 }
     ]
   },
   {
@@ -267,25 +267,25 @@
     "description": "20 hospitals, diagnostics, and life sciences innovators",
     "constituents": [
       { "symbol": "SUNPHARMA", "name": "Sun Pharmaceutical Inds Ltd", "sector": "Pharmaceuticals", "mcap": 425000 },
+      { "symbol": "DIVISLAB", "name": "Divi's Laboratories Limited", "sector": "Active Ingredients", "mcap": 142000 },
       { "symbol": "APOLLOHOSP", "name": "Apollo Hospitals Ent Ltd", "sector": "Hospital Chains", "mcap": 98500 },
-      { "symbol": "MAXHEALTH", "name": "Max Healthcare Institute Ltd", "sector": "Hospital Chains", "mcap": 88500 },
       { "symbol": "CIPLA", "name": "Cipla Limited", "sector": "Pharmaceuticals", "mcap": 128000 },
-      { "symbol": "DRREDDY", "name": "Dr. Reddy's Laboratories Ltd", "sector": "Pharmaceuticals", "mcap": 115000 },
-      { "symbol": "DIVISLAB", "name": "Divi's Laboratories Limited", "sector": "Life Sciences", "mcap": 142000 },
-      { "symbol": "FORTIS", "name": "Fortis Healthcare Limited", "sector": "Hospital Chains", "mcap": 42500 },
-      { "symbol": "LUPIN", "name": "Lupin Limited", "sector": "Pharmaceuticals", "mcap": 98500 },
+      { "symbol": "MAXHEALTH", "name": "Max Healthcare Institute Ltd", "sector": "Hospital Chains", "mcap": 88500 },
+      { "symbol": "LAURUSLABS", "name": "Laurus Labs Limited", "sector": "Active Ingredients", "mcap": 38500 },
       { "symbol": "TORNTPHARM", "name": "Torrent Pharmaceuticals Ltd", "sector": "Pharmaceuticals", "mcap": 112000 },
+      { "symbol": "DRREDDY", "name": "Dr. Reddy's Laboratories Ltd", "sector": "Pharmaceuticals", "mcap": 115000 },
+      { "symbol": "LUPIN", "name": "Lupin Limited", "sector": "Pharmaceuticals", "mcap": 98500 },
+      { "symbol": "AUROPHARMA", "name": "Aurobindo Pharma Limited", "sector": "Pharmaceuticals", "mcap": 84500 },
       { "symbol": "ZYDUSLIFE", "name": "Zydus Lifesciences Limited", "sector": "Pharmaceuticals", "mcap": 108000 },
       { "symbol": "MANKIND", "name": "Mankind Pharma Limited", "sector": "Pharmaceuticals", "mcap": 95400 },
-      { "symbol": "MEDANTA", "name": "Global Health Ltd (Medanta)", "sector": "Hospital Chains", "mcap": 34500 },
-      { "symbol": "NH", "name": "Narayana Hrudayalaya Ltd", "sector": "Hospital Chains", "mcap": 28500 },
-      { "symbol": "ASTERDM", "name": "Aster DM Healthcare Limited", "sector": "Hospital Chains", "mcap": 22500 },
-      { "symbol": "LALPATHLAB", "name": "Dr. Lal PathLabs Limited", "sector": "Diagnostics", "mcap": 24800 },
-      { "symbol": "METROPOLIS", "name": "Metropolis Healthcare Ltd", "sector": "Diagnostics", "mcap": 11500 },
+      { "symbol": "FORTIS", "name": "Fortis Healthcare Limited", "sector": "Hospital Chains", "mcap": 42500 },
+      { "symbol": "ALKEM", "name": "Alkem Laboratories Limited", "sector": "Pharmaceuticals", "mcap": 62500 },
+      { "symbol": "ABBOTINDIA", "name": "Abbott India Limited", "sector": "Pharmaceuticals", "mcap": 58500 },
+      { "symbol": "GLENMARK", "name": "Glenmark Pharmaceuticals Ltd", "sector": "Pharmaceuticals", "mcap": 41500 },
+      { "symbol": "IPCALAB", "name": "IPCA Laboratories Limited", "sector": "Pharmaceuticals", "mcap": 38500 },
+      { "symbol": "BIOCON", "name": "Biocon Limited", "sector": "Biopharmaceuticals", "mcap": 48500 },
       { "symbol": "SYNGENE", "name": "Syngene International Ltd", "sector": "CRISPR / CDMO", "mcap": 32500 },
-      { "symbol": "KIMS", "name": "Krishna Institute of Med Sci", "sector": "Hospital Chains", "mcap": 19500 },
-      { "symbol": "POLYMED", "name": "Poly Medicure Limited", "sector": "Medical Devices", "mcap": 21800 },
-      { "symbol": "VIJAYA", "name": "Vijaya Diagnostic Centre Ltd", "sector": "Diagnostics", "mcap": 9850 }
+      { "symbol": "PPLPHARMA", "name": "Piramal Pharma Limited", "sector": "Contract Development", "mcap": 28500 }
     ]
   },
   {
@@ -329,12 +329,12 @@
       { "symbol": "WHIRLPOOL", "name": "Whirlpool of India Ltd", "sector": "Refrigerators / Washers", "mcap": 24500 },
       { "symbol": "BLUESTARCO", "name": "Blue Star Limited", "sector": "Commercial AC", "mcap": 38500 },
       { "symbol": "KAJARIACER", "name": "Kajaria Ceramics Limited", "sector": "Ceramic Tiles", "mcap": 19500 },
+      { "symbol": "KALYANKJIL", "name": "Kalyan Jewellers India Ltd", "sector": "Jewellery Retail", "mcap": 68500 },
+      { "symbol": "AMBER", "name": "Amber Enterprises India Ltd", "sector": "HVAC OEM / EMS", "mcap": 21500 },
+      { "symbol": "VGUARD", "name": "V-Guard Industries Ltd", "sector": "Stabilizers / Pumps", "mcap": 22400 },
       { "symbol": "BATAINDIA", "name": "Bata India Limited", "sector": "Footwear", "mcap": 17800 },
       { "symbol": "RAJESHEXPO", "name": "Rajesh Exports Limited", "sector": "Gold Refining", "mcap": 8500 },
       { "symbol": "CENTURYPLY", "name": "Century Plyboards (India) Ltd", "sector": "Plywood / Laminates", "mcap": 16800 },
-      { "symbol": "AMBER", "name": "Amber Enterprises India Ltd", "sector": "HVAC OEM / EMS", "mcap": 21500 },
-      { "symbol": "VGUARD", "name": "V-Guard Industries Ltd", "sector": "Stabilizers / Pumps", "mcap": 22400 },
-      { "symbol": "SYMPHONY", "name": "Symphony Limited", "sector": "Air Coolers", "mcap": 9850 },
       { "symbol": "TTKPRESTIG", "name": "TTK Prestige Limited", "sector": "Kitchenware", "mcap": 11200 }
     ]
   },
@@ -348,19 +348,19 @@
     "constituents": [
       { "symbol": "PIDILITIND", "name": "Pidilite Industries Ltd (Fevicol)", "sector": "Adhesives & Sealants", "mcap": 158000 },
       { "symbol": "SRF", "name": "SRF Limited", "sector": "Fluorochemicals", "mcap": 68500 },
+      { "symbol": "SOLARINDS", "name": "Solar Industries India Ltd", "sector": "Industrial Explosives", "mcap": 98500 },
+      { "symbol": "FLUOROCHEM", "name": "Gujarat Fluorochemicals Ltd", "sector": "Fluoropolymers", "mcap": 48500 },
       { "symbol": "DEEPAKNTR", "name": "Deepak Nitrite Limited", "sector": "Basic & Fine Chemicals", "mcap": 38500 },
       { "symbol": "TATACHEM", "name": "Tata Chemicals Limited", "sector": "Soda Ash / Agri", "mcap": 26800 },
       { "symbol": "AARTIIND", "name": "Aarti Industries Limited", "sector": "Specialty Chemicals", "mcap": 21500 },
       { "symbol": "NAVINFLUOR", "name": "Navin Fluorine International", "sector": "Refrigerants / Pharma", "mcap": 17800 },
       { "symbol": "ATUL", "name": "Atul Limited", "sector": "Polymers / Aromatics", "mcap": 21200 },
+      { "symbol": "SUMICHEM", "name": "Sumitomo Chemical India Ltd", "sector": "Agrochem / Specialty", "mcap": 24500 },
       { "symbol": "FINEORG", "name": "Fine Organic Industries Ltd", "sector": "Green Additives", "mcap": 15800 },
       { "symbol": "CLEAN", "name": "Clean Science & Tech Ltd", "sector": "Catalytic Chemicals", "mcap": 14500 },
       { "symbol": "ALKYLAMINE", "name": "Alkyl Amines Chemicals Ltd", "sector": "Aliphatic Amines", "mcap": 11200 },
       { "symbol": "VINATIORGA", "name": "Vinati Organics Limited", "sector": "Specialty Monomers", "mcap": 19500 },
-      { "symbol": "FLUOROCHEM", "name": "Gujarat Fluorochemicals Ltd", "sector": "Fluoropolymers", "mcap": 48500 },
-      { "symbol": "SUMICHEM", "name": "Sumitomo Chemical India Ltd", "sector": "Agrochem / Specialty", "mcap": 24500 },
-      { "symbol": "GALAXYSURF", "name": "Galaxy Surfactants Limited", "sector": "Surfactants", "mcap": 10500 },
-      { "symbol": "SOLARINDS", "name": "Solar Industries India Ltd", "sector": "Industrial Explosives", "mcap": 98500 }
+      { "symbol": "GALAXYSURF", "name": "Galaxy Surfactants Limited", "sector": "Surfactants", "mcap": 10500 }
     ]
   }
 ]

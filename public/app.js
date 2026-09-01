@@ -51,12 +51,35 @@ const state = {
     darvas: true,
     rsi: true
   },
+  // Indicator Custom Stroke Colors (Persisted to storage and user profile)
+  colors: {
+    ema10: '#0284c7',
+    ema20: '#2563eb',
+    ema50: '#f59e0b',
+    ema150: '#9333ea',
+    ema200: '#e11d48',
+    volAvg: '#fbbf24',
+    vwap: '#eab308',
+    darvasTop: '#10b981',
+    darvasBottom: '#ef4444',
+    rsi: '#60a5fa',
+    rsiSma: '#fbbf24',
+    avwap: '#a855f7'
+  },
   pivotType: 'Traditional (Auto)',
+
+  // Interactive Chart Drawing Tools & Persisted State
+  activeDrawingTool: null, // null | 'avwap'
+  lastCrosshairPrice: null, // Tracked from mouse cursor on price chart for Alt+H
+  drawings: {}, // symbol -> { avwaps: [time], hlines: [price] }
+  activeDrawingSeries: {
+    avwaps: [], // Array of LineSeries instances
+    hlines: []  // Array of priceLine instances
+  },
 
   // Chart Instances & Series
   charts: {
     main: null,
-    volume: null,
     rsi: null,
     series: {
       candles: null,
@@ -93,11 +116,20 @@ const el = {
   statTotalStocks: document.getElementById('stat-total-stocks'),
   btnRunAll: document.getElementById('btn-run-all'),
   btnOpenAddModal: document.getElementById('btn-open-add-modal'),
+  btnCopyStocks: document.getElementById('btn-copy-stocks'),
   btnExportCsv: document.getElementById('btn-export-csv'),
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeIcon: document.getElementById('theme-icon'),
   btnNavAnalytics: document.getElementById('btn-nav-analytics'),
   btnAdminConsole: document.getElementById('btn-admin-console'),
+
+  // Floating On-Chart AVWAP Controls & Drawing Helpers
+  floatingAvwapControl: document.getElementById('floating-avwap-control'),
+  btnFloatingAvwap: document.getElementById('btn-floating-avwap'),
+  floatingAvwapLabel: document.getElementById('floating-avwap-label'),
+  floatingAvwapDivider: document.getElementById('floating-avwap-divider'),
+  floatingAvwapStatus: document.getElementById('floating-avwap-status'),
+  btnFloatingAvwapClear: document.getElementById('btn-floating-avwap-clear'),
   
   // Multi-User Auth Controls
   btnOpenAuthModal: document.getElementById('btn-open-auth-modal'),
@@ -208,6 +240,20 @@ const el = {
   chkDarvas: document.getElementById('chk-darvas'),
   chkRsi: document.getElementById('chk-rsi'),
 
+  // Color Pickers
+  colorEma10: document.getElementById('color-ema10'),
+  colorEma20: document.getElementById('color-ema20'),
+  colorEma50: document.getElementById('color-ema50'),
+  colorEma150: document.getElementById('color-ema150'),
+  colorEma200: document.getElementById('color-ema200'),
+  colorVolAvg: document.getElementById('color-vol-avg'),
+  colorVwap: document.getElementById('color-vwap'),
+  colorDarvasTop: document.getElementById('color-darvas-top'),
+  colorDarvasBottom: document.getElementById('color-darvas-bottom'),
+  colorRsi: document.getElementById('color-rsi'),
+  colorRsiSma: document.getElementById('color-rsi-sma'),
+  colorAvwap: document.getElementById('color-avwap'),
+
   // Modal Elements
   screenerModal: document.getElementById('screener-modal'),
   screenerForm: document.getElementById('screener-form'),
@@ -281,6 +327,7 @@ let savePrefsTimeout = null;
 function saveIndicatorPreferences() {
   const prefs = {
     toggles: { ...state.toggles },
+    colors: { ...state.colors },
     pivotType: state.pivotType || el.selectPivotType?.value || 'Traditional (Auto)'
   };
 
@@ -310,10 +357,27 @@ function applyLoadedIndicatorPreferences(prefs) {
   if (prefs.toggles) {
     state.toggles = { ...state.toggles, ...prefs.toggles };
   }
+  if (prefs.colors) {
+    state.colors = { ...state.colors, ...prefs.colors };
+  }
   if (prefs.pivotType) {
     state.pivotType = prefs.pivotType;
     if (el.selectPivotType) el.selectPivotType.value = prefs.pivotType;
   }
+
+  // Update Color Input DOM states
+  if (el.colorEma10 && state.colors.ema10) el.colorEma10.value = state.colors.ema10;
+  if (el.colorEma20 && state.colors.ema20) el.colorEma20.value = state.colors.ema20;
+  if (el.colorEma50 && state.colors.ema50) el.colorEma50.value = state.colors.ema50;
+  if (el.colorEma150 && state.colors.ema150) el.colorEma150.value = state.colors.ema150;
+  if (el.colorEma200 && state.colors.ema200) el.colorEma200.value = state.colors.ema200;
+  if (el.colorVolAvg && state.colors.volAvg) el.colorVolAvg.value = state.colors.volAvg;
+  if (el.colorVwap && state.colors.vwap) el.colorVwap.value = state.colors.vwap;
+  if (el.colorDarvasTop && state.colors.darvasTop) el.colorDarvasTop.value = state.colors.darvasTop;
+  if (el.colorDarvasBottom && state.colors.darvasBottom) el.colorDarvasBottom.value = state.colors.darvasBottom;
+  if (el.colorRsi && state.colors.rsi) el.colorRsi.value = state.colors.rsi;
+  if (el.colorRsiSma && state.colors.rsiSma) el.colorRsiSma.value = state.colors.rsiSma;
+  if (el.colorAvwap && state.colors.avwap) el.colorAvwap.value = state.colors.avwap;
 
   // Update Checkbox DOM states
   if (el.chkEma10) el.chkEma10.checked = Boolean(state.toggles.ema10);
@@ -328,22 +392,22 @@ function applyLoadedIndicatorPreferences(prefs) {
   if (el.chkDarvas) el.chkDarvas.checked = Boolean(state.toggles.darvas);
   if (el.chkRsi) el.chkRsi.checked = Boolean(state.toggles.rsi);
 
-  // Apply Series Visibility
+  // Apply Series Colors & Visibility
   if (state.charts?.series) {
-    state.charts.series.ema10?.applyOptions({ visible: Boolean(state.toggles.ema10) });
-    state.charts.series.ema20?.applyOptions({ visible: Boolean(state.toggles.ema20) });
-    state.charts.series.ema50?.applyOptions({ visible: Boolean(state.toggles.ema50) });
-    state.charts.series.ema150?.applyOptions({ visible: Boolean(state.toggles.ema150) });
-    state.charts.series.ema200?.applyOptions({ visible: Boolean(state.toggles.ema200) });
-    state.charts.series.vwap?.applyOptions({ visible: Boolean(state.toggles.vwap) });
-    state.charts.series.volAvg?.applyOptions({ visible: Boolean(state.toggles.volAvg) });
-    state.charts.series.darvasTop?.applyOptions({ visible: Boolean(state.toggles.darvas) });
-    state.charts.series.darvasBottom?.applyOptions({ visible: Boolean(state.toggles.darvas) });
+    state.charts.series.ema10?.applyOptions({ visible: Boolean(state.toggles.ema10), color: state.colors.ema10 });
+    state.charts.series.ema20?.applyOptions({ visible: Boolean(state.toggles.ema20), color: state.colors.ema20 });
+    state.charts.series.ema50?.applyOptions({ visible: Boolean(state.toggles.ema50), color: state.colors.ema50 });
+    state.charts.series.ema150?.applyOptions({ visible: Boolean(state.toggles.ema150), color: state.colors.ema150 });
+    state.charts.series.ema200?.applyOptions({ visible: Boolean(state.toggles.ema200), color: state.colors.ema200 });
+    state.charts.series.vwap?.applyOptions({ visible: Boolean(state.toggles.vwap), color: state.colors.vwap });
+    state.charts.series.volAvg?.applyOptions({ visible: Boolean(state.toggles.volAvg), color: state.colors.volAvg });
+    state.charts.series.darvasTop?.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasTop });
+    state.charts.series.darvasBottom?.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasBottom });
+    state.charts.series.rsi?.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsi });
+    state.charts.series.rsiSma?.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsiSma });
   }
 
-  if (el.tvVolumeContainer) {
-    el.tvVolumeContainer.style.display = state.toggles.volume ? 'flex' : 'none';
-  }
+  renderPersistedDrawings();
   if (el.tvRsiContainer) {
     el.tvRsiContainer.style.display = state.toggles.rsi ? 'flex' : 'none';
   }
@@ -1227,6 +1291,27 @@ function setupEventListeners() {
     renderScreeners();
   });
 
+  // Copy Screened Stock Symbols Button
+  el.btnCopyStocks?.addEventListener('click', handleCopyStocks);
+
+  // Floating On-Chart AVWAP Badge Controls
+  el.btnFloatingAvwap?.addEventListener('click', toggleAvwapAnchorMode);
+  el.btnFloatingAvwapClear?.addEventListener('click', clearStockAvwaps);
+
+  // Global Keyboard Shortcut: Alt + H for Horizontal Support/Resistance Line
+  window.addEventListener('keydown', e => {
+    if (e.altKey && (e.key === 'h' || e.key === 'H')) {
+      e.preventDefault();
+      handleAltHShortcut();
+    }
+  });
+
+  // Dynamic Adaptive Input Width on Manual Stock Input
+  el.manualStockInput?.addEventListener('input', adjustStockInputWidth);
+
+  // Global Keyboard Arrow Navigation (↑ / ↓)
+  setupKeyboardNavigation();
+
   // Stock Search Filter
   el.stockSearchInput?.addEventListener('input', e => {
     state.searchQuery = e.target.value.toLowerCase().trim();
@@ -1302,6 +1387,7 @@ function setupEventListeners() {
   setupToggle(el.chkEma50, 'ema50', vis => state.charts.series?.ema50?.applyOptions({ visible: vis }));
   setupToggle(el.chkEma150, 'ema150', vis => state.charts.series?.ema150?.applyOptions({ visible: vis }));
   setupToggle(el.chkEma200, 'ema200', vis => state.charts.series?.ema200?.applyOptions({ visible: vis }));
+  setupToggle(el.chkVol, 'volume', vis => state.charts.series?.volume?.applyOptions({ visible: vis }));
   setupToggle(el.chkVolAvg, 'volAvg', vis => state.charts.series?.volAvg?.applyOptions({ visible: vis }));
   setupToggle(el.chkVwap, 'vwap', vis => state.charts.series?.vwap?.applyOptions({ visible: vis }));
   setupToggle(el.chkPivots, 'pivots', () => updatePivotLines());
@@ -1310,14 +1396,31 @@ function setupEventListeners() {
     state.charts.series?.darvasBottom?.applyOptions({ visible: vis });
   });
 
-  // Toggle Volume Pane visibility
-  setupToggle(el.chkVol, 'volume', vis => {
-    if (el.tvVolumeContainer) {
-      el.tvVolumeContainer.style.display = vis ? 'flex' : 'none';
-      updateTimeScalesVisibility();
-      handleResize();
-    }
-  });
+  // Interactive Color Pickers
+  const setupColorPicker = (input, key, onColorChange) => {
+    if (!input) return;
+    const handleColor = e => {
+      const val = e.target.value;
+      state.colors[key] = val;
+      if (onColorChange) onColorChange(val);
+      saveIndicatorPreferences();
+    };
+    input.addEventListener('input', handleColor);
+    input.addEventListener('change', handleColor);
+  };
+
+  setupColorPicker(el.colorEma10, 'ema10', c => state.charts.series?.ema10?.applyOptions({ color: c }));
+  setupColorPicker(el.colorEma20, 'ema20', c => state.charts.series?.ema20?.applyOptions({ color: c }));
+  setupColorPicker(el.colorEma50, 'ema50', c => state.charts.series?.ema50?.applyOptions({ color: c }));
+  setupColorPicker(el.colorEma150, 'ema150', c => state.charts.series?.ema150?.applyOptions({ color: c }));
+  setupColorPicker(el.colorEma200, 'ema200', c => state.charts.series?.ema200?.applyOptions({ color: c }));
+  setupColorPicker(el.colorVolAvg, 'volAvg', c => state.charts.series?.volAvg?.applyOptions({ color: c }));
+  setupColorPicker(el.colorVwap, 'vwap', c => state.charts.series?.vwap?.applyOptions({ color: c }));
+  setupColorPicker(el.colorDarvasTop, 'darvasTop', c => state.charts.series?.darvasTop?.applyOptions({ color: c }));
+  setupColorPicker(el.colorDarvasBottom, 'darvasBottom', c => state.charts.series?.darvasBottom?.applyOptions({ color: c }));
+  setupColorPicker(el.colorRsi, 'rsi', c => state.charts.series?.rsi?.applyOptions({ color: c }));
+  setupColorPicker(el.colorRsiSma, 'rsiSma', c => state.charts.series?.rsiSma?.applyOptions({ color: c }));
+  setupColorPicker(el.colorAvwap, 'avwap', () => renderPersistedDrawings());
 
   // Toggle RSI Pane visibility
   setupToggle(el.chkRsi, 'rsi', vis => {
@@ -1338,21 +1441,21 @@ function setupEventListeners() {
   }
 
   // Export CSV
-  el.btnExportCsv.addEventListener('click', exportToCsv);
+  el.btnExportCsv?.addEventListener('click', exportToCsv);
 
   // Modal Triggers
-  el.btnOpenAddModal.addEventListener('click', openAddModal);
-  el.btnCloseModal.addEventListener('click', closeModal);
-  el.btnCancelModal.addEventListener('click', closeModal);
-  el.screenerModal.addEventListener('click', e => {
+  el.btnOpenAddModal?.addEventListener('click', openAddModal);
+  el.btnCloseModal?.addEventListener('click', closeModal);
+  el.btnCancelModal?.addEventListener('click', closeModal);
+  el.screenerModal?.addEventListener('click', e => {
     if (e.target === el.screenerModal) closeModal();
   });
 
   // Modal Form Submit
-  el.screenerForm.addEventListener('submit', handleSaveScreener);
+  el.screenerForm?.addEventListener('submit', handleSaveScreener);
 
   // Test Screener Button in Modal
-  el.btnTestScreener.addEventListener('click', testScreenerLink);
+  el.btnTestScreener?.addEventListener('click', testScreenerLink);
 
   // Window Resize Listener for Charts
   window.addEventListener('resize', handleResize);
@@ -1362,7 +1465,7 @@ function setupEventListeners() {
 }
 
 // -------------------------------------------------------------
-// Native Lightweight Charts Multi-Pane Engine
+// Native Lightweight Charts Engine (Price + Bottom Volume Overlay & RSI Pane)
 // -------------------------------------------------------------
 
 function initNativeCharts() {
@@ -1395,19 +1498,18 @@ function initNativeCharts() {
   };
 
   // ==========================================
-  // PANE 1: Main Price Chart (Candlesticks + Clean EMAs + VWAP + Pivots)
-  // NO text on EMAs or VWAP
+  // PANE 1: Main Price Chart (Candlesticks + Clean EMAs + VWAP + Pivots + Integrated Bottom Volume)
   // ==========================================
   el.tvMainChart.innerHTML = '';
   const mainRect = el.tvMainChart.getBoundingClientRect();
   const mainChart = LightweightCharts.createChart(el.tvMainChart, {
     ...baseChartOptions,
     width: mainRect.width || 600,
-    height: mainRect.height || 340,
+    height: mainRect.height || 420,
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
-      scaleMargins: { top: 0.08, bottom: 0.08 }
+      scaleMargins: { top: 0.08, bottom: 0.25 } // Leaves bottom 25% for integrated volume
     },
     timeScale: {
       borderColor: borderColor,
@@ -1431,117 +1533,106 @@ function initNativeCharts() {
     wickDownColor: '#ef4444'
   });
 
-  // EMA Lines (WITHOUT ANY TEXT LABELS on chart or axis)
+  // Volume Histogram Series (Integrated at bottom of main chart via overlay scale)
+  const volumeSeries = mainChart.addHistogramSeries({
+    color: '#26a69a',
+    priceFormat: { type: 'volume' },
+    priceScaleId: '' // overlay scale
+  });
+  volumeSeries.priceScale().applyOptions({
+    scaleMargins: { top: 0.75, bottom: 0 } // Bottom 25%
+  });
+
+  // 9-Period Volume SMA Overlay Line
+  const volAvgSeries = mainChart.addLineSeries({
+    color: state.colors.volAvg || '#fbbf24',
+    lineWidth: 1.5,
+    priceFormat: { type: 'volume' },
+    priceScaleId: '', // overlay scale
+    title: '',
+    priceLineVisible: false,
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
+  });
+
+  // EMA Lines (WITHOUT ANY TEXT LABELS or crosshair circle markers)
   const ema10Series = mainChart.addLineSeries({
-    color: '#0284c7',
+    color: state.colors.ema10 || '#0284c7',
     lineWidth: 1.5,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   const ema20Series = mainChart.addLineSeries({
-    color: '#2563eb',
+    color: state.colors.ema20 || '#2563eb',
     lineWidth: 1.5,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   const ema50Series = mainChart.addLineSeries({
-    color: '#f59e0b',
+    color: state.colors.ema50 || '#f59e0b',
     lineWidth: 1.5,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   const ema150Series = mainChart.addLineSeries({
-    color: '#9333ea',
+    color: state.colors.ema150 || '#9333ea',
     lineWidth: 2,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   const ema200Series = mainChart.addLineSeries({
-    color: '#e11d48',
+    color: state.colors.ema200 || '#e11d48',
     lineWidth: 2,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
-  // VWAP Line (WITHOUT ANY TEXT LABELS)
+  // VWAP Line (WITHOUT ANY TEXT LABELS or circle markers)
   const vwapSeries = mainChart.addLineSeries({
-    color: '#eab308',
+    color: state.colors.vwap || '#eab308',
     lineWidth: 1.8,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   // Darvas Box - Top Box Line (Green, lineWidth 2.5)
   const darvasTopSeries = mainChart.addLineSeries({
-    color: '#10b981',
+    color: state.colors.darvasTop || '#10b981',
     lineWidth: 2.5,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   // Darvas Box - Bottom Box Line (Red, lineWidth 2.5)
   const darvasBottomSeries = mainChart.addLineSeries({
-    color: '#ef4444',
+    color: state.colors.darvasBottom || '#ef4444',
     lineWidth: 2.5,
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   // ==========================================
-  // PANE 2: Dedicated Volume Pane (Separate from Price & RSI)
-  // ==========================================
-  el.tvVolumeChart.innerHTML = '';
-  const volRect = el.tvVolumeChart.getBoundingClientRect();
-  const volumeChart = LightweightCharts.createChart(el.tvVolumeChart, {
-    ...baseChartOptions,
-    width: volRect.width || 600,
-    height: volRect.height || 100,
-    rightPriceScale: {
-      borderColor: borderColor,
-      autoScale: true,
-      scaleMargins: { top: 0.1, bottom: 0.05 }
-    },
-    timeScale: {
-      borderColor: borderColor,
-      visible: false,
-      fixLeftEdge: false,
-      fixRightEdge: false,
-      rightOffset: 6,
-      barSpacing: 8,
-      minBarSpacing: 1
-    }
-  });
-
-  // Volume Histogram Series
-  const volumeSeries = volumeChart.addHistogramSeries({
-    color: '#26a69a',
-    priceFormat: { type: 'volume' }
-  });
-
-  // 9-Period Volume SMA Overlay
-  const volAvgSeries = volumeChart.addLineSeries({
-    color: '#fbbf24',
-    lineWidth: 1.5,
-    priceFormat: { type: 'volume' },
-    title: '',
-    priceLineVisible: false,
-    lastValueVisible: false
-  });
-
-  // ==========================================
-  // PANE 3: Dedicated RSI (14) + RSI SMA (14) Pane
+  // PANE 2: Dedicated RSI (14) + RSI SMA (14) Sub-Pane
   // ==========================================
   el.tvRsiChart.innerHTML = '';
   const rsiRect = el.tvRsiChart.getBoundingClientRect();
@@ -1567,28 +1658,30 @@ function initNativeCharts() {
     }
   });
 
-  // RSI Line (Blue)
+  // RSI Line
   const rsiSeries = rsiChart.addLineSeries({
-    color: '#60a5fa',
+    color: state.colors.rsi || '#60a5fa',
     lineWidth: 2,
     priceFormat: {
       type: 'custom',
       formatter: price => Number(price).toFixed(1)
     },
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
-  // RSI 14-Period SMA Line (Amber / Yellow)
+  // RSI 14-Period SMA Line
   const rsiSmaSeries = rsiChart.addLineSeries({
-    color: '#fbbf24',
+    color: state.colors.rsiSma || '#fbbf24',
     lineWidth: 1.5,
     priceFormat: {
       type: 'custom',
       formatter: price => Number(price).toFixed(1)
     },
     priceLineVisible: false,
-    lastValueVisible: false
+    lastValueVisible: false,
+    crosshairMarkerVisible: false
   });
 
   // Built-in Reference Lines at 70, 50, and 30 for RSI
@@ -1620,9 +1713,9 @@ function initNativeCharts() {
   });
 
   // ==========================================
-  // Synchronize TimeScales across all 3 charts
+  // Synchronize TimeScales across Main and RSI charts
   // ==========================================
-  const allCharts = [mainChart, volumeChart, rsiChart];
+  const allCharts = [mainChart, rsiChart];
   let isSyncing = false;
 
   allCharts.forEach(source => {
@@ -1639,12 +1732,20 @@ function initNativeCharts() {
   });
 
   // ==========================================
-  // Synchronize Crosshairs across all 3 charts
+  // Synchronize Crosshairs & Legend Updates
   // ==========================================
   function handleCrosshairUpdate(param) {
     if (!param.time) {
       updateDefaultLegend();
       return;
+    }
+
+    // Track price at current mouse crosshair point for Alt+H
+    if (param.point && candlestickSeries) {
+      const p = candlestickSeries.coordinateToPrice(param.point.y);
+      if (typeof p === 'number' && !isNaN(p)) {
+        state.lastCrosshairPrice = Number(p.toFixed(2));
+      }
     }
 
     const candle = param.seriesData.get(candlestickSeries) || state.currentStockData?.candles?.find(c => c.time === param.time);
@@ -1670,7 +1771,8 @@ function initNativeCharts() {
         <span>H: <strong class="text-slate-200 font-mono">${candle.high?.toFixed(2)}</strong></span>
         <span>L: <strong class="text-slate-200 font-mono">${candle.low?.toFixed(2)}</strong></span>
         <span>C: <strong class="${chgColor} font-mono">${candle.close?.toFixed(2)}</strong></span>
-        ${vol ? `<span>Vol: <strong class="text-slate-300 font-mono">${fmt.volume(vol.value)}</strong></span>` : ''}
+        ${vol ? `<span>Vol: <strong class="text-teal-400 font-mono">${fmt.volume(vol.value)}</strong></span>` : ''}
+        ${volAvg ? `<span>AvgVol(9): <strong class="text-amber-400 font-mono">${fmt.volume(volAvg.value)}</strong></span>` : ''}
         ${vwapVal ? `<span>VWAP: <strong class="text-yellow-400 font-mono">₹${vwapVal.value?.toFixed(2)}</strong></span>` : ''}
         ${rsiVal ? `<span>RSI: <strong class="text-blue-400 font-mono">${rsiVal}</strong></span>` : ''}
         ${rsiSmaVal ? `<span>RSI-SMA: <strong class="text-amber-400 font-mono">${rsiSmaVal}</strong></span>` : ''}
@@ -1692,12 +1794,11 @@ function initNativeCharts() {
   }
 
   mainChart.subscribeCrosshairMove(handleCrosshairUpdate);
-  volumeChart.subscribeCrosshairMove(handleCrosshairUpdate);
   rsiChart.subscribeCrosshairMove(handleCrosshairUpdate);
+  mainChart.subscribeClick(handleChartClick);
 
   // Store references
   state.charts.main = mainChart;
-  state.charts.volume = volumeChart;
   state.charts.rsi = rsiChart;
   state.charts.series = {
     candles: candlestickSeries,
@@ -1721,18 +1822,11 @@ function initNativeCharts() {
 
 function updateTimeScalesVisibility() {
   const isRsiVisible = el.tvRsiContainer && el.tvRsiContainer.style.display !== 'none';
-  const isVolVisible = el.tvVolumeContainer && el.tvVolumeContainer.style.display !== 'none';
   const isIntraday = state.currentStockData?.isIntraday || false;
 
   if (state.charts.rsi) {
     state.charts.rsi.applyOptions({
       timeScale: { visible: isRsiVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
-    });
-  }
-
-  if (state.charts.volume) {
-    state.charts.volume.applyOptions({
-      timeScale: { visible: !isRsiVisible && isVolVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
   }
 
@@ -1749,18 +1843,10 @@ function handleResize() {
   const mainRect = el.tvMainChart.getBoundingClientRect();
   state.charts.main.applyOptions({
     width: mainRect.width,
-    height: mainRect.height || 340
+    height: mainRect.height || 420
   });
 
-  if (state.charts.volume && el.tvVolumeContainer.style.display !== 'none') {
-    const volRect = el.tvVolumeChart.getBoundingClientRect();
-    state.charts.volume.applyOptions({
-      width: volRect.width || mainRect.width,
-      height: volRect.height || 100
-    });
-  }
-
-  if (state.charts.rsi && el.tvRsiContainer.style.display !== 'none') {
+  if (state.charts.rsi && el.tvRsiContainer && el.tvRsiContainer.style.display !== 'none') {
     const rsiRect = el.tvRsiChart.getBoundingClientRect();
     state.charts.rsi.applyOptions({
       width: rsiRect.width || mainRect.width,
@@ -1792,33 +1878,28 @@ function applyActiveRangeZoom() {
     to: toIndex
   });
 
-  if (state.charts.volume) {
-    state.charts.volume.timeScale().setVisibleLogicalRange({ from: fromIndex, to: toIndex });
-  }
   if (state.charts.rsi) {
     state.charts.rsi.timeScale().setVisibleLogicalRange({ from: fromIndex, to: toIndex });
   }
 }
 
-// Draggable Pane Resizers between Price, Volume, and RSI panes
+// Draggable Pane Resizer between Price+Volume and RSI pane
 function setupPaneResizers() {
-  const resizerPriceVol = document.getElementById('resizer-price-vol');
-  const resizerVolRsi = document.getElementById('resizer-vol-rsi');
+  const resizerPriceRsi = document.getElementById('resizer-price-rsi');
   const pricePane = document.getElementById('tv_price_pane');
-  const volContainer = document.getElementById('tv_volume_container');
   const rsiContainer = document.getElementById('tv_rsi_container');
 
-  let activeResizer = null;
+  if (!resizerPriceRsi || !pricePane || !rsiContainer) return;
+
+  let isDragging = false;
   let startY = 0;
   let startPriceH = 0;
-  let startVolH = 0;
   let startRsiH = 0;
 
-  const onMouseDown = (resizer, e) => {
-    activeResizer = resizer;
+  const onMouseDown = (e) => {
+    isDragging = true;
     startY = e.clientY;
     startPriceH = pricePane.clientHeight;
-    startVolH = volContainer.clientHeight;
     startRsiH = rsiContainer.clientHeight;
     document.body.style.cursor = 'row-resize';
     document.body.style.userSelect = 'none';
@@ -1827,28 +1908,19 @@ function setupPaneResizers() {
   };
 
   const onMouseMove = (e) => {
-    if (!activeResizer) return;
+    if (!isDragging) return;
     const deltaY = e.clientY - startY;
-
-    if (activeResizer === resizerPriceVol) {
-      const newPriceH = Math.max(160, startPriceH + deltaY);
-      const newVolH = Math.max(40, startVolH - deltaY);
-      pricePane.style.flex = 'none';
-      pricePane.style.height = `${newPriceH}px`;
-      volContainer.style.height = `${newVolH}px`;
-    } else if (activeResizer === resizerVolRsi) {
-      const newVolH = Math.max(40, startVolH + deltaY);
-      const newRsiH = Math.max(40, startRsiH - deltaY);
-      volContainer.style.height = `${newVolH}px`;
-      rsiContainer.style.height = `${newRsiH}px`;
-    }
-
+    const newPriceH = Math.max(200, startPriceH + deltaY);
+    const newRsiH = Math.max(40, startRsiH - deltaY);
+    pricePane.style.flex = 'none';
+    pricePane.style.height = `${newPriceH}px`;
+    rsiContainer.style.height = `${newRsiH}px`;
     handleResize();
   };
 
   const onMouseUp = () => {
-    if (!activeResizer) return;
-    activeResizer = null;
+    if (!isDragging) return;
+    isDragging = false;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
     window.removeEventListener('mousemove', onMouseMove);
@@ -1856,8 +1928,7 @@ function setupPaneResizers() {
     handleResize();
   };
 
-  if (resizerPriceVol) resizerPriceVol.addEventListener('mousedown', e => onMouseDown(resizerPriceVol, e));
-  if (resizerVolRsi) resizerVolRsi.addEventListener('mousedown', e => onMouseDown(resizerVolRsi, e));
+  resizerPriceRsi.addEventListener('mousedown', onMouseDown);
 }
 
 // Predictive Autocomplete Search for Stock Input Field
@@ -2059,7 +2130,6 @@ function updateNativeChartTheme() {
   };
 
   state.charts.main.applyOptions(themeOpts);
-  if (state.charts.volume) state.charts.volume.applyOptions(themeOpts);
   if (state.charts.rsi) state.charts.rsi.applyOptions(themeOpts);
 }
 
@@ -2086,6 +2156,364 @@ function updatePivotLines() {
     candles.createPriceLine({ price: r1, color: '#f97316', lineWidth: 1.2, lineStyle: 2, axisLabelVisible: true, title: `R1 ${r1}` }),
     candles.createPriceLine({ price: s1, color: '#10b981', lineWidth: 1.2, lineStyle: 2, axisLabelVisible: true, title: `S1 ${s1}` })
   ];
+}
+
+// -------------------------------------------------------------
+// Interactive Chart Drawing Tools (Anchored VWAP, H-Line, V-Line)
+// -------------------------------------------------------------
+
+// -------------------------------------------------------------
+// Interactive Chart Drawing Tools (On-Chart AVWAP & Alt+H Horizontal Line)
+// -------------------------------------------------------------
+
+function calculateAnchoredVwap(candles, anchorTime) {
+  if (!Array.isArray(candles) || candles.length === 0 || !anchorTime) return [];
+
+  // Find index of the anchor candle
+  const startIndex = candles.findIndex(c => {
+    if (typeof c.time === 'number' && typeof anchorTime === 'number') return c.time >= anchorTime;
+    if (typeof c.time === 'string' && typeof anchorTime === 'string') return c.time >= anchorTime;
+    if (typeof c.time === 'object' && typeof anchorTime === 'object') {
+      return (c.time.year > anchorTime.year) ||
+             (c.time.year === anchorTime.year && c.time.month > anchorTime.month) ||
+             (c.time.year === anchorTime.year && c.time.month === anchorTime.month && c.time.day >= anchorTime.day);
+    }
+    return String(c.time) >= String(anchorTime);
+  });
+
+  if (startIndex === -1) return [];
+
+  let cumVolume = 0;
+  let cumVolPrice = 0;
+  const result = [];
+
+  for (let i = startIndex; i < candles.length; i++) {
+    const c = candles[i];
+    const typicalPrice = (c.high + c.low + c.close) / 3;
+    const vol = (typeof c.volume === 'number' && c.volume > 0) ? c.volume : 1000;
+    cumVolume += vol;
+    cumVolPrice += (typicalPrice * vol);
+    const vwapVal = cumVolume > 0 ? Number((cumVolPrice / cumVolume).toFixed(2)) : c.close;
+    result.push({ time: c.time, value: vwapVal });
+  }
+
+  return result;
+}
+
+function handleChartClick(param) {
+  if (!state.activeDrawingTool) return;
+  const currentSymbol = state.selectedStock?.symbol;
+  if (!currentSymbol) return;
+
+  if (!state.drawings[currentSymbol]) {
+    state.drawings[currentSymbol] = { avwaps: [], hlines: [] };
+  }
+
+  if (state.activeDrawingTool === 'avwap') {
+    if (!param.time) return;
+    const anchorTime = param.time;
+    
+    // Replace previous AVWAP anchor or add
+    state.drawings[currentSymbol].avwaps = [anchorTime];
+    renderPersistedDrawings();
+    
+    let dateStr = anchorTime;
+    if (typeof anchorTime === 'number') {
+      const d = new Date(anchorTime * 1000);
+      dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    }
+    showToast(`⚓ Anchored VWAP plotted from ${dateStr}!`, 'success');
+    state.activeDrawingTool = null;
+    updateAvwapWidgetUI();
+  }
+}
+
+function handleAltHShortcut() {
+  const currentSymbol = state.selectedStock?.symbol;
+  if (!currentSymbol || !state.charts.series.candles) return;
+
+  const price = state.lastCrosshairPrice || state.currentStockData?.ltp;
+  if (!price || isNaN(price)) {
+    showToast('Hover over chart to position Horizontal Line', 'info');
+    return;
+  }
+
+  if (!state.drawings[currentSymbol]) {
+    state.drawings[currentSymbol] = { avwaps: [], hlines: [] };
+  }
+  if (!state.drawings[currentSymbol].hlines) {
+    state.drawings[currentSymbol].hlines = [];
+  }
+
+  state.drawings[currentSymbol].hlines.push(price);
+  renderPersistedDrawings();
+  showToast(`─ Horizontal Line placed at ₹${price.toLocaleString('en-IN')}`, 'success');
+}
+
+function toggleAvwapAnchorMode() {
+  state.activeDrawingTool = (state.activeDrawingTool === 'avwap') ? null : 'avwap';
+  updateAvwapWidgetUI();
+}
+
+function updateAvwapWidgetUI() {
+  const currentSymbol = state.selectedStock?.symbol;
+  const stockDrawings = (currentSymbol && state.drawings[currentSymbol]) ? state.drawings[currentSymbol] : { avwaps: [], hlines: [] };
+  const hasAvwap = stockDrawings.avwaps && stockDrawings.avwaps.length > 0;
+
+  if (state.activeDrawingTool === 'avwap') {
+    if (el.btnFloatingAvwap) {
+      el.btnFloatingAvwap.classList.add('text-purple-400', 'animate-pulse');
+    }
+  } else {
+    if (el.btnFloatingAvwap) {
+      el.btnFloatingAvwap.classList.remove('text-purple-400', 'animate-pulse');
+    }
+  }
+
+  if (hasAvwap) {
+    const lastAnchor = stockDrawings.avwaps[stockDrawings.avwaps.length - 1];
+    let anchorText = '';
+    if (typeof lastAnchor === 'number') {
+      const d = new Date(lastAnchor * 1000);
+      anchorText = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    } else if (typeof lastAnchor === 'string') {
+      anchorText = lastAnchor;
+    }
+    if (el.floatingAvwapDivider) el.floatingAvwapDivider.classList.remove('hidden');
+    if (el.floatingAvwapStatus) {
+      el.floatingAvwapStatus.classList.remove('hidden');
+      el.floatingAvwapStatus.textContent = anchorText;
+    }
+    if (el.btnFloatingAvwapClear) el.btnFloatingAvwapClear.classList.remove('hidden');
+  } else {
+    if (el.floatingAvwapDivider) el.floatingAvwapDivider.classList.add('hidden');
+    if (el.floatingAvwapStatus) el.floatingAvwapStatus.classList.add('hidden');
+    if (el.btnFloatingAvwapClear) el.btnFloatingAvwapClear.classList.add('hidden');
+  }
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+}
+
+function clearStockAvwaps() {
+  const currentSymbol = state.selectedStock?.symbol;
+  if (currentSymbol && state.drawings[currentSymbol]) {
+    state.drawings[currentSymbol].avwaps = [];
+  }
+  renderPersistedDrawings();
+  updateAvwapWidgetUI();
+  showToast('Anchored VWAP removed', 'info');
+}
+
+function renderPersistedDrawings() {
+  const currentSymbol = state.selectedStock?.symbol;
+  const { candles } = state.charts.series;
+  if (!candles || !state.currentStockData?.candles || !state.charts.main) return;
+
+  // 1. Remove previously active AVWAP series
+  if (state.activeDrawingSeries.avwaps && state.activeDrawingSeries.avwaps.length > 0) {
+    state.activeDrawingSeries.avwaps.forEach(series => {
+      try { state.charts.main.removeSeries(series); } catch (e) {}
+    });
+    state.activeDrawingSeries.avwaps = [];
+  }
+
+  // 2. Remove previously active price lines (H-lines)
+  if (state.activeDrawingSeries.hlines && state.activeDrawingSeries.hlines.length > 0) {
+    state.activeDrawingSeries.hlines.forEach(line => {
+      try { candles.removePriceLine(line); } catch (e) {}
+    });
+    state.activeDrawingSeries.hlines = [];
+  }
+
+  const stockDrawings = state.drawings[currentSymbol] || { avwaps: [], hlines: [] };
+  const avwapColors = ['#a855f7', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'];
+
+  // 3. Render AVWAPs for current stock
+  (stockDrawings.avwaps || []).forEach((anchorTime, idx) => {
+    const avwapData = calculateAnchoredVwap(state.currentStockData.candles, anchorTime);
+    if (avwapData.length > 0) {
+      const color = state.colors.avwap || avwapColors[idx % avwapColors.length];
+      const avSeries = state.charts.main.addLineSeries({
+        color: color,
+        lineWidth: 2,
+        title: '',
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false
+      });
+      avSeries.setData(avwapData);
+      state.activeDrawingSeries.avwaps.push(avSeries);
+    }
+  });
+
+  // 4. Render H-lines for current stock
+  (stockDrawings.hlines || []).forEach(price => {
+    const pLine = candles.createPriceLine({
+      price: price,
+      color: '#f59e0b',
+      lineWidth: 1.5,
+      lineStyle: 2,
+      axisLabelVisible: true,
+      title: `H ${price}`
+    });
+    state.activeDrawingSeries.hlines.push(pLine);
+  });
+
+  updateAvwapWidgetUI();
+}
+
+function cancelActiveDrawingTool() {
+  state.activeDrawingTool = null;
+  updateAvwapWidgetUI();
+}
+
+// -------------------------------------------------------------
+// Adaptive Stock Input Width & Copy Stock Symbols
+// -------------------------------------------------------------
+
+function adjustStockInputWidth() {
+  if (!el.manualStockInput) return;
+  const val = (el.manualStockInput.value || '').trim();
+  const len = Math.max(val.length + 3, 11);
+  const clamped = Math.min(len, 32);
+  el.manualStockInput.style.width = `${clamped}ch`;
+}
+
+function handleCopyStocks() {
+  let list = [];
+  if (state.activeSidebarTab === 'watchlists') {
+    const activeWl = getActiveWatchlist();
+    list = activeWl ? activeWl.stocks || [] : [];
+  } else {
+    list = (state.currentStocks || []).filter(stock => {
+      if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
+      if (!state.searchQuery) return true;
+      const q = state.searchQuery;
+      const sym = (stock.symbol || '').toLowerCase();
+      const name = (stock.name || '').toLowerCase();
+      return sym.includes(q) || name.includes(q);
+    });
+  }
+
+  if (!list || list.length === 0) {
+    showToast('No stocks available to copy', 'error');
+    return;
+  }
+
+  const symbols = list.map(s => s.symbol).filter(Boolean);
+  const textToCopy = symbols.join(', ');
+
+  const copySuccess = () => {
+    showToast(`Copied ${symbols.length} stock symbols! (Ready for TradingView / Dhan / Chartink)`, 'success');
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textToCopy).then(copySuccess).catch(() => {
+      fallbackCopyText(textToCopy, symbols.length);
+    });
+  } else {
+    fallbackCopyText(textToCopy, symbols.length);
+  }
+}
+
+function fallbackCopyText(text, count) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast(`Copied ${count} stock symbols! (Ready for TradingView / Dhan / Chartink)`, 'success');
+  } catch (err) {
+    showToast('Failed to copy to clipboard', 'error');
+  }
+  document.body.removeChild(ta);
+}
+
+// -------------------------------------------------------------
+// Keyboard Arrow Navigation (↑ / ↓)
+// -------------------------------------------------------------
+
+function setupKeyboardNavigation() {
+  window.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+      if (e.key === 'Escape') {
+        document.activeElement.blur();
+        cancelActiveDrawingTool();
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      cancelActiveDrawingTool();
+      return;
+    }
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'j' || e.key === 'k') {
+      let list = [];
+      if (state.activeSidebarTab === 'watchlists') {
+        const activeWl = getActiveWatchlist();
+        list = activeWl ? activeWl.stocks || [] : [];
+      } else {
+        list = (state.currentStocks || []).filter(stock => {
+          if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
+          if (!state.searchQuery) return true;
+          const q = state.searchQuery;
+          const sym = (stock.symbol || '').toLowerCase();
+          const name = (stock.name || '').toLowerCase();
+          return sym.includes(q) || name.includes(q);
+        });
+
+        list.sort((a, b) => {
+          let valA = a[state.sortField];
+          let valB = b[state.sortField];
+          if (typeof valA === 'string') {
+            return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+          }
+          valA = valA || 0;
+          valB = valB || 0;
+          return state.sortAscending ? valA - valB : valB - valA;
+        });
+      }
+
+      if (!list || list.length === 0) return;
+
+      const currentSym = state.selectedStock?.symbol;
+      const currentIndex = list.findIndex(s => s.symbol === currentSym);
+
+      let targetIndex = 0;
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault();
+        targetIndex = currentIndex === -1 ? 0 : Math.min(currentIndex + 1, list.length - 1);
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault();
+        targetIndex = currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
+      }
+
+      if (targetIndex >= 0 && targetIndex < list.length && targetIndex !== currentIndex) {
+        const nextStock = list[targetIndex];
+        selectStock(nextStock);
+
+        const tbody = state.activeSidebarTab === 'watchlists' ? el.watchlistTbody : el.stocksTbody;
+        if (tbody) {
+          const rows = tbody.querySelectorAll('tr.stock-row');
+          rows.forEach((r, idx) => {
+            if (idx === targetIndex) {
+              r.classList.add('selected', 'bg-blue-600/20');
+              r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+              r.classList.remove('selected', 'bg-blue-600/20');
+            }
+          });
+        }
+      }
+    }
+  });
 }
 
 function updateDefaultLegend() {
@@ -2237,12 +2665,16 @@ async function loadStockChart(rawSymbol) {
       }
     }
 
+    // Render any active drawings (AVWAPs, H-lines, V-lines) for this stock
+    renderPersistedDrawings();
+
     // Set initial visible range based on activeRange (3M, 6M, 12M)
     // while keeping all full history available for backwards scrolling
     applyActiveRangeZoom();
 
     if (el.manualStockInput) {
       el.manualStockInput.value = cleanSymbol;
+      adjustStockInputWidth();
     }
     
     updateDefaultLegend();
@@ -2262,16 +2694,17 @@ function selectStock(stock) {
 
   if (el.manualStockInput) {
     el.manualStockInput.value = stock.symbol;
+    adjustStockInputWidth();
   }
 
   // Highlight selected row in table
-  document.querySelectorAll('.stock-row').forEach(row => row.classList.remove('selected'));
+  document.querySelectorAll('.stock-row').forEach(row => row.classList.remove('selected', 'bg-blue-600/20'));
   const matchingRow = Array.from(document.querySelectorAll('.stock-row')).find(row => {
-    return row.querySelector('span.font-mono')?.textContent === stock.symbol;
+    return row.querySelector('span.font-mono')?.textContent?.trim() === stock.symbol;
   });
-  if (matchingRow) matchingRow.classList.add('selected');
+  if (matchingRow) matchingRow.classList.add('selected', 'bg-blue-600/20');
 
-  el.chartStockName.textContent = stock.name || stock.symbol;
+  if (el.chartStockName) el.chartStockName.textContent = stock.name || stock.symbol;
   loadStockChart(stock.symbol);
 }
 
@@ -3232,6 +3665,11 @@ window.handleAdminAddUser = handleAdminAddUser;
 window.handleAdminDeleteUser = handleAdminDeleteUser;
 window.handleAdminResetPassword = handleAdminResetPassword;
 window.handleAdminUpdateMaxUsers = handleAdminUpdateMaxUsers;
+window.toggleAvwapAnchorMode = toggleAvwapAnchorMode;
+window.clearStockAvwaps = clearStockAvwaps;
+window.cancelActiveDrawingTool = cancelActiveDrawingTool;
+window.handleAltHShortcut = handleAltHShortcut;
+window.handleCopyStocks = handleCopyStocks;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);

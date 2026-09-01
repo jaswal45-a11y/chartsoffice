@@ -1215,11 +1215,19 @@ async function fetchBatchQuotes(symbols) {
 
   if (uncached.length > 0) {
     const chunkSize = 25;
+    const YAHOO_SYMBOL_ALIASES = {
+      'MCDOWELL-N': 'UNITDSPR',
+      'MCDOWELLN': 'UNITDSPR',
+      'TATAMOTORS': 'TMPV',
+      'LTIM': 'OFSS'
+    };
+
     for (let i = 0; i < uncached.length; i += chunkSize) {
       const batch = uncached.slice(i, i + chunkSize);
       const promises = batch.map(async (s) => {
         try {
-          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}.NS?range=5d&interval=1d`, {
+          const querySym = YAHOO_SYMBOL_ALIASES[s] || s;
+          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(querySym)}.NS?range=5d&interval=1d`, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
             signal: AbortSignal.timeout(4000)
           });

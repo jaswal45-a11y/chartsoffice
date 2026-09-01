@@ -364,3 +364,57 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
   white-space: nowrap;
 }
 
+/* =============================================================
+   Indicator Interactive Color Picker Swatches
+   ============================================================= */
+.indicator-color-picker {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  min-width: 13px;
+  min-height: 13px;
+  padding: 0;
+  margin: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+html:not(.dark) .indicator-color-picker {
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.indicator-color-picker:hover {
+  transform: scale(1.25);
+  border-color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+html:not(.dark) .indicator-color-picker:hover {
+  border-color: #0f172a;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.indicator-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 50%;
+}
+
+.indicator-color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.indicator-color-picker::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+
