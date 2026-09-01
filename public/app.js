@@ -121,6 +121,7 @@ const el = {
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeIcon: document.getElementById('theme-icon'),
   btnNavAnalytics: document.getElementById('btn-nav-analytics'),
+  btnNavFno: document.getElementById('btn-nav-fno'),
   btnAdminConsole: document.getElementById('btn-admin-console'),
 
   // Floating On-Chart AVWAP Controls & Drawing Helpers
@@ -498,6 +499,8 @@ function updateAuthUI(user) {
   if (user) {
     el.btnNavAnalytics?.classList.remove('hidden');
     el.btnNavAnalytics?.classList.add('flex');
+    el.btnNavFno?.classList.remove('hidden');
+    el.btnNavFno?.classList.add('flex');
     el.btnOpenAuthModal?.classList.add('hidden');
     el.userAuthBox?.classList.remove('hidden');
     el.userAuthBox?.classList.add('flex');
@@ -521,6 +524,8 @@ function updateAuthUI(user) {
   } else {
     el.btnNavAnalytics?.classList.add('hidden');
     el.btnNavAnalytics?.classList.remove('flex');
+    el.btnNavFno?.classList.add('hidden');
+    el.btnNavFno?.classList.remove('flex');
     el.btnOpenAuthModal?.classList.remove('hidden');
     el.userAuthBox?.classList.add('hidden');
     el.userAuthBox?.classList.remove('flex');

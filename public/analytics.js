@@ -138,7 +138,11 @@ function updateAuthUI(user) {
   const authGuard = document.getElementById('analytics-auth-guard');
   const authContent = document.getElementById('analytics-authenticated-content');
 
+  const btnNavFno = document.getElementById('btn-nav-fno');
+
   if (user) {
+    btnNavFno?.classList.remove('hidden');
+    btnNavFno?.classList.add('flex');
     btnOpenModal?.classList.add('hidden');
     userBox?.classList.remove('hidden');
     userBox?.classList.add('flex');
@@ -162,6 +166,8 @@ function updateAuthUI(user) {
     authContent?.classList.add('flex');
     loadAnalyticsData();
   } else {
+    btnNavFno?.classList.add('hidden');
+    btnNavFno?.classList.remove('flex');
     btnOpenModal?.classList.remove('hidden');
     userBox?.classList.add('hidden');
     userBox?.classList.remove('flex');

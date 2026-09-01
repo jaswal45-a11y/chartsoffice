@@ -18,6 +18,7 @@ const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 const SECTORS_FILE = path.join(__dirname, 'data', 'sectors_data.json');
 const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.json');
+const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // MIME types for static assets
@@ -2729,6 +2730,26 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // 11. GET /api/fno/stocks - Complete Stock Universe for F&O & Equity Screener
+      if (pathname === '/api/fno/stocks' && method === 'GET') {
+        try {
+          if (!fs.existsSync(FNO_DATA_FILE)) {
+            return sendJson(res, 200, { success: true, count: 0, stocks: [] });
+          }
+          const raw = fs.readFileSync(FNO_DATA_FILE, 'utf8');
+          const stocks = JSON.parse(raw || '[]');
+          return sendJson(res, 200, {
+            success: true,
+            count: stocks.length,
+            timestamp: new Date().toISOString(),
+            stocks
+          });
+        } catch (err) {
+          console.error('Error loading F&O stocks universe:', err);
+          return sendJson(res, 500, { success: false, error: 'Failed to load stocks universe' });
+        }
+      }
+
       return sendJson(res, 404, { success: false, error: 'API route not found' });
     } catch (apiErr) {
       console.error('API Error:', apiErr);
@@ -2740,6 +2761,7 @@ const server = http.createServer(async (req, res) => {
   let reqTarget = pathname;
   if (reqTarget === '/' || reqTarget === '') reqTarget = 'index.html';
   else if (reqTarget === '/analytics') reqTarget = 'analytics.html';
+  else if (reqTarget === '/fno') reqTarget = 'fno.html';
 
   let filePath = path.join(PUBLIC_DIR, reqTarget);
   
@@ -2752,8 +2774,14 @@ const server = http.createServer(async (req, res) => {
 
   fs.stat(resolvedPath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // If file not found and doesn't have an extension, try analytics.html or index.html
+      // If file not found and doesn't have an extension, try fno.html, analytics.html or index.html
       if (!path.extname(resolvedPath)) {
+        const fnoPath = path.join(PUBLIC_DIR, 'fno.html');
+        if (pathname.startsWith('/fno') && fs.existsSync(fnoPath)) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          return fs.createReadStream(fnoPath).pipe(res);
+        }
+
         const analyticsPath = path.join(PUBLIC_DIR, 'analytics.html');
         if (pathname.startsWith('/analytics') && fs.existsSync(analyticsPath)) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });

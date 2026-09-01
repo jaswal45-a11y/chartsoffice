@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F&O & Equity Stock Screener | Sangam_chartlinks</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            dark: {
+              bg: '#0b0f19',
+              card: '#111827',
+              border: '#1f293d',
+              accent: '#1e293b'
+            },
+            bull: '#10b981',
+            bear: '#ef4444'
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Custom Styling for Screener Table & Multi-Select Dropdowns */
+    .fno-table-container {
+      max-height: calc(100vh - 270px);
+      overflow-y: auto;
+      overflow-x: auto;
+    }
+    .sticky-col-header {
+      position: sticky;
+      left: 0;
+      z-index: 25;
+    }
+    .sticky-col-cell {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 1);
+    }
+    .filter-dropdown-menu {
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .sort-active {
+      color: #38bdf8 !important;
+    }
+  </style>
+</head>
+<body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-purple-600 selection:text-white transition-colors duration-200">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-dark-border bg-dark-card/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-6 py-2.5">
+    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <i data-lucide="crosshair" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+              Sangam_chartlinks
+            </h1>
+            <span class="px-2 py-0.5 text-[9px] font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+              F&O & Equity Terminal
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">Institutional Progressive Stock Screener</p>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <div class="flex items-center p-1 bg-dark-bg/80 border border-dark-border rounded-xl text-xs shadow-inner gap-1">
+        <a href="/" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-white cursor-pointer" title="Go to Screener Scanner & Multi-Pane TV Visualizer">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+          <span>Screener & TV Charts</span>
+        </a>
+        <a href="/analytics" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-white cursor-pointer" title="Market Breadth Diagnostics (20/50 SMA), Sector Rankings & Indices">
+          <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Market Breadth & Sectors</span>
+          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-emerald-500/20 text-emerald-300 font-semibold uppercase tracking-wider">New Tab ↗</span>
+        </a>
+        <a href="/fno" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 bg-purple-600 text-white shadow-sm cursor-pointer" title="F&O & Equity Multi-Parameter Stock Screener">
+          <i data-lucide="crosshair" class="w-3.5 h-3.5 text-white"></i>
+          <span>FnO</span>
+          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-white/20 text-white font-semibold uppercase tracking-wider">Active</span>
+        </a>
+      </div>
+
+      <!-- Right Header Actions & Auth Status -->
+      <div class="flex items-center gap-2.5">
+        
+        <!-- Multi-User Auth Box / Login Trigger -->
+        <div id="user-auth-box" class="hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-dark-bg/80 border border-dark-border text-xs">
+          <div class="w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+          </div>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1.5">
+              <span id="user-badge-name" class="font-bold text-slate-200">User</span>
+              <span id="user-badge-role" class="text-[10px] text-purple-400 font-semibold">(Member)</span>
+            </div>
+          </div>
+          <button onclick="handleLogout()" class="ml-2 text-slate-400 hover:text-rose-400 transition-colors p-1 rounded hover:bg-rose-500/10 cursor-pointer" title="Logout">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <button id="btn-open-auth-modal" onclick="openAuthModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-900/30 transition-all cursor-pointer">
+          <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+          <span>Login / Sign Up</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="btn-theme-toggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-slate-200 transition-all cursor-pointer" title="Toggle Light/Dark Theme">
+          <i data-lucide="sun" id="theme-icon" class="w-4 h-4 text-amber-400"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Auth Required Wall (Only shown when not logged in) -->
+  <div id="fno-auth-guard" class="hidden flex-1 flex-col items-center justify-center p-8 text-center bg-dark-bg">
+    <div class="max-w-md w-full bg-dark-card border border-dark-border rounded-2xl p-8 shadow-2xl flex flex-col items-center">
+      <div class="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 shadow-inner">
+        <i data-lucide="lock" class="w-8 h-8"></i>
+      </div>
+      <h2 class="text-xl font-bold text-slate-100 mb-2">Member Authentication Required</h2>
+      <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+        The institutional F&O & Equity Stock Screener is available exclusively to registered users. Please log in or create a free account to access.
+      </p>
+      <button onclick="openAuthModal('login')" class="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer mb-3">
+        <i data-lucide="log-in" class="w-4 h-4"></i>
+        <span>Login to Access Screener</span>
+      </button>
+      <button onclick="openAuthModal('register')" class="w-full py-2.5 px-4 bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+        <i data-lucide="user-plus" class="w-4 h-4"></i>
+        <span>Create New Account</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Authenticated Screener Workspace -->
+  <main id="fno-authenticated-content" class="flex-1 flex flex-col max-w-[1920px] w-full mx-auto p-4 lg:p-6 gap-4">
+    
+    <!-- Screener Title & Top Controls Bar -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-dark-border/60">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h2 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            Stock Screener
+          </h2>
+          <span id="badge-total-stocks" class="px-2.5 py-0.5 text-xs font-mono font-semibold bg-slate-800 text-purple-300 border border-purple-500/30 rounded-full">
+            Loading...
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          Explore the Indian equity market and filter stocks using fundamental, technical and volume-based parameters.
+        </p>
+      </div>
+
+      <!-- Top Action Controls: Search, Columns, Refresh -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        <!-- Universal Search -->
+        <div class="relative min-w-[240px] sm:min-w-[280px]">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="input-stock-search" placeholder="Search company or symbol..." class="w-full pl-9 pr-8 py-1.5 bg-dark-card border border-dark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500 transition-colors shadow-inner">
+          <button id="btn-clear-search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Column Selector Dropdown Trigger -->
+        <div class="relative">
+          <button id="btn-columns-menu" onclick="toggleColumnMenu()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer" title="Customize visible columns">
+            <i data-lucide="columns-3" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span>Columns ⚙</span>
+          </button>
+
+          <!-- Column Selector Dropdown Menu -->
+          <div id="column-selector-dropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-dark-card border border-dark-border rounded-xl p-3 shadow-2xl z-50 flex flex-col gap-2 text-xs">
+            <div class="flex items-center justify-between border-b border-dark-border pb-1.5 mb-1">
+              <span class="font-bold text-slate-200">Visible Columns</span>
+              <button onclick="resetColumns()" class="text-[10px] text-purple-400 hover:underline">Reset</button>
+            </div>
+            <div class="flex flex-col gap-1.5 max-h-60 overflow-y-auto custom-scrollbar" id="columns-checkbox-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Refresh Button -->
+        <button id="btn-refresh-stocks" onclick="refreshStockData()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer" title="Refresh latest market data">
+          <i data-lucide="rotate-cw" id="icon-refresh-spin" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>Refresh</span>
+        </button>
+
+        <!-- Export CSV Button -->
+        <button id="btn-export-fno-csv" onclick="exportFnoCsv()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer" title="Export filtered stocks to CSV">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Export CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Progressive Filter Bar (Compact & Horizontally Arranged) -->
+    <div class="bg-dark-card/90 border border-dark-border rounded-2xl p-3.5 shadow-lg flex flex-col gap-3">
+      
+      <div class="flex items-center flex-wrap gap-2.5">
+        
+        <!-- 1. Market Cap Dropdown -->
+        <div class="flex items-center gap-1.5 bg-dark-bg border border-dark-border rounded-xl px-2.5 py-1 text-xs">
+          <span class="text-slate-400 text-[11px] font-medium">Market Cap:</span>
+          <select id="select-market-cap" onchange="handleFilterChange()" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer text-xs pr-1">
+            <option value="all" class="bg-dark-card">All</option>
+            <option value="500" class="bg-dark-card">&gt; ₹500 Cr</option>
+            <option value="1000" class="bg-dark-card">&gt; ₹1,000 Cr</option>
+            <option value="2000" class="bg-dark-card">&gt; ₹2,000 Cr</option>
+            <option value="5000" class="bg-dark-card">&gt; ₹5,000 Cr</option>
+            <option value="10000" class="bg-dark-card">&gt; ₹10,000 Cr</option>
+            <option value="50000" class="bg-dark-card">&gt; ₹50,000 Cr</option>
+          </select>
+        </div>
+
+        <!-- 2. Sector Searchable Multi-Select Dropdown -->
+        <div class="relative" id="sector-multiselect-container">
+          <button id="btn-sector-dropdown" onclick="toggleSectorDropdown()" class="flex items-center gap-1.5 bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-xl px-3 py-1.5 text-xs text-slate-200 font-medium transition-all cursor-pointer">
+            <span class="text-slate-400">Sector:</span>
+            <span id="sector-selected-label" class="font-semibold text-purple-300">All Sectors</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 ml-0.5"></i>
+          </button>
+
+          <!-- Sector Dropdown Popup -->
+          <div id="sector-dropdown-menu" class="hidden absolute left-0 top-full mt-2 w-72 bg-dark-card border border-dark-border rounded-xl p-3 shadow-2xl z-50 flex flex-col gap-2 text-xs">
+            <div class="relative">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="input-search-sector" oninput="filterSectorList()" placeholder="Search sectors..." class="w-full pl-8 pr-2 py-1 bg-dark-bg border border-dark-border rounded-lg text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1 border-b border-dark-border pb-1">
+              <button onclick="selectAllSectors()" class="hover:text-purple-300">Select All</button>
+              <button onclick="clearSectors()" class="hover:text-purple-300">Clear</button>
+            </div>
+            <div class="flex flex-col gap-1 filter-dropdown-menu custom-scrollbar" id="sector-checkbox-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Industry Searchable Multi-Select Dropdown (Cascading) -->
+        <div class="relative" id="industry-multiselect-container">
+          <button id="btn-industry-dropdown" onclick="toggleIndustryDropdown()" class="flex items-center gap-1.5 bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-xl px-3 py-1.5 text-xs text-slate-200 font-medium transition-all cursor-pointer">
+            <span class="text-slate-400">Industry:</span>
+            <span id="industry-selected-label" class="font-semibold text-purple-300">All Industries</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 ml-0.5"></i>
+          </button>
+
+          <!-- Industry Dropdown Popup -->
+          <div id="industry-dropdown-menu" class="hidden absolute left-0 top-full mt-2 w-80 bg-dark-card border border-dark-border rounded-xl p-3 shadow-2xl z-50 flex flex-col gap-2 text-xs">
+            <div class="relative">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="input-search-industry" oninput="filterIndustryList()" placeholder="Search industries..." class="w-full pl-8 pr-2 py-1 bg-dark-bg border border-dark-border rounded-lg text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1 border-b border-dark-border pb-1">
+              <button onclick="selectAllIndustries()" class="hover:text-purple-300">Select All</button>
+              <button onclick="clearIndustries()" class="hover:text-purple-300">Clear</button>
+            </div>
+            <div class="flex flex-col gap-1 filter-dropdown-menu custom-scrollbar" id="industry-checkbox-list">
+              <!-- Dynamically populated based on sector -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. F&O Stocks Only Toggle Checkbox -->
+        <label class="flex items-center gap-2 bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-xl px-3 py-1.5 text-xs font-semibold cursor-pointer select-none transition-colors">
+          <input type="checkbox" id="chk-fno-only" onchange="handleFilterChange()" class="w-4 h-4 rounded border-slate-700 text-purple-600 focus:ring-0 bg-dark-card cursor-pointer">
+          <span class="text-slate-200">F&O Stocks Only</span>
+          <span class="px-1.5 py-0.2 text-[9px] bg-purple-500/20 text-purple-300 rounded font-mono">180+</span>
+        </label>
+
+        <!-- 5. More Filters Toggle -->
+        <button id="btn-toggle-more-filters" onclick="toggleMoreFiltersDrawer()" class="flex items-center gap-1.5 bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-purple-400"></i>
+          <span>More Filters</span>
+          <i data-lucide="chevron-down" id="icon-more-filters" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+        </button>
+
+        <!-- 6. Reset Filters Button -->
+        <button id="btn-reset-filters" onclick="resetAllFilters()" class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-semibold transition-all cursor-pointer" title="Reset all filters to default state">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Reset Filters</span>
+        </button>
+
+      </div>
+
+      <!-- Expandable More Filters Section (Technical, Volume, Price & Momentum) -->
+      <div id="drawer-more-filters" class="hidden pt-3 border-t border-dark-border/60 flex flex-wrap gap-4 items-center">
+        
+        <!-- RSI Range -->
+        <div class="flex items-center gap-1.5 bg-dark-bg border border-dark-border rounded-xl px-3 py-1.5 text-xs">
+          <span class="text-slate-400 font-medium">RSI (14):</span>
+          <input type="number" id="input-rsi-min" placeholder="Min" min="0" max="100" class="w-14 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+          <span class="text-slate-600">–</span>
+          <input type="number" id="input-rsi-max" placeholder="Max" min="0" max="100" class="w-14 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+        </div>
+
+        <!-- Relative Volume (RVOL) Min -->
+        <div class="flex items-center gap-1.5 bg-dark-bg border border-dark-border rounded-xl px-3 py-1.5 text-xs">
+          <span class="text-slate-400 font-medium">RVOL &gt;</span>
+          <input type="number" id="input-rvol-min" placeholder="e.g. 1.5" step="0.1" min="0" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+          <span class="text-slate-400 font-mono">x</span>
+        </div>
+
+        <!-- % Distance From 20 EMA -->
+        <div class="flex items-center gap-1.5 bg-dark-bg border border-dark-border rounded-xl px-3 py-1.5 text-xs">
+          <span class="text-slate-400 font-medium">% from 20 EMA:</span>
+          <input type="number" id="input-ema-min" placeholder="Min %" step="0.5" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+          <span class="text-slate-600">–</span>
+          <input type="number" id="input-ema-max" placeholder="Max %" step="0.5" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+        </div>
+
+        <!-- Current Price (₹) -->
+        <div class="flex items-center gap-1.5 bg-dark-bg border border-dark-border rounded-xl px-3 py-1.5 text-xs">
+          <span class="text-slate-400 font-medium">Price (₹):</span>
+          <input type="number" id="input-price-min" placeholder="Min ₹" min="0" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+          <span class="text-slate-600">–</span>
+          <input type="number" id="input-price-max" placeholder="Max ₹" min="0" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+        </div>
+
+        <!-- 1D Change % -->
+        <div class="flex items-center gap-1.5 bg-dark-bg border border-dark-border rounded-xl px-3 py-1.5 text-xs">
+          <span class="text-slate-400 font-medium">1D % Change:</span>
+          <input type="number" id="input-change-min" placeholder="Min %" step="0.5" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+          <span class="text-slate-600">–</span>
+          <input type="number" id="input-change-max" placeholder="Max %" step="0.5" class="w-16 bg-dark-card border border-dark-border rounded px-1.5 py-0.5 text-center text-slate-200 focus:outline-none focus:border-purple-500 text-xs" oninput="handleFilterChange()">
+        </div>
+
+      </div>
+
+      <!-- Active Filters Chips Row -->
+      <div id="active-filter-chips-container" class="hidden flex-wrap items-center gap-2 pt-2 border-t border-dark-border/40">
+        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Filters:</span>
+        <div id="active-chips-list" class="flex flex-wrap items-center gap-1.5">
+          <!-- Dynamically populated chips -->
+        </div>
+        <button onclick="resetAllFilters()" class="text-[11px] font-bold text-purple-400 hover:text-purple-300 ml-1 underline cursor-pointer">
+          Clear All
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Full-Width Terminal Data Table Container -->
+    <div class="bg-dark-card border border-dark-border rounded-2xl shadow-xl flex flex-col flex-1 overflow-hidden">
+      
+      <!-- Table Header Status Bar -->
+      <div class="px-4 py-2 bg-dark-bg/60 border-b border-dark-border flex items-center justify-between text-xs text-slate-400">
+        <div class="flex items-center gap-2 font-mono">
+          <span id="table-status-showing">Showing all stocks</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-[11px] text-slate-500 hidden sm:inline">Click any column header to sort (Asc ↑ / Desc ↓ / Default)</span>
+        </div>
+      </div>
+
+      <!-- Table Viewport -->
+      <div class="fno-table-container custom-scrollbar">
+        <table class="w-full text-left text-xs border-collapse table-fixed-wrap select-none" id="screener-data-table">
+          <thead class="sticky top-0 bg-dark-card text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-dark-border z-20 shadow-sm">
+            <tr>
+              <th scope="col" class="py-2.5 px-3 w-10 text-center sticky-col-header bg-dark-card border-r border-dark-border/40" title="Watchlist Pin">
+                <i data-lucide="star" class="w-3.5 h-3.5 mx-auto text-slate-500"></i>
+              </th>
+              <th scope="col" onclick="handleSort('symbol')" class="py-2.5 px-3 min-w-[180px] sticky-col-header bg-dark-card border-r border-dark-border/40 cursor-pointer hover:text-white group col-stock" title="Sort by Symbol/Company">
+                <div class="flex items-center justify-between">
+                  <span>STOCK</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-symbol">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('marketCap')" class="py-2.5 px-3 min-w-[130px] text-right cursor-pointer hover:text-white group col-marketCap" title="Sort by Market Cap">
+                <div class="flex items-center justify-end gap-1">
+                  <span>MARKET CAP</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-marketCap">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('sector')" class="py-2.5 px-3 min-w-[130px] cursor-pointer hover:text-white group col-sector" title="Sort by Sector">
+                <div class="flex items-center justify-between">
+                  <span>SECTOR</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-sector">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('industry')" class="py-2.5 px-3 min-w-[180px] cursor-pointer hover:text-white group col-industry" title="Sort by Industry">
+                <div class="flex items-center justify-between">
+                  <span>INDUSTRY</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-industry">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('price')" class="py-2.5 px-3 min-w-[100px] text-right cursor-pointer hover:text-white group col-price" title="Sort by Current Price">
+                <div class="flex items-center justify-end gap-1">
+                  <span>PRICE</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-price">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('changePercent')" class="py-2.5 px-3 min-w-[90px] text-right cursor-pointer hover:text-white group col-changePercent" title="Sort by 1 Day Change %">
+                <div class="flex items-center justify-end gap-1">
+                  <span>1D %</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-changePercent">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('rsi')" class="py-2.5 px-3 min-w-[80px] text-right cursor-pointer hover:text-white group col-rsi" title="Sort by RSI (14)">
+                <div class="flex items-center justify-end gap-1">
+                  <span>RSI</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-rsi">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('rvol')" class="py-2.5 px-3 min-w-[80px] text-right cursor-pointer hover:text-white group col-rvol" title="Sort by Relative Volume (RVOL)">
+                <div class="flex items-center justify-end gap-1">
+                  <span>RVOL</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-rvol">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('ema20Distance')" class="py-2.5 px-3 min-w-[120px] text-right cursor-pointer hover:text-white group col-ema20Distance" title="Sort by % Distance From 20 EMA">
+                <div class="flex items-center justify-end gap-1">
+                  <span>% FROM 20 EMA</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-ema20Distance">↕</span>
+                </div>
+              </th>
+              <th scope="col" onclick="handleSort('fno')" class="py-2.5 px-3 min-w-[70px] text-center cursor-pointer hover:text-white group col-fno" title="Sort by F&O Eligibility">
+                <div class="flex items-center justify-center gap-1">
+                  <span>F&O</span>
+                  <span class="sort-icon text-slate-600 group-hover:text-slate-300" id="sort-icon-fno">↕</span>
+                </div>
+              </th>
+              <th scope="col" class="py-2.5 px-3 min-w-[80px] text-center col-action">
+                <span>CHART</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="fno-stocks-tbody" class="divide-y divide-dark-border/40 font-mono text-[12px]">
+            <!-- Dynamically populated stock rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination & Results Footer -->
+      <div class="p-3 bg-dark-bg/80 border-t border-dark-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+        
+        <!-- Range Showing Info -->
+        <div class="flex items-center gap-2">
+          <span id="pagination-info" class="font-mono">Showing 0 of 0 stocks</span>
+        </div>
+
+        <!-- Page Controls & Rows Per Page -->
+        <div class="flex items-center gap-4">
+          
+          <!-- Rows per page selector -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-500 text-[11px]">Rows:</span>
+            <select id="select-rows-per-page" onchange="handleRowsPerPageChange()" class="bg-dark-card border border-dark-border rounded-lg px-2 py-1 text-slate-200 text-xs font-semibold focus:outline-none cursor-pointer">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <!-- Page Navigation Buttons -->
+          <div class="flex items-center gap-1" id="pagination-buttons-container">
+            <!-- Dynamically populated page buttons -->
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Auth Modal (Login / Registration) -->
+  <div id="auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-scale-up">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-dark-border bg-dark-bg/60">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+          </div>
+          <span class="font-bold text-slate-100">Sangam_chartlinks Account</span>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-dark-accent">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Auth Tabs: Login vs Register -->
+      <div class="flex border-b border-dark-border bg-dark-bg/40 text-xs font-bold">
+        <button id="auth-tab-login" onclick="switchAuthTab('login')" class="flex-1 py-3 text-center border-b-2 border-purple-500 text-purple-400 transition-all cursor-pointer">
+          Login
+        </button>
+        <button id="auth-tab-register" onclick="switchAuthTab('register')" class="flex-1 py-3 text-center text-slate-400 hover:text-slate-200 transition-all cursor-pointer">
+          Register New Account
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6">
+        <!-- Login Form -->
+        <form id="login-form" onsubmit="handleLogin(event)" class="flex flex-col gap-4">
+          <div id="login-error-banner" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs"></div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Username</label>
+            <input type="text" id="login-username" required placeholder="Enter your username" class="w-full px-3.5 py-2 bg-dark-bg border border-dark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+            <input type="password" id="login-password" required placeholder="Enter password" class="w-full px-3.5 py-2 bg-dark-bg border border-dark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
+            <span>Sign In</span>
+          </button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="register-form" onsubmit="handleRegister(event)" class="hidden flex flex-col gap-4">
+          <div id="register-error-banner" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs"></div>
+          <div id="register-success-banner" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs"></div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Desired Username</label>
+            <input type="text" id="reg-username" required placeholder="Choose a username" class="w-full px-3.5 py-2 bg-dark-bg border border-dark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+            <input type="password" id="reg-password" required minlength="6" placeholder="At least 6 characters" class="w-full px-3.5 py-2 bg-dark-bg border border-dark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Confirm Password</label>
+            <input type="password" id="reg-confirm-password" required minlength="6" placeholder="Repeat password" class="w-full px-3.5 py-2 bg-dark-bg border border-dark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500">
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            <span>Create Account</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Scripts -->
+  <script src="fno.js?v=1.0.0"></script>
+</body>
+</html>
