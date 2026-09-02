@@ -79,6 +79,29 @@
     .sort-active {
       color: #38bdf8 !important;
     }
+    /* Horizontal Column Resize Drag Handles */
+    th.resizable-th {
+      position: relative;
+    }
+    .col-resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      user-select: none;
+      z-index: 30;
+      transition: background 0.15s ease;
+    }
+    .col-resizer:hover, .col-resizer.is-resizing {
+      background: #a855f7 !important;
+      width: 6px;
+    }
+    body.is-col-resizing {
+      cursor: col-resize !important;
+      user-select: none !important;
+    }
   </style>
 </head>
 <body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-purple-600 selection:text-white transition-colors duration-200">
@@ -233,6 +256,13 @@
           <span>Refresh</span>
         </button>
 
+        <!-- Custom Universe Button -->
+        <button id="btn-open-universe-modal" onclick="openCustomUniverseModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-xs font-semibold text-purple-200 hover:text-white transition-all cursor-pointer shadow-sm shadow-purple-900/20" title="Paste custom stock list or select universe preset">
+          <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-purple-400"></i>
+          <span>Custom Universe</span>
+          <span id="badge-custom-universe-active" class="hidden px-1.5 py-0.2 text-[9px] bg-purple-500 text-white rounded font-mono font-bold">212</span>
+        </button>
+
         <!-- Export CSV Button -->
         <button id="btn-export-fno-csv" onclick="exportFnoCsv()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer" title="Export filtered stocks to CSV">
           <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -312,7 +342,7 @@
         <label class="flex items-center gap-2 bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-xl px-3 py-1.5 text-xs font-semibold cursor-pointer select-none transition-colors">
           <input type="checkbox" id="chk-fno-only" onchange="handleFilterChange()" class="w-4 h-4 rounded border-slate-700 text-purple-600 focus:ring-0 bg-dark-card cursor-pointer">
           <span class="text-slate-200">F&O Stocks Only</span>
-          <span class="px-1.5 py-0.2 text-[9px] bg-purple-500/20 text-purple-300 rounded font-mono">180+</span>
+          <span class="px-1.5 py-0.2 text-[9px] bg-purple-500/20 text-purple-300 rounded font-mono font-bold">212</span>
         </label>
 
         <!-- 5. More Filters Toggle -->
@@ -584,10 +614,85 @@
     </div>
   </div>
 
+  <!-- Custom Stock Universe Pasting Modal -->
+  <div id="custom-universe-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col animate-scale-up">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-dark-border bg-dark-bg/60">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+            <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <span class="font-bold text-slate-100 text-sm">Custom Stock Universe</span>
+            <p class="text-[11px] text-slate-400">Paste your custom list of stocks to restrict the screener universe</p>
+          </div>
+        </div>
+        <button onclick="closeCustomUniverseModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-dark-accent">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 flex flex-col gap-4">
+        
+        <!-- Action Quick Buttons Row -->
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="loadFnoPreset212()" class="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-300 hover:text-purple-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i>
+              <span>⚡ Load 212 F&amp;O Preset</span>
+            </button>
+            <button type="button" onclick="clearCustomUniverseText()" class="px-2.5 py-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-slate-200 text-xs font-semibold transition-all cursor-pointer">
+              Clear Text
+            </button>
+          </div>
+
+          <div class="flex items-center gap-1.5 font-mono text-xs">
+            <span class="text-slate-400">Detected:</span>
+            <span id="custom-universe-detected-count" class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">0 symbols</span>
+          </div>
+        </div>
+
+        <!-- Textarea -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Paste Stock Symbols (Comma, Space, or Newline separated):</label>
+          <textarea id="textarea-custom-universe" rows="8" placeholder="e.g. ITC, RELIANCE, INFY, TCS, HDFCBANK, BAJFINANCE, PERSISTENT..." class="w-full p-3 bg-dark-bg border border-dark-border rounded-xl text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-purple-500 custom-scrollbar leading-relaxed" oninput="handleUniverseTextareaInput()"></textarea>
+        </div>
+
+        <div class="text-[11px] text-slate-400 bg-slate-900/50 p-2.5 rounded-xl border border-dark-border/60 flex items-start gap-2">
+          <i data-lucide="info" class="w-4 h-4 text-purple-400 shrink-0 mt-0.5"></i>
+          <span>Once applied, the screener and all filters (Market Cap, Sector, Industry, RSI, RVOL, 20 EMA, Sorting, and CSV Export) will exclusively operate on your specified custom stock universe with zero lag.</span>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between px-6 py-3.5 border-t border-dark-border bg-dark-bg/60">
+        <button type="button" onclick="resetToFullUniverse()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-400"></i>
+          <span>Reset to Full Universe (1,050+)</span>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeCustomUniverseModal()" class="px-4 py-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white text-xs font-semibold transition-all cursor-pointer">
+            Cancel
+          </button>
+          <button type="button" onclick="applyCustomUniverse()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-900/30 transition-all cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Apply Custom Universe</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="fno.js?v=1.0.0"></script>
+  <script src="fno.js?v=1.2.0"></script>
 </body>
 </html>

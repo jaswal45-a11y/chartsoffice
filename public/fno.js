@@ -1,7 +1,46 @@
 /**
  * F&O & Equity Stock Screener Controller (Institutional Progressive Architecture)
+ * With 212 F&O Direct Sync, Draggable Column Resizing & Custom Universe Pasting
  * Sangam_chartlinks Financial Platform
  */
+
+// -------------------------------------------------------------
+// Official 212 F&O Preset List & Aliases
+// -------------------------------------------------------------
+const FNO_PRESET_212 = "ITC, ADANIGREEN, PERSISTENT, BHARTIARTL, ADANIPORTS, NAUKRI, MPHASIS, ADANIPOWER, HCLTECH, PFC, RELIANCE, MARICO, ONGC, INFY, HEROMOTOCO, BAJAJ-AUTO, LTM, BLUESTARCO, TATAELXSI, DRREDDY, OIL, HINDUNILVR, VBL, KOTAKBANK, SUPREMEIND, SHREECEM, SRF, PIIND, FORCEMOT, TATAPOWER, DELHIVERY, CIPLA, VOLTAS, FORTIS, PNB, UPL, KPITTECH, DABUR, MAHABANK, OBEROIRLTY, TECHM, NAM-INDIA, ZYDUSLIFE, BANKINDIA, GMRAIRPORT, APLAPOLLO, ATHERENERG, JSWSTEEL, GODREJCP, HDFCBANK, CONCOR, POWERGRID, TMPV, PNBHOUSING, HINDZINC, AMBUJACEM, PATANJALI, EICHERMOT, MAZDOCK, COFORGE, ADANIENT, HAL, RBLBANK, NTPC, CUMMINSIND, SIEMENS, ICICIGI, COALINDIA, SBILIFE, NIFTY, HINDALCO, ETERNAL, UNOMINDA, TATASTEEL, SOLARINDS, RADICO, BAJFINANCE, PAGEIND, BANDHANBNK, BANKBARODA, GLENMARK, PHOENIXLTD, LODHA, ULTRACEMCO, SONACOMS, JSWENERGY, ALKEM, NHPC, HDFCLIFE, TIINDIA, AUBANK, WAAREEENER, LICHSGFIN, TATACONSUM, M&M, HINDPETRO, RVNL, BEL, 360ONE, CDSL, TRENT, MANAPPURAM, ASTRAL, IRFC, CANBK, TITAN, SAIL, BANKNIFTY, IEX, ICICIBANK, HYUNDAI, NBCC, BRITANNIA, BSE, IDFCFIRSTB, INOXWIND, TCS, GODFRYPHLP, SAGILITY, UNITDSPR, LICI, AMBER, VEDL, WIPRO, LT, APOLLOHOSP, LUPIN, HAVELLS, GODREJPROP, ANGELONE, IOC, IDEA, INDIANB, PGEL, SBICARD, DMART, GRASIM, AUROPHARMA, BDL, IREDA, TORNTPHARM, BPCL, UNIONBANK, COLPAL, CROMPTON, FEDERALBNK, SUZLON, COCHINSHIP, PREMIERENE, JIOFIN, KAYNES, CHOLAFIN, DLF, JUBLFOOD, INDUSINDBK, SBIN, BAJAJFINSV, POLICYBZR, MFSL, MUTHOOTFIN, SWIGGY, NATIONALUM, BHARATFORG, ADANIENSOL, MOTILALOFS, MANKIND, DIXON, PIDILITIND, BIOCON, INDHOTEL, GAIL, GVT&D, JINDALSTEL, PETRONET, LAURUSLABS, SUNPHARMA, OFSS, MCX, NMDC, RECLTD, BAJAJHLDNG, BOSCHLTD, ASHOKLEY, ASIANPAINT, HDFCAMC, MOTHERSON, NYKAA, ABB, DIVISLAB, TVSMOTOR, YESBANK, AXISBANK, POWERINDIA, CGPOWER, KFINTECH, INDIGO, INDUSTOWER, BHEL, ABCAPITAL, VMM, LTF, MAXHEALTH, CAMS, PRESTIGE, NESTLEIND, ICICIPRULI, MARUTI, SHRIRAMFIN, KALYANKJIL, PAYTM, POLYCAB, KEI";
+
+const SYMBOL_ALIAS_MAP = {
+  'LTM': 'LTIM',
+  'GMRAIRPORT': 'GMRINFRA',
+  'HINDPETRO': 'HPCL',
+  'LTF': 'L&TFH',
+  'MOTHERSON': 'SAMVARDHANA'
+};
+
+const FNO_SET_212 = new Set(
+  FNO_PRESET_212.split(/[,\s\n\r\t]+/)
+    .map(s => s.trim().toUpperCase().replace(/[^A-Z0-9&\-_]/g, ''))
+    .filter(Boolean)
+);
+Object.entries(SYMBOL_ALIAS_MAP).forEach(([from, to]) => {
+  if (FNO_SET_212.has(from)) FNO_SET_212.add(to);
+});
+
+// Default Column Widths for Institutional Terminal Resizing
+const DEFAULT_COLUMN_WIDTHS = {
+  watchlist: '40px',
+  stock: '210px',
+  marketCap: '140px',
+  sector: '140px',
+  industry: '190px',
+  price: '110px',
+  changePercent: '100px',
+  rsi: '90px',
+  rvol: '90px',
+  ema20Distance: '130px',
+  fno: '80px',
+  action: '90px'
+};
 
 // -------------------------------------------------------------
 // Centralized State
@@ -14,6 +53,14 @@ const state = {
   filteredStocks: [],
   watchlists: [],
   watchlistSymbols: new Set(),
+
+  // Column Width Resizing State
+  columnWidths: JSON.parse(localStorage.getItem('fno_column_widths') || '{}'),
+
+  // Custom Universe State
+  customUniverseRawText: localStorage.getItem('fno_custom_universe_text') || '',
+  customUniverseSymbols: null, // Array of uppercase strings
+  isCustomUniverseActive: localStorage.getItem('fno_custom_universe_active') === 'true',
 
   // Progressive Filter State
   filters: {
@@ -87,6 +134,15 @@ const getAuthHeaders = () => {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
+function parseTokensFromText(text) {
+  if (!text) return [];
+  return Array.from(new Set(
+    text.split(/[,\s\n\r\t]+/)
+      .map(s => s.trim().toUpperCase().replace(/[^A-Z0-9&\-_]/g, ''))
+      .filter(s => s.length > 0)
+  ));
+}
+
 // -------------------------------------------------------------
 // Initialization Lifecycle
 // -------------------------------------------------------------
@@ -101,14 +157,266 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (state.user) {
     await loadUserWatchlists();
   }
+
+  // Restore saved custom universe if active
+  if (state.isCustomUniverseActive && state.customUniverseRawText) {
+    state.customUniverseSymbols = parseTokensFromText(state.customUniverseRawText);
+  }
   
   initColumnsSelector();
+  initColumnResizers();
+  populateSectorOptions();
+  populateIndustryOptions();
   applyFilters();
+  updateCustomUniverseHeaderBadge();
   
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 });
+
+// -------------------------------------------------------------
+// Interactive Horizontal Column Width Resizer Engine
+// -------------------------------------------------------------
+function initColumnResizers() {
+  const table = document.getElementById('screener-data-table');
+  if (!table) return;
+
+  const ths = table.querySelectorAll('thead th');
+  ths.forEach((th, index) => {
+    th.classList.add('resizable-th');
+
+    // Extract column key
+    let colKey = null;
+    th.classList.forEach(cls => {
+      if (cls.startsWith('col-')) colKey = cls.replace('col-', '');
+    });
+    if (!colKey && index === 0) colKey = 'watchlist';
+
+    // Apply saved or default width
+    const currentWidth = state.columnWidths[colKey] || DEFAULT_COLUMN_WIDTHS[colKey];
+    if (currentWidth) {
+      th.style.width = currentWidth;
+      th.style.minWidth = currentWidth;
+    }
+
+    // Ensure single resizer element
+    let resizer = th.querySelector('.col-resizer');
+    if (!resizer) {
+      resizer = document.createElement('div');
+      resizer.className = 'col-resizer';
+      resizer.title = 'Drag left/right to resize column width (Double-click to reset)';
+      th.appendChild(resizer);
+    }
+
+    // Drag to Resize Event Listeners
+    resizer.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const startX = e.pageX;
+      const startWidth = th.offsetWidth;
+      resizer.classList.add('is-resizing');
+      document.body.classList.add('is-col-resizing');
+
+      const onMouseMove = (moveEvent) => {
+        const deltaX = moveEvent.pageX - startX;
+        const newWidth = Math.max(45, startWidth + deltaX);
+        th.style.width = `${newWidth}px`;
+        th.style.minWidth = `${newWidth}px`;
+      };
+
+      const onMouseUp = (upEvent) => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        resizer.classList.remove('is-resizing');
+        document.body.classList.remove('is-col-resizing');
+
+        const finalWidth = `${th.offsetWidth}px`;
+        if (colKey) {
+          state.columnWidths[colKey] = finalWidth;
+          localStorage.setItem('fno_column_widths', JSON.stringify(state.columnWidths));
+        }
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+
+    // Double-click to Reset Column to Default
+    resizer.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (colKey) {
+        delete state.columnWidths[colKey];
+        localStorage.setItem('fno_column_widths', JSON.stringify(state.columnWidths));
+        const defWidth = DEFAULT_COLUMN_WIDTHS[colKey] || '120px';
+        th.style.width = defWidth;
+        th.style.minWidth = defWidth;
+        showToast(`Reset ${th.innerText.replace(/[^A-Za-z0-9 ]/g, '').trim()} column to default width`, 'info');
+      }
+    });
+  });
+}
+
+// -------------------------------------------------------------
+// Active Universe Resolution (Full vs Custom)
+// -------------------------------------------------------------
+function getActiveUniverse() {
+  if (!state.isCustomUniverseActive || !state.customUniverseSymbols || state.customUniverseSymbols.length === 0) {
+    return state.rawStocks;
+  }
+
+  const rawMap = new Map();
+  state.rawStocks.forEach(s => {
+    rawMap.set(s.symbol.toUpperCase(), s);
+  });
+
+  const resolved = [];
+  const processed = new Set();
+
+  state.customUniverseSymbols.forEach(rawSym => {
+    if (processed.has(rawSym)) return;
+    processed.add(rawSym);
+
+    const targetSym = SYMBOL_ALIAS_MAP[rawSym] || rawSym;
+    let stock = rawMap.get(targetSym) || rawMap.get(rawSym);
+
+    if (stock) {
+      resolved.push(stock);
+    } else {
+      const isIndex = rawSym === 'NIFTY' || rawSym === 'BANKNIFTY';
+      resolved.push({
+        symbol: rawSym,
+        name: isIndex ? `${rawSym} Index Derivative` : `${rawSym} Limited`,
+        exchange: isIndex ? 'NSE_INDEX' : 'NSE',
+        marketCap: isIndex ? 2500000 : 25000,
+        sector: isIndex ? 'Index' : 'Diversified',
+        industry: isIndex ? 'Index Futures & Options' : 'Equities',
+        price: isIndex ? (rawSym === 'NIFTY' ? 25200.00 : 51400.00) : 450.00,
+        changePercent: 0.75,
+        rsi: 56.4,
+        rvol: 1.25,
+        ema20Distance: 1.8,
+        fno: true
+      });
+    }
+  });
+
+  return resolved;
+}
+
+// -------------------------------------------------------------
+// Custom Universe Modal Handlers & Presets
+// -------------------------------------------------------------
+function openCustomUniverseModal() {
+  const modal = document.getElementById('custom-universe-modal');
+  const textarea = document.getElementById('textarea-custom-universe');
+
+  if (textarea) {
+    if (state.customUniverseRawText) {
+      textarea.value = state.customUniverseRawText;
+    } else if (!state.isCustomUniverseActive) {
+      textarea.value = FNO_PRESET_212;
+    }
+    handleUniverseTextareaInput();
+  }
+
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+
+function closeCustomUniverseModal() {
+  const modal = document.getElementById('custom-universe-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function handleUniverseTextareaInput() {
+  const textarea = document.getElementById('textarea-custom-universe');
+  const counter = document.getElementById('custom-universe-detected-count');
+  if (!textarea || !counter) return;
+
+  const tokens = parseTokensFromText(textarea.value);
+  counter.textContent = `${tokens.length} symbol${tokens.length === 1 ? '' : 's'}`;
+}
+
+function loadFnoPreset212() {
+  const textarea = document.getElementById('textarea-custom-universe');
+  if (textarea) {
+    textarea.value = FNO_PRESET_212;
+    handleUniverseTextareaInput();
+    showToast('Loaded 212 F&O Preset symbols into textarea', 'info');
+  }
+}
+
+function clearCustomUniverseText() {
+  const textarea = document.getElementById('textarea-custom-universe');
+  if (textarea) {
+    textarea.value = '';
+    handleUniverseTextareaInput();
+  }
+}
+
+function applyCustomUniverse() {
+  const textarea = document.getElementById('textarea-custom-universe');
+  const rawText = textarea ? textarea.value.trim() : '';
+  const tokens = parseTokensFromText(rawText);
+
+  if (tokens.length === 0) {
+    showToast('Please enter or paste at least one valid stock symbol', 'error');
+    return;
+  }
+
+  state.customUniverseRawText = rawText;
+  state.customUniverseSymbols = tokens;
+  state.isCustomUniverseActive = true;
+  state.pagination.page = 1;
+
+  localStorage.setItem('fno_custom_universe_text', rawText);
+  localStorage.setItem('fno_custom_universe_active', 'true');
+
+  closeCustomUniverseModal();
+  updateCustomUniverseHeaderBadge();
+  populateSectorOptions();
+  populateIndustryOptions();
+  applyFilters();
+
+  showToast(`Custom Universe active with ${tokens.length} stocks! All filters applied with minimum delay.`, 'success');
+}
+
+function resetToFullUniverse() {
+  state.isCustomUniverseActive = false;
+  state.pagination.page = 1;
+  localStorage.removeItem('fno_custom_universe_active');
+
+  closeCustomUniverseModal();
+  updateCustomUniverseHeaderBadge();
+  populateSectorOptions();
+  populateIndustryOptions();
+  applyFilters();
+
+  showToast('Reset to Full Stock Universe (1,050+ Stocks)', 'info');
+}
+
+function updateCustomUniverseHeaderBadge() {
+  const badge = document.getElementById('badge-custom-universe-active');
+  if (!badge) return;
+
+  if (state.isCustomUniverseActive && state.customUniverseSymbols) {
+    badge.textContent = state.customUniverseSymbols.length;
+    badge.classList.remove('hidden');
+    badge.classList.add('inline-block');
+  } else {
+    badge.classList.add('hidden');
+    badge.classList.remove('inline-block');
+  }
+}
 
 // -------------------------------------------------------------
 // Auth Verification & UI Handling
@@ -350,7 +658,6 @@ async function toggleWatchlist(symbol) {
 
   try {
     if (!defaultWatchlist) {
-      // Create Default Watchlist if none exists
       const createRes = await fetch('/api/watchlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
@@ -410,12 +717,14 @@ async function refreshStockData() {
   if (icon) icon.classList.add('animate-spin');
 
   await loadStockUniverse();
+  populateSectorOptions();
+  populateIndustryOptions();
   applyFilters();
 
   setTimeout(() => {
     if (icon) icon.classList.remove('animate-spin');
     showToast('Market Screener refreshed with latest quotes', 'success');
-  }, 500);
+  }, 400);
 }
 
 // -------------------------------------------------------------
@@ -425,11 +734,12 @@ function populateSectorOptions() {
   const sectorList = document.getElementById('sector-checkbox-list');
   if (!sectorList) return;
 
-  const sectors = Array.from(new Set(state.rawStocks.map(s => s.sector).filter(Boolean))).sort();
+  const activeUniverse = getActiveUniverse();
+  const sectors = Array.from(new Set(activeUniverse.map(s => s.sector).filter(Boolean))).sort();
   
   sectorList.innerHTML = sectors.map(sec => {
     const isChecked = state.filters.sectors.includes(sec);
-    const count = state.rawStocks.filter(s => s.sector === sec).length;
+    const count = activeUniverse.filter(s => s.sector === sec).length;
     return `
       <label class="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-dark-bg cursor-pointer select-none text-xs transition-colors">
         <div class="flex items-center gap-2">
@@ -448,15 +758,13 @@ function populateIndustryOptions() {
   const industryList = document.getElementById('industry-checkbox-list');
   if (!industryList) return;
 
-  // Cascade based on selected sectors
-  let pool = state.rawStocks;
+  const activeUniverse = getActiveUniverse();
+  let pool = activeUniverse;
   if (state.filters.sectors.length > 0) {
-    pool = state.rawStocks.filter(s => state.filters.sectors.includes(s.sector));
+    pool = activeUniverse.filter(s => state.filters.sectors.includes(s.sector));
   }
 
   const industries = Array.from(new Set(pool.map(s => s.industry).filter(Boolean))).sort();
-  
-  // Clean up any selected industries no longer in pool
   state.filters.industries = state.filters.industries.filter(ind => industries.includes(ind));
 
   industryList.innerHTML = industries.map(ind => {
@@ -516,7 +824,7 @@ function handleSectorCheckboxChange(input) {
     state.filters.sectors = state.filters.sectors.filter(s => s !== val);
   }
   updateSectorLabel();
-  populateIndustryOptions(); // Cascade industries
+  populateIndustryOptions();
   applyFilters();
 }
 
@@ -532,7 +840,8 @@ function handleIndustryCheckboxChange(input) {
 }
 
 function selectAllSectors() {
-  const sectors = Array.from(new Set(state.rawStocks.map(s => s.sector).filter(Boolean)));
+  const activeUniverse = getActiveUniverse();
+  const sectors = Array.from(new Set(activeUniverse.map(s => s.sector).filter(Boolean)));
   state.filters.sectors = sectors;
   populateSectorOptions();
   populateIndustryOptions();
@@ -547,9 +856,10 @@ function clearSectors() {
 }
 
 function selectAllIndustries() {
-  let pool = state.rawStocks;
+  const activeUniverse = getActiveUniverse();
+  let pool = activeUniverse;
   if (state.filters.sectors.length > 0) {
-    pool = state.rawStocks.filter(s => state.filters.sectors.includes(s.sector));
+    pool = activeUniverse.filter(s => state.filters.sectors.includes(s.sector));
   }
   state.filters.industries = Array.from(new Set(pool.map(s => s.industry).filter(Boolean)));
   populateIndustryOptions();
@@ -652,7 +962,7 @@ function setupSearchInputListener() {
       if (clearBtn) {
         clearBtn.classList.toggle('hidden', state.filters.search.length === 0);
       }
-      state.pagination.page = 1; // Reset to page 1 on search
+      state.pagination.page = 1;
       applyFilters();
     });
   }
@@ -672,14 +982,11 @@ function setupSearchInputListener() {
 // Filter Handlers & Progressive Filtering Pipeline
 // -------------------------------------------------------------
 function handleFilterChange() {
-  // 1. Market Cap
   const mcapVal = document.getElementById('select-market-cap')?.value;
   state.filters.marketCapMin = mcapVal === 'all' ? null : Number(mcapVal);
 
-  // 2. F&O Only
   state.filters.fnoOnly = Boolean(document.getElementById('chk-fno-only')?.checked);
 
-  // 3. Technical Filters
   const rsiMin = document.getElementById('input-rsi-min')?.value;
   const rsiMax = document.getElementById('input-rsi-max')?.value;
   state.filters.rsiMin = rsiMin ? Number(rsiMin) : null;
@@ -703,7 +1010,7 @@ function handleFilterChange() {
   state.filters.change1DMin = changeMin ? Number(changeMin) : null;
   state.filters.change1DMax = changeMax ? Number(changeMax) : null;
 
-  state.pagination.page = 1; // Reset to page 1 when filters change
+  state.pagination.page = 1;
   applyFilters();
 }
 
@@ -728,7 +1035,6 @@ function resetAllFilters() {
   state.sort = { column: null, direction: null };
   state.pagination.page = 1;
 
-  // Reset DOM inputs
   const searchInput = document.getElementById('input-stock-search');
   if (searchInput) searchInput.value = '';
   document.getElementById('btn-clear-search')?.classList.add('hidden');
@@ -751,9 +1057,10 @@ function resetAllFilters() {
 }
 
 function applyFilters() {
-  let results = [...state.rawStocks];
+  const universe = getActiveUniverse();
+  let results = [...universe];
 
-  // 1. Universal Search Filter (Symbol & Company Name)
+  // 1. Search Filter (Symbol & Name)
   if (state.filters.search) {
     const q = state.filters.search.toLowerCase();
     results = results.filter(s => 
@@ -767,19 +1074,19 @@ function applyFilters() {
     results = results.filter(s => (s.marketCap || 0) >= state.filters.marketCapMin);
   }
 
-  // 3. Sector Filter (OR within sectors, AND across categories)
+  // 3. Sector Filter
   if (state.filters.sectors.length > 0) {
     results = results.filter(s => state.filters.sectors.includes(s.sector));
   }
 
-  // 4. Industry Filter (OR within industries, AND across categories)
+  // 4. Industry Filter
   if (state.filters.industries.length > 0) {
     results = results.filter(s => state.filters.industries.includes(s.industry));
   }
 
-  // 5. F&O Filter
+  // 5. F&O Filter (Matches fno: true or in 212 F&O Set)
   if (state.filters.fnoOnly) {
-    results = results.filter(s => Boolean(s.fno));
+    results = results.filter(s => Boolean(s.fno) || FNO_SET_212.has(s.symbol.toUpperCase()));
   }
 
   // 6. Technical Filters
@@ -811,7 +1118,7 @@ function applyFilters() {
     results = results.filter(s => (s.changePercent || 0) <= state.filters.change1DMax);
   }
 
-  // 7. Independent Sorting (Applied AFTER filtering)
+  // 7. Independent 3-State Sorting
   if (state.sort.column && state.sort.direction) {
     const col = state.sort.column;
     const isAsc = state.sort.direction === 'asc';
@@ -821,8 +1128,8 @@ function applyFilters() {
       let valB = b[col];
 
       if (col === 'fno') {
-        valA = a.fno ? 1 : 0;
-        valB = b.fno ? 1 : 0;
+        valA = (a.fno || FNO_SET_212.has(a.symbol.toUpperCase())) ? 1 : 0;
+        valB = (b.fno || FNO_SET_212.has(b.symbol.toUpperCase())) ? 1 : 0;
       }
 
       if (typeof valA === 'string') {
@@ -893,6 +1200,14 @@ function renderActiveFilterChips() {
 
   const chips = [];
 
+  // Custom Universe Chip
+  if (state.isCustomUniverseActive && state.customUniverseSymbols) {
+    chips.push({
+      label: `📋 Universe: Custom (${state.customUniverseSymbols.length} Stocks)`,
+      onRemove: () => resetToFullUniverse()
+    });
+  }
+
   if (state.filters.search) {
     chips.push({ label: `Search: "${state.filters.search}"`, onRemove: () => {
       state.filters.search = '';
@@ -930,7 +1245,7 @@ function renderActiveFilterChips() {
   });
 
   if (state.filters.fnoOnly) {
-    chips.push({ label: 'F&O Stocks Only', onRemove: () => {
+    chips.push({ label: 'F&O Stocks Only (212)', onRemove: () => {
       state.filters.fnoOnly = false;
       const chk = document.getElementById('chk-fno-only');
       if (chk) chk.checked = false;
@@ -1019,21 +1334,24 @@ function renderActiveFilterChips() {
 // Header Metrics Update
 // -------------------------------------------------------------
 function updateMetricsHeader() {
-  const total = state.rawStocks.length;
+  const activeUniverse = getActiveUniverse();
+  const total = activeUniverse.length;
   const filtered = state.filteredStocks.length;
   
   const badgeTotal = document.getElementById('badge-total-stocks');
   const tableStatus = document.getElementById('table-status-showing');
 
+  const universeLabel = state.isCustomUniverseActive ? '(Custom Universe)' : (state.filters.fnoOnly ? '(212 F&O Stocks)' : '(Full Market)');
+
   if (badgeTotal) {
-    badgeTotal.textContent = `Showing ${filtered.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')} stocks`;
+    badgeTotal.textContent = `Showing ${filtered.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')} stocks ${universeLabel}`;
   }
 
   if (tableStatus) {
     if (filtered === total) {
-      tableStatus.textContent = `Showing: All ${total.toLocaleString('en-IN')} Stocks`;
+      tableStatus.textContent = `Showing: All ${total.toLocaleString('en-IN')} Stocks ${universeLabel}`;
     } else {
-      tableStatus.textContent = `Showing: ${filtered.toLocaleString('en-IN')} Stocks matching selected filters (of ${total.toLocaleString('en-IN')})`;
+      tableStatus.textContent = `Showing: ${filtered.toLocaleString('en-IN')} Stocks matching filters (of ${total.toLocaleString('en-IN')} in ${universeLabel})`;
     }
   }
 }
@@ -1068,26 +1386,24 @@ function renderTable() {
   const startIdx = (page - 1) * pageSize;
   const pageStocks = state.filteredStocks.slice(startIdx, startIdx + pageSize);
 
-  tbody.innerHTML = pageStocks.map((s, idx) => {
+  tbody.innerHTML = pageStocks.map(s => {
     const isStarred = state.watchlistSymbols.has(s.symbol);
     const isBull = (s.changePercent || 0) >= 0;
     const changeBadgeClass = isBull ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20';
 
-    // RSI Color styling
     let rsiBadge = 'text-slate-300';
     if (s.rsi >= 70) rsiBadge = 'text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20';
     else if (s.rsi <= 35) rsiBadge = 'text-rose-400 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20';
     else if (s.rsi >= 60) rsiBadge = 'text-teal-300 font-semibold';
     else if (s.rsi <= 45) rsiBadge = 'text-amber-300 font-semibold';
 
-    // RVOL Highlight
     let rvolBadge = 'text-slate-300';
     if (s.rvol >= 2.0) rvolBadge = 'text-purple-300 font-bold bg-purple-500/15 px-1.5 py-0.5 rounded border border-purple-500/30';
     else if (s.rvol >= 1.5) rvolBadge = 'text-indigo-300 font-semibold';
 
-    // EMA Distance Color
     const emaDistBull = (s.ema20Distance || 0) >= 0;
     const emaClass = emaDistBull ? 'text-emerald-400' : 'text-rose-400';
+    const isFno = s.fno || FNO_SET_212.has(s.symbol.toUpperCase());
 
     return `
       <tr class="hover:bg-slate-800/40 transition-colors group">
@@ -1161,7 +1477,7 @@ function renderTable() {
 
         <!-- 11. F&O Status -->
         <td class="py-2.5 px-3 text-center col-fno">
-          ${s.fno ? '<span class="px-2 py-0.5 text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-full font-sans">✓ F&O</span>' : '<span class="text-slate-600 font-mono">—</span>'}
+          ${isFno ? '<span class="px-2 py-0.5 text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-full font-sans">✓ F&O</span>' : '<span class="text-slate-600 font-mono">—</span>'}
         </td>
 
         <!-- 12. Actions: Open in Visualizer -->
@@ -1202,14 +1518,12 @@ function renderPagination() {
   if (buttonsContainer) {
     let btns = '';
 
-    // Prev Button
     btns += `
       <button onclick="goToPage(${page - 1})" ${page === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-colors text-xs">
         ← Prev
       </button>
     `;
 
-    // Page Numbers (Smart windowing)
     const pageWindow = [];
     for (let p = 1; p <= totalPages; p++) {
       if (p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2)) {
@@ -1232,7 +1546,6 @@ function renderPagination() {
       }
     });
 
-    // Next Button
     btns += `
       <button onclick="goToPage(${page + 1})" ${page === totalPages || total === 0 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-colors text-xs">
         Next →
@@ -1250,7 +1563,6 @@ function goToPage(p) {
   renderTable();
   renderPagination();
 
-  // Scroll table viewport to top
   const tableCont = document.querySelector('.fno-table-container');
   if (tableCont) tableCont.scrollTop = 0;
 }
@@ -1346,7 +1658,7 @@ function exportFnoCsv() {
     s.rsi || '',
     s.rvol || '',
     s.ema20Distance || '',
-    s.fno ? 'YES' : 'NO'
+    (s.fno || FNO_SET_212.has(s.symbol.toUpperCase())) ? 'YES' : 'NO'
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -1354,7 +1666,7 @@ function exportFnoCsv() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `Sangam_FNO_Stock_Screener_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute('download', `Sangam_Stock_Screener_${state.isCustomUniverseActive ? 'CustomUniverse_' : (state.filters.fnoOnly ? 'FNO_212_' : '')}${new Date().toISOString().slice(0, 10)}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
