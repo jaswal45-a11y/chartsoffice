@@ -316,6 +316,9 @@ async function init() {
     changePercent: 12.18
   });
 
+  // Start real-time active chart ticker (4s auto-pull for zero lag)
+  startActiveChartLiveTicker();
+
   lucide.createIcons();
 }
 
@@ -2684,12 +2687,106 @@ async function loadStockChart(rawSymbol) {
     
     updateDefaultLegend();
 
+    // Trigger immediate live quote verification for the chart
+    pollActiveStockLiveQuote();
+
   } catch (err) {
     showToast(`Chart error for ${cleanSymbol}: ${err.message}`, 'error');
   } finally {
     el.chartLoadingOverlay.classList.remove('flex');
     el.chartLoadingOverlay.classList.add('hidden');
   }
+}
+
+// -------------------------------------------------------------
+// Real-Time Active Chart Ticker & Screener Price Sync
+// -------------------------------------------------------------
+let activeChartTickerInterval = null;
+
+function startActiveChartLiveTicker() {
+  if (activeChartTickerInterval) clearInterval(activeChartTickerInterval);
+  activeChartTickerInterval = setInterval(() => {
+    pollActiveStockLiveQuote();
+  }, 4000); // Poll active stock every 4s for zero-lag intraday precision
+}
+
+async function pollActiveStockLiveQuote() {
+  const sym = state.selectedStock?.symbol;
+  if (!sym || !state.currentStockData?.candles) return;
+
+  try {
+    const cleanSym = sym.toUpperCase().replace(/\.(NS|BO)$/, '');
+    const res = await fetch(`/api/fno/live-quotes?symbols=${encodeURIComponent(cleanSym)}`);
+    const data = await res.json();
+    const q = data.quotes?.[cleanSym];
+    if (!q || !q.price) return;
+
+    const oldPrice = state.currentStockData.ltp;
+    const newPrice = q.price;
+    const newChange = q.changePercent != null ? q.changePercent : state.currentStockData.changePercent;
+
+    state.currentStockData.ltp = newPrice;
+    state.currentStockData.changePercent = newChange;
+
+    // Update Header LTP Display
+    if (el.chartStockLtp) {
+      el.chartStockLtp.textContent = fmt.currency(newPrice);
+      if (oldPrice && oldPrice !== newPrice) {
+        const isUp = newPrice > oldPrice;
+        el.chartStockLtp.style.color = isUp ? '#10b981' : '#ef4444';
+        setTimeout(() => { if (el.chartStockLtp) el.chartStockLtp.style.color = ''; }, 1200);
+      }
+    }
+
+    if (el.chartStockChange) {
+      const isBull = newChange >= 0;
+      el.chartStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md ${
+        isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+      }`;
+      el.chartStockChange.textContent = fmt.percent(newChange);
+    }
+
+    // Update the last candle on the chart in real-time
+    const candles = state.currentStockData.candles;
+    if (candles && candles.length > 0 && state.charts.series.candles) {
+      const lastC = { ...candles[candles.length - 1] };
+      lastC.close = newPrice;
+      lastC.high = Math.max(lastC.high, newPrice);
+      lastC.low = Math.min(lastC.low, newPrice);
+      if (q.volume) lastC.volume = Math.max(lastC.volume || 0, q.volume);
+      candles[candles.length - 1] = lastC;
+      try {
+        state.charts.series.candles.update(lastC);
+      } catch (e) {}
+    }
+
+    updateDefaultLegend();
+  } catch (err) {}
+}
+
+async function syncScreenedStocksLivePrices() {
+  if (!state.currentStocks || state.currentStocks.length === 0) return;
+  const symbols = state.currentStocks.map(s => s.symbol).filter(Boolean);
+  if (symbols.length === 0) return;
+
+  try {
+    const res = await fetch(`/api/fno/live-quotes?symbols=${encodeURIComponent(symbols.slice(0, 80).join(','))}`);
+    const data = await res.json();
+    if (data.success && data.quotes) {
+      let updated = false;
+      state.currentStocks.forEach(s => {
+        const q = data.quotes[s.symbol.toUpperCase()];
+        if (q && q.price) {
+          s.price = q.price;
+          if (q.changePercent != null) s.changePercent = q.changePercent;
+          updated = true;
+        }
+      });
+      if (updated) {
+        renderStocksTable();
+      }
+    }
+  } catch (err) {}
 }
 
 // Select a stock from the table or manual search
@@ -2910,6 +3007,9 @@ async function runScreener(id) {
     if (state.currentStocks.length > 0) {
       selectStock(state.currentStocks[0]);
     }
+
+    // Trigger instant live prices sync for screened results
+    syncScreenedStocksLivePrices();
   } catch (err) {
     showToast(`Error running screener: ${err.message}`, 'error');
     el.lastUpdatedTime.textContent = 'Execution failed';
@@ -2965,6 +3065,9 @@ async function runAllScreeners() {
     if (state.currentStocks.length > 0) {
       selectStock(state.currentStocks[0]);
     }
+
+    // Trigger instant live prices sync for aggregated results
+    syncScreenedStocksLivePrices();
   } catch (err) {
     showToast(`Run All failed: ${err.message}`, 'error');
   } finally {

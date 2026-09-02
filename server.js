@@ -743,7 +743,7 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
   return null;
 }
 
-// In-memory cache for stock history (10 mins TTL)
+// In-memory cache for stock history (5 seconds TTL for instant responsiveness)
 const historyCache = new Map();
 
 async function fetchStockHistory(rawSymbol, customRange = null, customInterval = '1d') {
@@ -759,7 +759,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   const yahooRange = '2y';
   const cacheKey = `${rawSymbol.toUpperCase()}_${selectedRange}_${interval}`;
   const cached = historyCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp < 10 * 60 * 1000)) {
+  if (cached && (Date.now() - cached.timestamp < 5000)) {
     return cached.data;
   }
 
@@ -796,12 +796,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         let v = quotes.volume[i] || 0;
 
         if (c === null || o === null || h === null || l === null) {
-          // If this is the latest bar and meta has live market data, fill it!
           if (i === timestamps.length - 1 && meta.regularMarketPrice) {
             c = c !== null ? c : meta.regularMarketPrice;
             h = h !== null ? h : (meta.regularMarketDayHigh || c);
             l = l !== null ? l : (meta.regularMarketDayLow || c);
-            // Preserve actual quote open; fallback to previous day close, NOT 2-year chartPreviousClose
             const prevClose = candles.length > 0 ? candles[candles.length - 1].close : c;
             o = o !== null ? o : prevClose;
             v = v || meta.regularMarketVolume || 0;
@@ -822,27 +820,14 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         });
       }
 
-      // Check if meta regularMarketTime represents a new trading session not yet in timestamps
-      if (candles.length > 0 && meta.regularMarketPrice && meta.regularMarketTime) {
-        const lastCandleTime = candles[candles.length - 1].time;
-        const metaDate = new Date(meta.regularMarketTime * 1000).toISOString().split('T')[0];
-        if (metaDate > lastCandleTime) {
-          const prevClose = candles[candles.length - 1].close;
-          candles.push({
-            time: metaDate,
-            open: prevClose,
-            high: Number((meta.regularMarketDayHigh || meta.regularMarketPrice).toFixed(2)),
-            low: Number((meta.regularMarketDayLow || meta.regularMarketPrice).toFixed(2)),
-            close: Number(meta.regularMarketPrice.toFixed(2)),
-            volume: meta.regularMarketVolume || 0
-          });
-        } else if (metaDate === lastCandleTime) {
-          const lastC = candles[candles.length - 1];
-          lastC.close = Number(meta.regularMarketPrice.toFixed(2));
-          if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
-          if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
-          if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
-        }
+      // Merge latest live intraday quote from meta if available
+      if (candles.length > 0 && meta.regularMarketPrice) {
+        const livePrice = Number(meta.regularMarketPrice.toFixed(2));
+        const lastC = candles[candles.length - 1];
+        lastC.close = livePrice;
+        if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
+        if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
+        if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
       }
 
       if (candles.length > 0) {
@@ -863,13 +848,22 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
         const latestCandle = candles[candles.length - 1];
         const prevCandle = candles.length > 1 ? candles[candles.length - 2] : latestCandle;
-        const changePercent = Number((((latestCandle.close - prevCandle.close) / prevCandle.close) * 100).toFixed(2));
+        
+        const realLtp = meta.regularMarketPrice ? Number(meta.regularMarketPrice.toFixed(2)) : latestCandle.close;
+        let changePercent = 0;
+        if (meta.regularMarketChangePercent != null) {
+          changePercent = Number(meta.regularMarketChangePercent.toFixed(2));
+        } else if (meta.chartPreviousClose) {
+          changePercent = Number((((realLtp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
+        } else if (prevCandle && prevCandle.close) {
+          changePercent = Number((((realLtp - prevCandle.close) / prevCandle.close) * 100).toFixed(2));
+        }
 
         const high52w = meta.fiftyTwoWeekHigh || Math.max(...candles.slice(-250).map(c => c.high));
         const low52w = meta.fiftyTwoWeekLow || Math.min(...candles.slice(-250).map(c => c.low));
         const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
-        const pctFrom52wHigh = Number((((latestCandle.close - high52w) / high52w) * 100).toFixed(2));
-        const pctFromAth = Number((((latestCandle.close - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
+        const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
+        const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
 
         const responsePayload = {
           symbol: rawSymbol,
@@ -878,10 +872,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           range: selectedRange,
           initialRange: selectedRange,
           isIntraday,
-          ltp: latestCandle.close,
+          ltp: realLtp,
           changePercent,
           high52w,
           low52w,
+          fiftyTwoWeekHigh: high52w,
+          fiftyTwoWeekLow: low52w,
           allTimeHigh,
           pctFrom52wHigh,
           pctFromAth,
