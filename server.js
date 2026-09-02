@@ -4,6 +4,7 @@
  */
 
 const http = require('node:http');
+const https = require('node:https');
 const fs = require('node:fs');
 const path = require('node:path');
 const url = require('node:url');
@@ -20,6 +21,101 @@ const SECTORS_FILE = path.join(__dirname, 'data', 'sectors_data.json');
 const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.json');
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+
+// Live Intraday Quotes In-Memory Cache (25s TTL)
+const LIVE_QUOTES_CACHE = {
+  data: {}, // { [symbol]: { price, changePercent, prevClose, volume, dayHigh, dayLow, timestamp } }
+  lastUpdated: 0,
+  TTL_MS: 25000
+};
+
+// Yahoo Finance single quote fetcher
+function fetchSingleLiveQuote(symbol) {
+  return new Promise((resolve) => {
+    const cleanSym = (symbol || '').trim().toUpperCase().replace('.NS', '').replace('.BO', '');
+    if (!cleanSym) return resolve(null);
+
+    const isIndex = cleanSym === 'NIFTY' || cleanSym === 'BANKNIFTY';
+    const yahooSym = isIndex ? (cleanSym === 'NIFTY' ? '%5ENSEI' : '%5ENSEBANK') : `${cleanSym}.NS`;
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${yahooSym}?interval=1d&range=5d`;
+
+    const agent = new https.Agent({ rejectUnauthorized: false });
+    const req = https.get(url, {
+      agent,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': '*/*'
+      },
+      timeout: 4500
+    }, res => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(d);
+          if (json.chart && json.chart.result && json.chart.result[0]) {
+            const meta = json.chart.result[0].meta;
+            const ltp = meta.regularMarketPrice;
+            const prevClose = meta.chartPreviousClose || meta.previousClose;
+            const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
+            return resolve({
+              symbol: cleanSym,
+              price: ltp,
+              changePercent: changePercent,
+              prevClose: prevClose,
+              volume: meta.regularMarketVolume || 0,
+              dayHigh: meta.regularMarketDayHigh || 0,
+              dayLow: meta.regularMarketDayLow || 0,
+              timestamp: Date.now()
+            });
+          }
+        } catch (e) {}
+        resolve(null);
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+  });
+}
+
+// Concurrency-limited batch quote fetcher
+async function getOrFetchLiveQuotes(symbols) {
+  const now = Date.now();
+  const result = {};
+  const needed = [];
+
+  // Check cache first
+  symbols.forEach(sym => {
+    const cleanSym = sym.toUpperCase();
+    const cached = LIVE_QUOTES_CACHE.data[cleanSym];
+    if (cached && (now - cached.timestamp < LIVE_QUOTES_CACHE.TTL_MS)) {
+      result[cleanSym] = cached;
+    } else {
+      needed.push(cleanSym);
+    }
+  });
+
+  if (needed.length === 0) return result;
+
+  // Fetch needed in concurrency chunks of 20
+  const CHUNK_SIZE = 20;
+  for (let i = 0; i < needed.length; i += CHUNK_SIZE) {
+    const chunk = needed.slice(i, i + CHUNK_SIZE);
+    const chunkResults = await Promise.all(chunk.map(fetchSingleLiveQuote));
+    chunkResults.forEach((q, idx) => {
+      const sym = chunk[idx];
+      if (q && q.price) {
+        LIVE_QUOTES_CACHE.data[sym] = q;
+        result[sym] = q;
+      } else if (LIVE_QUOTES_CACHE.data[sym]) {
+        // Fallback to previous cached value if transient error
+        result[sym] = LIVE_QUOTES_CACHE.data[sym];
+      }
+    });
+  }
+
+  return result;
+}
 
 // MIME types for static assets
 const MIME_TYPES = {
@@ -2747,6 +2843,38 @@ const server = http.createServer(async (req, res) => {
         } catch (err) {
           console.error('Error loading F&O stocks universe:', err);
           return sendJson(res, 500, { success: false, error: 'Failed to load stocks universe' });
+        }
+      }
+
+      // 12. GET /api/fno/live-quotes - Fetch Live Intraday Market Quotes for Stocks
+      if (pathname === '/api/fno/live-quotes' && method === 'GET') {
+        try {
+          const querySymbolsRaw = parsedUrl.query.symbols;
+          let symbolsToFetch = [];
+          if (querySymbolsRaw) {
+            symbolsToFetch = querySymbolsRaw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+          } else {
+            // Default to 212 F&O universe
+            if (fs.existsSync(FNO_DATA_FILE)) {
+              const stocks = JSON.parse(fs.readFileSync(FNO_DATA_FILE, 'utf8') || '[]');
+              symbolsToFetch = stocks.filter(s => s.fno).map(s => s.symbol);
+            }
+          }
+
+          if (symbolsToFetch.length === 0) {
+            return sendJson(res, 200, { success: true, count: 0, quotes: {} });
+          }
+
+          const quotes = await getOrFetchLiveQuotes(symbolsToFetch);
+          return sendJson(res, 200, {
+            success: true,
+            timestamp: new Date().toISOString(),
+            count: Object.keys(quotes).length,
+            quotes
+          });
+        } catch (err) {
+          console.error('Error fetching live quotes:', err);
+          return sendJson(res, 500, { success: false, error: 'Failed to fetch live quotes' });
         }
       }
 

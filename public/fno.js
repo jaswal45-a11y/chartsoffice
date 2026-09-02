@@ -1,6 +1,7 @@
 /**
  * F&O & Equity Stock Screener Controller (Institutional Progressive Architecture)
- * With 212 F&O Direct Sync, Draggable Column Resizing & Custom Universe Pasting
+ * With Real-Time Live Quotes Polling (30s), Green/Red Visual Price Flashes,
+ * 212 F&O Direct Sync, Draggable Column Resizing & Custom Universe Pasting
  * Sangam_chartlinks Financial Platform
  */
 
@@ -53,6 +54,12 @@ const state = {
   filteredStocks: [],
   watchlists: [],
   watchlistSymbols: new Set(),
+
+  // Live Real-Time Quotes Map & Flash Tracking
+  liveQuotes: {},
+  priceFlashMap: {}, // { [symbol]: 'up' | 'down' }
+  livePollInterval: null,
+  lastQuoteTimestamp: null,
 
   // Column Width Resizing State
   columnWidths: JSON.parse(localStorage.getItem('fno_column_widths') || '{}'),
@@ -170,10 +177,89 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyFilters();
   updateCustomUniverseHeaderBadge();
   
+  // Start Live Real-Time Quotes Polling (30s Interval)
+  startLiveQuotesPolling();
+  
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 });
+
+// -------------------------------------------------------------
+// Live Real-Time Market Quotes Engine (30s Poller & Visual Flash)
+// -------------------------------------------------------------
+function startLiveQuotesPolling() {
+  if (state.livePollInterval) clearInterval(state.livePollInterval);
+  
+  // Immediate initial live fetch
+  pollLiveQuotes(true);
+
+  // Recurring 30s auto-refresh
+  state.livePollInterval = setInterval(() => {
+    pollLiveQuotes(true);
+  }, 30000);
+}
+
+async function pollLiveQuotes(silent = false) {
+  const activeUniverse = getActiveUniverse();
+  if (!activeUniverse || activeUniverse.length === 0) return;
+
+  // Determine top priority symbols to refresh (visible page stocks + top 50 liquid heavyweights)
+  const { page, pageSize } = state.pagination;
+  const startIdx = (page - 1) * pageSize;
+  const visibleStocks = state.filteredStocks.slice(startIdx, startIdx + pageSize);
+  const visibleSymbols = visibleStocks.map(s => s.symbol);
+
+  // Add top liquid F&O stocks
+  const prioritySymbols = Array.from(new Set([
+    ...visibleSymbols,
+    'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'SBIN', 'BHARTIARTL', 'ITC', 'LT', 'BAJFINANCE',
+    'TATAMOTORS', 'SUNPHARMA', 'TITAN', 'M&M', 'NTPC', 'ONGC', 'KOTAKBANK', 'HINDUNILVR', 'AXISBANK', 'ZOMATO',
+    'NIFTY', 'BANKNIFTY'
+  ]));
+
+  try {
+    const url = `/api/fno/live-quotes?symbols=${encodeURIComponent(prioritySymbols.join(','))}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.success && data.quotes) {
+      state.lastQuoteTimestamp = data.timestamp;
+      const quotes = data.quotes;
+      let hasChanges = false;
+      state.priceFlashMap = {};
+
+      // Merge quotes into master stocks and track price flashes
+      state.rawStocks.forEach(s => {
+        const q = quotes[s.symbol.toUpperCase()];
+        if (q && q.price && q.price !== s.price) {
+          state.priceFlashMap[s.symbol] = q.price > s.price ? 'up' : 'down';
+          s.price = q.price;
+          if (q.changePercent != null) s.changePercent = q.changePercent;
+          if (q.volume) s.volume = q.volume;
+          hasChanges = true;
+        }
+      });
+
+      // Update live status text with last refresh time
+      const statusText = document.getElementById('live-quotes-status-text');
+      if (statusText) {
+        const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        statusText.textContent = `Live (30s) • ${timeStr}`;
+      }
+
+      if (hasChanges) {
+        applyFilters();
+      }
+
+      if (!silent) {
+        showToast('Live market quotes refreshed!', 'success');
+      }
+    }
+  } catch (err) {
+    console.warn('Live quotes polling notice:', err);
+  }
+}
 
 // -------------------------------------------------------------
 // Interactive Horizontal Column Width Resizer Engine
@@ -226,7 +312,7 @@ function initColumnResizers() {
         th.style.minWidth = `${newWidth}px`;
       };
 
-      const onMouseUp = (upEvent) => {
+      const onMouseUp = () => {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         resizer.classList.remove('is-resizing');
@@ -387,6 +473,9 @@ function applyCustomUniverse() {
   populateIndustryOptions();
   applyFilters();
 
+  // Trigger live quotes poll for newly activated custom universe
+  pollLiveQuotes(true);
+
   showToast(`Custom Universe active with ${tokens.length} stocks! All filters applied with minimum delay.`, 'success');
 }
 
@@ -401,7 +490,7 @@ function resetToFullUniverse() {
   populateIndustryOptions();
   applyFilters();
 
-  showToast('Reset to Full Stock Universe (1,050+ Stocks)', 'info');
+  showToast('Reset to Full Stock Universe (1,100+ Stocks)', 'info');
 }
 
 function updateCustomUniverseHeaderBadge() {
@@ -716,14 +805,10 @@ async function refreshStockData() {
   const icon = document.getElementById('icon-refresh-spin');
   if (icon) icon.classList.add('animate-spin');
 
-  await loadStockUniverse();
-  populateSectorOptions();
-  populateIndustryOptions();
-  applyFilters();
+  await pollLiveQuotes(false);
 
   setTimeout(() => {
     if (icon) icon.classList.remove('animate-spin');
-    showToast('Market Screener refreshed with latest quotes', 'success');
   }, 400);
 }
 
@@ -1357,7 +1442,7 @@ function updateMetricsHeader() {
 }
 
 // -------------------------------------------------------------
-// Table Rendering (Data-Dense Terminal Style)
+// Table Rendering (Data-Dense Terminal Style & Visual Flashes)
 // -------------------------------------------------------------
 function renderTable() {
   const tbody = document.getElementById('fno-stocks-tbody');
@@ -1391,6 +1476,9 @@ function renderTable() {
     const isBull = (s.changePercent || 0) >= 0;
     const changeBadgeClass = isBull ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20';
 
+    // Check if this stock had a live price flash in this tick
+    const flashClass = state.priceFlashMap[s.symbol] === 'up' ? 'flash-up' : (state.priceFlashMap[s.symbol] === 'down' ? 'flash-down' : '');
+
     let rsiBadge = 'text-slate-300';
     if (s.rsi >= 70) rsiBadge = 'text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20';
     else if (s.rsi <= 35) rsiBadge = 'text-rose-400 font-bold bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20';
@@ -1406,7 +1494,7 @@ function renderTable() {
     const isFno = s.fno || FNO_SET_212.has(s.symbol.toUpperCase());
 
     return `
-      <tr class="hover:bg-slate-800/40 transition-colors group">
+      <tr class="hover:bg-slate-800/40 transition-colors group ${flashClass}">
         <!-- 1. Watchlist Pin Star -->
         <td class="py-2.5 px-3 text-center sticky-col-cell bg-dark-card group-hover:bg-slate-800/60 border-r border-dark-border/40">
           <button onclick="toggleWatchlist('${s.symbol}')" class="p-1 text-slate-500 hover:text-amber-400 transition-colors cursor-pointer" title="${isStarred ? 'Unpin from Watchlist' : 'Pin to Watchlist'}">
@@ -1444,8 +1532,8 @@ function renderTable() {
           ${s.industry || '—'}
         </td>
 
-        <!-- 6. Price -->
-        <td class="py-2.5 px-3 text-right font-bold text-slate-100 col-price">
+        <!-- 6. Price (With Flash Animation on Live Tick) -->
+        <td class="py-2.5 px-3 text-right font-bold text-slate-100 col-price font-mono ${flashClass}">
           ${formatPriceINR(s.price)}
         </td>
 
@@ -1563,8 +1651,12 @@ function goToPage(p) {
   renderTable();
   renderPagination();
 
+  // Scroll table viewport to top
   const tableCont = document.querySelector('.fno-table-container');
   if (tableCont) tableCont.scrollTop = 0;
+
+  // Poll live quotes for the newly visible page
+  pollLiveQuotes(true);
 }
 
 function handleRowsPerPageChange() {
@@ -1574,6 +1666,7 @@ function handleRowsPerPageChange() {
     state.pagination.page = 1;
     renderTable();
     renderPagination();
+    pollLiveQuotes(true);
   }
 }
 
