@@ -232,10 +232,15 @@ async function pollLiveQuotes(silent = false) {
       // Merge quotes into master stocks and track price flashes
       state.rawStocks.forEach(s => {
         const q = quotes[s.symbol.toUpperCase()];
-        if (q && q.price && q.price !== s.price) {
-          state.priceFlashMap[s.symbol] = q.price > s.price ? 'up' : 'down';
+        if (q && q.price) {
+          if (s.price && q.price !== s.price) {
+            state.priceFlashMap[s.symbol] = q.price > s.price ? 'up' : 'down';
+          }
           s.price = q.price;
-          if (q.changePercent != null) s.changePercent = q.changePercent;
+          if (q.changePercent != null) {
+            if (s.changePercent !== q.changePercent) hasChanges = true;
+            s.changePercent = q.changePercent;
+          }
           if (q.volume) s.volume = q.volume;
           hasChanges = true;
         }

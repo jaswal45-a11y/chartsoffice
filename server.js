@@ -55,14 +55,23 @@ function fetchSingleLiveQuote(symbol) {
           const json = JSON.parse(d);
           if (json.chart && json.chart.result && json.chart.result[0]) {
             const meta = json.chart.result[0].meta;
-            const ltp = meta.regularMarketPrice;
-            const prevClose = meta.chartPreviousClose || meta.previousClose;
-            const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
+            const ltp = Number((meta.regularMarketPrice || 0).toFixed(2));
+            const quotes = json.chart.result[0].indicators?.quote?.[0];
+            const closes = quotes ? (quotes.close || []).filter(c => c != null) : [];
+            const yesterdayClose = closes.length > 1 ? closes[closes.length - 2] : (meta.previousClose || ltp);
+
+            let changePercent = 0;
+            if (meta.regularMarketChangePercent != null) {
+              changePercent = Number(meta.regularMarketChangePercent.toFixed(2));
+            } else if (yesterdayClose && yesterdayClose > 0) {
+              changePercent = Number(((ltp - yesterdayClose) / yesterdayClose * 100).toFixed(2));
+            }
+
             return resolve({
               symbol: cleanSym,
               price: ltp,
               changePercent: changePercent,
-              prevClose: prevClose,
+              prevClose: yesterdayClose,
               volume: meta.regularMarketVolume || 0,
               dayHigh: meta.regularMarketDayHigh || 0,
               dayLow: meta.regularMarketDayLow || 0,
@@ -639,6 +648,130 @@ function calculateDarvasBox(candles, boxp = 5) {
   };
 }
 
+// -------------------------------------------------------------
+// Cloud-Resilient Yahoo Finance Session & Crumb Handshake Engine
+// -------------------------------------------------------------
+const YAHOO_SESSION = {
+  cookies: '',
+  crumb: '',
+  lastUpdated: 0,
+  TTL_MS: 30 * 60 * 1000 // 30 minutes session cache
+};
+
+async function getYahooCrumbAndCookie() {
+  const now = Date.now();
+  if (YAHOO_SESSION.crumb && YAHOO_SESSION.cookies && (now - YAHOO_SESSION.lastUpdated < YAHOO_SESSION.TTL_MS)) {
+    return YAHOO_SESSION;
+  }
+
+  try {
+    const fetchHelper = (url, headers = {}) => {
+      return new Promise((resolve) => {
+        const agent = new https.Agent({ rejectUnauthorized: false });
+        const req = https.get(url, {
+          agent,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            ...headers
+          },
+          timeout: 6000
+        }, res => {
+          let d = '';
+          const setCookies = res.headers['set-cookie'];
+          res.on('data', c => d += c);
+          res.on('end', () => resolve({ status: res.statusCode, setCookies, body: d }));
+        });
+        req.on('error', () => resolve({ status: 500, body: '' }));
+        req.on('timeout', () => { req.destroy(); resolve({ status: 504, body: '' }); });
+      });
+    };
+
+    // Step 1: Initial cookie handshake
+    const initRes = await fetchHelper('https://fc.yahoo.com');
+    let cookies = [];
+    if (initRes.setCookies) {
+      cookies = initRes.setCookies.map(c => c.split(';')[0]);
+    }
+
+    const cookieHeader = Array.from(new Set(cookies)).join('; ');
+
+    // Step 2: Acquire crumb
+    const crumbRes = await fetchHelper('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+      Cookie: cookieHeader
+    });
+
+    if (crumbRes.status === 200 && crumbRes.body && !crumbRes.body.includes('<')) {
+      YAHOO_SESSION.cookies = cookieHeader;
+      YAHOO_SESSION.crumb = crumbRes.body.trim();
+      YAHOO_SESSION.lastUpdated = now;
+      console.log(`[CLOUD_AUTH] Initialized Yahoo Crumb Session: "${YAHOO_SESSION.crumb}"`);
+    } else {
+      YAHOO_SESSION.cookies = cookieHeader;
+      YAHOO_SESSION.crumb = '';
+      YAHOO_SESSION.lastUpdated = now;
+    }
+  } catch (err) {
+    console.warn('[CLOUD_AUTH] Yahoo Session initialization notice:', err.message);
+  }
+
+  return YAHOO_SESSION;
+}
+
+// Multi-Source Resilient Chart Data Fetcher (Tier 1: Crumb Session, Tier 2: Query2, Tier 3: Query1)
+async function fetchChartDataMultiSource(candidate, range, interval) {
+  const session = await getYahooCrumbAndCookie();
+  const crumbParam = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
+
+  // Tier 1: Query1 with Crumb + Cookies (Bypasses Cloud Datacenter blocks)
+  const tier1Url = `https://query1.finance.yahoo.com/v8/finance/chart/${candidate}?range=${range}&interval=${interval}${crumbParam}`;
+  try {
+    const res = await fetch(tier1Url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        ...(session.cookies ? { 'Cookie': session.cookies } : {})
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.chart?.result?.[0]) return data.chart.result[0];
+    }
+  } catch (e) {}
+
+  // Tier 2: Query2 Mirror (Direct)
+  const tier2Url = `https://query2.finance.yahoo.com/v8/finance/chart/${candidate}?range=${range}&interval=${interval}`;
+  try {
+    const res = await fetch(tier2Url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.chart?.result?.[0]) return data.chart.result[0];
+    }
+  } catch (e) {}
+
+  // Tier 3: Query1 Mirror (Direct fallback)
+  const tier3Url = `https://query1.finance.yahoo.com/v8/finance/chart/${candidate}?range=${range}&interval=${interval}`;
+  try {
+    const res = await fetch(tier3Url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': '*/*'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.chart?.result?.[0]) return data.chart.result[0];
+    }
+  } catch (e) {}
+
+  return null;
+}
+
 // Traditional Auto Pivot Points (TradingView Standard)
 // Automatically selects reference period based on active timeframe:
 // - Intraday (1m, 5m, 15m, 30m, 1hr) -> Daily (D) base
@@ -674,16 +807,13 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
 
   for (const candidate of candidates) {
     try {
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${candidate}?range=${refRange}&interval=${refInterval}`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      const r = data.chart?.result?.[0];
+      const r = await fetchChartDataMultiSource(candidate, refRange, refInterval);
       if (!r || !r.timestamp || r.timestamp.length === 0) continue;
 
       const meta = r.meta || {};
-      const q = r.indicators.quote[0];
+      const q = r.indicators?.quote?.[0];
+      if (!q) continue;
+
       const validCandles = [];
       for (let i = 0; i < r.timestamp.length; i++) {
         let c = q.close[i];
@@ -772,19 +902,13 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
   for (const candidate of candidates) {
     try {
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${candidate}?range=${yahooRange}&interval=${interval}`;
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-      });
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      const result = data.chart?.result?.[0];
+      const result = await fetchChartDataMultiSource(candidate, yahooRange, interval);
       if (!result || !result.timestamp || result.timestamp.length === 0) continue;
 
       const meta = result.meta || {};
       const timestamps = result.timestamp;
-      const quotes = result.indicators.quote[0];
+      const quotes = result.indicators?.quote?.[0];
+      if (!quotes) continue;
       const closes = quotes.close;
 
       const candles = [];
