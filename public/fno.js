@@ -180,10 +180,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Start Live Real-Time Quotes Polling (30s Interval)
   startLiveQuotesPolling();
   
+  // Sync Live Data Feed Status Badge (Dhan vs Backup)
+  syncDataFeedStatus();
+
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
 });
+
+// -------------------------------------------------------------
+// Live Broker Feed Status Indicator (Dhan HQ vs Backup)
+// -------------------------------------------------------------
+async function syncDataFeedStatus() {
+  try {
+    const res = await fetch('/api/feed/status');
+    const data = await res.json();
+    const badge = document.getElementById('data-feed-badge');
+    const dot = document.getElementById('data-feed-dot');
+    const label = document.getElementById('data-feed-label');
+
+    if (!badge || !dot || !label) return;
+
+    if (data.dhanConfigured) {
+      badge.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono select-none shadow-sm';
+      badge.title = 'Active Feed: Official Dhan HQ Broker API (Connected)';
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+      label.textContent = '🟢 Dhan HQ Live';
+    } else {
+      badge.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono select-none';
+      badge.title = 'Active Feed: Multi-Source Backup Feed (Dhan credentials not configured in environment)';
+      dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+      label.textContent = 'Backup Feed';
+    }
+  } catch (err) {}
+}
 
 // -------------------------------------------------------------
 // Live Real-Time Market Quotes Engine (30s Poller & Visual Flash)

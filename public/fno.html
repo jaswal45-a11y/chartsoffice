@@ -272,8 +272,14 @@
         </button>
 
         <!-- Live Feed Status Indicator Badge -->
-        <div id="live-quotes-badge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono select-none" title="Live real-time market quotes auto-refreshing every 30 seconds">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div id="data-feed-badge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono select-none" title="Broker Feed Connection Status">
+          <span id="data-feed-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="data-feed-label" class="text-[11px] font-semibold">Backup Feed</span>
+        </div>
+
+        <!-- Live Auto-Refresh Status Badge -->
+        <div id="live-quotes-badge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-dark-card border border-dark-border text-slate-300 text-xs font-mono select-none" title="Live real-time market quotes auto-refreshing every 30 seconds">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           <span id="live-quotes-status-text" class="text-[11px] font-semibold">Live (30s)</span>
         </div>
 

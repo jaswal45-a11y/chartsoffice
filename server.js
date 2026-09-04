@@ -22,6 +22,210 @@ const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.j
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+// -------------------------------------------------------------
+// DhanHQ Official Broker API Configuration & Scrip Master Engine
+// -------------------------------------------------------------
+const DHAN_CONFIG = {
+  get clientId() { return process.env.DHAN_CLIENT_ID || ''; },
+  get accessToken() { return process.env.DHAN_ACCESS_TOKEN || ''; },
+  baseUrl: 'https://api.dhan.co/v2',
+  scripMapPath: path.join(__dirname, 'data', 'dhan_scrip_map.json'),
+  scripMap: {}
+};
+
+// Load pre-bundled Dhan scrip map (10,000+ NSE/BSE securities & indices)
+try {
+  if (fs.existsSync(DHAN_CONFIG.scripMapPath)) {
+    DHAN_CONFIG.scripMap = JSON.parse(fs.readFileSync(DHAN_CONFIG.scripMapPath, 'utf8'));
+  }
+} catch (e) {
+  console.warn('[DHAN] Scrip map load notice:', e.message);
+}
+
+// Fallback & Alias mappings for primary indices & top stocks
+DHAN_CONFIG.scripMap['NIFTY'] = { secId: '13', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['NIFTY 50'] = { secId: '13', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['^NSEI'] = { secId: '13', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['BANKNIFTY'] = { secId: '25', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['NIFTY BANK'] = { secId: '25', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['^NSEBANK'] = { secId: '25', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['FINNIFTY'] = { secId: '27', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['MIDCPNIFTY'] = { secId: '44', segment: 'IDX_I', instrument: 'INDEX' };
+DHAN_CONFIG.scripMap['TATAMOTORS'] = DHAN_CONFIG.scripMap['TMPV'] || { secId: '3456', segment: 'NSE_EQ', instrument: 'EQUITY' };
+
+function isDhanConfigured() {
+  return Boolean(DHAN_CONFIG.clientId && DHAN_CONFIG.accessToken);
+}
+
+function getDhanSecurityMeta(symbol) {
+  if (!symbol) return null;
+  const clean = symbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+  return DHAN_CONFIG.scripMap[clean] || null;
+}
+
+// Convert Dhan historical response to standard candle format
+function convertDhanHistoricalToCandles(dhanData) {
+  if (!dhanData || !dhanData.close || !Array.isArray(dhanData.close) || dhanData.close.length === 0) {
+    return [];
+  }
+
+  const times = dhanData.start_Time || [];
+  const opens = dhanData.open || [];
+  const highs = dhanData.high || [];
+  const lows = dhanData.low || [];
+  const closes = dhanData.close || [];
+  const volumes = dhanData.volume || [];
+
+  const candles = [];
+  for (let i = 0; i < closes.length; i++) {
+    const c = closes[i];
+    const o = opens[i] != null ? opens[i] : c;
+    const h = highs[i] != null ? highs[i] : c;
+    const l = lows[i] != null ? lows[i] : c;
+    const v = volumes[i] || 0;
+    const t = times[i];
+
+    if (c == null || !t) continue;
+
+    const dateStr = new Date(t * 1000).toISOString().split('T')[0];
+    candles.push({
+      time: dateStr,
+      open: Number(Number(o).toFixed(2)),
+      high: Number(Number(h).toFixed(2)),
+      low: Number(Number(l).toFixed(2)),
+      close: Number(Number(c).toFixed(2)),
+      volume: Number(v)
+    });
+  }
+
+  return candles;
+}
+
+// Fetch historical candles from DhanHQ API
+async function fetchDhanHistorical(symbol, fromDate = null, toDate = null) {
+  if (!isDhanConfigured()) return null;
+  const meta = getDhanSecurityMeta(symbol);
+  if (!meta || !meta.secId) return null;
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const twoYearsAgo = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+
+  const payload = {
+    securityId: String(meta.secId),
+    exchangeSegment: meta.segment || 'NSE_EQ',
+    instrument: meta.instrument || 'EQUITY',
+    expiryCode: 0,
+    fromDate: fromDate || twoYearsAgo,
+    toDate: toDate || todayStr
+  };
+
+  try {
+    const res = await fetch(`${DHAN_CONFIG.baseUrl}/charts/historical`, {
+      method: 'POST',
+      headers: {
+        'access-token': DHAN_CONFIG.accessToken,
+        'client-id': DHAN_CONFIG.clientId,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      console.warn(`[DHAN] Historical charts API returned HTTP ${res.status} for ${symbol}`);
+      return null;
+    }
+
+    const json = await res.json();
+    const candles = convertDhanHistoricalToCandles(json);
+    if (candles.length > 0) {
+      return { candles, meta };
+    }
+  } catch (err) {
+    console.warn(`[DHAN] Historical fetch exception for ${symbol}:`, err.message);
+  }
+  return null;
+}
+
+// Fetch live quotes from DhanHQ API
+async function fetchDhanLiveQuotes(symbols) {
+  if (!isDhanConfigured() || !symbols || symbols.length === 0) return {};
+
+  const nseEqIds = [];
+  const idxIds = [];
+  const idToSymbol = {};
+
+  symbols.forEach(sym => {
+    const clean = sym.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+    const meta = getDhanSecurityMeta(clean);
+    if (meta && meta.secId) {
+      const numId = parseInt(meta.secId, 10);
+      idToSymbol[meta.secId] = clean;
+      idToSymbol[numId] = clean;
+      if (meta.segment === 'IDX_I') {
+        idxIds.push(numId);
+      } else {
+        nseEqIds.push(numId);
+      }
+    }
+  });
+
+  const payload = {};
+  if (nseEqIds.length > 0) payload['NSE_EQ'] = nseEqIds;
+  if (idxIds.length > 0) payload['IDX_I'] = idxIds;
+
+  if (Object.keys(payload).length === 0) return {};
+
+  try {
+    const res = await fetch(`${DHAN_CONFIG.baseUrl}/marketfeed/quote`, {
+      method: 'POST',
+      headers: {
+        'access-token': DHAN_CONFIG.accessToken,
+        'client-id': DHAN_CONFIG.clientId,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) return {};
+    const json = await res.json();
+    const quotes = {};
+
+    ['NSE_EQ', 'IDX_I'].forEach(seg => {
+      const segData = json.data?.[seg];
+      if (segData) {
+        Object.keys(segData).forEach(secId => {
+          const sym = idToSymbol[secId];
+          const q = segData[secId];
+          if (sym && q && q.last_price) {
+            const ltp = Number(q.last_price.toFixed(2));
+            const prevClose = q.prev_close || q.ohlc?.close || ltp;
+            const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
+            quotes[sym] = {
+              symbol: sym,
+              price: ltp,
+              changePercent,
+              prevClose,
+              volume: q.volume || 0,
+              dayHigh: q.ohlc?.high || ltp,
+              dayLow: q.ohlc?.low || ltp,
+              source: 'dhan',
+              timestamp: Date.now()
+            };
+          }
+        });
+      }
+    });
+
+    return quotes;
+  } catch (err) {
+    console.warn('[DHAN] Live quote batch fetch exception:', err.message);
+    return {};
+  }
+}
+
 // Live Intraday Quotes In-Memory Cache (25s TTL)
 const LIVE_QUOTES_CACHE = {
   data: {}, // { [symbol]: { price, changePercent, prevClose, volume, dayHigh, dayLow, timestamp } }
@@ -106,21 +310,40 @@ async function getOrFetchLiveQuotes(symbols) {
 
   if (needed.length === 0) return result;
 
-  // Fetch needed in concurrency chunks of 20
-  const CHUNK_SIZE = 20;
-  for (let i = 0; i < needed.length; i += CHUNK_SIZE) {
-    const chunk = needed.slice(i, i + CHUNK_SIZE);
-    const chunkResults = await Promise.all(chunk.map(fetchSingleLiveQuote));
-    chunkResults.forEach((q, idx) => {
-      const sym = chunk[idx];
-      if (q && q.price) {
-        LIVE_QUOTES_CACHE.data[sym] = q;
-        result[sym] = q;
-      } else if (LIVE_QUOTES_CACHE.data[sym]) {
-        // Fallback to previous cached value if transient error
-        result[sym] = LIVE_QUOTES_CACHE.data[sym];
-      }
-    });
+  let remainingNeeded = [...needed];
+
+  // Primary Tier: DhanHQ Broker Feed (if configured)
+  if (isDhanConfigured()) {
+    try {
+      const dhanQuotes = await fetchDhanLiveQuotes(needed);
+      Object.keys(dhanQuotes).forEach(sym => {
+        const q = dhanQuotes[sym];
+        if (q && q.price) {
+          LIVE_QUOTES_CACHE.data[sym] = q;
+          result[sym] = q;
+        }
+      });
+      remainingNeeded = needed.filter(sym => !result[sym]);
+    } catch (e) {}
+  }
+
+  // Backup Tier: Concurrency-limited Yahoo/Mirror fetcher for any remaining
+  if (remainingNeeded.length > 0) {
+    const CHUNK_SIZE = 20;
+    for (let i = 0; i < remainingNeeded.length; i += CHUNK_SIZE) {
+      const chunk = remainingNeeded.slice(i, i + CHUNK_SIZE);
+      const chunkResults = await Promise.all(chunk.map(fetchSingleLiveQuote));
+      chunkResults.forEach((q, idx) => {
+        const sym = chunk[idx];
+        if (q && q.price) {
+          LIVE_QUOTES_CACHE.data[sym] = q;
+          result[sym] = q;
+        } else if (LIVE_QUOTES_CACHE.data[sym]) {
+          // Fallback to previous cached value if transient error
+          result[sym] = LIVE_QUOTES_CACHE.data[sym];
+        }
+      });
+    }
   }
 
   return result;
@@ -894,6 +1117,96 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   }
 
   let sym = rawSymbol.trim().toUpperCase().replace(/&/g, '%26');
+
+  // 1. Try Primary Tier: DhanHQ Broker API (if configured)
+  if (isDhanConfigured()) {
+    try {
+      const dhanRes = await fetchDhanHistorical(rawSymbol);
+      if (dhanRes && dhanRes.candles && dhanRes.candles.length > 0) {
+        const candles = dhanRes.candles;
+        const closePrices = candles.map(c => c.close);
+        const volumeValues = candles.map(c => c.volume);
+
+        const ema10 = calculateEMA(closePrices, 10);
+        const ema20 = calculateEMA(closePrices, 20);
+        const ema50 = calculateEMA(closePrices, 50);
+        const ema150 = calculateEMA(closePrices, 150);
+        const ema200 = calculateEMA(closePrices, 200);
+        const volAvg9 = calculateSMA(volumeValues, 9);
+        const vwap = calculateVWAP(candles, isIntraday);
+        const rsi14 = calculateRSI(closePrices, 14);
+        const rsiSma14 = calculateSMA(rsi14, 14);
+        const darvasBox = calculateDarvasBox(candles, 5);
+        const pivotPoints = await fetchTraditionalAutoPivots(rawSymbol, interval);
+
+        const latestCandle = candles[candles.length - 1];
+        const prevCandle = candles.length > 1 ? candles[candles.length - 2] : latestCandle;
+        const realLtp = latestCandle.close;
+        const changePercent = prevCandle.close ? Number((((realLtp - prevCandle.close) / prevCandle.close) * 100).toFixed(2)) : 0;
+
+        const high52w = Math.max(...candles.slice(-250).map(c => c.high));
+        const low52w = Math.min(...candles.slice(-250).map(c => c.low));
+        const allTimeHigh = Math.max(...candles.map(c => c.high));
+        const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
+        const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
+
+        const responsePayload = {
+          symbol: rawSymbol,
+          exchange: 'NSE',
+          source: 'dhan',
+          sourceLabel: 'Dhan HQ Broker',
+          interval,
+          range: selectedRange,
+          initialRange: selectedRange,
+          isIntraday,
+          ltp: realLtp,
+          changePercent,
+          high52w,
+          low52w,
+          fiftyTwoWeekHigh: high52w,
+          fiftyTwoWeekLow: low52w,
+          allTimeHigh,
+          pctFrom52wHigh,
+          pctFromAth,
+          latestEMA10: ema10[ema10.length - 1],
+          latestEMA20: ema20[ema20.length - 1],
+          latestEMA50: ema50[ema50.length - 1],
+          latestEMA150: ema150[ema150.length - 1],
+          latestEMA200: ema200[ema200.length - 1],
+          latestRSI: rsi14[rsi14.length - 1],
+          latestRsiSMA: rsiSma14[rsiSma14.length - 1],
+          latestVWAP: vwap[vwap.length - 1],
+          latestDarvasTop: darvasBox.latestTopBox,
+          latestDarvasBottom: darvasBox.latestBottomBox,
+          darvasBox,
+          pivotPoints,
+          candlesCount: candles.length,
+          candles,
+          volumeSeries: candles.map(c => ({
+            time: c.time,
+            value: c.volume,
+            color: c.close >= c.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
+          })),
+          volAvg9: candles.map((c, idx) => ({ time: c.time, value: volAvg9[idx] })).filter(e => e.value !== null),
+          vwapSeries: candles.map((c, idx) => ({ time: c.time, value: vwap[idx] })).filter(e => e.value !== null),
+          ema10: candles.map((c, idx) => ({ time: c.time, value: ema10[idx] })).filter(e => e.value !== null),
+          ema20: candles.map((c, idx) => ({ time: c.time, value: ema20[idx] })).filter(e => e.value !== null),
+          ema50: candles.map((c, idx) => ({ time: c.time, value: ema50[idx] })).filter(e => e.value !== null),
+          ema150: candles.map((c, idx) => ({ time: c.time, value: ema150[idx] })).filter(e => e.value !== null),
+          ema200: candles.map((c, idx) => ({ time: c.time, value: ema200[idx] })).filter(e => e.value !== null),
+          rsi14: candles.map((c, idx) => ({ time: c.time, value: rsi14[idx] })).filter(e => e.value !== null),
+          rsiSma14: candles.map((c, idx) => ({ time: c.time, value: rsiSma14[idx] })).filter(e => e.value !== null)
+        };
+
+        historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+        return responsePayload;
+      }
+    } catch (dhanErr) {
+      console.warn(`[DHAN] Primary fetch notice for ${rawSymbol}, falling back to backup feed:`, dhanErr.message);
+    }
+  }
+
+  // 2. Backup Tier: Multi-Source Yahoo/Mirrors Fallback
   // Try NSE first, fallback to BSE
   let candidates = [`${sym}.NS`, `${sym}.BO`];
   if (/^\d+$/.test(sym)) {
@@ -992,6 +1305,8 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const responsePayload = {
           symbol: rawSymbol,
           exchange: candidate.endsWith('.NS') ? 'NSE' : 'BSE',
+          source: 'backup',
+          sourceLabel: 'Backup Feed',
           interval,
           range: selectedRange,
           initialRange: selectedRange,
@@ -2996,6 +3311,19 @@ const server = http.createServer(async (req, res) => {
           console.error('Error fetching live quotes:', err);
           return sendJson(res, 500, { success: false, error: 'Failed to fetch live quotes' });
         }
+      }
+
+      // 13. GET /api/feed/status - Live Broker Feed Status (Dhan vs Backup)
+      if (pathname === '/api/feed/status' && method === 'GET') {
+        const configured = isDhanConfigured();
+        return sendJson(res, 200, {
+          success: true,
+          dhanConfigured: configured,
+          dhanActive: configured,
+          source: configured ? 'dhan' : 'backup',
+          sourceLabel: configured ? 'Dhan HQ Broker' : 'Backup Feed',
+          timestamp: new Date().toISOString()
+        });
       }
 
       return sendJson(res, 404, { success: false, error: 'API route not found' });
