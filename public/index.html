@@ -159,32 +159,45 @@
   <!-- Main Workspace -->
   <main class="flex-1 max-w-[1920px] w-full mx-auto p-4 lg:p-6 flex flex-col gap-5">
     
-    <!-- Screener Deck: 10-15 Screeners visible in a single dashboard -->
-    <section class="bg-dark-card border border-dark-border rounded-2xl p-4 lg:p-5 shadow-xl relative">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-dark-border/60">
-        <div>
-          <div class="flex items-center gap-2">
-            <i data-lucide="sliders" class="w-4 h-4 text-blue-400"></i>
-            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Screener Command Deck</h2>
-            <span class="text-xs text-slate-500">Select any screener button to run & inspect instantly</span>
+    <!-- Screener Deck: 10-15 Screeners visible in a single dashboard (Collapsible Pull-down Deck) -->
+    <section id="screener-command-deck" class="bg-dark-card border border-dark-border rounded-2xl shadow-xl relative transition-all duration-300">
+      
+      <!-- Collapsible Deck Content -->
+      <div id="deck-collapsible-body" class="p-4 lg:p-5 transition-all duration-300 overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-dark-border/60">
+          <div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-blue-400"></i>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Screener Command Deck</h2>
+              <span class="text-xs text-slate-500">Select any screener button to run & inspect instantly</span>
+            </div>
+          </div>
+
+          <!-- Category Filter Tabs -->
+          <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
+            <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">All</button>
+            <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Intraday</button>
+            <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Breakout</button>
+            <button data-category="Swing" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Swing</button>
+            <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Momentum</button>
+            <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Reversal</button>
+            <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">My Custom</button>
           </div>
         </div>
 
-        <!-- Category Filter Tabs -->
-        <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
-          <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">All</button>
-          <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Intraday</button>
-          <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Breakout</button>
-          <button data-category="Swing" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Swing</button>
-          <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Momentum</button>
-          <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Reversal</button>
-          <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">My Custom</button>
+        <!-- Screener Buttons Grid -->
+        <div id="screeners-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+          <!-- Dynamically populated screener cards / buttons -->
         </div>
       </div>
 
-      <!-- Screener Buttons Grid -->
-      <div id="screeners-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-        <!-- Dynamically populated screener cards / buttons -->
+      <!-- Center Pull-down / Collapse Arrow Handle -->
+      <div class="flex items-center justify-center -mb-3 relative z-20">
+        <button id="btn-toggle-deck" onclick="toggleScreenerDeck()" class="group flex items-center gap-2 px-4 py-1.5 rounded-full bg-dark-card hover:bg-slate-800 text-slate-300 hover:text-white border border-dark-border hover:border-blue-500/50 shadow-lg text-xs font-semibold cursor-pointer transition-all active:scale-95" title="Toggle Screener Command Deck to enhance chart visibility">
+          <i data-lucide="chevron-up" id="deck-toggle-icon" class="w-4 h-4 text-blue-400 group-hover:-translate-y-0.5 transition-transform"></i>
+          <span id="deck-toggle-label">Collapse Deck</span>
+          <span id="deck-collapsed-active-badge" class="hidden text-[10px] px-2 py-0.2 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 font-mono font-medium"></span>
+        </button>
       </div>
     </section>
 
@@ -274,13 +287,12 @@
                   <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="volume">
                     <div class="flex items-center justify-end gap-1">Volume <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-3 text-center">Chart</th>
                 </tr>
               </thead>
               <tbody id="stocks-tbody" class="divide-y divide-dark-border/40">
                 <!-- Empty state default -->
                 <tr>
-                  <td colspan="5" class="py-16 text-center text-slate-500">
+                  <td colspan="4" class="py-16 text-center text-slate-500">
                     <div class="flex flex-col items-center justify-center gap-2">
                       <div class="w-12 h-12 rounded-full bg-dark-bg flex items-center justify-center text-slate-600">
                         <i data-lucide="filter" class="w-6 h-6"></i>

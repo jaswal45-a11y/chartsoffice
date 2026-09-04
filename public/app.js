@@ -322,6 +322,9 @@ async function init() {
   // Sync Live Data Feed Status Badge (Dhan vs Backup)
   syncDataFeedStatus();
 
+  // Initialize Screener Command Deck Collapsed/Expanded State
+  initScreenerDeckState();
+
   lucide.createIcons();
 }
 
@@ -2843,6 +2846,84 @@ function selectStock(stock) {
 }
 
 // -------------------------------------------------------------
+// Screener Command Deck (Collapsible Pull-Down Deck)
+// -------------------------------------------------------------
+function toggleScreenerDeck(forceState) {
+  const deck = document.getElementById('screener-command-deck');
+  const body = document.getElementById('deck-collapsible-body');
+  const icon = document.getElementById('deck-toggle-icon');
+  const label = document.getElementById('deck-toggle-label');
+  const activeBadge = document.getElementById('deck-collapsed-active-badge');
+  if (!deck || !body) return;
+
+  const isCurrentlyCollapsed = deck.classList.contains('deck-collapsed');
+  const shouldCollapse = (forceState !== undefined) ? forceState : !isCurrentlyCollapsed;
+
+  if (shouldCollapse) {
+    deck.classList.add('deck-collapsed');
+    body.style.maxHeight = '0px';
+    body.style.paddingTop = '0px';
+    body.style.paddingBottom = '0px';
+    body.style.opacity = '0';
+    body.style.pointerEvents = 'none';
+
+    if (icon) {
+      icon.setAttribute('data-lucide', 'chevron-down');
+    }
+    if (label) {
+      label.textContent = 'Pull Down Screener Deck';
+    }
+
+    if (activeBadge) {
+      const activeScreener = state.screeners.find(s => s.id === state.activeScreenerId);
+      if (activeScreener) {
+        activeBadge.textContent = activeScreener.name;
+        activeBadge.classList.remove('hidden');
+      } else {
+        activeBadge.classList.add('hidden');
+      }
+    }
+
+    localStorage.setItem('sangam_screener_deck_collapsed', 'true');
+  } else {
+    deck.classList.remove('deck-collapsed');
+    body.style.maxHeight = '1200px';
+    body.style.paddingTop = '';
+    body.style.paddingBottom = '';
+    body.style.opacity = '1';
+    body.style.pointerEvents = '';
+
+    if (icon) {
+      icon.setAttribute('data-lucide', 'chevron-up');
+    }
+    if (label) {
+      label.textContent = 'Collapse Deck';
+    }
+    if (activeBadge) {
+      activeBadge.classList.add('hidden');
+    }
+
+    localStorage.setItem('sangam_screener_deck_collapsed', 'false');
+  }
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+
+  // Trigger smooth resize for TradingView charts
+  setTimeout(() => {
+    handleResize();
+  }, 320);
+}
+
+function initScreenerDeckState() {
+  const isCollapsed = localStorage.getItem('sangam_screener_deck_collapsed') === 'true';
+  if (isCollapsed) {
+    toggleScreenerDeck(true);
+  }
+}
+
+// -------------------------------------------------------------
 // Screener Management & Table Logic (Admin Controlled)
 // -------------------------------------------------------------
 
@@ -3031,6 +3112,11 @@ async function runScreener(id) {
 
     if (el.lastUpdatedTime) el.lastUpdatedTime.textContent = `Updated: ${fmt.time(data.timestamp)}`;
     if (el.statTotalStocks) el.statTotalStocks.textContent = data.count;
+
+    const collapsedActiveBadge = document.getElementById('deck-collapsed-active-badge');
+    if (collapsedActiveBadge) {
+      collapsedActiveBadge.textContent = screener.name;
+    }
     
     showToast(`Found ${data.count} stocks for "${screener.name}"`, 'success');
 
@@ -3148,7 +3234,7 @@ function renderStocksTable() {
   if (list.length === 0) {
     el.stocksTbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-16 text-center text-slate-500">
+        <td colspan="4" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="search-x" class="w-6 h-6 text-slate-600"></i>
             <p class="text-sm font-medium text-slate-400">No matching stocks found</p>
@@ -3169,7 +3255,7 @@ function renderStocksTable() {
       : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
 
     const tr = document.createElement('tr');
-    tr.className = `stock-row border-b border-dark-border/40 ${isSelected ? 'selected' : ''}`;
+    tr.className = `stock-row border-b border-dark-border/40 hover:bg-dark-accent/40 cursor-pointer transition-colors ${isSelected ? 'selected' : ''}`;
     
     let confluenceHtml = '';
     if (stock.matchCount && stock.matchCount > 1) {
@@ -3210,11 +3296,6 @@ function renderStocksTable() {
       </td>
       <td class="py-2.5 px-3 text-right font-mono text-slate-400 text-[11px]">
         ${fmt.volume(stock.volume)}
-      </td>
-      <td class="py-2.5 px-3 text-center">
-        <button class="p-1.5 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors" title="Load Chart">
-          <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
-        </button>
       </td>
     `;
 
@@ -3810,6 +3891,7 @@ window.clearStockAvwaps = clearStockAvwaps;
 window.cancelActiveDrawingTool = cancelActiveDrawingTool;
 window.handleAltHShortcut = handleAltHShortcut;
 window.handleCopyStocks = handleCopyStocks;
+window.toggleScreenerDeck = toggleScreenerDeck;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);
