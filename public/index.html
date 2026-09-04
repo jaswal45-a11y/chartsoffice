@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sangam_chartlinks - Chartink Multi-Screener Runner & Visualizer</title>
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/favicon.png">
+
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,9 +61,7 @@
       
       <!-- Brand & Stats -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <i data-lucide="candlestick-chart" class="w-5 h-5 text-white"></i>
-        </div>
+        <img src="/favicon.png" alt="Sangam_chartlinks Logo" class="w-10 h-10 rounded-full object-cover ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/20">
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
@@ -106,12 +109,6 @@
             <span id="stat-total-stocks" class="font-semibold text-emerald-400">0</span>
           </div>
         </div>
-
-        <!-- Run All Screeners Button -->
-        <button id="btn-run-all" class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg shadow-lg shadow-emerald-900/30 active:scale-95 transition-all">
-          <i data-lucide="play-circle" class="w-4 h-4"></i>
-          <span>Run All Screeners</span>
-        </button>
 
         <!-- Add Screener Button (Visible to Logged-in User / Admin) -->
         <button id="btn-open-add-modal" class="hidden items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-900/30 active:scale-95 transition-all cursor-pointer">
@@ -491,27 +488,27 @@
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-ema10" checked class="rounded border-slate-700 text-sky-400 focus:ring-0 bg-dark-bg cursor-pointer">
                 <input type="color" id="color-ema10" value="#0284c7" class="indicator-color-picker" title="Change EMA 10 color">
-                <label for="chk-ema10" class="cursor-pointer hover:text-white" title="10-period Exponential Moving Average">EMA 10</label>
+                <label for="chk-ema10" class="cursor-pointer hover:text-white" title="10-period Exponential Moving Average">10</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-ema20" checked class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-bg cursor-pointer">
                 <input type="color" id="color-ema20" value="#2563eb" class="indicator-color-picker" title="Change EMA 20 color">
-                <label for="chk-ema20" class="cursor-pointer hover:text-white" title="20-period Exponential Moving Average">EMA 20</label>
+                <label for="chk-ema20" class="cursor-pointer hover:text-white" title="20-period Exponential Moving Average">20</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-ema50" checked class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-bg cursor-pointer">
                 <input type="color" id="color-ema50" value="#f59e0b" class="indicator-color-picker" title="Change EMA 50 color">
-                <label for="chk-ema50" class="cursor-pointer hover:text-white" title="50-period Exponential Moving Average">EMA 50</label>
+                <label for="chk-ema50" class="cursor-pointer hover:text-white" title="50-period Exponential Moving Average">50</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-ema150" checked class="rounded border-slate-700 text-purple-500 focus:ring-0 bg-dark-bg cursor-pointer">
                 <input type="color" id="color-ema150" value="#9333ea" class="indicator-color-picker" title="Change EMA 150 color">
-                <label for="chk-ema150" class="cursor-pointer hover:text-white" title="150-period Exponential Moving Average">EMA 150</label>
+                <label for="chk-ema150" class="cursor-pointer hover:text-white" title="150-period Exponential Moving Average">150</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-ema200" checked class="rounded border-slate-700 text-rose-500 focus:ring-0 bg-dark-bg cursor-pointer">
                 <input type="color" id="color-ema200" value="#e11d48" class="indicator-color-picker" title="Change EMA 200 color">
-                <label for="chk-ema200" class="cursor-pointer hover:text-white" title="200-period Exponential Moving Average">EMA 200</label>
+                <label for="chk-ema200" class="cursor-pointer hover:text-white" title="200-period Exponential Moving Average">200</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-vol" checked class="rounded border-slate-700 text-teal-500 focus:ring-0 bg-dark-bg cursor-pointer">

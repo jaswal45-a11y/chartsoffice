@@ -45,7 +45,7 @@
         "ema200": false,
         "volume": true,
         "volAvg": true,
-        "vwap": true,
+        "vwap": false,
         "pivots": false,
         "darvas": false,
         "rsi": true

@@ -1562,13 +1562,15 @@ function initNativeCharts() {
     }
   });
 
-  // Candlestick Series
+  // Candlestick Series (Default horizontal price line disabled)
   const candlestickSeries = mainChart.addCandlestickSeries({
     upColor: '#10b981',
     downColor: '#ef4444',
     borderVisible: false,
     wickUpColor: '#10b981',
-    wickDownColor: '#ef4444'
+    wickDownColor: '#ef4444',
+    priceLineVisible: false,
+    lastValueVisible: false
   });
 
   // Volume Histogram Series (Integrated at bottom of main chart via overlay scale)
