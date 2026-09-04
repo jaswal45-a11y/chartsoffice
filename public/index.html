@@ -116,6 +116,12 @@
           <span>Add Screener</span>
         </button>
 
+        <!-- Notes Sticky Window Launcher Tile -->
+        <button id="btn-open-notes" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Open Sticky Notes & Scratchpad (Synchronized across all tabs)">
+          <i data-lucide="sticky-note" class="w-4 h-4 text-amber-400"></i>
+          <span>Notes</span>
+        </button>
+
         <!-- User Auth Button (Visible when Logged Out) -->
         <button id="btn-open-auth-modal" onclick="openAuthModal('login')" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 rounded-lg shadow-sm transition-all cursor-pointer">
           <i data-lucide="user" class="w-3.5 h-3.5"></i>
@@ -1043,5 +1049,7 @@
 
   <!-- Application Script -->
   <script src="app.js?v=2.8.0"></script>
+  <!-- Sticky Synchronized Notes Script -->
+  <script src="notes.js"></script>
 </body>
 </html>

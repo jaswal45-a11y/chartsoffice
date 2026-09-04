@@ -1726,6 +1726,37 @@ function saveUserIndicatorPreferences(user, preferences) {
   }
 }
 
+function getUserNotes(user) {
+  if (!user) return '';
+  const users = readUsers();
+  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
+  const u = users.find(x => x.id === targetId);
+  return (u && typeof u.notes === 'string') ? u.notes : '';
+}
+
+function saveUserNotes(user, notesText) {
+  if (!user) return false;
+  const users = readUsers();
+  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
+  let u = users.find(x => x.id === targetId);
+  if (u) {
+    u.notes = String(notesText || '');
+    u.notesUpdatedAt = new Date().toISOString();
+    saveUsers(users);
+    return true;
+  } else {
+    users.push({
+      id: targetId,
+      username: user.username,
+      role: user.role,
+      notes: String(notesText || ''),
+      notesUpdatedAt: new Date().toISOString()
+    });
+    saveUsers(users);
+    return true;
+  }
+}
+
 
 // Fast Quotes Cache for Watchlists (45s TTL)
 const quotesCache = new Map();
@@ -2658,6 +2689,23 @@ const server = http.createServer(async (req, res) => {
         const payload = await parseJsonBody(req);
         saveUserIndicatorPreferences(authUser, payload);
         return sendJson(res, 200, { success: true, message: 'Indicator preferences saved successfully', preferences: payload });
+      }
+
+      // 0g. GET, POST, PUT /api/user/notes - User Synchronized Sticky Notes
+      if (pathname === '/api/user/notes' && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        const notes = getUserNotes(authUser);
+        return sendJson(res, 200, { success: true, notes: notes || '' });
+      }
+
+      if (pathname === '/api/user/notes' && (method === 'POST' || method === 'PUT')) {
+        const authUser = getAuthenticatedUser(req);
+        const payload = await parseJsonBody(req);
+        const notesContent = typeof payload.notes === 'string' ? payload.notes : (typeof payload.content === 'string' ? payload.content : '');
+        if (authUser) {
+          saveUserNotes(authUser, notesContent);
+        }
+        return sendJson(res, 200, { success: true, message: 'Notes saved successfully', notes: notesContent });
       }
 
       // ==========================================

@@ -189,6 +189,12 @@
           <span>Login / Sign Up</span>
         </button>
 
+        <!-- Notes Sticky Window Launcher -->
+        <button id="btn-open-notes" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 active:scale-95 transition-all cursor-pointer" title="Open Sticky Notes & Scratchpad (Synchronized across all tabs)">
+          <i data-lucide="sticky-note" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Notes</span>
+        </button>
+
         <!-- Theme Toggle -->
         <button id="btn-theme-toggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-slate-200 transition-all cursor-pointer" title="Toggle Light/Dark Theme">
           <i data-lucide="sun" id="theme-icon" class="w-4 h-4 text-amber-400"></i>
@@ -724,5 +730,7 @@
 
   <!-- Scripts -->
   <script src="fno.js?v=1.3.0"></script>
+  <!-- Sticky Synchronized Notes Script -->
+  <script src="notes.js"></script>
 </body>
 </html>
