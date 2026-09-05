@@ -481,8 +481,7 @@ async function initDatabase() {
     const client = new MongoClient(MONGO_CONFIG.uri, {
       serverSelectionTimeoutMS: 15000,
       connectTimeoutMS: 15000,
-      tls: true,
-      tlsAllowInvalidCertificates: true
+      maxPoolSize: 10
     });
 
     await client.connect();
