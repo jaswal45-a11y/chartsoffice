@@ -9,9 +9,38 @@ const fs = require('node:fs');
 const path = require('node:path');
 const url = require('node:url');
 const crypto = require('node:crypto');
+const dns = require('node:dns');
+
+// Configure reliable DNS servers for MongoDB Atlas SRV lookups across all environments
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (e) {}
 
 // Allow self-signed or intermediate certificates for external requests
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// Load local .env file if present (Zero external dependencies)
+try {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split(/\r?\n/).forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        let val = trimmed.slice(eqIdx + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+    });
+  }
+} catch (e) {}
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'screeners.json');
@@ -433,8 +462,10 @@ async function initDatabase() {
   try {
     console.log('[MongoDB] 🔌 Connecting to MongoDB Atlas cluster...');
     const client = new MongoClient(MONGO_CONFIG.uri, {
-      serverSelectionTimeoutMS: 8000,
-      connectTimeoutMS: 10000
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      tls: true,
+      tlsAllowInvalidCertificates: true
     });
 
     await client.connect();

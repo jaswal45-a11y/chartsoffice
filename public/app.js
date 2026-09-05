@@ -2119,6 +2119,29 @@ function setupEventListeners() {
 // Native Lightweight Charts Engine (Price + Bottom Volume Overlay & RSI Pane)
 // -------------------------------------------------------------
 
+function updateDefaultVolumeBadges() {
+  const volArr = state.currentStockData?.volumeSeries;
+  const volAvgArr = state.currentStockData?.volAvg9;
+  if (volArr && volArr.length > 0 && el.volLiveBadge) {
+    const lastVol = volArr[volArr.length - 1];
+    el.volLiveBadge.textContent = fmt.volume(lastVol?.value || 0);
+  }
+  if (volAvgArr && volAvgArr.length > 0 && el.volAvgLiveBadge) {
+    const lastVolAvg = volAvgArr[volAvgArr.length - 1];
+    el.volAvgLiveBadge.textContent = fmt.volume(lastVolAvg?.value || 0);
+  }
+  const rsiArr = state.currentStockData?.rsi14;
+  const rsiSmaArr = state.currentStockData?.rsiSma14;
+  if (rsiArr && rsiArr.length > 0 && el.rsiLiveBadge) {
+    const lastRsi = rsiArr[rsiArr.length - 1];
+    el.rsiLiveBadge.textContent = lastRsi?.value ?? '--';
+  }
+  if (rsiSmaArr && rsiSmaArr.length > 0 && el.rsiSmaLiveBadge) {
+    const lastRsiSma = rsiSmaArr[rsiSmaArr.length - 1];
+    el.rsiSmaLiveBadge.textContent = lastRsiSma?.value ?? '--';
+  }
+}
+
 function initNativeCharts() {
   if (typeof LightweightCharts === 'undefined') {
     console.error('LightweightCharts library not loaded');
@@ -2398,29 +2421,6 @@ function initNativeCharts() {
   // ==========================================
   // Synchronize Crosshairs & Floating Volume Badge Updates
   // ==========================================
-  function updateDefaultVolumeBadges() {
-    const volArr = state.currentStockData?.volumeSeries;
-    const volAvgArr = state.currentStockData?.volAvg9;
-    if (volArr && volArr.length > 0 && el.volLiveBadge) {
-      const lastVol = volArr[volArr.length - 1];
-      el.volLiveBadge.textContent = fmt.volume(lastVol?.value || 0);
-    }
-    if (volAvgArr && volAvgArr.length > 0 && el.volAvgLiveBadge) {
-      const lastVolAvg = volAvgArr[volAvgArr.length - 1];
-      el.volAvgLiveBadge.textContent = fmt.volume(lastVolAvg?.value || 0);
-    }
-    const rsiArr = state.currentStockData?.rsi14;
-    const rsiSmaArr = state.currentStockData?.rsiSma14;
-    if (rsiArr && rsiArr.length > 0 && el.rsiLiveBadge) {
-      const lastRsi = rsiArr[rsiArr.length - 1];
-      el.rsiLiveBadge.textContent = lastRsi?.value ?? '--';
-    }
-    if (rsiSmaArr && rsiSmaArr.length > 0 && el.rsiSmaLiveBadge) {
-      const lastRsiSma = rsiSmaArr[rsiSmaArr.length - 1];
-      el.rsiSmaLiveBadge.textContent = lastRsiSma?.value ?? '--';
-    }
-  }
-
   function handleCrosshairUpdate(param) {
     if (!param.time) {
       updateDefaultVolumeBadges();
