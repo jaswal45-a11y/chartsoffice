@@ -577,14 +577,6 @@
 
           </div>
 
-          <!-- OHLCV Live Hover Legend -->
-          <div class="px-4 py-1.5 border-b border-dark-border/40 bg-dark-bg/50 text-[11px] font-mono text-slate-400 flex items-center justify-between">
-            <div id="chart-ohlcv-legend" class="flex items-center flex-wrap gap-3">
-              <span>Hover over chart to see candle values</span>
-            </div>
-            <span class="text-[10px] text-slate-500">Scroll to zoom · Drag to pan</span>
-          </div>
-
           <!-- Native Canvas Chart Container (Price + Bottom Volume Overlay & Sub-Pane for RSI) -->
           <div class="flex-1 w-full h-full min-h-[620px] relative bg-dark-bg flex flex-col" id="chart-main-container">
             
@@ -592,18 +584,30 @@
             <div id="tv_price_pane" class="w-full flex-1 min-h-[300px] relative">
               <div id="tv_main_chart" class="w-full h-full relative"></div>
 
-              <!-- Floating / Movable On-Chart AVWAP Badge (TradingView Style) -->
-              <div id="floating-avwap-control" class="absolute top-3 left-3 z-20 flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 hover:border-purple-500/80 rounded-lg px-2 py-1 shadow-xl transition-all select-none text-xs gap-1.5">
-                <input type="color" id="color-avwap" value="#a855f7" class="indicator-color-picker" title="Change Anchored VWAP line color">
-                <button id="btn-floating-avwap" class="flex items-center gap-1 text-purple-300 hover:text-purple-100 font-semibold cursor-pointer" title="Anchored VWAP: Click to place or move Anchor point on any candle">
-                  <i data-lucide="anchor" class="w-3.5 h-3.5 text-purple-400"></i>
-                  <span id="floating-avwap-label">AVWAP</span>
-                </button>
-                <span id="floating-avwap-divider" class="hidden text-slate-600">|</span>
-                <span id="floating-avwap-status" class="hidden text-[10px] font-mono text-purple-200"></span>
-                <button id="btn-floating-avwap-clear" class="hidden text-slate-400 hover:text-rose-400 cursor-pointer p-0.5 rounded hover:bg-rose-500/10" title="Remove Anchored VWAP">
-                  <i data-lucide="x" class="w-3 h-3"></i>
-                </button>
+              <!-- Floating On-Chart Controls & Badges (AVWAP & Live Volume) -->
+              <div class="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none select-none">
+                <!-- Floating / Movable On-Chart AVWAP Badge (TradingView Style) -->
+                <div id="floating-avwap-control" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 hover:border-purple-500/80 rounded-lg px-2 py-1 shadow-xl transition-all text-xs gap-1.5 w-fit">
+                  <input type="color" id="color-avwap" value="#a855f7" class="indicator-color-picker" title="Change Anchored VWAP line color">
+                  <button id="btn-floating-avwap" class="flex items-center gap-1 text-purple-300 hover:text-purple-100 font-semibold cursor-pointer" title="Anchored VWAP: Click to place or move Anchor point on any candle">
+                    <i data-lucide="anchor" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span id="floating-avwap-label">AVWAP</span>
+                  </button>
+                  <span id="floating-avwap-divider" class="hidden text-slate-600">|</span>
+                  <span id="floating-avwap-status" class="hidden text-[10px] font-mono text-purple-200"></span>
+                  <button id="btn-floating-avwap-clear" class="hidden text-slate-400 hover:text-rose-400 cursor-pointer p-0.5 rounded hover:bg-rose-500/10" title="Remove Anchored VWAP">
+                    <i data-lucide="x" class="w-3 h-3"></i>
+                  </button>
+                </div>
+
+                <!-- Floating Live Volume Badge on Chart (Below AVWAP) -->
+                <div id="floating-volume-badge" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-lg px-2 py-0.5 shadow-xl text-[11px] font-mono gap-1.5 text-slate-300 w-fit">
+                  <span class="text-teal-400 font-semibold">Vol:</span>
+                  <strong id="vol-live-badge" class="text-teal-300">--</strong>
+                  <span class="text-slate-600">|</span>
+                  <span class="text-amber-400 font-medium">Avg:</span>
+                  <strong id="vol-avg-live-badge" class="text-amber-300">--</strong>
+                </div>
               </div>
             </div>
             

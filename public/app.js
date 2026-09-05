@@ -2303,11 +2303,34 @@ function initNativeCharts() {
   });
 
   // ==========================================
-  // Synchronize Crosshairs & Legend Updates
+  // Synchronize Crosshairs & Floating Volume Badge Updates
   // ==========================================
+  function updateDefaultVolumeBadges() {
+    const volArr = state.currentStockData?.volumeSeries;
+    const volAvgArr = state.currentStockData?.volAvg9;
+    if (volArr && volArr.length > 0 && el.volLiveBadge) {
+      const lastVol = volArr[volArr.length - 1];
+      el.volLiveBadge.textContent = fmt.volume(lastVol?.value || 0);
+    }
+    if (volAvgArr && volAvgArr.length > 0 && el.volAvgLiveBadge) {
+      const lastVolAvg = volAvgArr[volAvgArr.length - 1];
+      el.volAvgLiveBadge.textContent = fmt.volume(lastVolAvg?.value || 0);
+    }
+    const rsiArr = state.currentStockData?.rsi14;
+    const rsiSmaArr = state.currentStockData?.rsiSma14;
+    if (rsiArr && rsiArr.length > 0 && el.rsiLiveBadge) {
+      const lastRsi = rsiArr[rsiArr.length - 1];
+      el.rsiLiveBadge.textContent = lastRsi?.value ?? '--';
+    }
+    if (rsiSmaArr && rsiSmaArr.length > 0 && el.rsiSmaLiveBadge) {
+      const lastRsiSma = rsiSmaArr[rsiSmaArr.length - 1];
+      el.rsiSmaLiveBadge.textContent = lastRsiSma?.value ?? '--';
+    }
+  }
+
   function handleCrosshairUpdate(param) {
     if (!param.time) {
-      updateDefaultLegend();
+      updateDefaultVolumeBadges();
       return;
     }
 
@@ -2319,36 +2342,10 @@ function initNativeCharts() {
       }
     }
 
-    const candle = param.seriesData.get(candlestickSeries) || state.currentStockData?.candles?.find(c => c.time === param.time);
     const vol = param.seriesData.get(volumeSeries) || state.currentStockData?.volumeSeries?.find(v => v.time === param.time);
     const volAvg = param.seriesData.get(volAvgSeries) || state.currentStockData?.volAvg9?.find(v => v.time === param.time);
     const rsiVal = state.currentStockData?.rsi14?.find(r => r.time === param.time)?.value;
     const rsiSmaVal = state.currentStockData?.rsiSma14?.find(r => r.time === param.time)?.value;
-    const vwapVal = param.seriesData.get(vwapSeries) || state.currentStockData?.vwapSeries?.find(w => w.time === param.time);
-
-    if (candle) {
-      const isUp = candle.close >= candle.open;
-      const chgColor = isUp ? 'text-emerald-400' : 'text-rose-400';
-      
-      let formattedTime = param.time;
-      if (typeof param.time === 'number') {
-        const d = new Date(param.time * 1000);
-        formattedTime = `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      }
-
-      el.chartOhlcvLegend.innerHTML = `
-        <span class="text-slate-300 font-semibold">${formattedTime}</span>
-        <span>O: <strong class="text-slate-200 font-mono">${candle.open?.toFixed(2)}</strong></span>
-        <span>H: <strong class="text-slate-200 font-mono">${candle.high?.toFixed(2)}</strong></span>
-        <span>L: <strong class="text-slate-200 font-mono">${candle.low?.toFixed(2)}</strong></span>
-        <span>C: <strong class="${chgColor} font-mono">${candle.close?.toFixed(2)}</strong></span>
-        ${vol ? `<span>Vol: <strong class="text-teal-400 font-mono">${fmt.volume(vol.value)}</strong></span>` : ''}
-        ${volAvg ? `<span>AvgVol(9): <strong class="text-amber-400 font-mono">${fmt.volume(volAvg.value)}</strong></span>` : ''}
-        ${vwapVal ? `<span>VWAP: <strong class="text-yellow-400 font-mono">₹${vwapVal.value?.toFixed(2)}</strong></span>` : ''}
-        ${rsiVal ? `<span>RSI: <strong class="text-blue-400 font-mono">${rsiVal}</strong></span>` : ''}
-        ${rsiSmaVal ? `<span>RSI-SMA: <strong class="text-amber-400 font-mono">${rsiSmaVal}</strong></span>` : ''}
-      `;
-    }
 
     if (vol && el.volLiveBadge) {
       el.volLiveBadge.textContent = fmt.volume(vol.value);
@@ -2778,20 +2775,36 @@ function saveDrawingsToServer() {
 }
 
 function handleChartClick(param) {
-  if (!state.activeDrawingTool) return;
   const currentSymbol = state.selectedStock?.symbol;
-  if (!currentSymbol) return;
+  if (!currentSymbol || !state.currentStockData?.candles) return;
 
   if (!state.drawings[currentSymbol]) {
     state.drawings[currentSymbol] = { avwaps: [], hlines: [] };
   }
+  if (!Array.isArray(state.drawings[currentSymbol].avwaps)) {
+    state.drawings[currentSymbol].avwaps = [];
+  }
+  if (!Array.isArray(state.drawings[currentSymbol].hlines)) {
+    state.drawings[currentSymbol].hlines = [];
+  }
 
+  // 1. PLACING NEW ANCHORED VWAP: Add to list without deleting previous ones
   if (state.activeDrawingTool === 'avwap') {
     if (!param.time) return;
     const anchorTime = param.time;
     
-    // Replace previous AVWAP anchor or add
-    state.drawings[currentSymbol].avwaps = [anchorTime];
+    // Add new AVWAP anchor alongside previous ones
+    const exists = state.drawings[currentSymbol].avwaps.some(t => {
+      if (typeof t === 'object' && typeof anchorTime === 'object') {
+        return t.year === anchorTime.year && t.month === anchorTime.month && t.day === anchorTime.day;
+      }
+      return String(t) === String(anchorTime);
+    });
+
+    if (!exists) {
+      state.drawings[currentSymbol].avwaps.push(anchorTime);
+    }
+
     renderPersistedDrawings();
     saveDrawingsToServer();
     
@@ -2799,10 +2812,69 @@ function handleChartClick(param) {
     if (typeof anchorTime === 'number') {
       const d = new Date(anchorTime * 1000);
       dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    } else if (typeof anchorTime === 'object' && anchorTime.year) {
+      dateStr = `${anchorTime.day}/${anchorTime.month}/${anchorTime.year}`;
     }
-    showToast(`⚓ Anchored VWAP plotted from ${dateStr}!`, 'success');
+    showToast(`⚓ Anchored VWAP added from ${dateStr}!`, 'success');
     state.activeDrawingTool = null;
     updateAvwapWidgetUI();
+    return;
+  }
+
+  // 2. NORMAL MODE: Check if user clicked directly on any drawn AVWAP or H-Line to delete it
+  if (!state.activeDrawingTool && param.point && state.charts.series?.candles) {
+    const { candles } = state.charts.series;
+
+    // Check AVWAPs click-to-delete
+    if (param.time && state.drawings[currentSymbol].avwaps.length > 0) {
+      const avwaps = state.drawings[currentSymbol].avwaps;
+      for (let i = avwaps.length - 1; i >= 0; i--) {
+        const anchorTime = avwaps[i];
+        const avwapData = calculateAnchoredVwap(state.currentStockData.candles, anchorTime);
+        const matchPt = avwapData.find(d => {
+          if (typeof d.time === 'object' && typeof param.time === 'object') {
+            return d.time.year === param.time.year && d.time.month === param.time.month && d.time.day === param.time.day;
+          }
+          return String(d.time) === String(param.time);
+        });
+
+        if (matchPt && typeof matchPt.value === 'number') {
+          const lineY = candles.priceToCoordinate(matchPt.value);
+          if (lineY !== null && Math.abs(param.point.y - lineY) <= 14) {
+            // Clicked directly on this AVWAP line! Delete it.
+            const removedAnchor = avwaps.splice(i, 1)[0];
+            renderPersistedDrawings();
+            saveDrawingsToServer();
+            
+            let dateStr = removedAnchor;
+            if (typeof removedAnchor === 'number') {
+              const d = new Date(removedAnchor * 1000);
+              dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+            } else if (typeof removedAnchor === 'object' && removedAnchor.year) {
+              dateStr = `${removedAnchor.day}/${removedAnchor.month}/${removedAnchor.year}`;
+            }
+            showToast(`🗑️ Anchored VWAP from ${dateStr} deleted`, 'info');
+            return;
+          }
+        }
+      }
+    }
+
+    // Check H-Lines click-to-delete
+    if (state.drawings[currentSymbol].hlines.length > 0) {
+      const hlines = state.drawings[currentSymbol].hlines;
+      for (let i = hlines.length - 1; i >= 0; i--) {
+        const price = hlines[i];
+        const lineY = candles.priceToCoordinate(price);
+        if (lineY !== null && Math.abs(param.point.y - lineY) <= 10) {
+          hlines.splice(i, 1);
+          renderPersistedDrawings();
+          saveDrawingsToServer();
+          showToast(`🗑️ Horizontal Line at ₹${price.toLocaleString('en-IN')} deleted`, 'info');
+          return;
+        }
+      }
+    }
   }
 }
 
@@ -2832,12 +2904,15 @@ function handleAltHShortcut() {
 function toggleAvwapAnchorMode() {
   state.activeDrawingTool = (state.activeDrawingTool === 'avwap') ? null : 'avwap';
   updateAvwapWidgetUI();
+  if (state.activeDrawingTool === 'avwap') {
+    showToast('Click on any candle to anchor VWAP', 'info');
+  }
 }
 
 function updateAvwapWidgetUI() {
   const currentSymbol = state.selectedStock?.symbol;
   const stockDrawings = (currentSymbol && state.drawings[currentSymbol]) ? state.drawings[currentSymbol] : { avwaps: [], hlines: [] };
-  const hasAvwap = stockDrawings.avwaps && stockDrawings.avwaps.length > 0;
+  const avwapCount = (stockDrawings.avwaps && Array.isArray(stockDrawings.avwaps)) ? stockDrawings.avwaps.length : 0;
 
   if (state.activeDrawingTool === 'avwap') {
     if (el.btnFloatingAvwap) {
@@ -2849,21 +2924,32 @@ function updateAvwapWidgetUI() {
     }
   }
 
-  if (hasAvwap) {
-    const lastAnchor = stockDrawings.avwaps[stockDrawings.avwaps.length - 1];
+  if (avwapCount > 0) {
     let anchorText = '';
-    if (typeof lastAnchor === 'number') {
-      const d = new Date(lastAnchor * 1000);
-      anchorText = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    } else if (typeof lastAnchor === 'string') {
-      anchorText = lastAnchor;
+    if (avwapCount === 1) {
+      const firstAnchor = stockDrawings.avwaps[0];
+      if (typeof firstAnchor === 'number') {
+        const d = new Date(firstAnchor * 1000);
+        anchorText = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+      } else if (typeof firstAnchor === 'object' && firstAnchor.year) {
+        anchorText = `${firstAnchor.day}/${firstAnchor.month}`;
+      } else {
+        anchorText = String(firstAnchor);
+      }
+    } else {
+      anchorText = `(${avwapCount})`;
     }
+
     if (el.floatingAvwapDivider) el.floatingAvwapDivider.classList.remove('hidden');
     if (el.floatingAvwapStatus) {
       el.floatingAvwapStatus.classList.remove('hidden');
       el.floatingAvwapStatus.textContent = anchorText;
+      el.floatingAvwapStatus.title = avwapCount > 1 ? `${avwapCount} Anchored VWAPs plotted` : `Anchored from ${anchorText}`;
     }
-    if (el.btnFloatingAvwapClear) el.btnFloatingAvwapClear.classList.remove('hidden');
+    if (el.btnFloatingAvwapClear) {
+      el.btnFloatingAvwapClear.classList.remove('hidden');
+      el.btnFloatingAvwapClear.title = avwapCount > 1 ? `Clear all ${avwapCount} Anchored VWAPs` : 'Remove Anchored VWAP';
+    }
   } else {
     if (el.floatingAvwapDivider) el.floatingAvwapDivider.classList.add('hidden');
     if (el.floatingAvwapStatus) el.floatingAvwapStatus.classList.add('hidden');
@@ -2883,7 +2969,7 @@ function clearStockAvwaps() {
   renderPersistedDrawings();
   saveDrawingsToServer();
   updateAvwapWidgetUI();
-  showToast('Anchored VWAP removed', 'info');
+  showToast('All Anchored VWAPs removed', 'info');
 }
 
 function renderPersistedDrawings() {
@@ -3257,7 +3343,7 @@ async function loadStockChart(rawSymbol) {
       adjustStockInputWidth();
     }
     
-    updateDefaultLegend();
+    updateDefaultVolumeBadges();
 
     // Trigger immediate live quote verification for the chart
     pollActiveStockLiveQuote();
