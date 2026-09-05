@@ -498,6 +498,13 @@ async function checkAuthStatus() {
       if (data.indicatorPreferences) {
         applyLoadedIndicatorPreferences(data.indicatorPreferences);
       }
+      if (data.drawings) {
+        state.drawings = data.drawings;
+        renderPersistedDrawings();
+      }
+      if (typeof data.notes === 'string' && data.notes) {
+        try { localStorage.setItem('sangam_user_notes', data.notes); } catch (e) {}
+      }
 
       await loadWatchlists();
     } else {
@@ -646,6 +653,13 @@ async function handleLoginSubmit(e) {
     updateAuthUI(state.user);
     if (data.indicatorPreferences) {
       applyLoadedIndicatorPreferences(data.indicatorPreferences);
+    }
+    if (data.drawings) {
+      state.drawings = data.drawings;
+      renderPersistedDrawings();
+    }
+    if (typeof data.notes === 'string' && data.notes) {
+      try { localStorage.setItem('sangam_user_notes', data.notes); } catch (e) {}
     }
     closeAuthModal();
     showToast(`Welcome back, ${data.username}! Logged in successfully.`, 'success');
@@ -2243,6 +2257,26 @@ function calculateAnchoredVwap(candles, anchorTime) {
   return result;
 }
 
+let saveDrawingsTimeout = null;
+function saveDrawingsToServer() {
+  if (!state.token && !state.user) return;
+  if (saveDrawingsTimeout) clearTimeout(saveDrawingsTimeout);
+  saveDrawingsTimeout = setTimeout(async () => {
+    try {
+      await fetch('/api/user/drawings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ drawings: state.drawings || {} })
+      });
+    } catch (e) {
+      console.warn('Failed to save chart drawings to server:', e);
+    }
+  }, 400);
+}
+
 function handleChartClick(param) {
   if (!state.activeDrawingTool) return;
   const currentSymbol = state.selectedStock?.symbol;
@@ -2259,6 +2293,7 @@ function handleChartClick(param) {
     // Replace previous AVWAP anchor or add
     state.drawings[currentSymbol].avwaps = [anchorTime];
     renderPersistedDrawings();
+    saveDrawingsToServer();
     
     let dateStr = anchorTime;
     if (typeof anchorTime === 'number') {
@@ -2290,6 +2325,7 @@ function handleAltHShortcut() {
 
   state.drawings[currentSymbol].hlines.push(price);
   renderPersistedDrawings();
+  saveDrawingsToServer();
   showToast(`─ Horizontal Line placed at ₹${price.toLocaleString('en-IN')}`, 'success');
 }
 
@@ -2345,6 +2381,7 @@ function clearStockAvwaps() {
     state.drawings[currentSymbol].avwaps = [];
   }
   renderPersistedDrawings();
+  saveDrawingsToServer();
   updateAvwapWidgetUI();
   showToast('Anchored VWAP removed', 'info');
 }

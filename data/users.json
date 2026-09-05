@@ -103,5 +103,90 @@
       }
     ],
     "customScreeners": []
+  },
+  {
+    "id": "usr_mto54rjp_dejp",
+    "username": "tester_1788598106438",
+    "passwordHash": "801c66fd2125735d27c41eb5fba3d632f75d7c881c7522b9ecb468ef70c4d161945b275085285e88f420fb3fbfc2c45b0205788238dbd236ff976f7841169a7a",
+    "salt": "c54c85f729ed70da547493215421a889",
+    "role": "user",
+    "createdAt": "2026-09-05T08:48:26.485Z",
+    "watchlists": [
+      {
+        "id": "wl_mto54rjo_1",
+        "name": "Watchlist 1",
+        "stocks": [
+          {
+            "symbol": "RELIANCE",
+            "name": "Reliance Industries Ltd",
+            "addedAt": "2026-09-05T08:48:26.551Z"
+          }
+        ]
+      },
+      {
+        "id": "wl_mto54rjo_2",
+        "name": "Watchlist 2",
+        "stocks": []
+      },
+      {
+        "id": "wl_mto54rjo_3",
+        "name": "Watchlist 3",
+        "stocks": []
+      },
+      {
+        "id": "wl_mto54rjo_4",
+        "name": "Watchlist 4",
+        "stocks": []
+      },
+      {
+        "id": "wl_mto54rjo_5",
+        "name": "Watchlist 5",
+        "stocks": []
+      }
+    ],
+    "customScreeners": [
+      {
+        "id": "scr_usr_mto54rkw_f02",
+        "name": "Super Momentum Scalp",
+        "category": "Custom",
+        "description": "Test custom screener",
+        "url": "https://chartink.com/screener/momentum-test",
+        "tags": [
+          "Custom"
+        ],
+        "isGlobal": false,
+        "isCustom": true,
+        "createdBy": "tester_1788598106438",
+        "lastRun": null,
+        "stockCount": 0,
+        "lastResults": []
+      }
+    ],
+    "indicatorPreferences": {
+      "toggles": {
+        "ema10": true,
+        "ema20": true,
+        "ema50": true,
+        "ema150": false,
+        "ema200": true
+      },
+      "colors": {
+        "ema10": "#00ffff",
+        "ema20": "#ff00ff"
+      },
+      "pivotType": "Traditional (Auto)"
+    },
+    "notes": "Bought Reliance at 2950 with stoploss 2900",
+    "notesUpdatedAt": "2026-09-05T08:48:26.577Z",
+    "drawings": {
+      "RELIANCE": {
+        "avwaps": [
+          "2026-08-01"
+        ],
+        "hlines": [
+          2980.5
+        ]
+      }
+    }
   }
 ]

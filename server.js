@@ -559,9 +559,17 @@ function saveUsers(users) {
     (async () => {
       try {
         const col = MONGO_CONFIG.db.collection('users');
-        await col.deleteMany({});
-        if (users.length > 0) {
-          await col.insertMany(users.map(u => ({ ...u, _id: u.id })));
+        if (users.length === 0) {
+          await col.deleteMany({});
+        } else {
+          const bulkOps = users.map(u => ({
+            replaceOne: {
+              filter: { id: u.id },
+              replacement: { ...u, _id: u.id },
+              upsert: true
+            }
+          }));
+          await col.bulkWrite(bulkOps);
         }
       } catch (err) {
         console.error('[MongoDB] Error saving users:', err.message);
@@ -1920,6 +1928,34 @@ function saveUserNotes(user, notesText) {
   }
 }
 
+function getUserDrawings(user) {
+  if (!user) return {};
+  const users = readUsers();
+  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
+  const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  return (u && u.drawings && typeof u.drawings === 'object') ? u.drawings : {};
+}
+
+function saveUserDrawings(user, drawings) {
+  if (!user) return false;
+  const users = readUsers();
+  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
+  let u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  if (u) {
+    u.drawings = drawings || {};
+    saveUsers(users);
+    return true;
+  } else {
+    users.push({
+      id: targetId,
+      username: user.username,
+      role: user.role,
+      drawings: drawings || {}
+    });
+    saveUsers(users);
+    return true;
+  }
+}
 
 // Fast Quotes Cache for Watchlists (45s TTL)
 const quotesCache = new Map();
@@ -2560,7 +2596,10 @@ const server = http.createServer(async (req, res) => {
             token: ADMIN_TOKEN,
             username: 'admin',
             role: 'admin',
-            indicatorPreferences: getUserIndicatorPreferences(authObj)
+            indicatorPreferences: getUserIndicatorPreferences(authObj),
+            analyticsPreferences: getUserAnalyticsPreferences(authObj),
+            notes: getUserNotes(authObj),
+            drawings: getUserDrawings(authObj)
           });
         }
 
@@ -2586,7 +2625,10 @@ const server = http.createServer(async (req, res) => {
           token,
           username: user.username,
           role: userRole,
-          indicatorPreferences: getUserIndicatorPreferences(authObj)
+          indicatorPreferences: getUserIndicatorPreferences(authObj),
+          analyticsPreferences: getUserAnalyticsPreferences(authObj),
+          notes: getUserNotes(authObj),
+          drawings: getUserDrawings(authObj)
         });
       }
 
@@ -2814,6 +2856,9 @@ const server = http.createServer(async (req, res) => {
         const watchlists = getUserWatchlists(authUser);
         const screeners = getUserScreeners(authUser);
         const indicatorPreferences = getUserIndicatorPreferences(authUser);
+        const analyticsPreferences = getUserAnalyticsPreferences(authUser);
+        const notes = getUserNotes(authUser);
+        const drawings = getUserDrawings(authUser);
 
         return sendJson(res, 200, {
           success: true,
@@ -2823,7 +2868,12 @@ const server = http.createServer(async (req, res) => {
           role: authUser.role,
           watchlistsCount: watchlists.length,
           screenersCount: screeners.length,
-          indicatorPreferences
+          watchlists,
+          screeners,
+          indicatorPreferences,
+          analyticsPreferences,
+          notes,
+          drawings
         });
       }
 
@@ -2869,6 +2919,24 @@ const server = http.createServer(async (req, res) => {
           saveUserNotes(authUser, notesContent);
         }
         return sendJson(res, 200, { success: true, message: 'Notes saved successfully', notes: notesContent });
+      }
+
+      // 0h. GET, POST, PUT /api/user/drawings - User On-Chart Drawings (Anchored VWAP, H-Lines)
+      if (pathname === '/api/user/drawings' && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        const drawings = getUserDrawings(authUser);
+        return sendJson(res, 200, { success: true, drawings: drawings || {} });
+      }
+
+      if (pathname === '/api/user/drawings' && (method === 'POST' || method === 'PUT')) {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Login required to save chart drawings' });
+        }
+        const payload = await parseJsonBody(req);
+        const drawingsObj = (payload && typeof payload.drawings === 'object') ? payload.drawings : (payload || {});
+        saveUserDrawings(authUser, drawingsObj);
+        return sendJson(res, 200, { success: true, message: 'Chart drawings saved successfully', drawings: drawingsObj });
       }
 
       // ==========================================
