@@ -464,13 +464,17 @@ async function syncMongoInitialData() {
     if (screenersCount === 0) {
       console.log('[MongoDB] 🌱 Seeding initial screeners into MongoDB...');
       if (memoryScreeners && memoryScreeners.length > 0) {
-        await screenersCol.insertMany(memoryScreeners.map(s => ({ ...s, _id: s.id })));
+        const cleanScreeners = memoryScreeners.map(s => {
+          const { _id, ...rest } = s;
+          return { ...rest, id: rest.id || _id };
+        });
+        await screenersCol.insertMany(cleanScreeners);
       }
     } else {
       const dbScreeners = await screenersCol.find({}).toArray();
       memoryScreeners = dbScreeners.map(s => {
         const { _id, ...rest } = s;
-        return { ...rest, id: rest.id || _id };
+        return { ...rest, id: rest.id || String(_id) };
       });
       console.log(`[MongoDB] 📥 Loaded ${memoryScreeners.length} screeners from MongoDB Atlas.`);
     }
@@ -481,13 +485,17 @@ async function syncMongoInitialData() {
     if (usersCount === 0) {
       if (memoryUsers && memoryUsers.length > 0) {
         console.log('[MongoDB] 🌱 Seeding initial users into MongoDB...');
-        await usersCol.insertMany(memoryUsers.map(u => ({ ...u, _id: u.id })));
+        const cleanUsers = memoryUsers.map(u => {
+          const { _id, ...rest } = u;
+          return { ...rest, id: rest.id || _id };
+        });
+        await usersCol.insertMany(cleanUsers);
       }
     } else {
       const dbUsers = await usersCol.find({}).toArray();
       memoryUsers = dbUsers.map(u => {
         const { _id, ...rest } = u;
-        return { ...rest, id: rest.id || _id };
+        return { ...rest, id: rest.id || String(_id) };
       });
       console.log(`[MongoDB] 📥 Loaded ${memoryUsers.length} users from MongoDB Atlas.`);
     }
@@ -524,9 +532,22 @@ function saveScreeners(screeners) {
     (async () => {
       try {
         const col = MONGO_CONFIG.db.collection('screeners');
-        await col.deleteMany({});
-        if (screeners.length > 0) {
-          await col.insertMany(screeners.map(s => ({ ...s, _id: s.id })));
+        if (screeners.length === 0) {
+          await col.deleteMany({});
+        } else {
+          const bulkOps = screeners.map(s => {
+            const { _id, ...cleanScreener } = s;
+            return {
+              updateOne: {
+                filter: { id: cleanScreener.id },
+                update: { $set: cleanScreener },
+                upsert: true
+              }
+            };
+          });
+          await col.bulkWrite(bulkOps);
+          const currentIds = screeners.map(s => s.id);
+          await col.deleteMany({ id: { $nin: currentIds } });
         }
       } catch (err) {
         console.error('[MongoDB] Error saving screeners:', err.message);
@@ -562,13 +583,16 @@ function saveUsers(users) {
         if (users.length === 0) {
           await col.deleteMany({});
         } else {
-          const bulkOps = users.map(u => ({
-            replaceOne: {
-              filter: { id: u.id },
-              replacement: { ...u, _id: u.id },
-              upsert: true
-            }
-          }));
+          const bulkOps = users.map(u => {
+            const { _id, ...cleanUser } = u;
+            return {
+              updateOne: {
+                filter: { id: cleanUser.id },
+                update: { $set: cleanUser },
+                upsert: true
+              }
+            };
+          });
           await col.bulkWrite(bulkOps);
         }
       } catch (err) {
@@ -1696,15 +1720,11 @@ function isRequestAuthorized(req) {
 function getUserScreeners(user) {
   const globalScreeners = readScreeners();
   
-  if (user && user.role === 'user') {
+  if (user) {
     const users = readUsers();
-    const targetId = user.userId || user.id;
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
     const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
-    if (u) {
-      if (!Array.isArray(u.customScreeners)) {
-        u.customScreeners = [];
-      }
-      
+    if (u && Array.isArray(u.customScreeners) && u.customScreeners.length > 0) {
       // Auto-migrate legacy u.screeners snapshots if present
       if (Array.isArray(u.screeners)) {
         const globalIds = new Set(globalScreeners.map(g => g.id));
@@ -1719,24 +1739,35 @@ function getUserScreeners(user) {
       }
 
       // Merge: Global Admin Screeners (always up to date) + User's Custom Screeners
+      const globalIds = new Set(globalScreeners.map(g => g.id));
+      const validCustom = u.customScreeners.filter(c => !globalIds.has(c.id));
       const merged = [
         ...globalScreeners.map(g => ({ ...g, isGlobal: true, isCustom: false })),
-        ...u.customScreeners.map(c => ({ ...c, isGlobal: false, isCustom: true }))
+        ...validCustom.map(c => ({ ...c, isGlobal: false, isCustom: true }))
       ];
       return merged;
     }
   }
 
-  // Admin or unauthenticated: return global system screeners
+  // Unauthenticated or no custom screeners: return global system screeners
   return globalScreeners.map(g => ({ ...g, isGlobal: true, isCustom: false }));
 }
 
 function addUserCustomScreener(user, screener) {
-  if (!user || user.role !== 'user') return false;
+  if (!user) return false;
   const users = readUsers();
-  const targetId = user.userId || user.id;
-  const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
-  if (!u) return false;
+  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
+  let u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  if (!u) {
+    u = {
+      id: targetId,
+      username: user.username,
+      role: user.role,
+      watchlists: [],
+      customScreeners: []
+    };
+    users.push(u);
+  }
 
   if (!Array.isArray(u.customScreeners)) u.customScreeners = [];
   u.customScreeners.push(screener);
@@ -1745,9 +1776,9 @@ function addUserCustomScreener(user, screener) {
 }
 
 function updateUserCustomScreener(user, screenerId, updatedData) {
-  if (!user || user.role !== 'user') return null;
+  if (!user) return null;
   const users = readUsers();
-  const targetId = user.userId || user.id;
+  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
   const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
   if (!u || !Array.isArray(u.customScreeners)) return null;
 
@@ -1766,9 +1797,9 @@ function updateUserCustomScreener(user, screenerId, updatedData) {
 }
 
 function deleteUserCustomScreener(user, screenerId) {
-  if (!user || user.role !== 'user') return false;
+  if (!user) return false;
   const users = readUsers();
-  const targetId = user.userId || user.id;
+  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
   const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
   if (!u || !Array.isArray(u.customScreeners)) return false;
 
@@ -1782,9 +1813,9 @@ function deleteUserCustomScreener(user, screenerId) {
 }
 
 function saveScreenerExecutionCache(user, screenerId, result) {
-  if (user && user.role === 'user') {
+  if (user) {
     const users = readUsers();
-    const targetId = user.userId || user.id;
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
     const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
     if (u && Array.isArray(u.customScreeners)) {
       const match = u.customScreeners.find(s => s.id === screenerId);
