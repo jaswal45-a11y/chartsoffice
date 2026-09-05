@@ -594,6 +594,8 @@ function saveUsers(users) {
             };
           });
           await col.bulkWrite(bulkOps);
+          const currentIds = users.map(u => u.id);
+          await col.deleteMany({ id: { $nin: currentIds } });
         }
       } catch (err) {
         console.error('[MongoDB] Error saving users:', err.message);
@@ -1717,13 +1719,24 @@ function isRequestAuthorized(req) {
   return user && user.role === 'admin';
 }
 
+function findUserRecord(users, user) {
+  if (!user || !Array.isArray(users)) return null;
+  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
+  const targetUsername = (user.username || '').toLowerCase();
+  return users.find(x => {
+    if (!x) return false;
+    if (targetId && (x.id === targetId || x.userId === targetId)) return true;
+    if (targetUsername && x.username && x.username.toLowerCase() === targetUsername) return true;
+    return false;
+  }) || null;
+}
+
 function getUserScreeners(user) {
   const globalScreeners = readScreeners();
   
   if (user) {
     const users = readUsers();
-    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
-    const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+    const u = findUserRecord(users, user);
     if (u && Array.isArray(u.customScreeners) && u.customScreeners.length > 0) {
       // Auto-migrate legacy u.screeners snapshots if present
       if (Array.isArray(u.screeners)) {
@@ -1756,14 +1769,14 @@ function getUserScreeners(user) {
 function addUserCustomScreener(user, screener) {
   if (!user) return false;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
-  let u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  let u = findUserRecord(users, user);
   if (!u) {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
     u = {
       id: targetId,
       username: user.username,
-      role: user.role,
-      watchlists: [],
+      role: user.role || 'user',
+      watchlists: createDefaultWatchlists(),
       customScreeners: []
     };
     users.push(u);
@@ -1778,8 +1791,7 @@ function addUserCustomScreener(user, screener) {
 function updateUserCustomScreener(user, screenerId, updatedData) {
   if (!user) return null;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
-  const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  const u = findUserRecord(users, user);
   if (!u || !Array.isArray(u.customScreeners)) return null;
 
   const idx = u.customScreeners.findIndex(s => s.id === screenerId);
@@ -1799,8 +1811,7 @@ function updateUserCustomScreener(user, screenerId, updatedData) {
 function deleteUserCustomScreener(user, screenerId) {
   if (!user) return false;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
-  const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  const u = findUserRecord(users, user);
   if (!u || !Array.isArray(u.customScreeners)) return false;
 
   const initialLen = u.customScreeners.length;
@@ -1815,8 +1826,7 @@ function deleteUserCustomScreener(user, screenerId) {
 function saveScreenerExecutionCache(user, screenerId, result) {
   if (user) {
     const users = readUsers();
-    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id);
-    const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+    const u = findUserRecord(users, user);
     if (u && Array.isArray(u.customScreeners)) {
       const match = u.customScreeners.find(s => s.id === screenerId);
       if (match) {
@@ -1843,13 +1853,13 @@ function saveScreenerExecutionCache(user, screenerId, result) {
 function getUserWatchlists(user) {
   if (!user) return [];
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  let u = users.find(x => x.id === targetId);
+  let u = findUserRecord(users, user);
   if (!u) {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
     u = {
       id: targetId,
       username: user.username,
-      role: user.role,
+      role: user.role || 'user',
       watchlists: createDefaultWatchlists()
     };
     users.push(u);
@@ -1865,17 +1875,17 @@ function getUserWatchlists(user) {
 function saveUserWatchlists(user, watchlists) {
   if (!user) return false;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  let u = users.find(x => x.id === targetId);
+  let u = findUserRecord(users, user);
   if (u) {
     u.watchlists = watchlists;
     saveUsers(users);
     return true;
   } else {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
     users.push({
       id: targetId,
       username: user.username,
-      role: user.role,
+      role: user.role || 'user',
       watchlists
     });
     saveUsers(users);
@@ -1898,29 +1908,66 @@ function getUserIndicatorPreferences(user) {
       darvas: true,
       rsi: true
     },
-    pivotType: 'Traditional (Auto)'
+    colors: {
+      ema10: '#0284c7',
+      ema20: '#2563eb',
+      ema50: '#f59e0b',
+      ema150: '#9333ea',
+      ema200: '#e11d48',
+      volAvg: '#fbbf24',
+      vwap: '#eab308',
+      darvasTop: '#10b981',
+      darvasBottom: '#ef4444',
+      rsi: '#60a5fa',
+      rsiSma: '#fbbf24',
+      avwap: '#a855f7'
+    },
+    pivotType: 'Traditional (Auto)',
+    chartTheme: 'dark',
+    customThemeColors: {
+      bg: '#0b0f19',
+      text: '#94a3b8',
+      grid: '#1f293d',
+      border: '#1f293d',
+      candleUp: '#10b981',
+      candleDown: '#ef4444'
+    },
+    lineWidths: {
+      ema10: 1.5,
+      ema20: 1.5,
+      ema50: 1.5,
+      ema150: 2,
+      ema200: 2,
+      vwap: 1.8,
+      darvasTop: 2.5,
+      darvasBottom: 2.5,
+      volAvg: 1.5,
+      rsi: 2,
+      rsiSma: 1.5,
+      avwap: 2,
+      pivots: 1.2
+    }
   };
   if (!user) return defaultPrefs;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  const u = users.find(x => x.id === targetId);
-  return u && u.indicatorPreferences ? u.indicatorPreferences : defaultPrefs;
+  const u = findUserRecord(users, user);
+  return (u && u.indicatorPreferences) ? { ...defaultPrefs, ...u.indicatorPreferences } : defaultPrefs;
 }
 
 function saveUserIndicatorPreferences(user, preferences) {
   if (!user) return false;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  let u = users.find(x => x.id === targetId);
+  let u = findUserRecord(users, user);
   if (u) {
     u.indicatorPreferences = preferences;
     saveUsers(users);
     return true;
   } else {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
     users.push({
       id: targetId,
       username: user.username,
-      role: user.role,
+      role: user.role || 'user',
       indicatorPreferences: preferences
     });
     saveUsers(users);
@@ -1931,26 +1978,25 @@ function saveUserIndicatorPreferences(user, preferences) {
 function getUserNotes(user) {
   if (!user) return '';
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  const u = users.find(x => x.id === targetId);
+  const u = findUserRecord(users, user);
   return (u && typeof u.notes === 'string') ? u.notes : '';
 }
 
 function saveUserNotes(user, notesText) {
   if (!user) return false;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  let u = users.find(x => x.id === targetId);
+  let u = findUserRecord(users, user);
   if (u) {
     u.notes = String(notesText || '');
     u.notesUpdatedAt = new Date().toISOString();
     saveUsers(users);
     return true;
   } else {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
     users.push({
       id: targetId,
       username: user.username,
-      role: user.role,
+      role: user.role || 'user',
       notes: String(notesText || ''),
       notesUpdatedAt: new Date().toISOString()
     });
@@ -1962,25 +2008,24 @@ function saveUserNotes(user, notesText) {
 function getUserDrawings(user) {
   if (!user) return {};
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  const u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  const u = findUserRecord(users, user);
   return (u && u.drawings && typeof u.drawings === 'object') ? u.drawings : {};
 }
 
 function saveUserDrawings(user, drawings) {
   if (!user) return false;
   const users = readUsers();
-  const targetId = user.role === 'admin' ? 'usr_admin' : user.userId;
-  let u = users.find(x => x.id === targetId || (x.username && x.username.toLowerCase() === (user.username || '').toLowerCase()));
+  let u = findUserRecord(users, user);
   if (u) {
     u.drawings = drawings || {};
     saveUsers(users);
     return true;
   } else {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
     users.push({
       id: targetId,
       username: user.username,
-      role: user.role,
+      role: user.role || 'user',
       drawings: drawings || {}
     });
     saveUsers(users);
@@ -2468,9 +2513,9 @@ function getUserAnalyticsPreferences(user) {
   const defaultSectorIds = (data.subSectors || []).map(s => s.id);
   const defaultIndexIds = (data.indices || []).map(i => i.id);
 
-  if (user && user.role === 'user') {
+  if (user) {
     const users = readUsers();
-    const u = users.find(x => x.id === user.userId);
+    const u = findUserRecord(users, user);
     if (u && u.analyticsPreferences) {
       return u.analyticsPreferences;
     }
@@ -2482,16 +2527,24 @@ function getUserAnalyticsPreferences(user) {
 }
 
 function saveUserAnalyticsPreferences(user, prefs) {
-  if (user && user.role === 'user') {
-    const users = readUsers();
-    const u = users.find(x => x.id === user.userId);
-    if (u) {
-      u.analyticsPreferences = prefs;
-      saveUsers(users);
-      return true;
-    }
+  if (!user) return false;
+  const users = readUsers();
+  let u = findUserRecord(users, user);
+  if (u) {
+    u.analyticsPreferences = prefs;
+    saveUsers(users);
+    return true;
+  } else {
+    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
+    users.push({
+      id: targetId,
+      username: user.username,
+      role: user.role || 'user',
+      analyticsPreferences: prefs
+    });
+    saveUsers(users);
+    return true;
   }
-  return false;
 }
 
 // JSON responder helper
@@ -2625,8 +2678,15 @@ const server = http.createServer(async (req, res) => {
           return sendJson(res, 200, {
             success: true,
             token: ADMIN_TOKEN,
+            userId: 'usr_admin',
             username: 'admin',
             role: 'admin',
+            user: {
+              id: 'usr_admin',
+              userId: 'usr_admin',
+              username: 'admin',
+              role: 'admin'
+            },
             indicatorPreferences: getUserIndicatorPreferences(authObj),
             analyticsPreferences: getUserAnalyticsPreferences(authObj),
             notes: getUserNotes(authObj),
@@ -2654,8 +2714,15 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, {
           success: true,
           token,
+          userId: user.id,
           username: user.username,
           role: userRole,
+          user: {
+            id: user.id,
+            userId: user.id,
+            username: user.username,
+            role: userRole
+          },
           indicatorPreferences: getUserIndicatorPreferences(authObj),
           analyticsPreferences: getUserAnalyticsPreferences(authObj),
           notes: getUserNotes(authObj),

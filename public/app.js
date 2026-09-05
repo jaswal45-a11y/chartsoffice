@@ -995,7 +995,7 @@ async function checkAuthStatus() {
     const data = await res.json();
     if (data.success && data.authenticated) {
       state.user = {
-        userId: data.userId,
+        userId: data.userId || (data.username === 'Patent' ? 'admin' : data.username),
         username: data.username,
         role: data.role
       };
@@ -1009,11 +1009,15 @@ async function checkAuthStatus() {
         state.drawings = data.drawings;
         renderPersistedDrawings();
       }
-      if (typeof data.notes === 'string' && data.notes) {
+      if (typeof data.notes === 'string') {
         try { localStorage.setItem('sangam_user_notes', data.notes); } catch (e) {}
+        if (window.SangamNotes && typeof window.SangamNotes.setNotes === 'function') {
+          window.SangamNotes.setNotes(data.notes);
+        }
       }
 
       await loadWatchlists();
+      await loadScreeners();
     } else {
       state.user = null;
       state.isAdmin = false;
@@ -1154,7 +1158,7 @@ async function handleLoginSubmit(e) {
 
     state.token = data.token;
     localStorage.setItem('authToken', data.token);
-    state.user = { userId: data.username === 'Patent' ? 'admin' : data.username, username: data.username, role: data.role };
+    state.user = { userId: data.userId || (data.username === 'Patent' ? 'admin' : data.username), username: data.username, role: data.role };
     state.isAdmin = (data.role === 'admin');
 
     updateAuthUI(state.user);
@@ -1165,8 +1169,11 @@ async function handleLoginSubmit(e) {
       state.drawings = data.drawings;
       renderPersistedDrawings();
     }
-    if (typeof data.notes === 'string' && data.notes) {
+    if (typeof data.notes === 'string') {
       try { localStorage.setItem('sangam_user_notes', data.notes); } catch (e) {}
+      if (window.SangamNotes && typeof window.SangamNotes.setNotes === 'function') {
+        window.SangamNotes.setNotes(data.notes);
+      }
     }
     closeAuthModal();
     showToast(`Welcome back, ${data.username}! Logged in successfully.`, 'success');

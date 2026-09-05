@@ -257,12 +257,12 @@ async function handleLogin(e) {
 
     state.token = data.token;
     localStorage.setItem('authToken', data.token);
-    state.user = data.user;
-    state.isAdmin = (data.user.role === 'admin');
+    state.user = data.user || { userId: data.userId || data.username, username: data.username, role: data.role };
+    state.isAdmin = (state.user && state.user.role === 'admin');
 
     closeAuthModal();
     updateAuthUI(state.user);
-    showToast(`Welcome back, ${data.user.username}!`, 'success');
+    showToast(`Welcome back, ${state.user.username}!`, 'success');
   } catch (err) {
     if (banner) {
       banner.textContent = err.message;

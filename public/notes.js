@@ -116,13 +116,11 @@
       }).then(function (res) {
         return res.json();
       }).then(function (data) {
-        if (data && data.success && typeof data.notes === 'string' && data.notes.trim()) {
-          if (!currentContent) {
-            currentContent = data.notes;
-            if (textareaEl) textareaEl.value = currentContent;
-            localStorage.setItem(STORAGE_KEY_CONTENT, currentContent);
-            updateStats();
-          }
+        if (data && data.success && typeof data.notes === 'string') {
+          currentContent = data.notes;
+          if (textareaEl) textareaEl.value = currentContent;
+          try { localStorage.setItem(STORAGE_KEY_CONTENT, currentContent); } catch (e) {}
+          updateStats();
         }
       }).catch(function () {});
     } catch (e) {}
@@ -708,12 +706,15 @@
     open: openWidget,
     close: closeWidget,
     toggle: toggleWidget,
+    syncFromServer: loadFromServer,
     minimize: function () { settings.isMinimized = true; saveSettings(); applyGeometry(); },
     restore: function () { settings.isMinimized = false; saveSettings(); applyGeometry(); },
     getNotes: function () { return currentContent; },
     setNotes: function (text) {
-      if (textareaEl) textareaEl.value = text;
-      saveContent(text, 'local');
+      currentContent = text || '';
+      if (textareaEl) textareaEl.value = currentContent;
+      try { localStorage.setItem(STORAGE_KEY_CONTENT, currentContent); } catch (e) {}
+      updateStats();
     },
     insertText: insertAtCursor
   };
