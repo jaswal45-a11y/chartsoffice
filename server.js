@@ -403,7 +403,24 @@ try {
 
 const MONGO_CONFIG = {
   get uri() {
-    return process.env.MONGODB_URI || process.env.MONGO_URL || process.env.DATABASE_URL || '';
+    let raw = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.DATABASE_URL || '';
+    raw = String(raw).trim();
+    // Strip accidental quotes
+    if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+      raw = raw.slice(1, -1).trim();
+    }
+    // Strip accidental key prefix if user pasted "MONGODB_URI=..." in the value field
+    if (raw.startsWith('MONGODB_URI=')) {
+      raw = raw.slice(12).trim();
+    } else if (raw.startsWith('MONGO_URL=')) {
+      raw = raw.slice(10).trim();
+    } else if (raw.startsWith('URI=')) {
+      raw = raw.slice(4).trim();
+    }
+    if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+      raw = raw.slice(1, -1).trim();
+    }
+    return raw;
   },
   dbName: 'sangam_stocks',
   client: null,
@@ -734,14 +751,21 @@ function parseChartinkSlug(inputUrl) {
   return trimmed.replace(/^\/+|\/+$/g, '');
 }
 
-// Market Cap > 2000 Cr Cache & Fetcher
+// Market Cap > 1000 Cr & > 2000 Cr Cache & Fetcher
+let marketCap1000CrSet = new Set();
 let marketCap2000CrSet = new Set();
-let cachedMarketCapList = [];
-let lastMcFetch = 0;
+let cachedMarketCap1000List = [];
+let cachedMarketCap2000List = [];
+let lastMc1000Fetch = 0;
+let lastMc2000Fetch = 0;
 
-async function getMarketCap2000CrSet() {
-  if (marketCap2000CrSet.size > 0 && (Date.now() - lastMcFetch < 6 * 60 * 60 * 1000)) {
-    return marketCap2000CrSet;
+async function getMarketCapSets() {
+  const now = Date.now();
+  const need1000 = marketCap1000CrSet.size === 0 || (now - lastMc1000Fetch >= 6 * 60 * 60 * 1000);
+  const need2000 = marketCap2000CrSet.size === 0 || (now - lastMc2000Fetch >= 6 * 60 * 60 * 1000);
+
+  if (!need1000 && !need2000) {
+    return { mc1000Set: marketCap1000CrSet, mc2000Set: marketCap2000CrSet };
   }
 
   try {
@@ -753,34 +777,68 @@ async function getMarketCap2000CrSet() {
     const csrf = tokenMatch ? tokenMatch[1] : '';
     const cookies = (pageRes.headers.getSetCookie ? pageRes.headers.getSetCookie() : [pageRes.headers.get('set-cookie') || '']).map(c => c.split(';')[0]).join('; ');
 
-    const pRes = await fetch('https://chartink.com/screener/process', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'X-CSRF-TOKEN': csrf,
-        'Cookie': cookies,
-        'Referer': 'https://chartink.com',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: 'scan_clause=' + encodeURIComponent('( {cash} ( market capital > 2000 ) )')
-    });
-    const data = await pRes.json();
-    if (Array.isArray(data.data) && data.data.length > 0) {
-      const newSet = new Set();
-      data.data.forEach(s => {
-        if (s.nsecode) newSet.add(s.nsecode.toUpperCase());
-        if (s.bsecode) newSet.add(String(s.bsecode).toUpperCase());
+    const fetchScan = async (clause) => {
+      const pRes = await fetch('https://chartink.com/screener/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-CSRF-TOKEN': csrf,
+          'Cookie': cookies,
+          'Referer': 'https://chartink.com',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'scan_clause=' + encodeURIComponent(clause)
       });
-      marketCap2000CrSet = newSet;
-      cachedMarketCapList = data.data;
-      lastMcFetch = Date.now();
-      console.log(`✅ Loaded Market Cap > ₹2000 Cr set: ${marketCap2000CrSet.size} stocks.`);
+      return pRes.json();
+    };
+
+    if (need1000) {
+      try {
+        const data1000 = await fetchScan('( {cash} ( market capital > 1000 ) )');
+        if (Array.isArray(data1000.data) && data1000.data.length > 0) {
+          const newSet1000 = new Set();
+          data1000.data.forEach(s => {
+            if (s.nsecode) newSet1000.add(s.nsecode.toUpperCase());
+            if (s.bsecode) newSet1000.add(String(s.bsecode).toUpperCase());
+          });
+          marketCap1000CrSet = newSet1000;
+          cachedMarketCap1000List = data1000.data;
+          lastMc1000Fetch = Date.now();
+          console.log(`✅ Loaded Market Cap > ₹1000 Cr set: ${marketCap1000CrSet.size} stocks.`);
+        }
+      } catch (err1000) {
+        console.warn('Could not refresh Market Cap > 1000 Cr set:', err1000.message);
+      }
+    }
+
+    if (need2000) {
+      try {
+        const data2000 = await fetchScan('( {cash} ( market capital > 2000 ) )');
+        if (Array.isArray(data2000.data) && data2000.data.length > 0) {
+          const newSet2000 = new Set();
+          data2000.data.forEach(s => {
+            if (s.nsecode) newSet2000.add(s.nsecode.toUpperCase());
+            if (s.bsecode) newSet2000.add(String(s.bsecode).toUpperCase());
+          });
+          marketCap2000CrSet = newSet2000;
+          cachedMarketCap2000List = data2000.data;
+          lastMc2000Fetch = Date.now();
+          console.log(`✅ Loaded Market Cap > ₹2000 Cr set: ${marketCap2000CrSet.size} stocks.`);
+        }
+      } catch (err2000) {
+        console.warn('Could not refresh Market Cap > 2000 Cr set:', err2000.message);
+      }
     }
   } catch (err) {
-    console.warn('Could not refresh Market Cap > 2000 Cr set:', err.message);
+    console.warn('Could not refresh Market Cap sets:', err.message);
   }
 
-  return marketCap2000CrSet;
+  return { mc1000Set: marketCap1000CrSet, mc2000Set: marketCap2000CrSet };
+}
+
+async function getMarketCap2000CrSet() {
+  const { mc2000Set } = await getMarketCapSets();
+  return mc2000Set;
 }
 
 // Core Chartink execution engine
@@ -886,15 +944,16 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
   const resultJson = await processRes.json();
   const rawStocks = Array.isArray(resultJson.data) ? resultJson.data : [];
 
-  // Fetch Market Cap > 2000 Cr symbols set to tag each stock
-  const mcSet = await getMarketCap2000CrSet();
+  // Fetch Market Cap > 1000 Cr & > 2000 Cr symbols sets to tag each stock
+  const { mc1000Set, mc2000Set } = await getMarketCapSets();
 
   // Normalize stock items
   const stocks = rawStocks.map((s, idx) => {
     const sym = s.nsecode || s.bsecode || 'UNKNOWN';
     const bse = s.bsecode ? String(s.bsecode).toUpperCase() : null;
     const nse = s.nsecode ? String(s.nsecode).toUpperCase() : null;
-    const isOver2000 = (nse && mcSet.has(nse)) || (bse && mcSet.has(bse)) || mcSet.has(sym.toUpperCase());
+    const isOver2000 = (nse && mc2000Set.has(nse)) || (bse && mc2000Set.has(bse)) || mc2000Set.has(sym.toUpperCase());
+    const isOver1000 = isOver2000 || (nse && mc1000Set.has(nse)) || (bse && mc1000Set.has(bse)) || mc1000Set.has(sym.toUpperCase());
 
     return {
       sr: s.sr || idx + 1,
@@ -905,6 +964,7 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
       close: typeof s.close === 'number' ? Number(s.close.toFixed(2)) : s.close,
       changePercent: typeof s.per_chg === 'number' ? Number(s.per_chg.toFixed(2)) : (typeof s.p_change === 'number' ? Number(s.p_change.toFixed(2)) : 0),
       volume: typeof s.volume === 'number' ? s.volume : (typeof s.vol === 'number' ? s.vol : 0),
+      mcOver1000Cr: Boolean(isOver1000),
       mcOver2000Cr: Boolean(isOver2000)
     };
   });

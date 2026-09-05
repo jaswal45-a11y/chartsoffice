@@ -258,11 +258,18 @@
                   class="w-full pl-9 pr-3 py-2 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
               </div>
 
-              <!-- Market Cap > 2000 Cr Toggle -->
-              <label class="flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium rounded-xl border border-dark-border bg-dark-bg hover:border-blue-500/50 cursor-pointer select-none transition-all" id="lbl-mc2000" title="Filter stocks with Market Capital > ₹2000 Cr">
-                <input type="checkbox" id="chk-mc2000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
-                <span class="text-slate-300 text-[11px] font-mono whitespace-nowrap">MCap &gt; 2000Cr</span>
-              </label>
+              <!-- Market Cap 1k & 2k Toggles (Compact Space-saving UI) -->
+              <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-bg border border-dark-border rounded-xl">
+                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc1000" title="Market Cap > ₹1000 Cr">
+                  <input type="checkbox" id="chk-mc1000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                  <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">1k</span>
+                </label>
+                <span class="text-slate-600 text-[10px] select-none">|</span>
+                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc2000" title="Market Cap > ₹2000 Cr">
+                  <input type="checkbox" id="chk-mc2000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                  <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
+                </label>
+              </div>
 
               <div class="px-2.5 py-2 text-xs font-mono text-slate-400 bg-dark-bg rounded-xl border border-dark-border">
                 <span id="visible-stocks-count">0</span>

@@ -16,6 +16,7 @@ const state = {
   currentStockData: null,
   activeInterval: '1d', // '1d' or '1wk'
   activeRange: '6mo', // '3mo', '6mo' (Default), '1y'
+  filterMc1000: false, // Filter stocks with Market Cap > 1000 Cr
   filterMc2000: false, // Filter stocks with Market Cap > 2000 Cr
   searchQuery: '',
   sortField: 'changePercent',
@@ -223,6 +224,7 @@ const el = {
   manualStockInput: document.getElementById('manual-stock-input'),
   btnManualStockSearch: document.getElementById('btn-manual-stock-search'),
   stockAutocompleteDropdown: document.getElementById('stock-autocomplete-dropdown'),
+  chkMc1000: document.getElementById('chk-mc1000'),
   chkMc2000: document.getElementById('chk-mc2000'),
   chartStockLtp: document.getElementById('chart-stock-ltp'),
   chartStockChange: document.getElementById('chart-stock-change'),
@@ -2011,10 +2013,24 @@ function setupEventListeners() {
     });
   });
 
-  // Market Cap > 2000 Cr Filter Checkbox
+  // Market Cap > 1000 Cr & > 2000 Cr Filter Checkboxes
+  if (el.chkMc1000) {
+    el.chkMc1000.addEventListener('change', e => {
+      state.filterMc1000 = e.target.checked;
+      if (state.filterMc1000 && state.filterMc2000) {
+        if (el.chkMc2000) el.chkMc2000.checked = false;
+        state.filterMc2000 = false;
+      }
+      renderStocksTable();
+    });
+  }
   if (el.chkMc2000) {
     el.chkMc2000.addEventListener('change', e => {
       state.filterMc2000 = e.target.checked;
+      if (state.filterMc2000 && state.filterMc1000) {
+        if (el.chkMc1000) el.chkMc1000.checked = false;
+        state.filterMc1000 = false;
+      }
       renderStocksTable();
     });
   }
@@ -3148,6 +3164,7 @@ function handleCopyStocks() {
   } else {
     list = (state.currentStocks || []).filter(stock => {
       if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
+      if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
       if (!state.searchQuery) return true;
       const q = state.searchQuery;
       const sym = (stock.symbol || '').toLowerCase();
@@ -3221,6 +3238,7 @@ function setupKeyboardNavigation() {
       } else {
         list = (state.currentStocks || []).filter(stock => {
           if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
+          if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
           if (!state.searchQuery) return true;
           const q = state.searchQuery;
           const sym = (stock.symbol || '').toLowerCase();
@@ -3924,6 +3942,9 @@ function renderStocksTable() {
     if (state.filterMc2000 && stock.mcOver2000Cr !== true) {
       return false;
     }
+    if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
+      return false;
+    }
     if (!state.searchQuery) return true;
     const q = state.searchQuery;
     const sym = (stock.symbol || '').toLowerCase();
@@ -3983,11 +4004,20 @@ function renderStocksTable() {
       `;
     }
 
-    const mcBadgeHtml = stock.mcOver2000Cr ? `
-      <span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2000 Cr">
-        &gt;2000Cr
-      </span>
-    ` : '';
+    let mcBadgeHtml = '';
+    if (stock.mcOver2000Cr) {
+      mcBadgeHtml = `
+        <span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2000 Cr">
+          &gt;2k
+        </span>
+      `;
+    } else if (stock.mcOver1000Cr) {
+      mcBadgeHtml = `
+        <span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">
+          &gt;1k
+        </span>
+      `;
+    }
 
     tr.innerHTML = `
       <td class="py-2.5 px-3">
