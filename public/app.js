@@ -1,5 +1,5 @@
 /**
- * Sangam_chartlinks - Client Application Logic
+ * Sangam_charts - Client Application Logic
  * Featuring:
  * - 3 Distinct, Unmixed Panes: Price, Dedicated Volume + 9 SMA, Dedicated RSI (14) + 14 SMA
  * - Traditional Auto Pivot Points (P, R1, S1 only as per selected timeframe)

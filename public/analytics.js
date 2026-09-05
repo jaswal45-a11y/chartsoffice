@@ -1,6 +1,6 @@
 /**
  * Standalone Market Analytics & Breadth Controller
- * Sangam_chartlinks
+ * Sangam_charts
  */
 
 const state = {

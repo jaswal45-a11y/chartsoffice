@@ -2,7 +2,7 @@
  * F&O & Equity Stock Screener Controller (Institutional Progressive Architecture)
  * With Real-Time Live Quotes Polling (30s), Green/Red Visual Price Flashes,
  * 212 F&O Direct Sync, Draggable Column Resizing & Custom Universe Pasting
- * Sangam_chartlinks Financial Platform
+ * Sangam_charts Financial Platform
  */
 
 // -------------------------------------------------------------
