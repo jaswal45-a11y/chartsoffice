@@ -618,15 +618,21 @@ function saveUsers(users) {
             const { _id, ...cleanUser } = u;
             return {
               updateOne: {
-                filter: { id: cleanUser.id },
+                filter: { $or: [{ id: cleanUser.id }, { username: cleanUser.username }] },
                 update: { $set: cleanUser },
                 upsert: true
               }
             };
           });
           await col.bulkWrite(bulkOps);
-          const currentIds = users.map(u => u.id);
-          await col.deleteMany({ id: { $nin: currentIds } });
+          const currentIds = users.map(u => u.id).filter(Boolean);
+          const currentUsernames = users.map(u => u.username).filter(Boolean);
+          if (currentIds.length > 0 && currentUsernames.length > 0) {
+            await col.deleteMany({
+              id: { $nin: currentIds },
+              username: { $nin: currentUsernames }
+            });
+          }
         }
       } catch (err) {
         console.error('[MongoDB] Error saving users:', err.message);
@@ -2904,12 +2910,25 @@ const server = http.createServer(async (req, res) => {
           return sendJson(res, 400, { success: false, error: 'Cannot delete primary admin account' });
         }
 
-        users = users.filter(u => u.id !== targetUser.id);
+        users = users.filter(u => u.id !== targetUser.id && u.username !== targetUser.username);
         saveUsers(users);
+
+        if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+          try {
+            await MONGO_CONFIG.db.collection('users').deleteMany({
+              $or: [
+                { id: targetUser.id },
+                { username: targetUser.username }
+              ]
+            });
+          } catch (err) {
+            console.error('[MongoDB] Error deleting user directly:', err.message);
+          }
+        }
 
         // Terminate any active sessions for this user
         for (const [tok, sess] of activeSessions.entries()) {
-          if (sess.userId === targetUser.id) {
+          if (sess.userId === targetUser.id || sess.username === targetUser.username) {
             activeSessions.delete(tok);
           }
         }
