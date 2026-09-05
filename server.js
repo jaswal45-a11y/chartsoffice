@@ -362,62 +362,253 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2'
 };
 
-// Helper to read screeners from JSON file
-function readScreeners() {
+// -------------------------------------------------------------
+// MongoDB Atlas Dual-Mode Persistence Layer
+// -------------------------------------------------------------
+let MongoClient = null;
+try {
+  MongoClient = require('mongodb').MongoClient;
+} catch (e) {
+  // mongodb module will fall back to local json storage if not installed
+}
+
+const MONGO_CONFIG = {
+  get uri() {
+    return process.env.MONGODB_URI || process.env.MONGO_URL || process.env.DATABASE_URL || '';
+  },
+  dbName: 'sangam_stocks',
+  client: null,
+  db: null,
+  isConnected: false
+};
+
+// In-memory caches for 0-latency synchronous reads
+let memoryUsers = null;
+let memoryScreeners = null;
+let memoryConfig = null;
+
+// Local file loaders
+function loadFileScreeners() {
   try {
-    if (!fs.existsSync(DATA_FILE)) {
-      return [];
-    }
-    const content = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(content || '[]');
-  } catch (err) {
-    console.error('Error reading screeners file:', err);
+    if (!fs.existsSync(DATA_FILE)) return [];
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8') || '[]');
+  } catch (e) {
     return [];
   }
 }
 
-// Helper to save screeners to JSON file
-function saveScreeners(screeners) {
+function loadFileUsers() {
   try {
-    const dir = path.dirname(DATA_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(screeners, null, 2), 'utf8');
-    return true;
-  } catch (err) {
-    console.error('Error saving screeners file:', err);
-    return false;
+    if (!fs.existsSync(USERS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8') || '[]');
+  } catch (e) {
+    return [];
   }
 }
 
-// System Configuration Helpers (Dynamic User Limits & Platform Settings)
-function readSystemConfig() {
+function loadFileConfig() {
   try {
     if (!fs.existsSync(CONFIG_FILE)) {
-      const defaultCfg = { maxUsers: 10, allowRegistration: true, updatedAt: new Date().toISOString() };
-      fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaultCfg, null, 2), 'utf8');
-      return defaultCfg;
+      return { maxUsers: 10, allowRegistration: true, updatedAt: new Date().toISOString() };
     }
-    const content = fs.readFileSync(CONFIG_FILE, 'utf8');
-    return JSON.parse(content || '{"maxUsers":10,"allowRegistration":true}');
-  } catch (err) {
-    return { maxUsers: 10, allowRegistration: true };
+    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8') || '{"maxUsers":10,"allowRegistration":true}');
+  } catch (e) {
+    return { maxUsers: 10, allowRegistration: true, updatedAt: new Date().toISOString() };
   }
+}
+
+async function initDatabase() {
+  // 1. First populate in-memory caches from local files as safe defaults
+  memoryScreeners = loadFileScreeners();
+  memoryUsers = loadFileUsers();
+  memoryConfig = loadFileConfig();
+
+  if (!MONGO_CONFIG.uri || !MongoClient) {
+    if (!MONGO_CONFIG.uri) {
+      console.log('[MongoDB] ℹ️ No MONGODB_URI found in environment. Using local JSON files.');
+    }
+    return;
+  }
+
+  try {
+    console.log('[MongoDB] 🔌 Connecting to MongoDB Atlas cluster...');
+    const client = new MongoClient(MONGO_CONFIG.uri, {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 10000
+    });
+
+    await client.connect();
+    MONGO_CONFIG.client = client;
+    MONGO_CONFIG.db = client.db(MONGO_CONFIG.dbName);
+    MONGO_CONFIG.isConnected = true;
+    console.log(`[MongoDB] ✅ Connected successfully to database "${MONGO_CONFIG.dbName}" on MongoDB Atlas!`);
+
+    // Ensure collections and auto-seed from local files if collections are empty
+    await syncMongoInitialData();
+
+  } catch (err) {
+    console.warn(`[MongoDB] ⚠️ Failed to connect to MongoDB Atlas: ${err.message}. Gracefully falling back to local JSON files.`);
+    MONGO_CONFIG.isConnected = false;
+  }
+}
+
+async function syncMongoInitialData() {
+  if (!MONGO_CONFIG.isConnected || !MONGO_CONFIG.db) return;
+
+  try {
+    const db = MONGO_CONFIG.db;
+
+    // 1. Screeners Collection
+    const screenersCol = db.collection('screeners');
+    const screenersCount = await screenersCol.countDocuments();
+    if (screenersCount === 0) {
+      console.log('[MongoDB] 🌱 Seeding initial screeners into MongoDB...');
+      if (memoryScreeners && memoryScreeners.length > 0) {
+        await screenersCol.insertMany(memoryScreeners.map(s => ({ ...s, _id: s.id })));
+      }
+    } else {
+      const dbScreeners = await screenersCol.find({}).toArray();
+      memoryScreeners = dbScreeners.map(s => {
+        const { _id, ...rest } = s;
+        return { ...rest, id: rest.id || _id };
+      });
+      console.log(`[MongoDB] 📥 Loaded ${memoryScreeners.length} screeners from MongoDB Atlas.`);
+    }
+
+    // 2. Users Collection
+    const usersCol = db.collection('users');
+    const usersCount = await usersCol.countDocuments();
+    if (usersCount === 0) {
+      if (memoryUsers && memoryUsers.length > 0) {
+        console.log('[MongoDB] 🌱 Seeding initial users into MongoDB...');
+        await usersCol.insertMany(memoryUsers.map(u => ({ ...u, _id: u.id })));
+      }
+    } else {
+      const dbUsers = await usersCol.find({}).toArray();
+      memoryUsers = dbUsers.map(u => {
+        const { _id, ...rest } = u;
+        return { ...rest, id: rest.id || _id };
+      });
+      console.log(`[MongoDB] 📥 Loaded ${memoryUsers.length} users from MongoDB Atlas.`);
+    }
+
+    // 3. Config Collection
+    const configCol = db.collection('config');
+    const configDoc = await configCol.findOne({ _id: 'system_config' });
+    if (!configDoc) {
+      await configCol.insertOne({ _id: 'system_config', ...memoryConfig });
+    } else {
+      const { _id, ...rest } = configDoc;
+      memoryConfig = rest;
+      console.log(`[MongoDB] 📥 Loaded system configuration from MongoDB Atlas.`);
+    }
+
+  } catch (err) {
+    console.error('[MongoDB] Error during initial data sync:', err.message);
+  }
+}
+
+// Global Read & Save Functions with Write-Through Caching
+function readScreeners() {
+  if (memoryScreeners === null) {
+    memoryScreeners = loadFileScreeners();
+  }
+  return memoryScreeners;
+}
+
+function saveScreeners(screeners) {
+  memoryScreeners = screeners;
+
+  // 1. Asynchronous write to MongoDB
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('screeners');
+        await col.deleteMany({});
+        if (screeners.length > 0) {
+          await col.insertMany(screeners.map(s => ({ ...s, _id: s.id })));
+        }
+      } catch (err) {
+        console.error('[MongoDB] Error saving screeners:', err.message);
+      }
+    })();
+  }
+
+  // 2. Local file backup
+  try {
+    const dir = path.dirname(DATA_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(DATA_FILE, JSON.stringify(screeners, null, 2), 'utf8');
+  } catch (err) {}
+
+  return true;
+}
+
+function readUsers() {
+  if (memoryUsers === null) {
+    memoryUsers = loadFileUsers();
+  }
+  return memoryUsers;
+}
+
+function saveUsers(users) {
+  memoryUsers = users;
+
+  // 1. Asynchronous write to MongoDB
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('users');
+        await col.deleteMany({});
+        if (users.length > 0) {
+          await col.insertMany(users.map(u => ({ ...u, _id: u.id })));
+        }
+      } catch (err) {
+        console.error('[MongoDB] Error saving users:', err.message);
+      }
+    })();
+  }
+
+  // 2. Local file backup
+  try {
+    const dir = path.dirname(USERS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+  } catch (err) {}
+
+  return true;
+}
+
+function readSystemConfig() {
+  if (memoryConfig === null) {
+    memoryConfig = loadFileConfig();
+  }
+  return memoryConfig;
 }
 
 function saveSystemConfig(cfg) {
+  memoryConfig = cfg;
+
+  // 1. Asynchronous write to MongoDB
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('config');
+        await col.updateOne({ _id: 'system_config' }, { $set: { ...cfg } }, { upsert: true });
+      } catch (err) {
+        console.error('[MongoDB] Error saving config:', err.message);
+      }
+    })();
+  }
+
+  // 2. Local file backup
   try {
     const dir = path.dirname(CONFIG_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
-    return true;
-  } catch (err) {
-    console.error('Error saving system config:', err);
-    return false;
-  }
+  } catch (err) {}
+
+  return true;
 }
 
 function getMaxUsersLimit() {
@@ -428,34 +619,6 @@ function getMaxUsersLimit() {
 // Constants for User and Watchlist Limits
 const MAX_WATCHLISTS = 5;
 const MAX_STOCKS_PER_WATCHLIST = 50;
-
-// User Data Storage Helpers
-function readUsers() {
-  try {
-    if (!fs.existsSync(USERS_FILE)) {
-      return [];
-    }
-    const content = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(content || '[]');
-  } catch (err) {
-    console.error('Error reading users file:', err);
-    return [];
-  }
-}
-
-function saveUsers(users) {
-  try {
-    const dir = path.dirname(USERS_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
-    return true;
-  } catch (err) {
-    console.error('Error saving users file:', err);
-    return false;
-  }
-}
 
 // Password hashing & verification
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -3361,7 +3524,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 13. GET /api/feed/status - Live Broker Feed Status (Dhan vs Backup)
+      // 13. GET /api/feed/status - Live Broker Feed Status (Dhan vs Backup) & Database Source
       if (pathname === '/api/feed/status' && method === 'GET') {
         const configured = isDhanConfigured();
         return sendJson(res, 200, {
@@ -3370,6 +3533,8 @@ const server = http.createServer(async (req, res) => {
           dhanActive: configured,
           source: configured ? 'dhan' : 'backup',
           sourceLabel: configured ? 'Dhan HQ Broker' : 'Backup Feed',
+          mongoConfigured: Boolean(MONGO_CONFIG.isConnected),
+          dbSource: MONGO_CONFIG.isConnected ? 'MongoDB Atlas' : 'Local JSON',
           timestamp: new Date().toISOString()
         });
       }
@@ -3435,10 +3600,16 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 Stock Screener & Visualizer Platform is running!`);
-  console.log(`🌐 Local URL: http://localhost:${PORT}`);
-  console.log(`📊 Screeners Loaded: ${readScreeners().length}`);
-  console.log(`=======================================================`);
-});
+async function startServer() {
+  await initDatabase();
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`=======================================================`);
+    console.log(`🚀 Stock Screener & Visualizer Platform is running!`);
+    console.log(`🌐 Local URL: http://localhost:${PORT}`);
+    console.log(`📊 Screeners Loaded: ${readScreeners().length}`);
+    console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
+    console.log(`=======================================================`);
+  });
+}
+
+startServer();
