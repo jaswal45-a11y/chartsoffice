@@ -499,6 +499,22 @@
               <button class="range-btn active px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold shadow transition-colors" data-range="6mo" title="Show last 6 months (Default)">6month</button>
               <button class="range-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors" data-range="1y" title="Show last 12 months">12M</button>
             </div>
+
+            <!-- Chart Themes Dropdown: Dark, Light, TradingView Dark, Midnight, Paper, High Contrast, Custom -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 font-medium text-slate-400 text-[11px]">
+              <span class="px-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1" title="Select Chart Visual Theme">
+                <i data-lucide="palette" class="w-3 h-3 text-blue-400"></i> Theme:
+              </span>
+              <select id="select-chart-theme" onchange="handleChartThemeChange(this.value)" class="bg-dark-card text-slate-200 text-[11px] font-semibold py-1 px-2 rounded-lg border border-dark-border focus:outline-none focus:border-blue-500 cursor-pointer" title="Switch chart appearance theme">
+                <option value="dark">🌙 Dark</option>
+                <option value="light">☀️ Light</option>
+                <option value="tv-dark">🟦 TradingView Dark</option>
+                <option value="midnight">⬛ Midnight</option>
+                <option value="paper">📜 Paper</option>
+                <option value="high-contrast">⚫ High Contrast</option>
+                <option value="custom">🎨 Custom</option>
+              </select>
+            </div>
           </div>
 
             <!-- Overlays & Technical Indicators Toolbar -->
@@ -568,6 +584,12 @@
                 <input type="color" id="color-rsi-sma" value="#fbbf24" class="indicator-color-picker" title="Change RSI 14-SMA color">
                 <label for="chk-rsi" class="cursor-pointer hover:text-white" title="Relative Strength Index (14) + 14-SMA">RSI (14)</label>
               </div>
+
+              <!-- Line Thickness & Style Settings Button -->
+              <button id="btn-open-line-settings" onclick="openLineSettingsModal()" class="px-2.5 py-1 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-500 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Customize chart line thickness, colors, and styles">
+                <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                <span>Line Thickness</span>
+              </button>
             </div>
 
           </div>
@@ -1047,6 +1069,313 @@
         <span>Logged in as <strong>admin (Superadmin)</strong> · All user accounts are isolated & secure</span>
         <button onclick="closeAdminConsole()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
           Exit Console
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Chart Line Thickness & Customizer Modal -->
+  <div id="line-settings-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/80">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm">Chart Theme & Line Thickness Customizer</h3>
+            <p class="text-[11px] text-slate-400">Customize line width, colors & chart canvas appearance</p>
+          </div>
+        </div>
+        <button onclick="closeLineSettingsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-dark-bg transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 overflow-y-auto flex flex-col gap-5 text-xs">
+        
+        <!-- Section 1: Chart Theme Preset & Custom Palette -->
+        <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <label class="font-bold text-slate-200 text-xs flex items-center gap-2">
+              <i data-lucide="palette" class="w-4 h-4 text-blue-400"></i>
+              <span>Chart Theme Preset:</span>
+            </label>
+            <select id="modal-select-chart-theme" onchange="handleModalThemeChange(this.value)" class="bg-dark-card text-slate-100 font-semibold px-3 py-1.5 rounded-lg border border-dark-border text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+              <option value="dark">🌙 Dark (Default)</option>
+              <option value="light">☀️ Light</option>
+              <option value="tv-dark">🟦 TradingView Dark</option>
+              <option value="midnight">⬛ Midnight (OLED Black)</option>
+              <option value="paper">📜 Paper (Warm Sepia)</option>
+              <option value="high-contrast">⚫ High Contrast</option>
+              <option value="custom">🎨 Custom Palette</option>
+            </select>
+          </div>
+
+          <!-- Custom Theme Color Pickers (Visible when Custom is selected) -->
+          <div id="custom-theme-palette" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-dark-border/40">
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Background</span>
+              <input type="color" id="picker-custom-bg" value="#0b0f19" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Text / Scale</span>
+              <input type="color" id="picker-custom-text" value="#94a3b8" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Grid Lines</span>
+              <input type="color" id="picker-custom-grid" value="#2a2e39" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Candle Bullish</span>
+              <input type="color" id="picker-custom-up" value="#10b981" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Candle Bearish</span>
+              <input type="color" id="picker-custom-down" value="#ef4444" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Axis Borders</span>
+              <input type="color" id="picker-custom-border" value="#1f293d" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Moving Averages & Overlays Line Thickness -->
+        <div>
+          <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>Price Pane Indicators & Line Thickness</span>
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- EMA 10 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema10" value="#0284c7" class="indicator-color-picker" onchange="updateLineStyle('ema10')">
+                <span class="font-semibold text-slate-200">10 EMA</span>
+              </div>
+              <select id="setting-width-ema10" onchange="updateLineStyle('ema10')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 20 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema20" value="#2563eb" class="indicator-color-picker" onchange="updateLineStyle('ema20')">
+                <span class="font-semibold text-slate-200">20 EMA</span>
+              </div>
+              <select id="setting-width-ema20" onchange="updateLineStyle('ema20')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 50 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema50" value="#f59e0b" class="indicator-color-picker" onchange="updateLineStyle('ema50')">
+                <span class="font-semibold text-slate-200">50 EMA</span>
+              </div>
+              <select id="setting-width-ema50" onchange="updateLineStyle('ema50')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 150 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema150" value="#9333ea" class="indicator-color-picker" onchange="updateLineStyle('ema150')">
+                <span class="font-semibold text-slate-200">150 EMA</span>
+              </div>
+              <select id="setting-width-ema150" onchange="updateLineStyle('ema150')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 200 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema200" value="#e11d48" class="indicator-color-picker" onchange="updateLineStyle('ema200')">
+                <span class="font-semibold text-slate-200">200 EMA</span>
+              </div>
+              <select id="setting-width-ema200" onchange="updateLineStyle('ema200')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- VWAP -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-vwap" value="#eab308" class="indicator-color-picker" onchange="updateLineStyle('vwap')">
+                <span class="font-semibold text-slate-200">VWAP</span>
+              </div>
+              <select id="setting-width-vwap" onchange="updateLineStyle('vwap')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="1.8" selected>1.8 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Darvas Box Top -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-darvas-top" value="#10b981" class="indicator-color-picker" onchange="updateLineStyle('darvasTop')">
+                <span class="font-semibold text-slate-200">Darvas Top Line</span>
+              </div>
+              <select id="setting-width-darvas-top" onchange="updateLineStyle('darvasTop')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px</option>
+                <option value="2.5" selected>2.5 px (Default)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Darvas Box Bottom -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-darvas-bottom" value="#ef4444" class="indicator-color-picker" onchange="updateLineStyle('darvasBottom')">
+                <span class="font-semibold text-slate-200">Darvas Bottom Line</span>
+              </div>
+              <select id="setting-width-darvas-bottom" onchange="updateLineStyle('darvasBottom')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px</option>
+                <option value="2.5" selected>2.5 px (Default)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Anchored VWAP (AVWAP) -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-avwap" value="#a855f7" class="indicator-color-picker" onchange="updateLineStyle('avwap')">
+                <span class="font-semibold text-slate-200">Anchored VWAP (AVWAP)</span>
+              </div>
+              <select id="setting-width-avwap" onchange="updateLineStyle('avwap')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Pivots Lines -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <i data-lucide="split" class="w-4 h-4 text-cyan-400"></i>
+                <span class="font-semibold text-slate-200">Pivot Points (P, R1, S1)</span>
+              </div>
+              <select id="setting-width-pivots" onchange="updateLineStyle('pivots')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.2" selected>1.2 px (Default)</option>
+                <option value="1.8">1.8 px</option>
+                <option value="2.5">2.5 px (Thick)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Sub-Panes & Volume Line Thickness -->
+        <div>
+          <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Volume & Sub-Pane Oscillators</span>
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- Volume 9-SMA -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-200">Volume 9-SMA</span>
+                <input type="color" id="setting-color-vol-avg" value="#fbbf24" class="indicator-color-picker" onchange="updateLineStyle('volAvg')">
+              </div>
+              <select id="setting-width-vol-avg" onchange="updateLineStyle('volAvg')" class="w-full bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px</option>
+                <option value="3">3 px</option>
+              </select>
+            </div>
+
+            <!-- RSI 14 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-200">RSI (14) Line</span>
+                <input type="color" id="setting-color-rsi" value="#60a5fa" class="indicator-color-picker" onchange="updateLineStyle('rsi')">
+              </div>
+              <select id="setting-width-rsi" onchange="updateLineStyle('rsi')" class="w-full bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px</option>
+                <option value="3">3 px (Bold)</option>
+              </select>
+            </div>
+
+            <!-- RSI 14-SMA -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-200">RSI 14-SMA Line</span>
+                <input type="color" id="setting-color-rsi-sma" value="#fbbf24" class="indicator-color-picker" onchange="updateLineStyle('rsiSma')">
+              </div>
+              <select id="setting-width-rsi-sma" onchange="updateLineStyle('rsiSma')" class="w-full bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px</option>
+                <option value="2.5">2.5 px</option>
+                <option value="3">3 px</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3.5 border-t border-dark-border bg-dark-bg/80 flex items-center justify-between gap-3">
+        <button onclick="resetLineStylesToDefaults()" class="px-3.5 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-slate-200 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Reset Defaults</span>
+        </button>
+        <button onclick="closeLineSettingsModal()" class="px-5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Apply & Done</span>
         </button>
       </div>
 

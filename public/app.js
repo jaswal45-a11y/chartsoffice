@@ -25,6 +25,34 @@ const state = {
   isAggregatedMode: false,
   theme: localStorage.getItem('theme') || 'dark',
 
+  // Visual Chart Themes & Custom Colors
+  chartTheme: localStorage.getItem('chart_theme') || 'dark',
+  customThemeColors: {
+    bg: '#0b0f19',
+    text: '#94a3b8',
+    grid: '#1f293d',
+    border: '#1f293d',
+    candleUp: '#10b981',
+    candleDown: '#ef4444'
+  },
+
+  // Customizable Line Thicknesses (px)
+  lineWidths: {
+    ema10: 1.5,
+    ema20: 1.5,
+    ema50: 1.5,
+    ema150: 2,
+    ema200: 2,
+    vwap: 1.8,
+    darvasTop: 2.5,
+    darvasBottom: 2.5,
+    volAvg: 1.5,
+    rsi: 2,
+    rsiSma: 1.5,
+    avwap: 2,
+    pivots: 1.2
+  },
+
   // Authentication State
   user: null, // { userId, username, role }
   token: localStorage.getItem('authToken') || localStorage.getItem('adminToken') || null,
@@ -356,7 +384,469 @@ async function syncDataFeedStatus() {
 }
 
 // -------------------------------------------------------------
-// User Indicator Preferences Management
+// Chart Themes Preset Configurations & Custom Styling
+// -------------------------------------------------------------
+
+const CHART_THEME_CONFIGS = {
+  'dark': {
+    name: 'Dark',
+    bg: '#0b0f19',
+    text: '#94a3b8',
+    grid: 'rgba(255, 255, 255, 0.04)',
+    border: '#1f293d',
+    candleUp: '#10b981',
+    candleDown: '#ef4444'
+  },
+  'light': {
+    name: 'Light',
+    bg: '#ffffff',
+    text: '#334155',
+    grid: 'rgba(0, 0, 0, 0.05)',
+    border: '#e2e8f0',
+    candleUp: '#16a34a',
+    candleDown: '#dc2626'
+  },
+  'tv-dark': {
+    name: 'TradingView Dark',
+    bg: '#131722',
+    text: '#d1d4dc',
+    grid: 'rgba(42, 46, 57, 0.6)',
+    border: '#2a2e39',
+    candleUp: '#089981',
+    candleDown: '#f23645'
+  },
+  'midnight': {
+    name: 'Midnight',
+    bg: '#000000',
+    text: '#a3a3a3',
+    grid: 'rgba(255, 255, 255, 0.05)',
+    border: '#262626',
+    candleUp: '#00e676',
+    candleDown: '#ff1744'
+  },
+  'paper': {
+    name: 'Paper',
+    bg: '#fbf7ee',
+    text: '#44403c',
+    grid: 'rgba(120, 113, 108, 0.08)',
+    border: '#e7e0d3',
+    candleUp: '#059669',
+    candleDown: '#b91c1c'
+  },
+  'high-contrast': {
+    name: 'High Contrast',
+    bg: '#000000',
+    text: '#ffffff',
+    grid: 'rgba(255, 255, 255, 0.15)',
+    border: '#525252',
+    candleUp: '#00ff66',
+    candleDown: '#ff0055'
+  }
+};
+
+function getThemeConfig(themeKey) {
+  if (themeKey === 'custom') {
+    return {
+      name: 'Custom',
+      bg: state.customThemeColors?.bg || '#0b0f19',
+      text: state.customThemeColors?.text || '#94a3b8',
+      grid: state.customThemeColors?.grid || 'rgba(255, 255, 255, 0.04)',
+      border: state.customThemeColors?.border || '#1f293d',
+      candleUp: state.customThemeColors?.candleUp || '#10b981',
+      candleDown: state.customThemeColors?.candleDown || '#ef4444'
+    };
+  }
+  return CHART_THEME_CONFIGS[themeKey] || CHART_THEME_CONFIGS['dark'];
+}
+
+function applyChartTheme(themeName) {
+  themeName = themeName || state.chartTheme || 'dark';
+  state.chartTheme = themeName;
+  localStorage.setItem('chart_theme', themeName);
+
+  const cfg = getThemeConfig(themeName);
+
+  // Sync toolbar dropdown & modal dropdown
+  const selectChartTheme = document.getElementById('select-chart-theme');
+  if (selectChartTheme && selectChartTheme.value !== themeName) {
+    selectChartTheme.value = themeName;
+  }
+  const modalSelectTheme = document.getElementById('modal-select-chart-theme');
+  if (modalSelectTheme && modalSelectTheme.value !== themeName) {
+    modalSelectTheme.value = themeName;
+  }
+
+  // Toggle custom palette visibility in modal
+  const customPalette = document.getElementById('custom-theme-palette');
+  if (customPalette) {
+    if (themeName === 'custom') {
+      customPalette.classList.remove('hidden');
+      customPalette.classList.add('grid');
+    } else {
+      customPalette.classList.add('hidden');
+      customPalette.classList.remove('grid');
+    }
+  }
+
+  // Update container backgrounds
+  const chartMainContainer = document.getElementById('chart-main-container');
+  if (chartMainContainer) chartMainContainer.style.backgroundColor = cfg.bg;
+  const tvRsiContainer = document.getElementById('tv_rsi_container');
+  if (tvRsiContainer) tvRsiContainer.style.backgroundColor = cfg.bg;
+
+  // Apply to Lightweight Charts instances
+  const themeOpts = {
+    layout: {
+      background: { color: cfg.bg },
+      textColor: cfg.text
+    },
+    grid: {
+      vertLines: { color: cfg.grid },
+      horzLines: { color: cfg.grid }
+    },
+    rightPriceScale: {
+      borderColor: cfg.border
+    },
+    timeScale: {
+      borderColor: cfg.border
+    }
+  };
+
+  if (state.charts?.main) {
+    state.charts.main.applyOptions(themeOpts);
+  }
+  if (state.charts?.rsi) {
+    state.charts.rsi.applyOptions(themeOpts);
+  }
+
+  // Apply candlestick colors
+  if (state.charts?.series?.candles) {
+    state.charts.series.candles.applyOptions({
+      upColor: cfg.candleUp,
+      downColor: cfg.candleDown,
+      wickUpColor: cfg.candleUp,
+      wickDownColor: cfg.candleDown
+    });
+  }
+}
+
+function handleChartThemeChange(themeName) {
+  applyChartTheme(themeName);
+  saveIndicatorPreferences();
+  const themeLabel = getThemeConfig(themeName).name || themeName;
+  showToast(`Chart theme set to ${themeLabel}`, 'info');
+}
+
+function handleModalThemeChange(themeName) {
+  applyChartTheme(themeName);
+  saveIndicatorPreferences();
+}
+
+function handleCustomColorChange() {
+  const bg = document.getElementById('picker-custom-bg')?.value || '#0b0f19';
+  const text = document.getElementById('picker-custom-text')?.value || '#94a3b8';
+  const grid = document.getElementById('picker-custom-grid')?.value || '#1f293d';
+  const border = document.getElementById('picker-custom-border')?.value || '#1f293d';
+  const candleUp = document.getElementById('picker-custom-up')?.value || '#10b981';
+  const candleDown = document.getElementById('picker-custom-down')?.value || '#ef4444';
+
+  state.customThemeColors = { bg, text, grid, border, candleUp, candleDown };
+
+  if (state.chartTheme === 'custom') {
+    applyChartTheme('custom');
+  }
+  saveIndicatorPreferences();
+}
+
+// -------------------------------------------------------------
+// Customizable Line Thickness & Style Settings
+// -------------------------------------------------------------
+
+function applyLineWidths(widths) {
+  if (widths) {
+    state.lineWidths = { ...state.lineWidths, ...widths };
+  }
+
+  const w = state.lineWidths;
+
+  // Sync modal select elements if present
+  const widthSelectMap = {
+    ema10: 'setting-width-ema10',
+    ema20: 'setting-width-ema20',
+    ema50: 'setting-width-ema50',
+    ema150: 'setting-width-ema150',
+    ema200: 'setting-width-ema200',
+    vwap: 'setting-width-vwap',
+    darvasTop: 'setting-width-darvas-top',
+    darvasBottom: 'setting-width-darvas-bottom',
+    volAvg: 'setting-width-vol-avg',
+    rsi: 'setting-width-rsi',
+    rsiSma: 'setting-width-rsi-sma',
+    avwap: 'setting-width-avwap',
+    pivots: 'setting-width-pivots'
+  };
+
+  Object.entries(widthSelectMap).forEach(([key, elementId]) => {
+    const elSel = document.getElementById(elementId);
+    if (elSel && w[key] !== undefined) {
+      elSel.value = String(w[key]);
+    }
+  });
+
+  // Apply to chart series
+  if (state.charts?.series) {
+    const s = state.charts.series;
+    if (s.ema10) s.ema10.applyOptions({ lineWidth: Number(w.ema10 || 1.5) });
+    if (s.ema20) s.ema20.applyOptions({ lineWidth: Number(w.ema20 || 1.5) });
+    if (s.ema50) s.ema50.applyOptions({ lineWidth: Number(w.ema50 || 1.5) });
+    if (s.ema150) s.ema150.applyOptions({ lineWidth: Number(w.ema150 || 2) });
+    if (s.ema200) s.ema200.applyOptions({ lineWidth: Number(w.ema200 || 2) });
+    if (s.vwap) s.vwap.applyOptions({ lineWidth: Number(w.vwap || 1.8) });
+    if (s.darvasTop) s.darvasTop.applyOptions({ lineWidth: Number(w.darvasTop || 2.5) });
+    if (s.darvasBottom) s.darvasBottom.applyOptions({ lineWidth: Number(w.darvasBottom || 2.5) });
+    if (s.volAvg) s.volAvg.applyOptions({ lineWidth: Number(w.volAvg || 1.5) });
+    if (s.rsi) s.rsi.applyOptions({ lineWidth: Number(w.rsi || 2) });
+    if (s.rsiSma) s.rsiSma.applyOptions({ lineWidth: Number(w.rsiSma || 1.5) });
+  }
+
+  // Apply to active AVWAPs
+  if (state.activeDrawingSeries?.avwaps && state.activeDrawingSeries.avwaps.length > 0) {
+    state.activeDrawingSeries.avwaps.forEach(av => {
+      try { av.applyOptions({ lineWidth: Number(w.avwap || 2) }); } catch(e) {}
+    });
+  }
+
+  // Update Pivot lines
+  updatePivotLines();
+}
+
+function updateLineStyle(indicatorKey) {
+  const colorMap = {
+    ema10: ['setting-color-ema10', 'color-ema10'],
+    ema20: ['setting-color-ema20', 'color-ema20'],
+    ema50: ['setting-color-ema50', 'color-ema50'],
+    ema150: ['setting-color-ema150', 'color-ema150'],
+    ema200: ['setting-color-ema200', 'color-ema200'],
+    vwap: ['setting-color-vwap', 'color-vwap'],
+    darvasTop: ['setting-color-darvas-top', 'color-darvas-top'],
+    darvasBottom: ['setting-color-darvas-bottom', 'color-darvas-bottom'],
+    volAvg: ['setting-color-vol-avg', 'color-vol-avg'],
+    rsi: ['setting-color-rsi', 'color-rsi'],
+    rsiSma: ['setting-color-rsi-sma', 'color-rsi-sma'],
+    avwap: ['setting-color-avwap', 'color-avwap']
+  };
+
+  const widthMap = {
+    ema10: 'setting-width-ema10',
+    ema20: 'setting-width-ema20',
+    ema50: 'setting-width-ema50',
+    ema150: 'setting-width-ema150',
+    ema200: 'setting-width-ema200',
+    vwap: 'setting-width-vwap',
+    darvasTop: 'setting-width-darvas-top',
+    darvasBottom: 'setting-width-darvas-bottom',
+    volAvg: 'setting-width-vol-avg',
+    rsi: 'setting-width-rsi',
+    rsiSma: 'setting-width-rsi-sma',
+    avwap: 'setting-width-avwap',
+    pivots: 'setting-width-pivots'
+  };
+
+  // Sync colors if applicable
+  if (colorMap[indicatorKey]) {
+    const [modalColId, barColId] = colorMap[indicatorKey];
+    const modalCol = document.getElementById(modalColId);
+    const barCol = document.getElementById(barColId);
+    let chosenColor = null;
+
+    if (modalCol && document.activeElement === modalCol) {
+      chosenColor = modalCol.value;
+      if (barCol) barCol.value = chosenColor;
+    } else if (barCol && document.activeElement === barCol) {
+      chosenColor = barCol.value;
+      if (modalCol) modalCol.value = chosenColor;
+    } else if (modalCol) {
+      chosenColor = modalCol.value;
+    } else if (barCol) {
+      chosenColor = barCol.value;
+    }
+
+    if (chosenColor) {
+      state.colors[indicatorKey] = chosenColor;
+    }
+  }
+
+  // Update line width if applicable
+  if (widthMap[indicatorKey]) {
+    const widthEl = document.getElementById(widthMap[indicatorKey]);
+    if (widthEl) {
+      state.lineWidths[indicatorKey] = Number(widthEl.value);
+    }
+  }
+
+  // Apply to chart series directly
+  const s = state.charts?.series;
+  if (s) {
+    const opts = {};
+    if (state.colors[indicatorKey]) opts.color = state.colors[indicatorKey];
+    if (state.lineWidths[indicatorKey]) opts.lineWidth = Number(state.lineWidths[indicatorKey]);
+
+    if (indicatorKey === 'ema10' && s.ema10) s.ema10.applyOptions(opts);
+    if (indicatorKey === 'ema20' && s.ema20) s.ema20.applyOptions(opts);
+    if (indicatorKey === 'ema50' && s.ema50) s.ema50.applyOptions(opts);
+    if (indicatorKey === 'ema150' && s.ema150) s.ema150.applyOptions(opts);
+    if (indicatorKey === 'ema200' && s.ema200) s.ema200.applyOptions(opts);
+    if (indicatorKey === 'vwap' && s.vwap) s.vwap.applyOptions(opts);
+    if (indicatorKey === 'darvasTop' && s.darvasTop) s.darvasTop.applyOptions(opts);
+    if (indicatorKey === 'darvasBottom' && s.darvasBottom) s.darvasBottom.applyOptions(opts);
+    if (indicatorKey === 'volAvg' && s.volAvg) s.volAvg.applyOptions(opts);
+    if (indicatorKey === 'rsi' && s.rsi) s.rsi.applyOptions(opts);
+    if (indicatorKey === 'rsiSma' && s.rsiSma) s.rsiSma.applyOptions(opts);
+  }
+
+  if (indicatorKey === 'avwap') {
+    renderPersistedDrawings();
+  } else if (indicatorKey === 'pivots') {
+    updatePivotLines();
+  }
+
+  saveIndicatorPreferences();
+}
+
+function openLineSettingsModal() {
+  const modal = document.getElementById('line-settings-modal');
+  if (!modal) return;
+
+  // Sync color pickers
+  const colorMap = {
+    ema10: 'setting-color-ema10',
+    ema20: 'setting-color-ema20',
+    ema50: 'setting-color-ema50',
+    ema150: 'setting-color-ema150',
+    ema200: 'setting-color-ema200',
+    vwap: 'setting-color-vwap',
+    darvasTop: 'setting-color-darvas-top',
+    darvasBottom: 'setting-color-darvas-bottom',
+    volAvg: 'setting-color-vol-avg',
+    rsi: 'setting-color-rsi',
+    rsiSma: 'setting-color-rsi-sma',
+    avwap: 'setting-color-avwap'
+  };
+  Object.entries(colorMap).forEach(([key, id]) => {
+    const colInput = document.getElementById(id);
+    if (colInput && state.colors[key]) colInput.value = state.colors[key];
+  });
+
+  // Sync width selects
+  const widthSelectMap = {
+    ema10: 'setting-width-ema10',
+    ema20: 'setting-width-ema20',
+    ema50: 'setting-width-ema50',
+    ema150: 'setting-width-ema150',
+    ema200: 'setting-width-ema200',
+    vwap: 'setting-width-vwap',
+    darvasTop: 'setting-width-darvas-top',
+    darvasBottom: 'setting-width-darvas-bottom',
+    volAvg: 'setting-width-vol-avg',
+    rsi: 'setting-width-rsi',
+    rsiSma: 'setting-width-rsi-sma',
+    avwap: 'setting-width-avwap',
+    pivots: 'setting-width-pivots'
+  };
+  Object.entries(widthSelectMap).forEach(([key, id]) => {
+    const sel = document.getElementById(id);
+    if (sel && state.lineWidths[key] !== undefined) sel.value = String(state.lineWidths[key]);
+  });
+
+  // Sync theme dropdown & custom pickers
+  const modalTheme = document.getElementById('modal-select-chart-theme');
+  if (modalTheme) modalTheme.value = state.chartTheme || 'dark';
+
+  const customPalette = document.getElementById('custom-theme-palette');
+  if (customPalette) {
+    if (state.chartTheme === 'custom') {
+      customPalette.classList.remove('hidden');
+      customPalette.classList.add('grid');
+    } else {
+      customPalette.classList.add('hidden');
+      customPalette.classList.remove('grid');
+    }
+  }
+
+  const c = state.customThemeColors;
+  if (document.getElementById('picker-custom-bg') && c.bg) document.getElementById('picker-custom-bg').value = c.bg;
+  if (document.getElementById('picker-custom-text') && c.text) document.getElementById('picker-custom-text').value = c.text;
+  if (document.getElementById('picker-custom-grid') && c.grid) document.getElementById('picker-custom-grid').value = c.grid;
+  if (document.getElementById('picker-custom-border') && c.border) document.getElementById('picker-custom-border').value = c.border;
+  if (document.getElementById('picker-custom-up') && c.candleUp) document.getElementById('picker-custom-up').value = c.candleUp;
+  if (document.getElementById('picker-custom-down') && c.candleDown) document.getElementById('picker-custom-down').value = c.candleDown;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeLineSettingsModal() {
+  const modal = document.getElementById('line-settings-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function resetLineStylesToDefaults() {
+  state.colors = {
+    ema10: '#0284c7',
+    ema20: '#2563eb',
+    ema50: '#f59e0b',
+    ema150: '#9333ea',
+    ema200: '#e11d48',
+    volAvg: '#fbbf24',
+    vwap: '#eab308',
+    darvasTop: '#10b981',
+    darvasBottom: '#ef4444',
+    rsi: '#60a5fa',
+    rsiSma: '#fbbf24',
+    avwap: '#a855f7'
+  };
+  state.lineWidths = {
+    ema10: 1.5,
+    ema20: 1.5,
+    ema50: 1.5,
+    ema150: 2,
+    ema200: 2,
+    vwap: 1.8,
+    darvasTop: 2.5,
+    darvasBottom: 2.5,
+    volAvg: 1.5,
+    rsi: 2,
+    rsiSma: 1.5,
+    avwap: 2,
+    pivots: 1.2
+  };
+  state.customThemeColors = {
+    bg: '#0b0f19',
+    text: '#94a3b8',
+    grid: '#1f293d',
+    border: '#1f293d',
+    candleUp: '#10b981',
+    candleDown: '#ef4444'
+  };
+
+  openLineSettingsModal();
+  applyLoadedIndicatorPreferences({
+    toggles: state.toggles,
+    colors: state.colors,
+    lineWidths: state.lineWidths,
+    chartTheme: state.chartTheme,
+    customThemeColors: state.customThemeColors,
+    pivotType: state.pivotType
+  });
+  saveIndicatorPreferences();
+  showToast('Line styles and thicknesses reset to default', 'info');
+}
+
+// -------------------------------------------------------------
+// User Indicator Preferences Management & Cloud Sync
 // -------------------------------------------------------------
 
 let savePrefsTimeout = null;
@@ -365,10 +855,14 @@ function saveIndicatorPreferences() {
   const prefs = {
     toggles: { ...state.toggles },
     colors: { ...state.colors },
-    pivotType: state.pivotType || el.selectPivotType?.value || 'Traditional (Auto)'
+    pivotType: state.pivotType || el.selectPivotType?.value || 'Traditional (Auto)',
+    chartTheme: state.chartTheme || 'dark',
+    customThemeColors: { ...state.customThemeColors },
+    lineWidths: { ...state.lineWidths }
   };
 
   localStorage.setItem('user_indicator_prefs', JSON.stringify(prefs));
+  localStorage.setItem('chart_theme', state.chartTheme || 'dark');
 
   if (state.user || state.isAdmin) {
     if (savePrefsTimeout) clearTimeout(savePrefsTimeout);
@@ -401,8 +895,21 @@ function applyLoadedIndicatorPreferences(prefs) {
     state.pivotType = prefs.pivotType;
     if (el.selectPivotType) el.selectPivotType.value = prefs.pivotType;
   }
+  if (prefs.chartTheme) {
+    state.chartTheme = prefs.chartTheme;
+  }
+  if (prefs.customThemeColors) {
+    state.customThemeColors = { ...state.customThemeColors, ...prefs.customThemeColors };
+  }
+  if (prefs.lineWidths) {
+    state.lineWidths = { ...state.lineWidths, ...prefs.lineWidths };
+  }
 
-  // Update Color Input DOM states
+  // Apply theme & line widths
+  applyChartTheme(state.chartTheme);
+  applyLineWidths(state.lineWidths);
+
+  // Update Color Input DOM states in toolbar
   if (el.colorEma10 && state.colors.ema10) el.colorEma10.value = state.colors.ema10;
   if (el.colorEma20 && state.colors.ema20) el.colorEma20.value = state.colors.ema20;
   if (el.colorEma50 && state.colors.ema50) el.colorEma50.value = state.colors.ema50;
@@ -1529,11 +2036,11 @@ function initNativeCharts() {
     return;
   }
 
-  const isDark = state.theme === 'dark';
-  const bgColor = isDark ? '#0b0f19' : '#ffffff';
-  const textColor = isDark ? '#94a3b8' : '#64748b';
-  const gridColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.04)';
-  const borderColor = isDark ? '#1f293d' : '#e2e8f0';
+  const themeCfg = getThemeConfig(state.chartTheme || 'dark');
+  const bgColor = themeCfg.bg;
+  const textColor = themeCfg.text;
+  const gridColor = themeCfg.grid;
+  const borderColor = themeCfg.border;
 
   const baseChartOptions = {
     layout: {
@@ -1581,11 +2088,11 @@ function initNativeCharts() {
 
   // Candlestick Series (Default horizontal price line disabled)
   const candlestickSeries = mainChart.addCandlestickSeries({
-    upColor: '#10b981',
-    downColor: '#ef4444',
+    upColor: themeCfg.candleUp || '#10b981',
+    downColor: themeCfg.candleDown || '#ef4444',
     borderVisible: false,
-    wickUpColor: '#10b981',
-    wickDownColor: '#ef4444',
+    wickUpColor: themeCfg.candleUp || '#10b981',
+    wickDownColor: themeCfg.candleDown || '#ef4444',
     priceLineVisible: false,
     lastValueVisible: false
   });
@@ -1603,7 +2110,7 @@ function initNativeCharts() {
   // 9-Period Volume SMA Overlay Line
   const volAvgSeries = mainChart.addLineSeries({
     color: state.colors.volAvg || '#fbbf24',
-    lineWidth: 1.5,
+    lineWidth: Number(state.lineWidths?.volAvg || 1.5),
     priceFormat: { type: 'volume' },
     priceScaleId: '', // overlay scale
     title: '',
@@ -1615,7 +2122,7 @@ function initNativeCharts() {
   // EMA Lines (WITHOUT ANY TEXT LABELS or crosshair circle markers)
   const ema10Series = mainChart.addLineSeries({
     color: state.colors.ema10 || '#0284c7',
-    lineWidth: 1.5,
+    lineWidth: Number(state.lineWidths?.ema10 || 1.5),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
@@ -1624,7 +2131,7 @@ function initNativeCharts() {
 
   const ema20Series = mainChart.addLineSeries({
     color: state.colors.ema20 || '#2563eb',
-    lineWidth: 1.5,
+    lineWidth: Number(state.lineWidths?.ema20 || 1.5),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
@@ -1633,7 +2140,7 @@ function initNativeCharts() {
 
   const ema50Series = mainChart.addLineSeries({
     color: state.colors.ema50 || '#f59e0b',
-    lineWidth: 1.5,
+    lineWidth: Number(state.lineWidths?.ema50 || 1.5),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
@@ -1642,7 +2149,7 @@ function initNativeCharts() {
 
   const ema150Series = mainChart.addLineSeries({
     color: state.colors.ema150 || '#9333ea',
-    lineWidth: 2,
+    lineWidth: Number(state.lineWidths?.ema150 || 2),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
@@ -1651,7 +2158,7 @@ function initNativeCharts() {
 
   const ema200Series = mainChart.addLineSeries({
     color: state.colors.ema200 || '#e11d48',
-    lineWidth: 2,
+    lineWidth: Number(state.lineWidths?.ema200 || 2),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
@@ -1661,27 +2168,27 @@ function initNativeCharts() {
   // VWAP Line (WITHOUT ANY TEXT LABELS or circle markers)
   const vwapSeries = mainChart.addLineSeries({
     color: state.colors.vwap || '#eab308',
-    lineWidth: 1.8,
+    lineWidth: Number(state.lineWidths?.vwap || 1.8),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
     crosshairMarkerVisible: false
   });
 
-  // Darvas Box - Top Box Line (Green, lineWidth 2.5)
+  // Darvas Box - Top Box Line
   const darvasTopSeries = mainChart.addLineSeries({
     color: state.colors.darvasTop || '#10b981',
-    lineWidth: 2.5,
+    lineWidth: Number(state.lineWidths?.darvasTop || 2.5),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
     crosshairMarkerVisible: false
   });
 
-  // Darvas Box - Bottom Box Line (Red, lineWidth 2.5)
+  // Darvas Box - Bottom Box Line
   const darvasBottomSeries = mainChart.addLineSeries({
     color: state.colors.darvasBottom || '#ef4444',
-    lineWidth: 2.5,
+    lineWidth: Number(state.lineWidths?.darvasBottom || 2.5),
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
@@ -1718,7 +2225,7 @@ function initNativeCharts() {
   // RSI Line
   const rsiSeries = rsiChart.addLineSeries({
     color: state.colors.rsi || '#60a5fa',
-    lineWidth: 2,
+    lineWidth: Number(state.lineWidths?.rsi || 2),
     priceFormat: {
       type: 'custom',
       formatter: price => Number(price).toFixed(1)
@@ -1731,7 +2238,7 @@ function initNativeCharts() {
   // RSI 14-Period SMA Line
   const rsiSmaSeries = rsiChart.addLineSeries({
     color: state.colors.rsiSma || '#fbbf24',
-    lineWidth: 1.5,
+    lineWidth: Number(state.lineWidths?.rsiSma || 1.5),
     priceFormat: {
       type: 'custom',
       formatter: price => Number(price).toFixed(1)
@@ -2172,22 +2679,7 @@ function setupPredictiveSearch() {
 }
 
 function updateNativeChartTheme() {
-  if (!state.charts.main) return;
-  const isDark = state.theme === 'dark';
-  const bgColor = isDark ? '#0b0f19' : '#ffffff';
-  const textColor = isDark ? '#94a3b8' : '#334155';
-  const gridColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.06)';
-  const borderColor = isDark ? '#1f293d' : '#cbd5e1';
-
-  const themeOpts = {
-    layout: { background: { color: bgColor }, textColor },
-    grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
-    rightPriceScale: { borderColor },
-    timeScale: { borderColor }
-  };
-
-  state.charts.main.applyOptions(themeOpts);
-  if (state.charts.rsi) state.charts.rsi.applyOptions(themeOpts);
+  applyChartTheme(state.chartTheme || (state.theme === 'light' ? 'light' : 'dark'));
 }
 
 // Draw ONLY Pivot line (P), Resistance line 1 (R1), and Support line 1 (S1)
@@ -2206,12 +2698,13 @@ function updatePivotLines() {
   if (!state.toggles.pivots || !state.currentStockData?.pivotPoints) return;
 
   const { p, r1, s1 } = state.currentStockData.pivotPoints;
+  const pWidth = Number(state.lineWidths?.pivots || 1.2);
 
   // EXACTLY 3 lines only: P, R1, S1
   state.charts.pivotLines = [
-    candles.createPriceLine({ price: p, color: '#06b6d4', lineWidth: 1.2, lineStyle: 2, axisLabelVisible: true, title: `P ${p}` }),
-    candles.createPriceLine({ price: r1, color: '#f97316', lineWidth: 1.2, lineStyle: 2, axisLabelVisible: true, title: `R1 ${r1}` }),
-    candles.createPriceLine({ price: s1, color: '#10b981', lineWidth: 1.2, lineStyle: 2, axisLabelVisible: true, title: `S1 ${s1}` })
+    candles.createPriceLine({ price: p, color: '#06b6d4', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `P ${p}` }),
+    candles.createPriceLine({ price: r1, color: '#f97316', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `R1 ${r1}` }),
+    candles.createPriceLine({ price: s1, color: '#10b981', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `S1 ${s1}` })
   ];
 }
 
@@ -2417,7 +2910,7 @@ function renderPersistedDrawings() {
       const color = state.colors.avwap || avwapColors[idx % avwapColors.length];
       const avSeries = state.charts.main.addLineSeries({
         color: color,
-        lineWidth: 2,
+        lineWidth: Number(state.lineWidths?.avwap || 2),
         title: '',
         priceLineVisible: false,
         lastValueVisible: false,
@@ -3929,6 +4422,13 @@ window.cancelActiveDrawingTool = cancelActiveDrawingTool;
 window.handleAltHShortcut = handleAltHShortcut;
 window.handleCopyStocks = handleCopyStocks;
 window.toggleScreenerDeck = toggleScreenerDeck;
+window.handleChartThemeChange = handleChartThemeChange;
+window.handleModalThemeChange = handleModalThemeChange;
+window.handleCustomColorChange = handleCustomColorChange;
+window.openLineSettingsModal = openLineSettingsModal;
+window.closeLineSettingsModal = closeLineSettingsModal;
+window.resetLineStylesToDefaults = resetLineStylesToDefaults;
+window.updateLineStyle = updateLineStyle;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);
