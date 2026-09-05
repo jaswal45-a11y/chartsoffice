@@ -1920,7 +1920,9 @@ function getUserIndicatorPreferences(user) {
       darvasBottom: '#ef4444',
       rsi: '#60a5fa',
       rsiSma: '#fbbf24',
-      avwap: '#a855f7'
+      avwap: '#a855f7',
+      crosshair: '#3b82f6',
+      closeLine: '#10b981'
     },
     pivotType: 'Traditional (Auto)',
     chartTheme: 'dark',
@@ -1945,7 +1947,9 @@ function getUserIndicatorPreferences(user) {
       rsi: 2,
       rsiSma: 1.5,
       avwap: 2,
-      pivots: 1.2
+      pivots: 1.2,
+      crosshair: 1,
+      closeLine: 1
     }
   };
   if (!user) return defaultPrefs;

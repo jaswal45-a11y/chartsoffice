@@ -50,7 +50,9 @@ const state = {
     rsi: 2,
     rsiSma: 1.5,
     avwap: 2,
-    pivots: 1.2
+    pivots: 1.2,
+    crosshair: 1,
+    closeLine: 1
   },
 
   // Authentication State
@@ -92,7 +94,9 @@ const state = {
     darvasBottom: '#ef4444',
     rsi: '#60a5fa',
     rsiSma: '#fbbf24',
-    avwap: '#a855f7'
+    avwap: '#a855f7',
+    crosshair: '#3b82f6',
+    closeLine: '#10b981'
   },
   pivotType: 'Traditional (Auto)',
 
@@ -583,7 +587,9 @@ function applyLineWidths(widths) {
     rsi: 'setting-width-rsi',
     rsiSma: 'setting-width-rsi-sma',
     avwap: 'setting-width-avwap',
-    pivots: 'setting-width-pivots'
+    pivots: 'setting-width-pivots',
+    crosshair: 'setting-width-crosshair',
+    closeLine: 'setting-width-close-line'
   };
 
   Object.entries(widthSelectMap).forEach(([key, elementId]) => {
@@ -596,6 +602,15 @@ function applyLineWidths(widths) {
   // Apply to chart series
   if (state.charts?.series) {
     const s = state.charts.series;
+    if (s.candles) {
+      s.candles.applyOptions({
+        priceLineVisible: true,
+        priceLineColor: state.colors.closeLine || '#10b981',
+        priceLineWidth: Number(w.closeLine || 1),
+        priceLineStyle: 2,
+        lastValueVisible: true
+      });
+    }
     if (s.ema10) s.ema10.applyOptions({ lineWidth: Number(w.ema10 || 1.5) });
     if (s.ema20) s.ema20.applyOptions({ lineWidth: Number(w.ema20 || 1.5) });
     if (s.ema50) s.ema50.applyOptions({ lineWidth: Number(w.ema50 || 1.5) });
@@ -608,6 +623,24 @@ function applyLineWidths(widths) {
     if (s.rsi) s.rsi.applyOptions({ lineWidth: Number(w.rsi || 2) });
     if (s.rsiSma) s.rsiSma.applyOptions({ lineWidth: Number(w.rsiSma || 1.5) });
   }
+
+  // Apply crosshair options
+  const crosshairOpts = {
+    crosshair: {
+      vertLine: {
+        color: state.colors.crosshair || '#3b82f6',
+        width: Number(w.crosshair || 1),
+        style: 2
+      },
+      horzLine: {
+        color: state.colors.crosshair || '#3b82f6',
+        width: Number(w.crosshair || 1),
+        style: 2
+      }
+    }
+  };
+  if (state.charts?.main) state.charts.main.applyOptions(crosshairOpts);
+  if (state.charts?.rsi) state.charts.rsi.applyOptions(crosshairOpts);
 
   // Apply to active AVWAPs
   if (state.activeDrawingSeries?.avwaps && state.activeDrawingSeries.avwaps.length > 0) {
@@ -633,7 +666,9 @@ function updateLineStyle(indicatorKey) {
     volAvg: ['setting-color-vol-avg', 'color-vol-avg'],
     rsi: ['setting-color-rsi', 'color-rsi'],
     rsiSma: ['setting-color-rsi-sma', 'color-rsi-sma'],
-    avwap: ['setting-color-avwap', 'color-avwap']
+    avwap: ['setting-color-avwap', 'color-avwap'],
+    crosshair: ['setting-color-crosshair', null],
+    closeLine: ['setting-color-close-line', null]
   };
 
   const widthMap = {
@@ -649,14 +684,16 @@ function updateLineStyle(indicatorKey) {
     rsi: 'setting-width-rsi',
     rsiSma: 'setting-width-rsi-sma',
     avwap: 'setting-width-avwap',
-    pivots: 'setting-width-pivots'
+    pivots: 'setting-width-pivots',
+    crosshair: 'setting-width-crosshair',
+    closeLine: 'setting-width-close-line'
   };
 
   // Sync colors if applicable
   if (colorMap[indicatorKey]) {
     const [modalColId, barColId] = colorMap[indicatorKey];
     const modalCol = document.getElementById(modalColId);
-    const barCol = document.getElementById(barColId);
+    const barCol = barColId ? document.getElementById(barColId) : null;
     let chosenColor = null;
 
     if (modalCol && document.activeElement === modalCol) {
@@ -702,6 +739,34 @@ function updateLineStyle(indicatorKey) {
     if (indicatorKey === 'volAvg' && s.volAvg) s.volAvg.applyOptions(opts);
     if (indicatorKey === 'rsi' && s.rsi) s.rsi.applyOptions(opts);
     if (indicatorKey === 'rsiSma' && s.rsiSma) s.rsiSma.applyOptions(opts);
+    if (indicatorKey === 'closeLine' && s.candles) {
+      s.candles.applyOptions({
+        priceLineVisible: true,
+        priceLineColor: state.colors.closeLine || '#10b981',
+        priceLineWidth: Number(state.lineWidths.closeLine || 1),
+        priceLineStyle: 2,
+        lastValueVisible: true
+      });
+    }
+  }
+
+  if (indicatorKey === 'crosshair') {
+    const crosshairOpts = {
+      crosshair: {
+        vertLine: {
+          color: state.colors.crosshair || '#3b82f6',
+          width: Number(state.lineWidths.crosshair || 1),
+          style: 2
+        },
+        horzLine: {
+          color: state.colors.crosshair || '#3b82f6',
+          width: Number(state.lineWidths.crosshair || 1),
+          style: 2
+        }
+      }
+    };
+    if (state.charts?.main) state.charts.main.applyOptions(crosshairOpts);
+    if (state.charts?.rsi) state.charts.rsi.applyOptions(crosshairOpts);
   }
 
   if (indicatorKey === 'avwap') {
@@ -730,7 +795,9 @@ function openLineSettingsModal() {
     volAvg: 'setting-color-vol-avg',
     rsi: 'setting-color-rsi',
     rsiSma: 'setting-color-rsi-sma',
-    avwap: 'setting-color-avwap'
+    avwap: 'setting-color-avwap',
+    crosshair: 'setting-color-crosshair',
+    closeLine: 'setting-color-close-line'
   };
   Object.entries(colorMap).forEach(([key, id]) => {
     const colInput = document.getElementById(id);
@@ -751,7 +818,9 @@ function openLineSettingsModal() {
     rsi: 'setting-width-rsi',
     rsiSma: 'setting-width-rsi-sma',
     avwap: 'setting-width-avwap',
-    pivots: 'setting-width-pivots'
+    pivots: 'setting-width-pivots',
+    crosshair: 'setting-width-crosshair',
+    closeLine: 'setting-width-close-line'
   };
   Object.entries(widthSelectMap).forEach(([key, id]) => {
     const sel = document.getElementById(id);
@@ -806,7 +875,9 @@ function resetLineStylesToDefaults() {
     darvasBottom: '#ef4444',
     rsi: '#60a5fa',
     rsiSma: '#fbbf24',
-    avwap: '#a855f7'
+    avwap: '#a855f7',
+    crosshair: '#3b82f6',
+    closeLine: '#10b981'
   };
   state.lineWidths = {
     ema10: 1.5,
@@ -821,7 +892,9 @@ function resetLineStylesToDefaults() {
     rsi: 2,
     rsiSma: 1.5,
     avwap: 2,
-    pivots: 1.2
+    pivots: 1.2,
+    crosshair: 1,
+    closeLine: 1
   };
   state.customThemeColors = {
     bg: '#0b0f19',
@@ -938,6 +1011,15 @@ function applyLoadedIndicatorPreferences(prefs) {
 
   // Apply Series Colors & Visibility
   if (state.charts?.series) {
+    if (state.charts.series.candles) {
+      state.charts.series.candles.applyOptions({
+        priceLineVisible: true,
+        priceLineColor: state.colors.closeLine || '#10b981',
+        priceLineWidth: Number(state.lineWidths.closeLine || 1),
+        priceLineStyle: 2,
+        lastValueVisible: true
+      });
+    }
     state.charts.series.ema10?.applyOptions({ visible: Boolean(state.toggles.ema10), color: state.colors.ema10 });
     state.charts.series.ema20?.applyOptions({ visible: Boolean(state.toggles.ema20), color: state.colors.ema20 });
     state.charts.series.ema50?.applyOptions({ visible: Boolean(state.toggles.ema50), color: state.colors.ema50 });
@@ -2061,8 +2143,16 @@ function initNativeCharts() {
     },
     crosshair: {
       mode: LightweightCharts.CrosshairMode.Normal,
-      vertLine: { color: 'rgba(59, 130, 246, 0.5)', width: 1, style: 2 },
-      horzLine: { color: 'rgba(59, 130, 246, 0.5)', width: 1, style: 2 }
+      vertLine: {
+        color: state.colors.crosshair || '#3b82f6',
+        width: Number(state.lineWidths?.crosshair || 1),
+        style: 2
+      },
+      horzLine: {
+        color: state.colors.crosshair || '#3b82f6',
+        width: Number(state.lineWidths?.crosshair || 1),
+        style: 2
+      }
     }
   };
 
@@ -2093,15 +2183,18 @@ function initNativeCharts() {
     }
   });
 
-  // Candlestick Series (Default horizontal price line disabled)
+  // Candlestick Series (Customizable TradingView-style Day Close Price Line)
   const candlestickSeries = mainChart.addCandlestickSeries({
     upColor: themeCfg.candleUp || '#10b981',
     downColor: themeCfg.candleDown || '#ef4444',
     borderVisible: false,
     wickUpColor: themeCfg.candleUp || '#10b981',
     wickDownColor: themeCfg.candleDown || '#ef4444',
-    priceLineVisible: false,
-    lastValueVisible: false
+    priceLineVisible: true,
+    priceLineColor: state.colors.closeLine || '#10b981',
+    priceLineWidth: Number(state.lineWidths?.closeLine || 1),
+    priceLineStyle: 2,
+    lastValueVisible: true
   });
 
   // Volume Histogram Series (Integrated at bottom of main chart via overlay scale)

@@ -1290,6 +1290,37 @@
                 <option value="2.5">2.5 px (Thick)</option>
               </select>
             </div>
+
+            <!-- Day Close Line (LTP) -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-close-line" value="#10b981" class="indicator-color-picker" onchange="updateLineStyle('closeLine')">
+                <span class="font-semibold text-slate-200">Day Close Line (LTP)</span>
+              </div>
+              <select id="setting-width-close-line" onchange="updateLineStyle('closeLine')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1" selected>1 px (Fine / Default)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Crosshair (Horz & Vert) -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-crosshair" value="#3b82f6" class="indicator-color-picker" onchange="updateLineStyle('crosshair')">
+                <span class="font-semibold text-slate-200">Crosshair (Horz & Vert)</span>
+              </div>
+              <select id="setting-width-crosshair" onchange="updateLineStyle('crosshair')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1" selected>1 px (Default)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+              </select>
+            </div>
           </div>
         </div>
 
