@@ -1791,12 +1791,12 @@ function renderChartWatchlistDropdown() {
   const anyWlHasStock = state.watchlists.some(wl => wl.stocks.some(s => (s.symbol || '').toUpperCase() === activeSym));
   if (el.btnChartWatchlistToggle) {
     if (anyWlHasStock) {
-      el.btnChartWatchlistToggle.className = 'p-2 rounded-xl bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
-      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-4 h-4 fill-black text-black"></i>`;
+      el.btnChartWatchlistToggle.className = 'p-1 px-1.5 rounded-lg bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
+      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-black text-black"></i>`;
       el.btnChartWatchlistToggle.title = `${activeSym} is in your watchlist (Click to manage)`;
     } else {
-      el.btnChartWatchlistToggle.className = 'p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
-      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-4 h-4 fill-none text-amber-400"></i>`;
+      el.btnChartWatchlistToggle.className = 'p-1 px-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
+      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-none text-amber-400"></i>`;
       el.btnChartWatchlistToggle.title = `Add ${activeSym} to watchlist`;
     }
     lucide.createIcons();
