@@ -247,6 +247,9 @@ const el = {
   pill52w: document.getElementById('pill-52w'),
   
   // 3 Separate Chart Containers & Badges
+  chartMainContainer: document.getElementById('chart-main-container'),
+  resizerPriceRsi: document.getElementById('resizer-price-rsi'),
+  resizerChartBottom: document.getElementById('resizer-chart-bottom'),
   chartOhlcvLegend: document.getElementById('chart-ohlcv-legend'),
   tvPricePane: document.getElementById('tv_price_pane'),
   tvMainChart: document.getElementById('tv_main_chart'),
@@ -2570,52 +2573,136 @@ function applyActiveRangeZoom() {
   }
 }
 
-// Draggable Pane Resizer between Price+Volume and RSI pane
+// Draggable Pane Resizers:
+// 1. Divider between Price+Volume and RSI pane (#resizer-price-rsi)
+// 2. Bottom handle for total chart card height (#resizer-chart-bottom)
 function setupPaneResizers() {
   const resizerPriceRsi = document.getElementById('resizer-price-rsi');
+  const resizerChartBottom = document.getElementById('resizer-chart-bottom');
+  const chartMainContainer = document.getElementById('chart-main-container');
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
 
-  if (!resizerPriceRsi || !pricePane || !rsiContainer) return;
+  // Restore saved heights from localStorage if present
+  const savedRsiH = localStorage.getItem('sangam_rsi_height');
+  if (savedRsiH && rsiContainer) {
+    const parsedRsiH = parseInt(savedRsiH, 10);
+    if (parsedRsiH >= 45 && parsedRsiH <= 350) {
+      rsiContainer.style.height = `${parsedRsiH}px`;
+    }
+  }
 
-  let isDragging = false;
-  let startY = 0;
-  let startPriceH = 0;
-  let startRsiH = 0;
+  const savedChartH = localStorage.getItem('sangam_chart_height');
+  if (savedChartH && chartMainContainer) {
+    const parsedChartH = parseInt(savedChartH, 10);
+    if (parsedChartH >= 360 && parsedChartH <= 950) {
+      chartMainContainer.style.height = `${parsedChartH}px`;
+    }
+  }
 
-  const onMouseDown = (e) => {
-    isDragging = true;
-    startY = e.clientY;
-    startPriceH = pricePane.clientHeight;
-    startRsiH = rsiContainer.clientHeight;
-    document.body.style.cursor = 'row-resize';
-    document.body.style.userSelect = 'none';
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-  };
+  // Resizer 1: Price & RSI divider
+  if (resizerPriceRsi && rsiContainer) {
+    let isDraggingRsi = false;
+    let startY = 0;
+    let startRsiH = 0;
 
-  const onMouseMove = (e) => {
-    if (!isDragging) return;
-    const deltaY = e.clientY - startY;
-    const newPriceH = Math.max(200, startPriceH + deltaY);
-    const newRsiH = Math.max(40, startRsiH - deltaY);
-    pricePane.style.flex = 'none';
-    pricePane.style.height = `${newPriceH}px`;
-    rsiContainer.style.height = `${newRsiH}px`;
-    handleResize();
-  };
+    const onRsiPointerDown = (e) => {
+      isDraggingRsi = true;
+      startY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      startRsiH = rsiContainer.clientHeight;
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onRsiPointerMove);
+      window.addEventListener('mouseup', onRsiPointerUp);
+      window.addEventListener('touchmove', onRsiPointerMove, { passive: false });
+      window.addEventListener('touchend', onRsiPointerUp);
+    };
 
-  const onMouseUp = () => {
-    if (!isDragging) return;
-    isDragging = false;
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-    window.removeEventListener('mousemove', onMouseMove);
-    window.removeEventListener('mouseup', onMouseUp);
-    handleResize();
-  };
+    const onRsiPointerMove = (e) => {
+      if (!isDraggingRsi) return;
+      if (e.cancelable && e.type === 'touchmove') e.preventDefault();
+      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      const deltaY = clientY - startY;
+      // Dragging UP (negative deltaY) increases RSI height; dragging DOWN decreases RSI height
+      const newRsiH = Math.max(45, Math.min(350, startRsiH - deltaY));
+      rsiContainer.style.height = `${newRsiH}px`;
+      localStorage.setItem('sangam_rsi_height', newRsiH);
+      handleResize();
+    };
 
-  resizerPriceRsi.addEventListener('mousedown', onMouseDown);
+    const onRsiPointerUp = () => {
+      if (!isDraggingRsi) return;
+      isDraggingRsi = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onRsiPointerMove);
+      window.removeEventListener('mouseup', onRsiPointerUp);
+      window.removeEventListener('touchmove', onRsiPointerMove);
+      window.removeEventListener('touchend', onRsiPointerUp);
+      handleResize();
+    };
+
+    resizerPriceRsi.addEventListener('mousedown', onRsiPointerDown);
+    resizerPriceRsi.addEventListener('touchstart', onRsiPointerDown, { passive: true });
+    resizerPriceRsi.addEventListener('dblclick', () => {
+      // Reset RSI height to default 115px
+      rsiContainer.style.height = '115px';
+      localStorage.setItem('sangam_rsi_height', 115);
+      handleResize();
+    });
+  }
+
+  // Resizer 2: Overall Chart Card Bottom Handle
+  if (resizerChartBottom && chartMainContainer) {
+    let isDraggingChart = false;
+    let startY = 0;
+    let startChartH = 0;
+
+    const onChartPointerDown = (e) => {
+      isDraggingChart = true;
+      startY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      startChartH = chartMainContainer.clientHeight;
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onChartPointerMove);
+      window.addEventListener('mouseup', onChartPointerUp);
+      window.addEventListener('touchmove', onChartPointerMove, { passive: false });
+      window.addEventListener('touchend', onChartPointerUp);
+    };
+
+    const onChartPointerMove = (e) => {
+      if (!isDraggingChart) return;
+      if (e.cancelable && e.type === 'touchmove') e.preventDefault();
+      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      const deltaY = clientY - startY;
+      // Dragging DOWN increases chart height; dragging UP decreases chart height
+      const newChartH = Math.max(360, Math.min(950, startChartH + deltaY));
+      chartMainContainer.style.height = `${newChartH}px`;
+      localStorage.setItem('sangam_chart_height', newChartH);
+      handleResize();
+    };
+
+    const onChartPointerUp = () => {
+      if (!isDraggingChart) return;
+      isDraggingChart = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onChartPointerMove);
+      window.removeEventListener('mouseup', onChartPointerUp);
+      window.removeEventListener('touchmove', onChartPointerMove);
+      window.removeEventListener('touchend', onChartPointerUp);
+      handleResize();
+    };
+
+    resizerChartBottom.addEventListener('mousedown', onChartPointerDown);
+    resizerChartBottom.addEventListener('touchstart', onChartPointerDown, { passive: true });
+    resizerChartBottom.addEventListener('dblclick', () => {
+      // Reset Chart height to default 460px
+      chartMainContainer.style.height = '460px';
+      localStorage.setItem('sangam_chart_height', 460);
+      handleResize();
+    });
+  }
 }
 
 // Predictive Autocomplete Search for Stock Input Field
@@ -3283,7 +3370,18 @@ function navigateStock(direction) {
       rows.forEach((r, idx) => {
         if (idx === targetIndex) {
           r.classList.add('selected', 'bg-blue-600/20');
-          r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          // Smooth internal container scroll only (NEVER scrolls or shifts the page/chart window)
+          const container = tbody.closest('.overflow-y-auto') || tbody.parentElement;
+          if (container) {
+            const cRect = container.getBoundingClientRect();
+            const rRect = r.getBoundingClientRect();
+            // 35px buffer accounts for sticky table thead
+            if (rRect.top < cRect.top + 35) {
+              container.scrollTop += (rRect.top - (cRect.top + 38));
+            } else if (rRect.bottom > cRect.bottom) {
+              container.scrollTop += (rRect.bottom - cRect.bottom + 10);
+            }
+          }
         } else {
           r.classList.remove('selected', 'bg-blue-600/20');
         }
