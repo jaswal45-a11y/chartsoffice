@@ -16,9 +16,6 @@ try {
   dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 } catch (e) {}
 
-// Allow self-signed or intermediate certificates for external requests
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 // Load local .env file if present (Zero external dependencies)
 try {
   const envPath = path.join(__dirname, '.env');
@@ -215,6 +212,58 @@ function convertDhanHistoricalToCandles(dhanData) {
   return candles;
 }
 
+// Robust Dhan API Request Dispatcher with TLS compatibility
+function dhanFetch(endpoint, options = {}) {
+  return new Promise((resolve) => {
+    try {
+      const url = endpoint.startsWith('http') ? endpoint : `${DHAN_CONFIG.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+      const parsed = new URL(url);
+      const agent = new https.Agent({ rejectUnauthorized: false });
+
+      const headers = {
+        'access-token': DHAN_CONFIG.accessToken,
+        'client-id': DHAN_CONFIG.clientId,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(options.headers || {})
+      };
+
+      const req = https.request({
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port || 443,
+        path: parsed.pathname + parsed.search,
+        method: (options.method || 'GET').toUpperCase(),
+        headers,
+        agent,
+        timeout: options.timeout || 8000
+      }, (res) => {
+        let raw = '';
+        res.on('data', chunk => raw += chunk);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(raw);
+            resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, json, data: json });
+          } catch (e) {
+            resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, raw, data: null });
+          }
+        });
+      });
+
+      req.on('error', (err) => resolve({ ok: false, status: 0, error: err.message }));
+      req.on('timeout', () => { req.destroy(); resolve({ ok: false, status: 408, error: 'Request timeout' }); });
+
+      if (options.body) {
+        const bodyStr = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+        req.write(bodyStr);
+      }
+      req.end();
+    } catch (err) {
+      resolve({ ok: false, status: 0, error: err.message });
+    }
+  });
+}
+
 // Fetch historical candles from DhanHQ API
 async function fetchDhanHistorical(symbol, fromDate = null, toDate = null) {
   if (!isDhanConfigured()) return null;
@@ -235,15 +284,9 @@ async function fetchDhanHistorical(symbol, fromDate = null, toDate = null) {
   };
 
   try {
-    const res = await fetch(`${DHAN_CONFIG.baseUrl}/charts/historical`, {
+    const res = await dhanFetch('/charts/historical', {
       method: 'POST',
-      headers: {
-        'access-token': DHAN_CONFIG.accessToken,
-        'client-id': DHAN_CONFIG.clientId,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(payload)
+      body: payload
     });
 
     if (!res.ok) {
@@ -251,8 +294,7 @@ async function fetchDhanHistorical(symbol, fromDate = null, toDate = null) {
       return null;
     }
 
-    const json = await res.json();
-    const candles = convertDhanHistoricalToCandles(json);
+    const candles = convertDhanHistoricalToCandles(res.json);
     if (candles.length > 0) {
       return { candles, meta };
     }
@@ -306,16 +348,9 @@ async function fetchDhanLiveQuotes(symbols) {
 
   const promises = chunks.map(async (payload) => {
     try {
-      const res = await fetch(`${DHAN_CONFIG.baseUrl}/marketfeed/quote`, {
+      const res = await dhanFetch('/marketfeed/quote', {
         method: 'POST',
-        headers: {
-          'access-token': DHAN_CONFIG.accessToken,
-          'client-id': DHAN_CONFIG.clientId,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(6000)
+        body: payload
       });
 
       if (!res.ok) {
@@ -325,25 +360,25 @@ async function fetchDhanLiveQuotes(symbols) {
         return;
       }
 
-      const json = await res.json();
+      const json = res.json || {};
       ['NSE_EQ', 'IDX_I'].forEach(seg => {
         const segData = json.data?.[seg];
         if (segData) {
           Object.keys(segData).forEach(secId => {
             const sym = idToSymbol[secId];
             const q = segData[secId];
-            if (sym && q && q.last_price) {
-              const ltp = Number(q.last_price.toFixed(2));
-              const prevClose = q.prev_close || q.ohlc?.close || ltp;
+            const ltp = q ? Number((q.last_price || q.lastPrice || q.ltp || q.price || 0).toFixed(2)) : 0;
+            if (sym && ltp > 0) {
+              const prevClose = q.prev_close || q.prevClose || q.ohlc?.close || ltp;
               const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
               quotes[sym] = {
                 symbol: sym,
                 price: ltp,
                 changePercent,
                 prevClose,
-                volume: q.volume || 0,
-                dayHigh: q.ohlc?.high || ltp,
-                dayLow: q.ohlc?.low || ltp,
+                volume: q.volume || q.vol || 0,
+                dayHigh: q.ohlc?.high || q.dayHigh || ltp,
+                dayLow: q.ohlc?.low || q.dayLow || ltp,
                 source: 'dhan',
                 timestamp: Date.now()
               };
@@ -591,7 +626,8 @@ async function initDatabase() {
     const client = new MongoClient(MONGO_CONFIG.uri, {
       serverSelectionTimeoutMS: 15000,
       connectTimeoutMS: 15000,
-      maxPoolSize: 10
+      maxPoolSize: 10,
+      tlsAllowInvalidCertificates: true
     });
 
     await client.connect();
@@ -4296,15 +4332,15 @@ const server = http.createServer(async (req, res) => {
 });
 
 async function startServer() {
-  await initDatabase();
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(`🚀 Stock Screener & Visualizer Platform is running!`);
     console.log(`🌐 Local URL: http://localhost:${PORT}`);
     console.log(`📊 Screeners Loaded: ${readScreeners().length}`);
-    console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
     console.log(`=======================================================`);
   });
+  await initDatabase();
+  console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
 }
 
 startServer();

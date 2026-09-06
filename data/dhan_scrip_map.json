@@ -49446,8 +49446,8 @@
   },
   "NIFTY": {
     "secId": "13",
-    "segment": "IDX_I",
-    "instrument": "INDEX"
+    "segment": "NSE_EQ",
+    "instrument": "EQUITY"
   },
   "NIFTY AUTO": {
     "secId": "14",
@@ -49496,8 +49496,8 @@
   },
   "BANKNIFTY": {
     "secId": "25",
-    "segment": "IDX_I",
-    "instrument": "INDEX"
+    "segment": "NSE_EQ",
+    "instrument": "EQUITY"
   },
   "FINNIFTY": {
     "secId": "27",
@@ -50008,5 +50008,25 @@
     "secId": "25",
     "segment": "IDX_I",
     "instrument": "INDEX"
+  },
+  "ROYALIND": {
+    "secId": "512047",
+    "segment": "BSE_EQ",
+    "instrument": "EQUITY"
+  },
+  "ALPHAIND": {
+    "secId": "543937",
+    "segment": "BSE_EQ",
+    "instrument": "EQUITY"
+  },
+  "BAJAJAUTO": {
+    "secId": "16669",
+    "segment": "NSE_EQ",
+    "instrument": "EQUITY"
+  },
+  "NAMINDIA": {
+    "secId": "357",
+    "segment": "NSE_EQ",
+    "instrument": "EQUITY"
   }
 }

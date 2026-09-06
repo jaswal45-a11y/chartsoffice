@@ -353,12 +353,13 @@ async function handleLogout() {
 async function loadAnalyticsData() {
   if (!state.user && !state.isAdmin) return;
   try {
-    const [breadthRes, sectorsRes, indicesRes, sectoralBreadthRes, exploreRes] = await Promise.all([
+    const [breadthRes, sectorsRes, indicesRes, sectoralBreadthRes, exploreRes, feedRes] = await Promise.all([
       fetch(`/api/analytics/breadth?sector=${encodeURIComponent(state.activeBreadthSector || 'all')}`),
       fetch('/api/analytics/sectors', { headers: getAuthHeaders() }),
       fetch('/api/analytics/indices'),
       fetch('/api/analytics/sectoral-breadth'),
-      fetch('/api/analytics/explore')
+      fetch('/api/analytics/explore'),
+      fetch('/api/feed/status')
     ]);
 
     const breadthData = await breadthRes.json();
@@ -366,6 +367,7 @@ async function loadAnalyticsData() {
     const indicesData = await indicesRes.json();
     const sectoralBreadthData = await sectoralBreadthRes.json();
     const exploreData = await exploreRes.json();
+    const feedData = await feedRes.json();
 
     if (breadthData.success) {
       state.breadthData = breadthData;
@@ -388,10 +390,15 @@ async function loadAnalyticsData() {
       renderIndicesRibbon(state.indicesData);
     }
 
+    if (feedData && (feedData.dhanActive || feedData.dhanConfigured)) {
+      state.dhanActive = Boolean(feedData.dhanActive || feedData.dhanConfigured);
+    } else if (exploreData.success) {
+      state.dhanActive = Boolean(exploreData.dhanActive);
+    }
+    updateDhanHeaderBadge();
+
     if (exploreData.success && Array.isArray(exploreData.stocks)) {
       state.exploreStocks = exploreData.stocks;
-      state.dhanActive = Boolean(exploreData.dhanActive);
-      updateDhanHeaderBadge();
       applyExploreFilters();
     }
   } catch (err) {
@@ -2772,12 +2779,22 @@ async function handleAdminUpdateMaxUsers(e) {
 
 async function loadExploreData() {
   try {
-    const res = await fetch('/api/analytics/explore');
-    const data = await res.json();
+    const [exploreRes, feedRes] = await Promise.all([
+      fetch('/api/analytics/explore'),
+      fetch('/api/feed/status')
+    ]);
+    const data = await exploreRes.json();
+    const feedData = await feedRes.json();
+
+    if (feedData && (feedData.dhanActive || feedData.dhanConfigured)) {
+      state.dhanActive = Boolean(feedData.dhanActive || feedData.dhanConfigured);
+    } else if (data.success) {
+      state.dhanActive = Boolean(data.dhanActive);
+    }
+    updateDhanHeaderBadge();
+
     if (data.success && Array.isArray(data.stocks)) {
       state.exploreStocks = data.stocks;
-      state.dhanActive = Boolean(data.dhanActive);
-      updateDhanHeaderBadge();
       applyExploreFilters();
     }
   } catch (err) {
