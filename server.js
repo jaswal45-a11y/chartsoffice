@@ -52,12 +52,35 @@ const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 function getDhanConfigValue(key, envKey) {
-  if (process.env[envKey]) return process.env[envKey];
+  const candidateKeys = [
+    envKey,
+    envKey.toLowerCase(),
+    envKey.toUpperCase(),
+    key,
+    key.toLowerCase(),
+    key.toUpperCase()
+  ];
+  if (key === 'dhanClientId') {
+    candidateKeys.push('DHAN_CLIENT_ID', 'DHAN_CLIENTID', 'DHAN_ID', 'CLIENT_ID', 'dhan_client_id', 'DHAN_USER_ID', 'DHAN_ACCOUNT_ID');
+  }
+  if (key === 'dhanAccessToken') {
+    candidateKeys.push('DHAN_ACCESS_TOKEN', 'DHAN_TOKEN', 'DHAN_ACCESS_JWT', 'ACCESS_TOKEN', 'dhan_access_token', 'DHAN_JWT_TOKEN', 'DHAN_AUTH_TOKEN');
+  }
+
+  for (const k of candidateKeys) {
+    if (process.env[k] && String(process.env[k]).trim()) {
+      return String(process.env[k]).trim();
+    }
+  }
+
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8') || '{}');
-      if (cfg[key]) return cfg[key];
-      if (cfg[envKey]) return cfg[envKey];
+      for (const k of candidateKeys) {
+        if (cfg[k] && String(cfg[k]).trim()) {
+          return String(cfg[k]).trim();
+        }
+      }
     }
   } catch (e) {}
   return '';
@@ -93,6 +116,59 @@ DHAN_CONFIG.scripMap['TATAMOTORS'] = DHAN_CONFIG.scripMap['TMPV'] || { secId: '3
 
 function isDhanConfigured() {
   return Boolean(DHAN_CONFIG.clientId && DHAN_CONFIG.accessToken);
+}
+
+let lastDhanCheckTime = 0;
+let lastDhanCheckStatus = false;
+let lastDhanErrorMsg = '';
+
+async function checkDhanApiHealth() {
+  if (!isDhanConfigured()) {
+    lastDhanCheckStatus = false;
+    lastDhanErrorMsg = 'Credentials not configured';
+    return false;
+  }
+  const now = Date.now();
+  if (now - lastDhanCheckTime < 60000) {
+    return lastDhanCheckStatus;
+  }
+
+  try {
+    const res = await fetch(`${DHAN_CONFIG.baseUrl}/marketfeed/quote`, {
+      method: 'POST',
+      headers: {
+        'access-token': DHAN_CONFIG.accessToken,
+        'client-id': DHAN_CONFIG.clientId,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 'IDX_I': [13] }),
+      signal: AbortSignal.timeout(4000)
+    });
+
+    if (res.status === 200) {
+      lastDhanCheckStatus = true;
+      lastDhanErrorMsg = '';
+      lastDhanCheckTime = now;
+      return true;
+    } else if (res.status === 401 || res.status === 403) {
+      lastDhanCheckStatus = false;
+      lastDhanErrorMsg = `Dhan API token invalid or expired (HTTP ${res.status})`;
+      console.warn(`[DHAN] Health check: ${lastDhanErrorMsg}`);
+      lastDhanCheckTime = now;
+      return false;
+    } else {
+      lastDhanCheckStatus = false;
+      lastDhanErrorMsg = `Dhan API returned HTTP ${res.status}`;
+      lastDhanCheckTime = now;
+      return false;
+    }
+  } catch (err) {
+    lastDhanCheckStatus = false;
+    lastDhanErrorMsg = err.message;
+    lastDhanCheckTime = now;
+    return false;
+  }
 }
 
 function getDhanSecurityMeta(symbol) {
@@ -209,59 +285,79 @@ async function fetchDhanLiveQuotes(symbols) {
     }
   });
 
-  const payload = {};
-  if (nseEqIds.length > 0) payload['NSE_EQ'] = nseEqIds;
-  if (idxIds.length > 0) payload['IDX_I'] = idxIds;
+  if (nseEqIds.length === 0 && idxIds.length === 0) return {};
 
-  if (Object.keys(payload).length === 0) return {};
+  const quotes = {};
+  const CHUNK_SIZE = 300;
+  const chunks = [];
 
-  try {
-    const res = await fetch(`${DHAN_CONFIG.baseUrl}/marketfeed/quote`, {
-      method: 'POST',
-      headers: {
-        'access-token': DHAN_CONFIG.accessToken,
-        'client-id': DHAN_CONFIG.clientId,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) return {};
-    const json = await res.json();
-    const quotes = {};
-
-    ['NSE_EQ', 'IDX_I'].forEach(seg => {
-      const segData = json.data?.[seg];
-      if (segData) {
-        Object.keys(segData).forEach(secId => {
-          const sym = idToSymbol[secId];
-          const q = segData[secId];
-          if (sym && q && q.last_price) {
-            const ltp = Number(q.last_price.toFixed(2));
-            const prevClose = q.prev_close || q.ohlc?.close || ltp;
-            const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
-            quotes[sym] = {
-              symbol: sym,
-              price: ltp,
-              changePercent,
-              prevClose,
-              volume: q.volume || 0,
-              dayHigh: q.ohlc?.high || ltp,
-              dayLow: q.ohlc?.low || ltp,
-              source: 'dhan',
-              timestamp: Date.now()
-            };
-          }
-        });
-      }
-    });
-
-    return quotes;
-  } catch (err) {
-    console.warn('[DHAN] Live quote batch fetch exception:', err.message);
-    return {};
+  for (let i = 0; i < nseEqIds.length; i += CHUNK_SIZE) {
+    const chunkEq = nseEqIds.slice(i, i + CHUNK_SIZE);
+    const p = { 'NSE_EQ': chunkEq };
+    if (i === 0 && idxIds.length > 0) {
+      p['IDX_I'] = idxIds;
+    }
+    chunks.push(p);
   }
+
+  if (chunks.length === 0 && idxIds.length > 0) {
+    chunks.push({ 'IDX_I': idxIds });
+  }
+
+  const promises = chunks.map(async (payload) => {
+    try {
+      const res = await fetch(`${DHAN_CONFIG.baseUrl}/marketfeed/quote`, {
+        method: 'POST',
+        headers: {
+          'access-token': DHAN_CONFIG.accessToken,
+          'client-id': DHAN_CONFIG.clientId,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(6000)
+      });
+
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          console.warn(`[DHAN] Marketfeed quote rejected: Token expired or invalid (HTTP ${res.status})`);
+        }
+        return;
+      }
+
+      const json = await res.json();
+      ['NSE_EQ', 'IDX_I'].forEach(seg => {
+        const segData = json.data?.[seg];
+        if (segData) {
+          Object.keys(segData).forEach(secId => {
+            const sym = idToSymbol[secId];
+            const q = segData[secId];
+            if (sym && q && q.last_price) {
+              const ltp = Number(q.last_price.toFixed(2));
+              const prevClose = q.prev_close || q.ohlc?.close || ltp;
+              const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
+              quotes[sym] = {
+                symbol: sym,
+                price: ltp,
+                changePercent,
+                prevClose,
+                volume: q.volume || 0,
+                dayHigh: q.ohlc?.high || ltp,
+                dayLow: q.ohlc?.low || ltp,
+                source: 'dhan',
+                timestamp: Date.now()
+              };
+            }
+          });
+        }
+      });
+    } catch (err) {
+      console.warn('[DHAN] Live quote batch chunk exception:', err.message);
+    }
+  });
+
+  await Promise.all(promises);
+  return quotes;
 }
 
 // Live Intraday Quotes In-Memory Cache (25s TTL)
@@ -365,23 +461,28 @@ async function getOrFetchLiveQuotes(symbols) {
     } catch (e) {}
   }
 
-  // Backup Tier: Concurrency-limited Yahoo/Mirror fetcher for any remaining
+  // Backup Tier: Fast Multi-Source Quotes for remaining symbols
   if (remainingNeeded.length > 0) {
-    const CHUNK_SIZE = 20;
-    for (let i = 0; i < remainingNeeded.length; i += CHUNK_SIZE) {
-      const chunk = remainingNeeded.slice(i, i + CHUNK_SIZE);
-      const chunkResults = await Promise.all(chunk.map(fetchSingleLiveQuote));
-      chunkResults.forEach((q, idx) => {
-        const sym = chunk[idx];
-        if (q && q.price) {
-          LIVE_QUOTES_CACHE.data[sym] = q;
-          result[sym] = q;
-        } else if (LIVE_QUOTES_CACHE.data[sym]) {
-          // Fallback to previous cached value if transient error
-          result[sym] = LIVE_QUOTES_CACHE.data[sym];
+    try {
+      const batchQuotes = await fetchBatchQuotes(remainingNeeded);
+      batchQuotes.forEach(q => {
+        if (q && q.symbol && q.ltp) {
+          const formatted = {
+            symbol: q.symbol,
+            price: q.ltp,
+            changePercent: q.changePercent || 0,
+            prevClose: q.ltp / (1 + (q.changePercent || 0) / 100),
+            volume: q.volume || 0,
+            dayHigh: q.dayHigh || q.ltp,
+            dayLow: q.dayLow || q.ltp,
+            source: 'backup',
+            timestamp: now
+          };
+          LIVE_QUOTES_CACHE.data[q.symbol] = formatted;
+          result[q.symbol] = formatted;
         }
       });
-    }
+    } catch (err) {}
   }
 
   return result;
@@ -2169,9 +2270,10 @@ async function fetchBatchQuotes(symbols) {
       'LTIM': 'OFSS'
     };
 
+    const allChunkPromises = [];
     for (let i = 0; i < uncached.length; i += chunkSize) {
       const batch = uncached.slice(i, i + chunkSize);
-      const promises = batch.map(async (s) => {
+      const batchPromise = Promise.all(batch.map(async (s) => {
         try {
           const querySym = YAHOO_SYMBOL_ALIASES[s] || s;
           const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(querySym)}.NS?range=5d&interval=1d`, {
@@ -2203,11 +2305,12 @@ async function fetchBatchQuotes(symbols) {
         const fallbackQuote = { symbol: s, ltp: null, changePercent: 0, dayHigh: null, dayLow: null, volume: 0, exchange: 'NSE' };
         quotesCache.set(s, { timestamp: now, data: fallbackQuote });
         return fallbackQuote;
-      });
-
-      const fetched = await Promise.all(promises);
-      results.push(...fetched);
+      }));
+      allChunkPromises.push(batchPromise);
     }
+
+    const fetchedBatches = await Promise.all(allChunkPromises);
+    fetchedBatches.forEach(batch => results.push(...batch));
   }
 
   return results;
@@ -2647,6 +2750,17 @@ async function computeExploreStocksData() {
 
   const isDhan = isDhanConfigured();
 
+  // Fetch real-time market quotes for all universe stocks
+  const allSymbols = rawUniverse.map(s => s.symbol);
+  let liveQuoteMap = {};
+  try {
+    liveQuoteMap = await getOrFetchLiveQuotes(allSymbols);
+  } catch (qErr) {
+    console.warn('[EXPLORE] Error fetching live quotes batch:', qErr.message);
+  }
+
+  let dhanLiveCount = 0;
+
   const processedStocks = rawUniverse.map((stk, index) => {
     const symbol = stk.symbol.toUpperCase();
     const name = stk.name || symbol;
@@ -2672,12 +2786,16 @@ async function computeExploreStocksData() {
       capLabel = 'Micro Cap';
     }
 
-    // Core Price & Volume
-    const ltp = Number((stk.price || (stk.ltp ?? (mcap > 50000 ? 2500 : mcap > 15000 ? 1200 : mcap > 5000 ? 450 : 180))).toFixed(2));
-    const changePercent = Number((stk.changePercent !== undefined ? stk.changePercent : 0).toFixed(2));
-    const dayHigh = Number((stk.dayHigh || (ltp * (1 + Math.abs(changePercent) / 150 + 0.008))).toFixed(2));
-    const dayLow = Number((stk.dayLow || (ltp * (1 - Math.abs(changePercent) / 150 - 0.008))).toFixed(2));
-    const volume = stk.volume || Math.round(150000 + (mcap * 120));
+    // Real-Time Core Price & Volume from live feed
+    const lq = liveQuoteMap[symbol] || {};
+    if (lq.source === 'dhan') dhanLiveCount++;
+
+    const ltp = Number((lq.price || (stk.price || (stk.ltp ?? (mcap > 50000 ? 2500 : mcap > 15000 ? 1200 : mcap > 5000 ? 450 : 180)))).toFixed(2));
+    const changePercent = Number((lq.changePercent !== undefined ? lq.changePercent : (stk.changePercent !== undefined ? stk.changePercent : 0)).toFixed(2));
+    const dayHigh = Number((lq.dayHigh || stk.dayHigh || (ltp * (1 + Math.abs(changePercent) / 150 + 0.008))).toFixed(2));
+    const dayLow = Number((lq.dayLow || stk.dayLow || (ltp * (1 - Math.abs(changePercent) / 150 - 0.008))).toFixed(2));
+    const volume = lq.volume || stk.volume || Math.round(150000 + (mcap * 120));
+    const stockSource = lq.source || (isDhan ? 'dhan' : 'backup');
 
     // 14-day RSI
     let rsi = stk.rsi !== undefined ? stk.rsi : 52.5;
@@ -2712,7 +2830,7 @@ async function computeExploreStocksData() {
     const emaCrossLabel = isBullishCross ? `+${crossDaysAgo}d` : `-${crossDaysAgo}d`;
 
     // % From 52-Week High
-    const high52w = Number((stk.high52w || (ltp * (1 + (symHash % 25) / 100 + 0.02))).toFixed(2));
+    const high52w = Number((stk.high52w || Math.max(dayHigh, (ltp * (1 + (symHash % 25) / 100 + 0.02)))).toFixed(2));
     const pctFrom52wHigh = Number((((ltp - high52w) / high52w) * 100).toFixed(2));
 
     // Custom Lookback Gains (5d, 10d, 20d, 30d, 60d)
@@ -2785,7 +2903,7 @@ async function computeExploreStocksData() {
       dayHigh,
       dayLow,
       volume,
-      source: isDhan ? 'dhan' : 'backup',
+      source: stockSource,
       rsi,
       rvol: rvol20,
       rvols: { d5: rvol5, d10: rvol10, d20: rvol20, d50: rvol50 },
@@ -2831,7 +2949,8 @@ async function computeExploreStocksData() {
   const responsePayload = {
     success: true,
     timestamp: new Date().toISOString(),
-    dhanActive: isDhan,
+    dhanActive: Boolean(isDhan && (dhanLiveCount > 0 || isDhanConfigured())),
+    dhanLiveCount,
     count: processedStocks.length,
     stocks: processedStocks
   };
@@ -4050,15 +4169,68 @@ const server = http.createServer(async (req, res) => {
       // 13. GET /api/feed/status - Live Broker Feed Status (Dhan vs Backup) & Database Source
       if (pathname === '/api/feed/status' && method === 'GET') {
         const configured = isDhanConfigured();
+        let isHealthy = configured;
+        let healthMessage = configured ? 'Credentials configured' : 'Credentials missing';
+
+        if (configured) {
+          isHealthy = await checkDhanApiHealth();
+          healthMessage = isHealthy ? 'Connected & Live' : (lastDhanErrorMsg || 'Token verification failed');
+        }
+
+        const clientIdPreview = DHAN_CONFIG.clientId ? (DHAN_CONFIG.clientId.slice(0, 3) + '****' + DHAN_CONFIG.clientId.slice(-2)) : null;
+
         return sendJson(res, 200, {
           success: true,
           dhanConfigured: configured,
-          dhanActive: configured,
-          source: configured ? 'dhan' : 'backup',
-          sourceLabel: configured ? 'Dhan' : 'Backup',
+          dhanActive: Boolean(configured && isHealthy),
+          dhanHealthy: isHealthy,
+          dhanMessage: healthMessage,
+          dhanClientIdPreview: clientIdPreview,
+          source: (configured && isHealthy) ? 'dhan' : 'backup',
+          sourceLabel: (configured && isHealthy) ? 'Dhan' : 'Backup',
           mongoConfigured: Boolean(MONGO_CONFIG.isConnected),
           dbSource: MONGO_CONFIG.isConnected ? 'MongoDB Atlas' : 'Local JSON',
           timestamp: new Date().toISOString()
+        });
+      }
+
+      // 13b. POST /api/feed/dhan-token - Update Dhan Credentials dynamically
+      if (pathname === '/api/feed/dhan-token' && method === 'POST') {
+        const body = await parseJsonBody(req);
+        const clientId = String(body.clientId || body.dhanClientId || '').trim();
+        const accessToken = String(body.accessToken || body.dhanAccessToken || '').trim();
+
+        if (!clientId || !accessToken) {
+          return sendJson(res, 400, { success: false, error: 'Both Client ID and Access Token are required' });
+        }
+
+        process.env.DHAN_CLIENT_ID = clientId;
+        process.env.DHAN_ACCESS_TOKEN = accessToken;
+
+        try {
+          let cfg = {};
+          if (fs.existsSync(CONFIG_FILE)) {
+            cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8') || '{}');
+          }
+          cfg.dhanClientId = clientId;
+          cfg.dhanAccessToken = accessToken;
+          cfg.updatedAt = new Date().toISOString();
+          fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
+        } catch (e) {}
+
+        // Reset check timer and test token health immediately
+        lastDhanCheckTime = 0;
+        const healthy = await checkDhanApiHealth();
+
+        // Invalidate Explore data cache
+        cachedExploreData = null;
+        lastExploreDataTime = 0;
+
+        return sendJson(res, 200, {
+          success: true,
+          message: healthy ? 'Dhan API credentials verified and active! 🟢' : `Credentials saved, but notice: ${lastDhanErrorMsg}`,
+          dhanActive: healthy,
+          dhanMessage: lastDhanErrorMsg || 'Active'
         });
       }
 
