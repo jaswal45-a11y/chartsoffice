@@ -381,12 +381,12 @@ async function syncDataFeedStatus() {
       badge.className = 'px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1 transition-all shadow-sm';
       badge.title = 'Active Feed: Official Dhan HQ Broker API (Connected)';
       dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse';
-      label.textContent = '🟢 Dhan HQ Live';
+      label.textContent = '🟢 Dhan';
     } else {
       badge.className = 'px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full flex items-center gap-1 transition-all';
       badge.title = 'Active Feed: Multi-Source Backup Feed (Dhan credentials not configured in environment)';
       dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
-      label.textContent = 'Backup Feed';
+      label.textContent = 'Backup';
     }
   } catch (err) {}
 }
@@ -3630,7 +3630,7 @@ function toggleScreenerDeck(forceState) {
       icon.setAttribute('data-lucide', 'chevron-down');
     }
     if (label) {
-      label.textContent = 'Pull Down Screener Deck';
+      label.textContent = 'Expand';
     }
 
     if (activeBadge) {
@@ -3656,7 +3656,7 @@ function toggleScreenerDeck(forceState) {
       icon.setAttribute('data-lucide', 'chevron-up');
     }
     if (label) {
-      label.textContent = 'Collapse Deck';
+      label.textContent = 'Collapse';
     }
     if (activeBadge) {
       activeBadge.classList.add('hidden');
@@ -4024,7 +4024,7 @@ function renderStocksTable() {
       confluenceHtml = `
         <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] font-bold" title="${(stock.matchingScreeners || []).join(', ')}">
           <i data-lucide="zap" class="w-2.5 h-2.5"></i>
-          ${stock.matchCount}x Confluence
+          ${stock.matchCount}x
         </span>
       `;
     }

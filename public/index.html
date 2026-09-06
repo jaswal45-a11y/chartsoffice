@@ -69,7 +69,7 @@
             </h1>
             <span id="data-feed-badge" class="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full flex items-center gap-1 transition-all" title="Broker Feed Connection Status">
               <span id="data-feed-dot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span id="data-feed-label">Backup Feed</span>
+              <span id="data-feed-label">Backup</span>
             </span>
           </div>
           <p class="text-xs text-slate-400">Chartink Multi-Screener Runner & TradingView Visualizer</p>
@@ -80,16 +80,16 @@
       <div class="flex items-center p-1 bg-dark-bg/80 border border-dark-border rounded-xl text-xs shadow-inner gap-1">
         <a href="/" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer" title="Chartink Multi-Screener Scanner & Multi-Pane TV Visualizer">
           <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
-          <span>Screener & TV Charts</span>
+          <span>Charts</span>
         </a>
         <a id="btn-nav-analytics" href="/analytics" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-1.5 rounded-lg font-bold transition-all items-center gap-1.5 text-slate-400 hover:text-white cursor-pointer" title="Open Market Breadth Diagnostics (20/50 SMA), Sector Rankings & Indices in a New Tab">
           <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400"></i>
-          <span>Market Breadth & Sectors</span>
+          <span>Analytics</span>
           <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-emerald-500/20 text-emerald-300 font-semibold uppercase tracking-wider">New Tab ↗</span>
         </a>
         <a id="btn-nav-fno" href="/fno" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-1.5 rounded-lg font-bold transition-all items-center gap-1.5 text-slate-400 hover:text-purple-300 cursor-pointer" title="Open Professional Institutional F&O & Equity Stock Screener in a New Tab">
           <i data-lucide="crosshair" class="w-3.5 h-3.5 text-purple-400"></i>
-          <span>FnO</span>
+          <span>F&O</span>
           <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-purple-500/20 text-purple-300 font-semibold uppercase tracking-wider">New Tab ↗</span>
         </a>
       </div>
@@ -195,7 +195,7 @@
       <div class="flex items-center justify-center -mb-3 relative z-20">
         <button id="btn-toggle-deck" onclick="toggleScreenerDeck()" class="group flex items-center gap-2 px-4 py-1.5 rounded-full bg-dark-card hover:bg-slate-800 text-slate-300 hover:text-white border border-dark-border hover:border-blue-500/50 shadow-lg text-xs font-semibold cursor-pointer transition-all active:scale-95" title="Toggle Screener Command Deck to enhance chart visibility">
           <i data-lucide="chevron-up" id="deck-toggle-icon" class="w-4 h-4 text-blue-400 group-hover:-translate-y-0.5 transition-transform"></i>
-          <span id="deck-toggle-label">Collapse Deck</span>
+          <span id="deck-toggle-label">Collapse</span>
           <span id="deck-collapsed-active-badge" class="hidden text-[10px] px-2 py-0.2 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 font-mono font-medium"></span>
         </button>
       </div>
@@ -473,15 +473,15 @@
             </div>
           </div>
 
-          <!-- Metric Pills: 52W High & All-Time High (ATH) Only -->
+          <!-- Metric Pills: 52WH & ATH Only -->
           <div class="flex items-center flex-wrap gap-2 text-[11px] font-mono pt-1">
             <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5" id="pill-52w" title="52-Week High price & distance from high">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-              <span>52W High: <strong class="text-white font-mono" id="val-52w-high">--</strong></span>
+              <span>52WH: <strong class="text-white font-mono" id="val-52w-high">--</strong></span>
             </span>
             <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 font-semibold flex items-center gap-1.5" id="pill-ath" title="All-Time High price & distance from ATH">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span>All-Time High (ATH): <strong class="text-amber-200 font-mono" id="val-ath">--</strong></span>
+              <span>ATH: <strong class="text-amber-200 font-mono" id="val-ath">--</strong></span>
             </span>
           </div>
 
@@ -492,19 +492,19 @@
           
           <!-- Timeframe & Range Selectors + Drawing Tools -->
           <div class="flex items-center flex-wrap gap-2.5">
-            <!-- Timeframes: Daily & Weekly only -->
+            <!-- Timeframes: D & W only -->
             <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 font-medium text-slate-400 text-[11px]">
               <span class="px-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider" title="Candlestick interval">TF:</span>
-              <button class="timeframe-btn active px-3 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors" data-interval="1d" title="Daily timeframe (1 day per candle)">Daily</button>
-              <button class="timeframe-btn px-3 py-1 rounded-lg hover:text-white transition-colors" data-interval="1wk" title="Weekly timeframe (1 week per candle)">Weekly</button>
+              <button class="timeframe-btn active px-3 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors" data-interval="1d" title="Daily timeframe (1 day per candle)">D</button>
+              <button class="timeframe-btn px-3 py-1 rounded-lg hover:text-white transition-colors" data-interval="1wk" title="Weekly timeframe (1 week per candle)">W</button>
             </div>
 
-            <!-- Range: 3month, 6month (Default), 12M -->
+            <!-- Range: 3M, 6M (Default), 1Y -->
             <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 font-medium text-slate-400 text-[11px]">
               <span class="px-2 text-[10px] text-slate-500 font-semibold uppercase tracking-wider" title="Chart visible zoom range">Range:</span>
-              <button class="range-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors" data-range="3mo" title="Show last 3 months">3month</button>
-              <button class="range-btn active px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold shadow transition-colors" data-range="6mo" title="Show last 6 months (Default)">6month</button>
-              <button class="range-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors" data-range="1y" title="Show last 12 months">12M</button>
+              <button class="range-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors" data-range="3mo" title="Show last 3 months">3M</button>
+              <button class="range-btn active px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold shadow transition-colors" data-range="6mo" title="Show last 6 months (Default)">6M</button>
+              <button class="range-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors" data-range="1y" title="Show last 12 months">1Y</button>
             </div>
           </div>
 
@@ -537,7 +537,7 @@
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-vol" checked class="rounded border-slate-700 text-teal-500 focus:ring-0 bg-dark-bg cursor-pointer">
-                <label for="chk-vol" class="cursor-pointer hover:text-white" title="Traded Volume Histogram (Bottom of Price Chart)">Volume</label>
+                <label for="chk-vol" class="cursor-pointer hover:text-white" title="Traded Volume Histogram (Bottom of Price Chart)">Vol</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-vol-avg" checked class="rounded border-slate-700 text-amber-400 focus:ring-0 bg-dark-bg cursor-pointer">
@@ -567,7 +567,7 @@
                 <input type="checkbox" id="chk-darvas" checked class="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-dark-bg cursor-pointer">
                 <input type="color" id="color-darvas-top" value="#10b981" class="indicator-color-picker" title="Change Darvas Box Top Line color">
                 <input type="color" id="color-darvas-bottom" value="#ef4444" class="indicator-color-picker" title="Change Darvas Box Bottom Line color">
-                <label for="chk-darvas" class="cursor-pointer hover:text-white" title="Nicolas Darvas 5-bar High/Low Box">Darvas Box (5)</label>
+                <label for="chk-darvas" class="cursor-pointer hover:text-white" title="Nicolas Darvas 5-bar High/Low Box">Darvas</label>
               </div>
               <div class="flex items-center gap-1">
                 <input type="checkbox" id="chk-rsi" checked class="rounded border-slate-700 text-indigo-500 focus:ring-0 bg-dark-bg cursor-pointer">
