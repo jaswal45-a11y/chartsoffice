@@ -596,11 +596,11 @@
           </div>
 
           <!-- Native Canvas Chart Container (Price + Bottom Volume Overlay & Sub-Pane for RSI) -->
-          <div class="flex-1 w-full relative bg-dark-bg flex flex-col min-h-[420px]" id="chart-main-container">
+          <div class="flex-1 w-full relative bg-dark-bg flex flex-col min-h-[320px] overflow-hidden" id="chart-main-container">
             
             <!-- PANE 1: Pure Price Candlestick + Bottom Volume Overlay -->
-            <div id="tv_price_pane" class="w-full flex-1 min-h-[220px] relative">
-              <div id="tv_main_chart" class="w-full h-full relative"></div>
+            <div id="tv_price_pane" class="w-full flex-1 min-h-[100px] overflow-hidden relative">
+              <div id="tv_main_chart" class="w-full h-full relative overflow-hidden"></div>
 
               <!-- Floating On-Chart Controls & Badges (AVWAP & Live Volume) -->
               <div class="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none select-none">
@@ -630,13 +630,13 @@
             </div>
             
             <!-- RESIZER: Price & RSI Divider (Drag up/down to adjust RSI height) -->
-            <div class="pane-resizer h-2 bg-dark-card hover:bg-blue-500/70 border-y border-dark-border/50 cursor-row-resize flex items-center justify-center select-none transition-colors z-20 group" id="resizer-price-rsi" title="Drag up or down to resize Price and RSI panes">
-              <div class="w-12 h-0.5 bg-slate-500 group-hover:bg-blue-300 rounded-full transition-colors"></div>
+            <div class="pane-resizer h-2.5 bg-dark-card hover:bg-blue-500/80 active:bg-blue-600 border-y border-dark-border/60 cursor-row-resize flex items-center justify-center select-none transition-colors z-20 group" id="resizer-price-rsi" title="Drag up or down to resize Price and RSI panes (Double-click to reset)">
+              <div class="w-14 h-0.5 bg-slate-500 group-hover:bg-blue-300 rounded-full transition-colors"></div>
             </div>
 
             <!-- PANE 2: Dedicated RSI (14) Pane -->
-            <div id="tv_rsi_container" class="w-full h-[115px] min-h-[45px] max-h-[350px] relative flex flex-col bg-dark-bg/60">
-              <div class="px-3 py-1 text-[10px] font-mono text-slate-400 bg-dark-card/50 flex items-center justify-between border-b border-dark-border/50 select-none">
+            <div id="tv_rsi_container" class="w-full h-[110px] min-h-[40px] max-h-[350px] overflow-hidden relative flex flex-col bg-dark-bg/60">
+              <div class="px-3 py-1 text-[10px] font-mono text-slate-400 bg-dark-card/50 flex items-center justify-between border-b border-dark-border/50 select-none flex-shrink-0">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-blue-400">RSI (14)</span>
                   <span class="text-slate-500">|</span>
@@ -647,11 +647,11 @@
                   <span>SMA: <strong id="rsi-sma-live-badge" class="font-mono text-amber-400">--</strong></span>
                 </div>
               </div>
-              <div id="tv_rsi_chart" class="w-full flex-1 relative"></div>
+              <div id="tv_rsi_chart" class="w-full flex-1 relative overflow-hidden"></div>
             </div>
 
             <!-- Bottom Resize Handle for Chart Card -->
-            <div class="pane-resizer h-2.5 bg-dark-card/90 hover:bg-blue-500/80 border-t border-dark-border cursor-ns-resize flex items-center justify-center select-none transition-colors group" id="resizer-chart-bottom" title="Drag up or down to resize overall chart height">
+            <div class="pane-resizer h-2.5 bg-dark-card/90 hover:bg-blue-500/80 active:bg-blue-600 border-t border-dark-border cursor-ns-resize flex items-center justify-center select-none transition-colors group z-20" id="resizer-chart-bottom" title="Drag up or down to resize overall chart height (Double-click to reset)">
               <div class="w-16 h-1 bg-slate-600 group-hover:bg-blue-300 rounded-full transition-colors"></div>
             </div>
 

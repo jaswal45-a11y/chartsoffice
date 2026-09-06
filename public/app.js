@@ -2530,17 +2530,27 @@ function updateTimeScalesVisibility() {
 function handleResize() {
   if (!state.charts.main) return;
   
-  const mainRect = el.tvMainChart.getBoundingClientRect();
-  state.charts.main.applyOptions({
-    width: mainRect.width,
-    height: mainRect.height || 420
-  });
+  const pricePane = el.tvPricePane || document.getElementById('tv_price_pane');
+  const rsiContainer = el.tvRsiContainer || document.getElementById('tv_rsi_container');
+  const rsiChartEl = el.tvRsiChart || document.getElementById('tv_rsi_chart');
+  
+  if (pricePane && el.tvMainChart) {
+    const pRect = pricePane.getBoundingClientRect();
+    const w = Math.round(pRect.width || 600);
+    const h = Math.round(Math.max(80, pRect.height));
+    state.charts.main.applyOptions({
+      width: w,
+      height: h
+    });
+  }
 
-  if (state.charts.rsi && el.tvRsiContainer && el.tvRsiContainer.style.display !== 'none') {
-    const rsiRect = el.tvRsiChart.getBoundingClientRect();
+  if (state.charts.rsi && rsiContainer && rsiChartEl && rsiContainer.style.display !== 'none') {
+    const rRect = rsiChartEl.getBoundingClientRect();
+    const w = Math.round(rRect.width || 600);
+    const h = Math.round(Math.max(30, rRect.height));
     state.charts.rsi.applyOptions({
-      width: rsiRect.width || mainRect.width,
-      height: rsiRect.height || 100
+      width: w,
+      height: h
     });
   }
 }
@@ -2583,123 +2593,166 @@ function setupPaneResizers() {
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
 
+  if (!chartMainContainer || !pricePane || !rsiContainer) return;
+
   // Restore saved heights from localStorage if present
   const savedRsiH = localStorage.getItem('sangam_rsi_height');
-  if (savedRsiH && rsiContainer) {
+  if (savedRsiH) {
     const parsedRsiH = parseInt(savedRsiH, 10);
-    if (parsedRsiH >= 45 && parsedRsiH <= 350) {
+    if (parsedRsiH >= 40 && parsedRsiH <= 350) {
       rsiContainer.style.height = `${parsedRsiH}px`;
     }
   }
 
   const savedChartH = localStorage.getItem('sangam_chart_height');
-  if (savedChartH && chartMainContainer) {
+  if (savedChartH) {
     const parsedChartH = parseInt(savedChartH, 10);
-    if (parsedChartH >= 360 && parsedChartH <= 950) {
+    if (parsedChartH >= 300 && parsedChartH <= 950) {
       chartMainContainer.style.height = `${parsedChartH}px`;
     }
   }
 
-  // Resizer 1: Price & RSI divider
-  if (resizerPriceRsi && rsiContainer) {
+  // Resizer 1: Price & RSI divider (adjusts proportion between Price and RSI without stretching page)
+  if (resizerPriceRsi) {
     let isDraggingRsi = false;
     let startY = 0;
+    let startPriceH = 0;
     let startRsiH = 0;
+    let combinedH = 0;
 
-    const onRsiPointerDown = (e) => {
+    const onRsiStart = (e) => {
+      e.preventDefault();
       isDraggingRsi = true;
-      startY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-      startRsiH = rsiContainer.clientHeight;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startPriceH = pricePane.getBoundingClientRect().height;
+      startRsiH = rsiContainer.getBoundingClientRect().height;
+      combinedH = startPriceH + startRsiH;
+
       document.body.style.cursor = 'row-resize';
       document.body.style.userSelect = 'none';
-      window.addEventListener('mousemove', onRsiPointerMove);
-      window.addEventListener('mouseup', onRsiPointerUp);
-      window.addEventListener('touchmove', onRsiPointerMove, { passive: false });
-      window.addEventListener('touchend', onRsiPointerUp);
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = 'none';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = 'none';
+
+      window.addEventListener('mousemove', onRsiMove, { passive: false });
+      window.addEventListener('mouseup', onRsiEnd);
+      window.addEventListener('touchmove', onRsiMove, { passive: false });
+      window.addEventListener('touchend', onRsiEnd);
     };
 
-    const onRsiPointerMove = (e) => {
+    const onRsiMove = (e) => {
       if (!isDraggingRsi) return;
-      if (e.cancelable && e.type === 'touchmove') e.preventDefault();
-      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      if (e.cancelable) e.preventDefault();
+
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const deltaY = clientY - startY;
-      // Dragging UP (negative deltaY) increases RSI height; dragging DOWN decreases RSI height
-      const newRsiH = Math.max(45, Math.min(350, startRsiH - deltaY));
+
+      // Dragging UP (deltaY < 0): RSI gets taller, Price gets shorter
+      // Dragging DOWN (deltaY > 0): RSI gets shorter, Price gets taller
+      const maxRsi = Math.max(40, combinedH - 80); // ensure at least 80px for price
+      const newRsiH = Math.round(Math.max(40, Math.min(maxRsi, startRsiH - deltaY)));
+      const newPriceH = Math.round(combinedH - newRsiH);
+
+      pricePane.style.flex = 'none';
+      pricePane.style.height = `${newPriceH}px`;
       rsiContainer.style.height = `${newRsiH}px`;
+
       localStorage.setItem('sangam_rsi_height', newRsiH);
       handleResize();
     };
 
-    const onRsiPointerUp = () => {
+    const onRsiEnd = () => {
       if (!isDraggingRsi) return;
       isDraggingRsi = false;
+
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      window.removeEventListener('mousemove', onRsiPointerMove);
-      window.removeEventListener('mouseup', onRsiPointerUp);
-      window.removeEventListener('touchmove', onRsiPointerMove);
-      window.removeEventListener('touchend', onRsiPointerUp);
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = '';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = '';
+
+      window.removeEventListener('mousemove', onRsiMove);
+      window.removeEventListener('mouseup', onRsiEnd);
+      window.removeEventListener('touchmove', onRsiMove);
+      window.removeEventListener('touchend', onRsiEnd);
       handleResize();
     };
 
-    resizerPriceRsi.addEventListener('mousedown', onRsiPointerDown);
-    resizerPriceRsi.addEventListener('touchstart', onRsiPointerDown, { passive: true });
+    resizerPriceRsi.addEventListener('mousedown', onRsiStart);
+    resizerPriceRsi.addEventListener('touchstart', onRsiStart, { passive: false });
     resizerPriceRsi.addEventListener('dblclick', () => {
-      // Reset RSI height to default 115px
-      rsiContainer.style.height = '115px';
-      localStorage.setItem('sangam_rsi_height', 115);
+      // Reset to balanced default
+      const defaultRsi = 105;
+      rsiContainer.style.height = `${defaultRsi}px`;
+      pricePane.style.flex = '1';
+      pricePane.style.height = '';
+      localStorage.setItem('sangam_rsi_height', defaultRsi);
       handleResize();
     });
   }
 
   // Resizer 2: Overall Chart Card Bottom Handle
-  if (resizerChartBottom && chartMainContainer) {
+  if (resizerChartBottom) {
     let isDraggingChart = false;
     let startY = 0;
     let startChartH = 0;
 
-    const onChartPointerDown = (e) => {
+    const onChartStart = (e) => {
+      e.preventDefault();
       isDraggingChart = true;
-      startY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-      startChartH = chartMainContainer.clientHeight;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startChartH = chartMainContainer.getBoundingClientRect().height;
+
       document.body.style.cursor = 'ns-resize';
       document.body.style.userSelect = 'none';
-      window.addEventListener('mousemove', onChartPointerMove);
-      window.addEventListener('mouseup', onChartPointerUp);
-      window.addEventListener('touchmove', onChartPointerMove, { passive: false });
-      window.addEventListener('touchend', onChartPointerUp);
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = 'none';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = 'none';
+
+      window.addEventListener('mousemove', onChartMove, { passive: false });
+      window.addEventListener('mouseup', onChartEnd);
+      window.addEventListener('touchmove', onChartMove, { passive: false });
+      window.addEventListener('touchend', onChartEnd);
     };
 
-    const onChartPointerMove = (e) => {
+    const onChartMove = (e) => {
       if (!isDraggingChart) return;
-      if (e.cancelable && e.type === 'touchmove') e.preventDefault();
-      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      if (e.cancelable) e.preventDefault();
+
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const deltaY = clientY - startY;
-      // Dragging DOWN increases chart height; dragging UP decreases chart height
-      const newChartH = Math.max(360, Math.min(950, startChartH + deltaY));
+      const newChartH = Math.round(Math.max(300, Math.min(950, startChartH + deltaY)));
+
       chartMainContainer.style.height = `${newChartH}px`;
+      pricePane.style.flex = '1';
+      pricePane.style.height = '';
+
       localStorage.setItem('sangam_chart_height', newChartH);
       handleResize();
     };
 
-    const onChartPointerUp = () => {
+    const onChartEnd = () => {
       if (!isDraggingChart) return;
       isDraggingChart = false;
+
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      window.removeEventListener('mousemove', onChartPointerMove);
-      window.removeEventListener('mouseup', onChartPointerUp);
-      window.removeEventListener('touchmove', onChartPointerMove);
-      window.removeEventListener('touchend', onChartPointerUp);
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = '';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = '';
+
+      window.removeEventListener('mousemove', onChartMove);
+      window.removeEventListener('mouseup', onChartEnd);
+      window.removeEventListener('touchmove', onChartMove);
+      window.removeEventListener('touchend', onChartEnd);
       handleResize();
     };
 
-    resizerChartBottom.addEventListener('mousedown', onChartPointerDown);
-    resizerChartBottom.addEventListener('touchstart', onChartPointerDown, { passive: true });
+    resizerChartBottom.addEventListener('mousedown', onChartStart);
+    resizerChartBottom.addEventListener('touchstart', onChartStart, { passive: false });
     resizerChartBottom.addEventListener('dblclick', () => {
-      // Reset Chart height to default 460px
-      chartMainContainer.style.height = '460px';
-      localStorage.setItem('sangam_chart_height', 460);
+      // Reset to comfortable default
+      const defaultH = 430;
+      chartMainContainer.style.height = `${defaultH}px`;
+      pricePane.style.flex = '1';
+      pricePane.style.height = '';
+      localStorage.setItem('sangam_chart_height', defaultH);
       handleResize();
     });
   }
