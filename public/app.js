@@ -249,10 +249,20 @@ const el = {
   // 3 Separate Chart Containers & Badges
   chartMainContainer: document.getElementById('chart-main-container'),
   resizerPriceRsi: document.getElementById('resizer-price-rsi'),
+  resizerRsiBottom: document.getElementById('resizer-rsi-bottom'),
   resizerChartBottom: document.getElementById('resizer-chart-bottom'),
   chartOhlcvLegend: document.getElementById('chart-ohlcv-legend'),
   tvPricePane: document.getElementById('tv_price_pane'),
   tvMainChart: document.getElementById('tv_main_chart'),
+
+  // Workspace Layout & Splitters
+  workspaceContainer: document.getElementById('workspace-container'),
+  sidebarPane: document.getElementById('sidebar-pane'),
+  chartPane: document.getElementById('chart-pane'),
+  workspaceSplitter: document.getElementById('workspace-splitter'),
+  splitterHandle: document.getElementById('splitter-handle'),
+  btnLayoutHorizontal: document.getElementById('btn-layout-horizontal'),
+  btnLayoutVertical: document.getElementById('btn-layout-vertical'),
   
   tvVolumeContainer: document.getElementById('tv_volume_container'),
   tvVolumeChart: document.getElementById('tv_volume_chart'),
@@ -1043,6 +1053,12 @@ function applyLoadedIndicatorPreferences(prefs) {
   renderPersistedDrawings();
   if (el.tvRsiContainer) {
     el.tvRsiContainer.style.display = state.toggles.rsi ? 'flex' : 'none';
+  }
+  if (el.resizerPriceRsi) {
+    el.resizerPriceRsi.style.display = state.toggles.rsi ? 'flex' : 'none';
+  }
+  if (el.resizerRsiBottom) {
+    el.resizerRsiBottom.style.display = state.toggles.rsi ? 'flex' : 'none';
   }
 
   updateTimeScalesVisibility();
@@ -2106,9 +2122,15 @@ function setupEventListeners() {
   setupToggle(el.chkRsi, 'rsi', vis => {
     if (el.tvRsiContainer) {
       el.tvRsiContainer.style.display = vis ? 'flex' : 'none';
-      updateTimeScalesVisibility();
-      handleResize();
     }
+    if (el.resizerPriceRsi) {
+      el.resizerPriceRsi.style.display = vis ? 'flex' : 'none';
+    }
+    if (el.resizerRsiBottom) {
+      el.resizerRsiBottom.style.display = vis ? 'flex' : 'none';
+    }
+    updateTimeScalesVisibility();
+    handleResize();
   });
 
   // Pivot Type Selector
@@ -2140,7 +2162,9 @@ function setupEventListeners() {
   // Window Resize Listener for Charts
   window.addEventListener('resize', handleResize);
 
-  // Initialize Draggable Pane Resizers
+  // Initialize Workspace Layout & Draggable Pane Resizers
+  const savedLayoutMode = localStorage.getItem('sangam_workspace_layout_mode') || 'horizontal';
+  switchWorkspaceLayout(savedLayoutMode);
   setupPaneResizers();
 }
 
@@ -2583,15 +2607,186 @@ function applyActiveRangeZoom() {
   }
 }
 
+// Workspace Layout Management (Horizontal Side-by-Side ↔ Vertical Stacked)
+function switchWorkspaceLayout(mode) {
+  state.workspaceLayout = mode || 'horizontal';
+  localStorage.setItem('sangam_workspace_layout_mode', state.workspaceLayout);
+
+  const container = el.workspaceContainer || document.getElementById('workspace-container');
+  const sidebar = el.sidebarPane || document.getElementById('sidebar-pane');
+  const chart = el.chartPane || document.getElementById('chart-pane');
+  const splitter = el.workspaceSplitter || document.getElementById('workspace-splitter');
+  const splitterHandle = el.splitterHandle || document.getElementById('splitter-handle');
+  const btnH = el.btnLayoutHorizontal || document.getElementById('btn-layout-horizontal');
+  const btnV = el.btnLayoutVertical || document.getElementById('btn-layout-vertical');
+
+  if (!container || !sidebar || !chart) return;
+
+  if (state.workspaceLayout === 'vertical') {
+    if (btnH) {
+      btnH.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition-all cursor-pointer';
+    }
+    if (btnV) {
+      btnV.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white shadow-sm transition-all cursor-pointer';
+    }
+
+    container.className = 'flex flex-col gap-0 flex-1 w-full items-stretch transition-all duration-150';
+    sidebar.className = 'w-full flex-shrink-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden';
+    sidebar.style.width = '100%';
+
+    const savedH = localStorage.getItem('sangam_sidebar_height');
+    sidebar.style.height = savedH ? `${savedH}px` : '440px';
+
+    if (splitter) {
+      splitter.className = 'flex h-3.5 hover:h-3.5 bg-dark-bg/40 hover:bg-blue-500/20 active:bg-blue-600/30 cursor-row-resize items-center justify-center select-none transition-colors z-20 group flex-shrink-0 py-0.5';
+    }
+    if (splitterHandle) {
+      splitterHandle.className = 'w-14 h-1 bg-slate-600 group-hover:bg-blue-400 group-active:bg-blue-300 rounded-full transition-colors';
+    }
+
+    chart.className = 'w-full flex-1 min-h-[520px] flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden';
+  } else {
+    // Horizontal Mode (Side-by-Side)
+    if (btnH) {
+      btnH.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white shadow-sm transition-all cursor-pointer';
+    }
+    if (btnV) {
+      btnV.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition-all cursor-pointer';
+    }
+
+    container.className = 'flex flex-col lg:flex-row gap-0 flex-1 min-h-[680px] w-full items-stretch transition-all duration-150';
+    sidebar.className = 'w-full lg:w-[42%] flex-shrink-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden min-h-[500px]';
+    sidebar.style.height = '';
+
+    const savedW = localStorage.getItem('sangam_sidebar_width');
+    if (savedW && window.innerWidth >= 1024) {
+      sidebar.style.width = `${savedW}px`;
+    } else {
+      sidebar.style.width = '';
+    }
+
+    if (splitter) {
+      splitter.className = 'hidden lg:flex w-3.5 hover:w-3.5 bg-dark-bg/40 hover:bg-blue-500/20 active:bg-blue-600/30 cursor-col-resize items-center justify-center select-none transition-colors z-20 group flex-shrink-0 px-0.5';
+    }
+    if (splitterHandle) {
+      splitterHandle.className = 'w-1 h-10 bg-slate-600 group-hover:bg-blue-400 group-active:bg-blue-300 rounded-full transition-colors';
+    }
+
+    chart.className = 'flex-1 min-w-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden min-h-[480px]';
+  }
+
+  handleResize();
+  setTimeout(handleResize, 80);
+  if (window.lucide) window.lucide.createIcons();
+}
+
+window.switchWorkspaceLayout = switchWorkspaceLayout;
+
 // Draggable Pane Resizers:
-// 1. Divider between Price+Volume and RSI pane (#resizer-price-rsi)
-// 2. Bottom handle for total chart card height (#resizer-chart-bottom)
+// 1. Workspace Splitter between Sidebar & Chart (Horizontal width / Vertical height)
+// 2. Divider between Price+Volume and RSI pane (#resizer-price-rsi)
+// 3. Dedicated bottom handle for RSI pane (#resizer-rsi-bottom)
+// 4. Bottom handle for total chart card height (#resizer-chart-bottom)
 function setupPaneResizers() {
-  const resizerPriceRsi = document.getElementById('resizer-price-rsi');
-  const resizerChartBottom = document.getElementById('resizer-chart-bottom');
-  const chartMainContainer = document.getElementById('chart-main-container');
-  const pricePane = document.getElementById('tv_price_pane');
-  const rsiContainer = document.getElementById('tv_rsi_container');
+  const workspaceSplitter = el.workspaceSplitter || document.getElementById('workspace-splitter');
+  const workspaceContainer = el.workspaceContainer || document.getElementById('workspace-container');
+  const sidebarPane = el.sidebarPane || document.getElementById('sidebar-pane');
+  const chartPane = el.chartPane || document.getElementById('chart-pane');
+
+  const resizerPriceRsi = el.resizerPriceRsi || document.getElementById('resizer-price-rsi');
+  const resizerRsiBottom = el.resizerRsiBottom || document.getElementById('resizer-rsi-bottom');
+  const resizerChartBottom = el.resizerChartBottom || document.getElementById('resizer-chart-bottom');
+  const chartMainContainer = el.chartMainContainer || document.getElementById('chart-main-container');
+  const pricePane = el.tvPricePane || document.getElementById('tv_price_pane');
+  const rsiContainer = el.tvRsiContainer || document.getElementById('tv_rsi_container');
+
+  // 1. Workspace Splitter (Sidebar ↔ Chart)
+  if (workspaceSplitter && workspaceContainer && sidebarPane && chartPane) {
+    let isDraggingSplitter = false;
+    let startX = 0;
+    let startY = 0;
+    let startSidebarW = 0;
+    let startSidebarH = 0;
+    let totalContainerW = 0;
+
+    const onSplitterStart = (e) => {
+      e.preventDefault();
+      isDraggingSplitter = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX = clientX;
+      startY = clientY;
+
+      startSidebarW = sidebarPane.getBoundingClientRect().width;
+      startSidebarH = sidebarPane.getBoundingClientRect().height;
+      totalContainerW = workspaceContainer.getBoundingClientRect().width;
+
+      const isVert = (state.workspaceLayout === 'vertical');
+      document.body.style.cursor = isVert ? 'row-resize' : 'col-resize';
+      document.body.style.userSelect = 'none';
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = 'none';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = 'none';
+
+      window.addEventListener('mousemove', onSplitterMove, { passive: false });
+      window.addEventListener('mouseup', onSplitterEnd);
+      window.addEventListener('touchmove', onSplitterMove, { passive: false });
+      window.addEventListener('touchend', onSplitterEnd);
+    };
+
+    const onSplitterMove = (e) => {
+      if (!isDraggingSplitter) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      if (state.workspaceLayout === 'vertical') {
+        const deltaY = clientY - startY;
+        const newH = Math.round(Math.max(200, Math.min(850, startSidebarH + deltaY)));
+        sidebarPane.style.height = `${newH}px`;
+        localStorage.setItem('sangam_sidebar_height', newH);
+      } else {
+        const deltaX = clientX - startX;
+        const minW = 280;
+        const maxW = Math.max(minW, totalContainerW - 350);
+        const newW = Math.round(Math.max(minW, Math.min(maxW, startSidebarW + deltaX)));
+        sidebarPane.style.width = `${newW}px`;
+        localStorage.setItem('sangam_sidebar_width', newW);
+      }
+
+      handleResize();
+    };
+
+    const onSplitterEnd = () => {
+      if (!isDraggingSplitter) return;
+      isDraggingSplitter = false;
+
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = '';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = '';
+
+      window.removeEventListener('mousemove', onSplitterMove);
+      window.removeEventListener('mouseup', onSplitterEnd);
+      window.removeEventListener('touchmove', onSplitterMove);
+      window.removeEventListener('touchend', onSplitterEnd);
+      handleResize();
+    };
+
+    workspaceSplitter.addEventListener('mousedown', onSplitterStart);
+    workspaceSplitter.addEventListener('touchstart', onSplitterStart, { passive: false });
+    workspaceSplitter.addEventListener('dblclick', () => {
+      if (state.workspaceLayout === 'vertical') {
+        const defaultH = 440;
+        sidebarPane.style.height = `${defaultH}px`;
+        localStorage.setItem('sangam_sidebar_height', defaultH);
+      } else {
+        sidebarPane.style.width = '';
+        localStorage.removeItem('sangam_sidebar_width');
+      }
+      handleResize();
+    });
+  }
 
   if (!chartMainContainer || !pricePane || !rsiContainer) return;
 
@@ -2599,7 +2794,7 @@ function setupPaneResizers() {
   const savedRsiH = localStorage.getItem('sangam_rsi_height');
   if (savedRsiH) {
     const parsedRsiH = parseInt(savedRsiH, 10);
-    if (parsedRsiH >= 40 && parsedRsiH <= 350) {
+    if (parsedRsiH >= 35 && parsedRsiH <= 400) {
       rsiContainer.style.height = `${parsedRsiH}px`;
     }
   }
@@ -2612,7 +2807,7 @@ function setupPaneResizers() {
     }
   }
 
-  // Resizer 1: Price & RSI divider (adjusts proportion between Price and RSI without stretching page)
+  // 2. Resizer: Price & RSI divider (adjusts proportion between Price and RSI)
   if (resizerPriceRsi) {
     let isDraggingRsi = false;
     let startY = 0;
@@ -2646,10 +2841,9 @@ function setupPaneResizers() {
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const deltaY = clientY - startY;
 
-      // Dragging UP (deltaY < 0): RSI gets taller, Price gets shorter
-      // Dragging DOWN (deltaY > 0): RSI gets shorter, Price gets taller
-      const maxRsi = Math.max(40, combinedH - 80); // ensure at least 80px for price
-      const newRsiH = Math.round(Math.max(40, Math.min(maxRsi, startRsiH - deltaY)));
+      // Dragging UP: RSI taller, Price shorter; Dragging DOWN: RSI shorter, Price taller
+      const maxRsi = Math.max(35, combinedH - 80);
+      const newRsiH = Math.round(Math.max(35, Math.min(maxRsi, startRsiH - deltaY)));
       const newPriceH = Math.round(combinedH - newRsiH);
 
       pricePane.style.flex = 'none';
@@ -2679,7 +2873,6 @@ function setupPaneResizers() {
     resizerPriceRsi.addEventListener('mousedown', onRsiStart);
     resizerPriceRsi.addEventListener('touchstart', onRsiStart, { passive: false });
     resizerPriceRsi.addEventListener('dblclick', () => {
-      // Reset to balanced default
       const defaultRsi = 105;
       rsiContainer.style.height = `${defaultRsi}px`;
       pricePane.style.flex = '1';
@@ -2689,7 +2882,72 @@ function setupPaneResizers() {
     });
   }
 
-  // Resizer 2: Overall Chart Card Bottom Handle
+  // 3. Resizer: Dedicated RSI Bottom Drag Handle (Direct bottom control of RSI)
+  if (resizerRsiBottom) {
+    let isDraggingRsiBottom = false;
+    let startY = 0;
+    let startRsiH = 0;
+
+    const onRsiBottomStart = (e) => {
+      e.preventDefault();
+      isDraggingRsiBottom = true;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startRsiH = rsiContainer.getBoundingClientRect().height;
+
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = 'none';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = 'none';
+
+      window.addEventListener('mousemove', onRsiBottomMove, { passive: false });
+      window.addEventListener('mouseup', onRsiBottomEnd);
+      window.addEventListener('touchmove', onRsiBottomMove, { passive: false });
+      window.addEventListener('touchend', onRsiBottomEnd);
+    };
+
+    const onRsiBottomMove = (e) => {
+      if (!isDraggingRsiBottom) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = clientY - startY;
+
+      // Dragging DOWN (deltaY > 0): expands RSI downwards
+      // Dragging UP (deltaY < 0): shrinks RSI upwards (leaving space below as desired)
+      const newRsiH = Math.round(Math.max(35, Math.min(400, startRsiH + deltaY)));
+      rsiContainer.style.height = `${newRsiH}px`;
+
+      localStorage.setItem('sangam_rsi_height', newRsiH);
+      handleResize();
+    };
+
+    const onRsiBottomEnd = () => {
+      if (!isDraggingRsiBottom) return;
+      isDraggingRsiBottom = false;
+
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      if (el.tvMainChart) el.tvMainChart.style.pointerEvents = '';
+      if (el.tvRsiChart) el.tvRsiChart.style.pointerEvents = '';
+
+      window.removeEventListener('mousemove', onRsiBottomMove);
+      window.removeEventListener('mouseup', onRsiBottomEnd);
+      window.removeEventListener('touchmove', onRsiBottomMove);
+      window.removeEventListener('touchend', onRsiBottomEnd);
+      handleResize();
+    };
+
+    resizerRsiBottom.addEventListener('mousedown', onRsiBottomStart);
+    resizerRsiBottom.addEventListener('touchstart', onRsiBottomStart, { passive: false });
+    resizerRsiBottom.addEventListener('dblclick', () => {
+      const defaultRsi = 105;
+      rsiContainer.style.height = `${defaultRsi}px`;
+      localStorage.setItem('sangam_rsi_height', defaultRsi);
+      handleResize();
+    });
+  }
+
+  // 4. Resizer: Overall Chart Card Bottom Handle
   if (resizerChartBottom) {
     let isDraggingChart = false;
     let startY = 0;
@@ -2747,7 +3005,6 @@ function setupPaneResizers() {
     resizerChartBottom.addEventListener('mousedown', onChartStart);
     resizerChartBottom.addEventListener('touchstart', onChartStart, { passive: false });
     resizerChartBottom.addEventListener('dblclick', () => {
-      // Reset to comfortable default
       const defaultH = 430;
       chartMainContainer.style.height = `${defaultH}px`;
       pricePane.style.flex = '1';

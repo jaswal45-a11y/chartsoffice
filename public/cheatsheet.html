@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sangam_charts - UI Navigation & Panes Reference Cheatsheet</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 15mm 12mm 15mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .page {
+      page-break-after: always;
+      padding-bottom: 20px;
+    }
+    .page:last-child {
+      page-break-after: avoid;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-banner h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #38bdf8;
+    }
+    .header-banner .subtitle {
+      font-size: 10.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .page-title-badge {
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 14px 0 6px 0;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title span.tag {
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .diagram-box {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 9.5px;
+      line-height: 1.35;
+      color: #0f172a;
+      margin-bottom: 12px;
+      white-space: pre;
+      overflow: hidden;
+    }
+    table.ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+      font-size: 10px;
+    }
+    table.ref-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    table.ref-table td {
+      padding: 5px 10px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    table.ref-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .short-code {
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 700;
+      color: #0284c7;
+      background: #f0f9ff;
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid #bae6fd;
+      display: inline-block;
+    }
+    .badge-tip {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 6px 10px;
+      font-size: 9.5px;
+      color: #78350f;
+      border-radius: 0 4px 4px 0;
+      margin-top: 6px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 9px;
+      color: #94a3b8;
+      margin-top: 14px;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 1: MAIN CHARTS & SCREENERS PAGE (public/index.html - /)   -->
+  <!-- ============================================================== -->
+  <div class="page">
+    <div class="header-banner">
+      <div>
+        <h1>Sangam_charts - UI Reference Cheatsheet</h1>
+        <div class="subtitle">Quick short-names guide for instructing AI prompt edits & UI customization</div>
+      </div>
+      <div class="page-title-badge">PAGE 1 : CHARTS & SCREENERS</div>
+    </div>
+
+    <div class="section-title">
+      <span>1. Visual Layout Map</span>
+      <span class="tag">Main Dashboard (/)</span>
+    </div>
+    
+    <div class="diagram-box">┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. NAVBAR (Logo, Navigation Tabs [Charts | Analytics | F&O], Live Feed Status, Theme)    │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 2. SCREENER DECK (Category Filter Pills, Run All Button, Collapse/Expand, Screener Cards│
+├──────────────────────────────────────────┬──────────────────────────────────────────────┤
+│ 3. LEFT TABLE / SIDEBAR                  │ 4. CHART CARD (RIGHT PANE)                   │
+│                                          │ ┌──────────────────────────────────────────┐ │
+│ • TAB BAR: [Screeners | Watchlists (5)]  │ │ A. STOCK HEADER (Symbol, LTP, 52WH, ATH) │ │
+│ • CONTROLS: Search, 1k, 2k, Copy, Export │ ├──────────────────────────────────────────┤ │
+│ • STOCK LIST: Screener table results     │ │ B. CHART TOOLBAR: [D|W] [3M|6M|1Y]       │ │
+│ • WATCHLIST MANAGER: Select, Rename, Add │ │    Checkboxes (10..RSI), [ ‹ | › ]       │ │
+│                                          │ ├──────────────────────────────────────────┤ │
+│                                          │ │ C. PRICE PANE (Candlesticks, EMAs, Vol)  │ │
+│                                          │ ├──────────────────────────────────────────┤ │
+│                                          │ │ D. RSI DIVIDER (Drag handle)             │ │
+│                                          │ ├──────────────────────────────────────────┤ │
+│                                          │ │ E. RSI PANE (RSI line, 14-SMA)           │ │
+│                                          │ ├──────────────────────────────────────────┤ │
+│                                          │ │ F. BOTTOM RESIZER (Chart card height)    │ │
+│                                          │ └──────────────────────────────────────────┘ │
+└──────────────────────────────────────────┴──────────────────────────────────────────────┘</div>
+
+    <div class="section-title">
+      <span>2. Short Names Glossary</span>
+      <span class="tag">Use these 1-2 word names in prompts</span>
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Short Name</th>
+          <th style="width: 35%;">UI Elements Included</th>
+          <th style="width: 40%;">Description & Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="short-code">Navbar</span></td>
+          <td>Logo, Tabs (Charts, Analytics, F&O), Dhan status, Theme toggle</td>
+          <td>Top global navigation header across all pages.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Deck</span></td>
+          <td>Category pills (All, Momentum, Breakout), Run All, Collapse toggle</td>
+          <td>Screener command deck bar with scan buttons.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Left Table</span> / <span class="short-code">Stock List</span></td>
+          <td>Search input, 1k/2k checkboxes, count badge, table rows</td>
+          <td>Left column listing stocks found by the active screener.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Watchlist Tab</span></td>
+          <td>Watchlist dropdown, Rename, Add stock, Capacity counter</td>
+          <td>Left sidebar when switched to Watchlists mode (5 x 50 stocks).</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Stock Header</span></td>
+          <td>Symbol avatar, input (RELIANCE), LTP, % Chg, 52WH, ATH, Star</td>
+          <td>Top bar of the chart card with stock prices and badges.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Toolbar</span></td>
+          <td>[D|W], [3M|6M|1Y], Checkboxes (10..RSI), Sliders, [ ‹ | › ]</td>
+          <td>Single-row chart control bar above candlestick chart.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Price Pane</span></td>
+          <td>Candlesticks, EMAs (10-200), VWAP, Pivots, Bottom Volume, AVWAP</td>
+          <td>Main candlestick price and volume chart canvas.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">RSI Divider</span></td>
+          <td>Draggable horizontal splitter bar</td>
+          <td>Drag up/down to adjust proportion between Price and RSI.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">RSI Pane</span></td>
+          <td>RSI (14) curve, 14-SMA line, live RSI badge</td>
+          <td>Dedicated bottom RSI sub-chart pane.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Bottom Resizer</span></td>
+          <td>Drag handle at bottom of chart card</td>
+          <td>Drag up/down to adjust total chart card height.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Line Settings Modal</span></td>
+          <td>Sliders popup for thickness, colors, line styles</td>
+          <td>Opened via Sliders icon button on toolbar.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="badge-tip">
+      <strong>Example Instructions:</strong> "In <strong>Toolbar</strong>, make buttons smaller" • "In <strong>Left Table</strong>, change 1k filter logic" • "In <strong>Stock Header</strong>, add PE ratio".
+    </div>
+
+    <div class="footer">Sangam_charts Cheatsheet • Page 1 of 3</div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 2: MARKET BREADTH & SECTOR ANALYTICS (analytics.html)     -->
+  <!-- ============================================================== -->
+  <div class="page">
+    <div class="header-banner" style="background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);">
+      <div>
+        <h1>Sangam_charts - UI Reference Cheatsheet</h1>
+        <div class="subtitle">Quick short-names guide for instructing AI prompt edits & UI customization</div>
+      </div>
+      <div class="page-title-badge" style="background: #059669;">PAGE 2 : ANALYTICS HUB</div>
+    </div>
+
+    <div class="section-title">
+      <span>1. Visual Layout Map</span>
+      <span class="tag">Market Breadth & Sector Analytics (/analytics)</span>
+    </div>
+    
+    <div class="diagram-box">┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. NAVBAR (Logo, Analytics [Active], Notes, Customize, User Badge, Theme)                │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 2. BREADTH MATRIX (Market Breadth Diagnostics & Regime)                                 │
+│ ┌───────────────────────────┬───────────────────────────┬─────────────────────────────┐ │
+│ │ A. 20 SMA DIAL (Gauge)    │ B. 50 SMA DIAL (Gauge)    │ C. REGIME CARD (A/D, 52W)   │ │
+│ └───────────────────────────┴───────────────────────────┴─────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 3. SECTORAL BREADTH SECTION (Interactive Advance / Decline Donut Cards Grid)            │
+│ • Toolbar: Search, Sort (Change, A/D, Advances, A-Z), Category Pills (Banking, IT, Auto)│
+│ • Donut Cards: Interactive advance/decline donut charts (Click to drill down)           │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 4. INDICES RIBBON (Standard & Sectoral Indices Live Cards)                              │
+│ • Toolbar: Sort (Change, Name, Price), Filters (Broad, Sectoral), Customize Button      │
+│ • Ribbon: Nifty 50, Bank Nifty, Midcap, Smallcap live cards                             │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 5. SUB-SECTORS SECTION (12 Sub-Sectors Ranked by Growth Grid)                           │
+│ • Toolbar: Sort (Rank, % Growing, PE, ROCE, 50 SMA), Category Pills (Capex, Energy)    │
+│ • Grid: Sub-sector performance tiles with "View Chart" instant hover preview            │
+└─────────────────────────────────────────────────────────────────────────────────────────┘</div>
+
+    <div class="section-title">
+      <span>2. Short Names Glossary</span>
+      <span class="tag">Analytics Hub Sections & Modals</span>
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Short Name</th>
+          <th style="width: 35%;">UI Elements Included</th>
+          <th style="width: 40%;">Description & Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="short-code">Breadth Matrix</span></td>
+          <td>20 SMA Dial, 50 SMA Dial, Market Regime Card, Sector filter</td>
+          <td>Top 3-card institutional market breadth diagnostics overview.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">20 SMA Dial</span></td>
+          <td>Circular SVG gauge, percentage, short-term momentum label</td>
+          <td>Shows % of stocks trading above their 20-day SMA.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">50 SMA Dial</span></td>
+          <td>Circular SVG gauge, percentage, intermediate trend label</td>
+          <td>Shows % of stocks trading above their 50-day SMA.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Regime Card</span></td>
+          <td>Regime badge (Healthy Bullish), A/D ratio, 52W High/Low</td>
+          <td>Overall market sentiment and momentum health summary.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Sectoral Breadth</span></td>
+          <td>Search, Sort (Change, A/D), Category pills, Donut cards grid</td>
+          <td>NSE Sectoral advance/decline cards with interactive donut charts.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Indices Ribbon</span></td>
+          <td>Horizontal scrollable ribbon of Nifty 50, Bank Nifty, Midcap</td>
+          <td>Live benchmark and sectoral index quote cards with 20/50 SMA posture.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Sub-Sectors Grid</span></td>
+          <td>12 ranked sub-sector cards, QoQ/YoY Sales, EPS, ROCE, PE</td>
+          <td>Growth & momentum tiles with instant "View Chart" hover previews.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Sector Stocks Modal</span></td>
+          <td>Drill-down popup with Advances/Declines stock table</td>
+          <td>Opens when clicking any donut chart slice in Sectoral Breadth.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Customize Modal</span></td>
+          <td>Pin/unpin checkboxes for indices and sub-sectors</td>
+          <td>Opened via "Customize Indices & Sectors" button.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Notes Window</span></td>
+          <td>Floating sticky notes notepad synced across tabs</td>
+          <td>Opened via "Notes" button on top navbar.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="badge-tip">
+      <strong>Example Instructions:</strong> "In <strong>Breadth Matrix</strong>, add 200 SMA dial" • "In <strong>Sectoral Breadth</strong>, sort by Advances by default" • "In <strong>Sub-Sectors Grid</strong>, show 3 columns".
+    </div>
+
+    <div class="footer">Sangam_charts Cheatsheet • Page 2 of 3</div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 3: INSTITUTIONAL F&O & EQUITY SCREENER (fno.html)          -->
+  <!-- ============================================================== -->
+  <div class="page">
+    <div class="header-banner" style="background: linear-gradient(135deg, #581c87 0%, #0f172a 100%);">
+      <div>
+        <h1>Sangam_charts - UI Reference Cheatsheet</h1>
+        <div class="subtitle">Quick short-names guide for instructing AI prompt edits & UI customization</div>
+      </div>
+      <div class="page-title-badge" style="background: #9333ea;">PAGE 3 : F&O & EQUITY TERMINAL</div>
+    </div>
+
+    <div class="section-title">
+      <span>1. Visual Layout Map</span>
+      <span class="tag">F&O & Equity Screener (/fno)</span>
+    </div>
+    
+    <div class="diagram-box">┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. NAVBAR (Logo, F&O [Active], Notes, User Status, Theme Toggle)                        │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 2. F&O CONTROLS BAR                                                                     │
+│ • Universal Search Box  • Columns ⚙ Dropdown  • Refresh Button  • Feed Status Badge    │
+│ • Live Quotes Badge (30s) • Custom Universe Button • Export CSV Button                  │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 3. F&O FILTER RIBBON (Progressive Parameter Filters)                                    │
+│ • Market Cap Dropdown (>1k, >2k, >5k) • Sector Multi-Select Dropdown with Search        │
+│ • Technical Toggles (Price > 20/50/200 EMA, RSI Range, Darvas Breakout)                 │
+│ • F&O Build-Up Toggles (Long Buildup, Short Buildup, Long Unwinding, Short Covering)   │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 4. F&O MASTER TABLE (Institutional Multi-Column Resizable Grid)                         │
+│ ┌──────────────────────┬──────────────────────────────────────────────────────────────┐ │
+│ │ STICKY COLUMNS       │ SCROLLABLE & RESIZABLE DATA COLUMNS                          │ │
+│ │ • Stock Symbol       │ • LTP, % Chg, Volume, OI, OI % Chg, Build-Up Tag             │ │
+│ │ • Company Name       │ • PCR, Max Pain, EMA Postures (20/50/200), RSI, 52W High     │ │
+│ └──────────────────────┴──────────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ 5. TABLE FOOTER (Visible Stock Count, Live Quote Refresh Timestamp, Status)             │
+└─────────────────────────────────────────────────────────────────────────────────────────┘</div>
+
+    <div class="section-title">
+      <span>2. Short Names Glossary</span>
+      <span class="tag">F&O Terminal Components & Modals</span>
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Short Name</th>
+          <th style="width: 35%;">UI Elements Included</th>
+          <th style="width: 40%;">Description & Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="short-code">F&O Controls</span></td>
+          <td>Search input, Columns menu, Refresh, Dhan feed status, Export CSV</td>
+          <td>Top controls toolbar directly above the filter ribbon.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Columns Menu</span></td>
+          <td>Dropdown checklist with checkboxes to show/hide table columns</td>
+          <td>Opened via "Columns ⚙" button in F&O Controls.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Custom Universe</span></td>
+          <td>Modal for pasting custom stock symbols or picking presets</td>
+          <td>Opened via "Custom Universe" button (e.g. F&O 212 list, Nifty 50).</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">F&O Filter Ribbon</span></td>
+          <td>Market Cap dropdown, Sector multi-select, Build-up toggles, EMA filters</td>
+          <td>Horizontal parameter bar for screening stocks and contracts.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">F&O Table</span></td>
+          <td>Master resizable data grid with live prices, OI, PCR, and indicators</td>
+          <td>Main comprehensive data table in the F&O terminal.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Sticky Columns</span></td>
+          <td>First columns (Stock Symbol, Company Name) locked during scroll</td>
+          <td>Fixed left columns that stay in place during horizontal scrolling.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Column Resizers</span></td>
+          <td>Draggable vertical dividers on table header edges</td>
+          <td>Drag left/right to adjust individual column widths (double-click to reset).</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">Build-Up Badge</span></td>
+          <td>Tags: Long Buildup, Short Buildup, Long Unwinding, Short Covering</td>
+          <td>Visual indicator pill showing institutional futures positioning.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">F&O Footer</span></td>
+          <td>Filtered count label, pagination info, live data timestamp</td>
+          <td>Bottom summary bar beneath the F&O table.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="badge-tip">
+      <strong>Example Instructions:</strong> "In <strong>F&O Table</strong>, add PCR column" • "In <strong>F&O Filter Ribbon</strong>, default Market Cap to >2k" • "In <strong>Columns Menu</strong>, add Darvas status".
+    </div>
+
+    <div class="footer">Sangam_charts Cheatsheet • Page 3 of 3</div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sangam_charts - System Architecture Guide: Dhan API & MongoDB Atlas</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 14mm 12mm 14mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      font-size: 10.5px;
+      line-height: 1.45;
+    }
+    .page {
+      page-break-after: always;
+      padding-bottom: 15px;
+    }
+    .page:last-child {
+      page-break-after: avoid;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-banner h1 {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #38bdf8;
+    }
+    .header-banner .subtitle {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .page-title-badge {
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 10.5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 12px 0 6px 0;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title span.tag {
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .diagram-box {
+      background: #0b0f19;
+      border: 1.5px solid #1f293d;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: "JetBrains Mono", "Courier New", Courier, monospace;
+      font-size: 9px;
+      line-height: 1.35;
+      color: #38bdf8;
+      margin-bottom: 10px;
+      white-space: pre;
+      overflow: hidden;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+    .card h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card p {
+      font-size: 9.5px;
+      color: #475569;
+      line-height: 1.35;
+    }
+    table.ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 9.5px;
+    }
+    table.ref-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 5px 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    table.ref-table td {
+      padding: 5px 8px;
+      border: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    table.ref-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .short-code {
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 700;
+      color: #0284c7;
+      background: #f0f9ff;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid #bae6fd;
+      display: inline-block;
+    }
+    .badge-tip {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 6px 10px;
+      font-size: 9px;
+      color: #78350f;
+      border-radius: 0 4px 4px 0;
+      margin-top: 6px;
+    }
+    .badge-success {
+      background: #ecfdf5;
+      border-left: 3px solid #10b981;
+      padding: 6px 10px;
+      font-size: 9px;
+      color: #065f46;
+      border-radius: 0 4px 4px 0;
+      margin-top: 6px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 8.5px;
+      color: #94a3b8;
+      margin-top: 10px;
+      padding-top: 4px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 1: DHANHQ BROKER API ARCHITECTURE & LIVE DATA STREAM      -->
+  <!-- ============================================================== -->
+  <div class="page">
+    <div class="header-banner">
+      <div>
+        <h1>Sangam_charts - System Architecture Guide</h1>
+        <div class="subtitle">Complete technical blueprint for DhanHQ Live Broker API & Historical Engine</div>
+      </div>
+      <div class="page-title-badge">SECTION 1 : DHAN API ARCHITECTURE</div>
+    </div>
+
+    <div class="section-title">
+      <span>1. DhanHQ End-to-End Request Pipeline</span>
+      <span class="tag">Live Market Data & Historical Candles Flow</span>
+    </div>
+
+    <div class="diagram-box">┌────────────────┐      ┌─────────────────────────────┐      ┌──────────────────────────────┐
+│  USER BROWSER  │ ───► │   NODE.JS BACKEND SERVER    │ ───► │      DHANHQ BROKER CLOUD     │
+│ (Frontend App) │ ◄─── │  (Local / Render Hosting)   │ ◄─── │   (https://api.dhan.co/v2)   │
+└────────────────┘      └──────────────┬──────────────┘      └──────────────────────────────┘
+                                       │
+                        ┌──────────────┴──────────────┐
+                        ▼                             ▼
+              [PRIMARY: DHANHQ API]        [FALLBACK: YAHOO/NSE BACKUP]
+              • Real-time Live Quotes      • Automatic Failover if Dhan is
+              • 2+ Years Daily/Weekly OHLC   offline, expired token, or
+              • Millisecond Scrip Mapping    outside market hours.</div>
+
+    <div class="section-title">
+      <span>2. How Dhan API Connection Works (Step-by-Step for Freshers)</span>
+      <span class="tag">Core Mechanism</span>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <h4>🔑 Step 1: Authentication & Credentials</h4>
+        <p>Our server reads two environment variables from <code>.env</code>:<br>
+        • <strong>DHAN_CLIENT_ID</strong>: Your unique 10-digit Dhan account number.<br>
+        • <strong>DHAN_ACCESS_TOKEN</strong>: Secure 256-bit JWT access token generated in the Dhan developer portal.</p>
+      </div>
+
+      <div class="card">
+        <h4>⚡ Step 2: Scrip Master Security Mapping</h4>
+        <p>Dhan identifies stocks by numeric IDs, not names. Our server bundles <code>dhan_scrip_map.json</code> (10,000+ securities) to instantly translate symbols:<br>
+        <code>"RELIANCE" ➔ SecurityID: 2885 (NSE_EQ)</code><br>
+        <code>"NIFTY 50" ➔ SecurityID: 13 (IDX_I)</code></p>
+      </div>
+
+      <div class="card">
+        <h4>📈 Step 3: Historical Candle Conversion</h4>
+        <p>Calls <code>POST https://api.dhan.co/v2/charts/historical</code>. Dhan returns raw epoch array data. Our server converts it to TradingView OHLCV format:<br>
+        <code>{ time: "2026-09-04", open, high, low, close, volume }</code></p>
+      </div>
+
+      <div class="card">
+        <h4>🛡️ Step 4: Graceful Auto-Fallback Engine</h4>
+        <p>If Dhan token expires, returns error, or is unconfigured, the app <strong>never crashes</strong>. It seamlessly switches to Yahoo Finance/NSE backup with zero user interruption.</p>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>3. Dhan API Endpoints & Payloads Reference</span>
+      <span class="tag">API Specifications</span>
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Endpoint URL & Method</th>
+          <th>Request Headers</th>
+          <th>Payload Structure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Historical Charts</strong></td>
+          <td><code>POST /charts/historical</code></td>
+          <td><code>client-id</code>, <code>access-token</code></td>
+          <td><code>{ securityId: "2885", exchangeSegment: "NSE_EQ", instrument: "EQUITY", fromDate, toDate }</code></td>
+        </tr>
+        <tr>
+          <td><strong>Live Quotes (LTP)</strong></td>
+          <td><code>POST /marketfeed/ltp</code></td>
+          <td><code>client-id</code>, <code>access-token</code></td>
+          <td><code>{ "NSE_EQ": [ 2885, 1594, 3045, 11536 ] }</code> (Batch up to 100 stocks in 1 request)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="badge-success">
+      <strong>Live Feed Status:</strong> Look at the top-right navbar badge: <strong>🟢 Dhan</strong> indicates active live broker stream, while <strong>Backup</strong> indicates automatic fallback feed.
+    </div>
+
+    <div class="footer">Sangam_charts Architecture Guide • Page 1 of 2</div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PAGE 2: MONGODB ATLAS CLOUD PERSISTENCE & DUAL-STORAGE SYSTEM  -->
+  <!-- ============================================================== -->
+  <div class="page">
+    <div class="header-banner" style="background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);">
+      <div>
+        <h1>Sangam_charts - System Architecture Guide</h1>
+        <div class="subtitle">Complete technical blueprint for MongoDB Atlas Cloud Database & Local JSON Fallback</div>
+      </div>
+      <div class="page-title-badge" style="background: #059669;">SECTION 2 : MONGODB ATLAS ARCHITECTURE</div>
+    </div>
+
+    <div class="section-title">
+      <span>1. MongoDB Atlas Dual-Storage Topology</span>
+      <span class="tag">Cloud Database & Local JSON Sync</span>
+    </div>
+
+    <div class="diagram-box">┌───────────────────────────┐      ┌──────────────────────────────┐      ┌─────────────────────────────┐
+│    NODE.JS SERVER (APP)   │ ───► │    MONGODB ATLAS CLUSTER     │ ───► │     DATABASE COLLECTIONS    │
+│  In-Memory Hot Cache RAM  │ ◄─── │  (mongodb+srv:// via TLS)    │ ◄─── │  users, screeners, config   │
+└─────────────┬─────────────┘      └──────────────────────────────┘      └─────────────────────────────┘
+              │
+              │ (If Atlas offline or no URI provided)
+              ▼
+    ┌───────────────────────────────┐
+    │  LOCAL JSON DISK STORAGE      │  • data/users.json (User accounts & custom watchlist slots)
+    │  (Zero-Dependency Fallback)   │  • data/screeners.json (Custom screener equations & tags)
+    └───────────────────────────────┘  • data/config.json (Global branding & line preferences)</div>
+
+    <div class="section-title">
+      <span>2. How MongoDB Connection Works (Step-by-Step for Freshers)</span>
+      <span class="tag">Connection Lifecycle</span>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card">
+        <h4>🌐 Step 1: DNS SRV Lookup Resolution</h4>
+        <p>Atlas uses <code>mongodb+srv://</code> URLs. Node.js resolves SRV records into 3 distributed replica-set server hostnames using configured DNS resolvers (<code>8.8.8.8</code>, <code>1.1.1.1</code>).</p>
+      </div>
+
+      <div class="card">
+        <h4>🔒 Step 2: TLS/SSL Encrypted Handshake</h4>
+        <p>A secure SSL socket connects to the Atlas cluster. Authentication verifies the database username, password, and IP access list (0.0.0.0/0 for cloud hosts).</p>
+      </div>
+
+      <div class="card">
+        <h4>🌱 Step 3: Smart Auto-Seeding & Ingest</h4>
+        <p>On first connect, if Atlas collections are empty, the server automatically <strong>seeds</strong> default screeners and admin accounts directly into Atlas with zero setup needed.</p>
+      </div>
+
+      <div class="card">
+        <h4>🔄 Step 4: Dual-Write & Local Backup</h4>
+        <p>Every time you create a screener or save a watchlist, the server writes asynchronously to MongoDB Atlas <strong>AND</strong> local JSON files, guaranteeing zero data loss.</p>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>3. MongoDB Collections Schema & Purpose</span>
+      <span class="tag">Data Model</span>
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Collection Name</th>
+          <th>Document Schema Keys</th>
+          <th>Usage & Functionality</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="short-code">users</span></td>
+          <td><code>userId, username, passwordHash, role, watchlists[5], preferences</code></td>
+          <td>Multi-user accounts, salted passwords, user-specific watchlists (5 x 50 stocks), indicator line widths and color preferences.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">screeners</span></td>
+          <td><code>id, name, description, chartinkUrl, category, tags, updatedAt</code></td>
+          <td>Custom screeners, Chartink query URLs, category classification, and scanner logic.</td>
+        </tr>
+        <tr>
+          <td><span class="short-code">config</span></td>
+          <td><code>systemName, maxUserSlots, globalThemes, lastMaintenance</code></td>
+          <td>Global system configuration, user registration capacity slots, and maintenance flags.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">
+      <span>4. Common Troubleshooting for Freshers</span>
+      <span class="tag">Error Handling</span>
+    </div>
+
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Common Issue</th>
+          <th style="width: 35%;">Root Cause</th>
+          <th style="width: 35%;">Instant Fix</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Invalid Scheme Error</strong></td>
+          <td>Accidental spaces in <code>.env</code> or pasting <code>MONGODB_URI=mongodb+srv://...</code> in value</td>
+          <td>Trim URI string. Server auto-strips duplicate prefixes now.</td>
+        </tr>
+        <tr>
+          <td><strong>SSL Alert Number 80</strong></td>
+          <td>Node TLS strict certificate or DNS SRV timeout</td>
+          <td>Auto-handled by <code>dns.setServers()</code> and dual-mode JSON fallback.</td>
+        </tr>
+        <tr>
+          <td><strong>IP Not Whitelisted</strong></td>
+          <td>MongoDB Atlas Network Access blocking server IP</td>
+          <td>In MongoDB Atlas ➔ Network Access ➔ Add IP <code>0.0.0.0/0</code> (Allow anywhere).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">Sangam_charts Architecture Guide • Page 2 of 2</div>
+  </div>
+
+</body>
+</html>

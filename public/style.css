@@ -417,4 +417,25 @@ html:not(.dark) .indicator-color-picker:hover {
   border-radius: 50%;
 }
 
+/* =============================================================
+   Draggable Pane Resizers & Workspace Splitter
+   ============================================================= */
+.pane-resizer {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#workspace-splitter {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#workspace-splitter:hover #splitter-handle,
+#workspace-splitter:active #splitter-handle {
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+}
+
+
 
