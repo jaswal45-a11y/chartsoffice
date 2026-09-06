@@ -614,16 +614,23 @@
           <div id="tv_price_pane" class="w-full flex-1 min-h-[100px] overflow-hidden relative">
             <div id="tv_main_chart" class="w-full h-full relative overflow-hidden"></div>
 
-            <!-- Floating On-Chart Controls & Badges (AVWAP & Live Volume) -->
+            <!-- Floating On-Chart Controls & Badges (Stock Symbol, Anchor Icon & Live Volume) -->
             <div class="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none select-none">
-                <!-- Floating / Movable On-Chart AVWAP Badge (TradingView Style) -->
-                <div id="floating-avwap-control" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 hover:border-purple-500/80 rounded-lg px-2 py-1 shadow-xl transition-all text-xs gap-1.5 w-fit">
-                  <input type="color" id="color-avwap" value="#a855f7" class="indicator-color-picker" title="Change Anchored VWAP line color">
-                  <button id="btn-floating-avwap" class="flex items-center gap-1 text-purple-300 hover:text-purple-100 font-semibold cursor-pointer" title="Anchored VWAP: Click to place or move Anchor point on any candle">
+                <!-- Floating / Movable On-Chart Stock Symbol & AVWAP Badge -->
+                <div id="floating-avwap-control" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 hover:border-purple-500/80 rounded-lg px-2.5 py-1 shadow-xl transition-all text-xs gap-2 w-fit">
+                  <!-- Stock Symbol on Price Pane -->
+                  <span id="onchart-stock-symbol" class="font-bold text-white tracking-wide font-mono text-xs">RELIANCE</span>
+                  
+                  <span class="text-slate-600 text-[10px] select-none">|</span>
+
+                  <!-- Anchored VWAP Button (Anchor Icon Only) -->
+                  <button id="btn-floating-avwap" class="flex items-center text-purple-300 hover:text-purple-100 font-semibold cursor-pointer p-0.5 rounded hover:bg-purple-500/20 transition-colors" title="Anchored VWAP: Click to place or move Anchor point on any candle">
                     <i data-lucide="anchor" class="w-3.5 h-3.5 text-purple-400"></i>
-                    <span id="floating-avwap-label">AVWAP</span>
                   </button>
-                  <span id="floating-avwap-divider" class="hidden text-slate-600">|</span>
+
+                  <input type="color" id="color-avwap" value="#a855f7" class="indicator-color-picker" title="Change Anchored VWAP line color">
+                  
+                  <span id="floating-avwap-divider" class="hidden text-slate-600 select-none">|</span>
                   <span id="floating-avwap-status" class="hidden text-[10px] font-mono text-purple-200"></span>
                   <button id="btn-floating-avwap-clear" class="hidden text-slate-400 hover:text-rose-400 cursor-pointer p-0.5 rounded hover:bg-rose-500/10" title="Remove Anchored VWAP">
                     <i data-lucide="x" class="w-3 h-3"></i>

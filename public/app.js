@@ -157,7 +157,8 @@ const el = {
   btnNavFno: document.getElementById('btn-nav-fno'),
   btnAdminConsole: document.getElementById('btn-admin-console'),
 
-  // Floating On-Chart AVWAP Controls & Drawing Helpers
+  // Floating On-Chart Controls & Badges (Symbol & AVWAP)
+  onchartStockSymbol: document.getElementById('onchart-stock-symbol'),
   floatingAvwapControl: document.getElementById('floating-avwap-control'),
   btnFloatingAvwap: document.getElementById('btn-floating-avwap'),
   floatingAvwapLabel: document.getElementById('floating-avwap-label'),
@@ -3792,9 +3793,10 @@ async function loadStockChart(rawSymbol) {
 
     state.currentStockData = data;
 
-    // Update Header Details
+    // Update Header & On-Chart Details
     if (el.chartSymbolAvatar) el.chartSymbolAvatar.textContent = cleanSymbol.substring(0, 3);
     if (el.manualStockInput) el.manualStockInput.value = cleanSymbol;
+    if (el.onchartStockSymbol) el.onchartStockSymbol.textContent = cleanSymbol;
     if (el.chartStockSymbol) {
       if ('value' in el.chartStockSymbol) el.chartStockSymbol.value = cleanSymbol;
       else el.chartStockSymbol.textContent = cleanSymbol;
