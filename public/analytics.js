@@ -39,7 +39,27 @@ const state = {
   hoverStock: null,
   activeIndicesCategory: 'all',
   indicesSortField: 'change',
-  indicesSortAsc: false
+  indicesSortAsc: false,
+  exploreStocks: [],
+  exploreFilteredStocks: [],
+  exploreFilters: {
+    segment: 'all',
+    search: '',
+    rsi: 'all',
+    rvolPeriod: 'd20',
+    rvolMult: 'all',
+    emaPosture: 'all',
+    crossDir: 'all',
+    crossDays: 'all',
+    dist52wh: 'all',
+    dailyPivot: 'all',
+    weeklyPivot: 'all'
+  },
+  exploreSortField: 'rank',
+  exploreSortAsc: true,
+  explorePage: 1,
+  explorePageSize: 50,
+  dhanActive: false
 };
 
 let analyticsChartInstance = null;
@@ -333,17 +353,19 @@ async function handleLogout() {
 async function loadAnalyticsData() {
   if (!state.user && !state.isAdmin) return;
   try {
-    const [breadthRes, sectorsRes, indicesRes, sectoralBreadthRes] = await Promise.all([
+    const [breadthRes, sectorsRes, indicesRes, sectoralBreadthRes, exploreRes] = await Promise.all([
       fetch(`/api/analytics/breadth?sector=${encodeURIComponent(state.activeBreadthSector || 'all')}`),
       fetch('/api/analytics/sectors', { headers: getAuthHeaders() }),
       fetch('/api/analytics/indices'),
-      fetch('/api/analytics/sectoral-breadth')
+      fetch('/api/analytics/sectoral-breadth'),
+      fetch('/api/analytics/explore')
     ]);
 
     const breadthData = await breadthRes.json();
     const sectorsData = await sectorsRes.json();
     const indicesData = await indicesRes.json();
     const sectoralBreadthData = await sectoralBreadthRes.json();
+    const exploreData = await exploreRes.json();
 
     if (breadthData.success) {
       state.breadthData = breadthData;
@@ -364,6 +386,13 @@ async function loadAnalyticsData() {
     if (indicesData.success) {
       state.indicesData = indicesData.indices || [];
       renderIndicesRibbon(state.indicesData);
+    }
+
+    if (exploreData.success && Array.isArray(exploreData.stocks)) {
+      state.exploreStocks = exploreData.stocks;
+      state.dhanActive = Boolean(exploreData.dhanActive);
+      updateDhanHeaderBadge();
+      applyExploreFilters();
     }
   } catch (err) {
     showToast('Failed to load market analytics: ' + err.message, 'error');
@@ -395,6 +424,7 @@ function renderBreadthDiagnostics(data) {
   const elAdRatio = document.getElementById('val-ad-ratio');
   const elHighLow = document.getElementById('val-high-low');
   const selectSector = document.getElementById('select-breadth-sector');
+  const badgeSummary = document.getElementById('badge-breadth-summary');
 
   if (el20Val) el20Val.textContent = `${u.above20SmaPct ?? 74.5}%`;
   if (el50Val) el50Val.textContent = `${u.above50SmaPct ?? 81.2}%`;
@@ -409,6 +439,10 @@ function renderBreadthDiagnostics(data) {
   if (elDesc) elDesc.textContent = s.description || 'Strong broad market participation above moving averages.';
   if (elAdRatio) elAdRatio.textContent = `${u.advanceDeclineRatio || 2.95} (${u.advances || 112}A / ${u.declines || 38}D)`;
   if (elHighLow) elHighLow.textContent = `${u.new52wHighs || 42} Highs / ${u.new52wLows || 8} Lows`;
+
+  if (badgeSummary) {
+    badgeSummary.textContent = `${u.above20SmaPct ?? 74.5}% > 20SMA · ${u.above50SmaPct ?? 81.2}% > 50SMA · ${u.advances || 112}A / ${u.declines || 38}D`;
+  }
 
   if (selectSector && (data.sectoralBreadth || data.indicesBreadth) && selectSector.options.length <= 1) {
     selectSector.innerHTML = '';
@@ -460,7 +494,7 @@ function renderBreadthDiagnostics(data) {
 }
 
 // -------------------------------------------------------------
-// NSE Sectoral Indices Advance / Decline Donut Breadth Controller
+// NSE Sectoral Indices Advance / Decline Leaderboard Controller (Option B)
 // -------------------------------------------------------------
 
 function renderSectoralBreadthGrid() {
@@ -483,6 +517,14 @@ function renderSectoralBreadthGrid() {
       (s.category && s.category.toLowerCase().includes(q)) ||
       (s.stocks && s.stocks.some(st => st.symbol.toLowerCase().includes(q) || (st.name || '').toLowerCase().includes(q)))
     );
+  }
+
+  // Update summary badge
+  const badgeSummary = document.getElementById('badge-sectoral-summary');
+  if (badgeSummary) {
+    const totalAdv = sectors.reduce((acc, s) => acc + (s.advances || 0), 0);
+    const totalDec = sectors.reduce((acc, s) => acc + (s.declines || 0), 0);
+    badgeSummary.textContent = `${sectors.length} Sectors (${totalAdv}A / ${totalDec}D)`;
   }
 
   // 3. Sort sectors
@@ -525,22 +567,31 @@ function renderSectoralBreadthGrid() {
 
   sectors.forEach(sec => {
     const card = document.createElement('div');
-    card.className = 'group p-4 rounded-2xl bg-dark-bg/60 hover:bg-dark-bg/90 border border-dark-border hover:border-emerald-500/40 transition-all duration-200 flex flex-col justify-between gap-3 shadow-lg hover:shadow-emerald-950/20';
+    card.className = 'group p-3.5 rounded-2xl bg-dark-bg/70 hover:bg-dark-bg/95 border border-dark-border hover:border-emerald-500/40 transition-all duration-200 flex flex-col justify-between gap-2.5 shadow-md';
 
     const isPositive = (sec.changePercent || 0) >= 0;
     const chgClass = isPositive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20';
     const chgSign = isPositive ? '+' : '';
 
-    const donutSvg = generateSectorDonutSvg(sec.advances, sec.declines, sec.unchanged || 0, sec.totalConstituents, sec.id);
+    const advPct = sec.advancePercent || (sec.totalConstituents ? Math.round((sec.advances / sec.totalConstituents) * 100) : 50);
+    const decPct = sec.declinePercent || (sec.totalConstituents ? Math.round((sec.declines / sec.totalConstituents) * 100) : 50);
+    const unchCount = sec.unchanged || 0;
+    const unchPct = (unchCount > 0 && sec.totalConstituents) ? Number(((unchCount / sec.totalConstituents) * 100).toFixed(1)) : 0;
+
+    const shortCode = sec.name.replace('NIFTY ', '').substring(0, 3).toUpperCase();
+    const avatarClass = advPct >= 50 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
 
     card.innerHTML = `
-      <!-- Card Header -->
-      <div class="flex items-start justify-between gap-2 cursor-pointer" onclick="openSectoralStocksModal('${sec.id}', 'all')">
-        <div class="flex flex-col">
-          <div class="flex items-center gap-1.5">
-            <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors font-mono tracking-tight">${sec.name}</h4>
+      <!-- Row 1: Header (Avatar, Sector Name, Category, LTP & % Change) -->
+      <div class="flex items-center justify-between gap-2 cursor-pointer" onclick="openSectoralStocksModal('${sec.id}', 'all')">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg ${avatarClass} border font-mono font-bold text-xs flex items-center justify-center shrink-0">
+            ${shortCode}
           </div>
-          <span class="text-[11px] text-slate-400 line-clamp-1">${sec.category} · ${sec.totalConstituents} Stocks</span>
+          <div class="min-w-0">
+            <h4 class="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors truncate font-mono">${sec.name}</h4>
+            <span class="text-[10px] text-slate-400 line-clamp-1">${sec.category || 'Sector'} · ${sec.totalConstituents} Stocks</span>
+          </div>
         </div>
         <div class="flex flex-col items-end shrink-0 font-mono">
           <span class="text-xs font-bold text-slate-100">${fmt.currency(sec.ltp)}</span>
@@ -550,41 +601,50 @@ function renderSectoralBreadthGrid() {
         </div>
       </div>
 
-      <!-- Donut Chart & Visual Ratio -->
-      <div class="flex items-center justify-center py-1">
-        ${donutSvg}
-      </div>
-
-      <!-- Advance / Decline Interactive Pills & Strength -->
-      <div class="flex flex-col gap-1.5 pt-2 border-t border-dark-border/40 font-mono text-[11px]">
-        <div class="grid grid-cols-2 gap-1.5">
+      <!-- Row 2: Advance / Decline Counts & 2-Tone Progress Bar -->
+      <div class="flex flex-col gap-1.5 font-mono text-[10px]">
+        <div class="flex items-center justify-between">
           <!-- Advances Pill (Clickable) -->
           <button onclick="event.stopPropagation(); openSectoralStocksModal('${sec.id}', 'advance')"
-            class="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/25 text-emerald-400 flex items-center justify-between transition-all cursor-pointer select-none"
+            class="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer px-1.5 py-0.5 rounded-md hover:bg-emerald-500/10 transition-colors"
             title="Click to view all ${sec.advances} advancing stocks in ${sec.name}">
-            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Adv:</span>
-            <strong class="font-bold">${sec.advances} (${sec.advancePercent}%)</strong>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>${sec.advances} Adv (${advPct}%)</span>
           </button>
 
           <!-- Declines Pill (Clickable) -->
           <button onclick="event.stopPropagation(); openSectoralStocksModal('${sec.id}', 'decline')"
-            class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/25 text-rose-400 flex items-center justify-between transition-all cursor-pointer select-none"
+            class="flex items-center gap-1 text-rose-400 hover:text-rose-300 font-semibold cursor-pointer px-1.5 py-0.5 rounded-md hover:bg-rose-500/10 transition-colors"
             title="Click to view all ${sec.declines} declining stocks in ${sec.name}">
-            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Dec:</span>
-            <strong class="font-bold">${sec.declines} (${sec.declinePercent}%)</strong>
+            <span>${sec.declines} Dec (${decPct}%)</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
           </button>
         </div>
 
-        <!-- Overall Sector Strength Badge & Inspect Trigger -->
-        <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-          <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-dark-card border border-dark-border text-slate-300">
+        <!-- 2-Tone Horizontal Progress Bar Strip -->
+        <div class="h-2 w-full bg-dark-card rounded-full overflow-hidden flex border border-dark-border/60 cursor-pointer shadow-inner"
+             onclick="openSectoralStocksModal('${sec.id}', 'all')"
+             title="${sec.advances} Adv (${advPct}%) / ${sec.declines} Dec (${decPct}%) - Click to inspect">
+          <div class="h-full bg-emerald-500 hover:bg-emerald-400 transition-all duration-300" style="width: ${advPct}%"></div>
+          ${unchPct > 0 ? `<div class="h-full bg-slate-600" style="width: ${unchPct}%"></div>` : ''}
+          <div class="h-full bg-rose-500 hover:bg-rose-400 transition-all duration-300" style="width: ${decPct}%"></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Strength Pill, A/D Ratio & Inspect Button -->
+      <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-dark-border/40 font-mono">
+        <div class="flex items-center gap-1.5">
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-dark-card border border-dark-border ${advPct >= 60 ? 'text-emerald-400 border-emerald-500/20' : advPct <= 40 ? 'text-rose-400 border-rose-500/20' : 'text-slate-300'}">
             ${sec.strength || 'Neutral ⚖️'}
           </span>
-          <button onclick="openSectoralStocksModal('${sec.id}', 'all')" class="text-slate-400 hover:text-emerald-400 flex items-center gap-0.5 transition-colors cursor-pointer" title="Inspect all constituent stocks">
-            <span>Inspect</span>
-            <i data-lucide="chevron-right" class="w-3 h-3"></i>
-          </button>
+          <span>A/D: <strong class="${sec.adRatio >= 1 ? 'text-emerald-400' : 'text-rose-400'}">${sec.adRatio}</strong></span>
         </div>
+        <button onclick="openSectoralStocksModal('${sec.id}', 'all')"
+          class="text-slate-400 hover:text-emerald-400 flex items-center gap-0.5 transition-colors cursor-pointer px-1 py-0.5 font-sans font-medium"
+          title="Inspect all ${sec.totalConstituents} constituent stocks">
+          <span>Inspect</span>
+          <i data-lucide="chevron-right" class="w-3 h-3"></i>
+        </button>
       </div>
     `;
 
@@ -1018,6 +1078,12 @@ function renderIndicesRibbon(indicesList = state.indicesData) {
     return true;
   });
 
+  // Update summary badge
+  const badgeSummary = document.getElementById('badge-indices-summary');
+  if (badgeSummary) {
+    badgeSummary.textContent = `${visibleIndices.length} Pinned Indices`;
+  }
+
   if (visibleIndices.length === 0) {
     container.innerHTML = '<div class="text-xs text-slate-500 py-3 px-2">No indices match the current category or customize settings.</div>';
     return;
@@ -1143,6 +1209,12 @@ function renderSubSectorsGrid() {
     return true;
   });
 
+  // Update summary badge
+  const badgeSummary = document.getElementById('badge-subsectors-summary');
+  if (badgeSummary) {
+    badgeSummary.textContent = `${filtered.length} Sub-Sectors Ranked`;
+  }
+
   if (filtered.length === 0) {
     container.innerHTML = '<div class="col-span-full py-12 text-center text-slate-500 text-xs">No sub-sectors found for this category.</div>';
     return;
@@ -1180,37 +1252,8 @@ function renderSubSectorsGrid() {
       thermalBorder = 'hover:border-slate-700';
     }
 
-    card.className = `p-4 sm:p-5 rounded-2xl bg-dark-bg/60 border border-dark-border ${thermalBorder} transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer shadow-lg hover:bg-dark-bg/80 overflow-hidden`;
+    card.className = `p-3.5 rounded-2xl bg-dark-bg/70 hover:bg-dark-bg/95 border border-dark-border ${thermalBorder} transition-all duration-200 flex flex-col justify-between gap-2.5 shadow-md cursor-pointer group`;
     card.title = `Click to inspect all constituent stocks of ${sub.name}`;
-
-    // 1. Mini Quarterly Histogram Bars
-    const qBars = sub.quarterlyBars || [40, 50, 60, 75, 88, 100];
-    const barsHtml = qBars.map((val, i) => {
-      const isLatest = (i >= qBars.length - 2);
-      const bg = isLatest ? 'bg-blue-500' : 'bg-blue-500/40';
-      return `<div class="w-2 rounded-t-sm ${bg} transition-all" style="height: ${Math.max(12, (val / 100) * 30)}px" title="Q${i+1} Index: ${val}"></div>`;
-    }).join('');
-
-    // 2. Valuation P/E Sparkline SVG (Clean, tightly bounded)
-    const pePts = sub.peSparkline || [40, 50, 65, 80, 75];
-    const peMin = Math.min(...pePts);
-    const peMax = Math.max(...pePts);
-    const peRange = peMax - peMin || 1;
-    const w = 48, h = 18;
-    const polyPoints = pePts.map((val, i) => {
-      const x = (i / (pePts.length - 1)) * w;
-      const y = h - ((val - peMin) / peRange) * (h - 6) - 3;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-    const lastPoint = polyPoints.split(' ').pop();
-    const [lx, ly] = lastPoint ? lastPoint.split(',') : [w, h / 2];
-
-    const peSvg = `
-      <svg class="w-12 h-4 overflow-hidden shrink-0" viewBox="0 0 48 18">
-        <polyline fill="none" stroke="#60a5fa" stroke-width="1.6" stroke-linecap="round" points="${polyPoints}" />
-        <circle cx="${lx}" cy="${ly}" r="2" fill="#3b82f6" stroke="#ffffff" stroke-width="1" />
-      </svg>
-    `;
 
     // Top 3 Constituent ticker pills
     const topTickers = (sub.stocks || []).slice(0, 3).map(stk => `
@@ -1219,57 +1262,52 @@ function renderSubSectorsGrid() {
       </span>
     `).join('');
 
-    // Spacious, non-overlapping card layout with strictly bounded sections
     card.innerHTML = `
-      <!-- LEFT: Rank, Sub-Sector Title & Key Fundamentals -->
-      <div class="flex items-start gap-3 flex-1 min-w-0">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-xs flex items-center justify-center shrink-0">
-          #${sub.rank}
-        </div>
-        <div class="flex flex-col gap-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h4 class="text-sm font-bold text-white hover:text-blue-400 transition-colors truncate">${sub.name}</h4>
+      <!-- Row 1: Rank, Sub-Sector Title, Key Fundamentals & Thermal Badge -->
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-xs flex items-center justify-center shrink-0">
+            #${sub.rank}
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
-            <span class="font-semibold text-slate-300">${(sub.stocks || []).length} names</span>
-            <span>·</span>
-            <span class="font-mono">P/E <strong class="text-white">${sub.pe}</strong></span>
-            <span>·</span>
-            <span class="font-mono">ROCE <strong class="text-white">${sub.roce}%</strong></span>
-          </div>
-          <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 flex-wrap">
-            <span class="text-emerald-400 font-semibold">${sub.pctGrowing}% growing</span>
-            <div class="flex items-center gap-1">${topTickers}</div>
+          <div class="min-w-0">
+            <h4 class="text-xs font-bold text-white group-hover:text-blue-400 transition-colors truncate font-sans">${sub.name}</h4>
+            <div class="text-[10px] text-slate-400 truncate flex items-center gap-1.5 font-mono">
+              <span>${(sub.stocks || []).length} stocks</span>
+              <span>·</span>
+              <span>P/E <strong class="text-slate-200">${sub.pe}</strong></span>
+              <span>·</span>
+              <span>ROCE <strong class="text-slate-200">${sub.roce}%</strong></span>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- MIDDLE: Thermal Momentum Status & Moving Average Breadth -->
-      <div class="flex flex-col items-start md:items-center gap-1.5 shrink-0">
-        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold border ${thermalBadge}">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${thermalBadge} shrink-0">
           ${sub.thermalLabel || 'Hot'}
         </span>
-        <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400">
-          <span class="px-1.5 py-0.5 rounded bg-dark-card border border-dark-border ${sub.breadth20Sma >= 70 ? 'text-blue-400' : 'text-slate-400'}">${sub.breadth20Sma || 80}% &gt; 20SMA</span>
-          <span class="px-1.5 py-0.5 rounded bg-dark-card border border-dark-border ${sub.breadth50Sma >= 70 ? 'text-emerald-400' : 'text-slate-400'}">${sub.breadth50Sma || 90}% &gt; 50SMA</span>
+      </div>
+
+      <!-- Row 2: % Growing Label, 20/50 SMA & Horizontal Progress Bar -->
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+          <span class="text-emerald-400 font-semibold">${sub.pctGrowing}% Growing</span>
+          <div class="flex items-center gap-1.5">
+            <span class="${sub.breadth20Sma >= 70 ? 'text-blue-400' : 'text-slate-400'}">${sub.breadth20Sma || 80}% &gt; 20SMA</span>
+            <span>·</span>
+            <span class="${sub.breadth50Sma >= 70 ? 'text-emerald-400' : 'text-slate-400'}">${sub.breadth50Sma || 90}% &gt; 50SMA</span>
+          </div>
+        </div>
+        <div class="h-1.5 w-full bg-dark-card rounded-full overflow-hidden border border-dark-border/40 shadow-inner">
+          <div class="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full transition-all duration-300" style="width: ${sub.pctGrowing}%"></div>
         </div>
       </div>
 
-      <!-- RIGHT: Mini Quarterly Bars Histogram & Valuation P/E Sparkline (No overflow) -->
-      <div class="flex items-center gap-3 shrink-0 font-mono text-[10px] text-slate-400 self-end md:self-auto overflow-hidden">
-        <!-- Quarterly Trend Histogram -->
-        <div class="flex flex-col items-center gap-1">
-          <div class="flex items-end gap-1 h-8">${barsHtml}</div>
-          <div class="text-[9px] text-slate-500 whitespace-nowrap">Q2 FY25 · Q1 FY27</div>
+      <!-- Row 3: Top 3 Ticker Pills & Inspect Action -->
+      <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-dark-border/40 font-mono">
+        <div class="flex items-center gap-1 truncate max-w-[70%]">
+          ${topTickers}
         </div>
-
-        <!-- P/E Valuation Sparkline -->
-        <div class="flex flex-col items-end gap-1 max-w-[80px] shrink-0">
-          <div class="flex items-center gap-1">
-            <span class="text-[9px] text-slate-400 font-sans font-semibold">P/E</span>
-            ${peSvg}
-          </div>
-          <div class="text-[9px] text-slate-400 font-mono font-bold">${sub.pe}x</div>
+        <div class="text-slate-400 group-hover:text-blue-400 flex items-center gap-0.5 transition-colors font-sans font-medium">
+          <span>Inspect</span>
+          <i data-lucide="chevron-right" class="w-3 h-3"></i>
         </div>
       </div>
     `;
@@ -1280,6 +1318,8 @@ function renderSubSectorsGrid() {
 
     container.appendChild(card);
   });
+
+  lucide.createIcons();
 }
 
 function handleSubSectorSort(field) {
@@ -2726,7 +2766,547 @@ async function handleAdminUpdateMaxUsers(e) {
   }
 }
 
+// -------------------------------------------------------------
+// Explore Institutional Multi-Factor Screener Controller
+// -------------------------------------------------------------
+
+async function loadExploreData() {
+  try {
+    const res = await fetch('/api/analytics/explore');
+    const data = await res.json();
+    if (data.success && Array.isArray(data.stocks)) {
+      state.exploreStocks = data.stocks;
+      state.dhanActive = Boolean(data.dhanActive);
+      updateDhanHeaderBadge();
+      applyExploreFilters();
+    }
+  } catch (err) {
+    console.error('Failed to load explore stocks data:', err);
+  }
+}
+
+function updateDhanHeaderBadge() {
+  const badgeEl = document.getElementById('dhan-header-badge');
+  const dotEl = document.getElementById('dhan-header-dot');
+  const textEl = document.getElementById('dhan-header-text');
+
+  if (state.dhanActive) {
+    if (badgeEl) badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+    if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse';
+    if (textEl) textEl.textContent = 'Dhan API Live';
+  } else {
+    if (badgeEl) badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-slate-800 text-slate-400 border-slate-700';
+    if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-slate-500';
+    if (textEl) textEl.textContent = 'Dhan API Off';
+  }
+}
+
+function handleExploreSegmentChange(segment, btnEl) {
+  state.exploreFilters.segment = segment;
+  state.explorePage = 1;
+
+  document.querySelectorAll('.explore-seg-pill').forEach(pill => {
+    pill.classList.remove('active', 'bg-emerald-600', 'text-white', 'shadow-sm');
+    if (pill.dataset.exploreSeg === 'fno') {
+      pill.className = 'explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-500/50 cursor-pointer';
+    } else {
+      pill.className = 'explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer';
+    }
+  });
+
+  if (btnEl) {
+    btnEl.className = 'explore-seg-pill active px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer';
+  }
+
+  applyExploreFilters();
+}
+
+function handleExploreSearch(query) {
+  state.exploreFilters.search = (query || '').toLowerCase().trim();
+  state.explorePage = 1;
+  applyExploreFilters();
+}
+
+function handleExploreFilterChange() {
+  const selRsi = document.getElementById('select-filter-rsi');
+  const selRvolPeriod = document.getElementById('select-filter-rvol-period');
+  const selRvolMult = document.getElementById('select-filter-rvol-mult');
+  const selEmaPosture = document.getElementById('select-filter-ema-posture');
+  const selCrossDir = document.getElementById('select-filter-cross-dir');
+  const selCrossDays = document.getElementById('select-filter-cross-days');
+  const sel52wh = document.getElementById('select-filter-52wh');
+  const selDailyPivot = document.getElementById('select-filter-daily-pivot');
+  const selWeeklyPivot = document.getElementById('select-filter-weekly-pivot');
+
+  state.exploreFilters.rsi = selRsi?.value || 'all';
+  state.exploreFilters.rvolPeriod = selRvolPeriod?.value || 'd20';
+  state.exploreFilters.rvolMult = selRvolMult?.value || 'all';
+  state.exploreFilters.emaPosture = selEmaPosture?.value || 'all';
+  state.exploreFilters.crossDir = selCrossDir?.value || 'all';
+  state.exploreFilters.crossDays = selCrossDays?.value || 'all';
+  state.exploreFilters.dist52wh = sel52wh?.value || 'all';
+  state.exploreFilters.dailyPivot = selDailyPivot?.value || 'all';
+  state.exploreFilters.weeklyPivot = selWeeklyPivot?.value || 'all';
+  state.explorePage = 1;
+
+  // Update visual labels
+  const lblRsi = document.getElementById('label-filter-rsi');
+  const lblRvol = document.getElementById('label-filter-rvol');
+  const lblEma = document.getElementById('label-filter-ema');
+  const lblCross = document.getElementById('label-filter-cross');
+  const lbl52wh = document.getElementById('label-filter-52wh');
+  const lblPivot = document.getElementById('label-filter-pivot');
+
+  if (lblRsi) lblRsi.textContent = state.exploreFilters.rsi === 'all' ? 'All' : state.exploreFilters.rsi;
+  if (lblRvol) lblRvol.textContent = state.exploreFilters.rvolMult === 'all' ? 'All' : `>${state.exploreFilters.rvolMult}x (${state.exploreFilters.rvolPeriod.toUpperCase()})`;
+  if (lblEma) lblEma.textContent = state.exploreFilters.emaPosture === 'all' ? 'All' : 'Active';
+  if (lblCross) lblCross.textContent = (state.exploreFilters.crossDir === 'all' && state.exploreFilters.crossDays === 'all') ? 'All' : `${state.exploreFilters.crossDir} (${state.exploreFilters.crossDays}d)`;
+  if (lbl52wh) lbl52wh.textContent = state.exploreFilters.dist52wh === 'all' ? 'All' : 'Active';
+  if (lblPivot) lblPivot.textContent = (state.exploreFilters.dailyPivot === 'all' && state.exploreFilters.weeklyPivot === 'all') ? 'All' : 'Filtered';
+
+  applyExploreFilters();
+}
+
+function resetExploreFilters() {
+  state.exploreFilters = {
+    segment: 'all',
+    search: '',
+    rsi: 'all',
+    rvolPeriod: 'd20',
+    rvolMult: 'all',
+    emaPosture: 'all',
+    crossDir: 'all',
+    crossDays: 'all',
+    dist52wh: 'all',
+    dailyPivot: 'all',
+    weeklyPivot: 'all'
+  };
+  state.explorePage = 1;
+  state.exploreSortField = 'rank';
+  state.exploreSortAsc = true;
+
+  const inputSearch = document.getElementById('input-explore-search');
+  if (inputSearch) inputSearch.value = '';
+
+  const selRsi = document.getElementById('select-filter-rsi');
+  const selRvolPeriod = document.getElementById('select-filter-rvol-period');
+  const selRvolMult = document.getElementById('select-filter-rvol-mult');
+  const selEmaPosture = document.getElementById('select-filter-ema-posture');
+  const selCrossDir = document.getElementById('select-filter-cross-dir');
+  const selCrossDays = document.getElementById('select-filter-cross-days');
+  const sel52wh = document.getElementById('select-filter-52wh');
+  const selDailyPivot = document.getElementById('select-filter-daily-pivot');
+  const selWeeklyPivot = document.getElementById('select-filter-weekly-pivot');
+
+  if (selRsi) selRsi.value = 'all';
+  if (selRvolPeriod) selRvolPeriod.value = 'd20';
+  if (selRvolMult) selRvolMult.value = 'all';
+  if (selEmaPosture) selEmaPosture.value = 'all';
+  if (selCrossDir) selCrossDir.value = 'all';
+  if (selCrossDays) selCrossDays.value = 'all';
+  if (sel52wh) sel52wh.value = 'all';
+  if (selDailyPivot) selDailyPivot.value = 'all';
+  if (selWeeklyPivot) selWeeklyPivot.value = 'all';
+
+  document.querySelectorAll('.explore-seg-pill').forEach(pill => {
+    if (pill.dataset.exploreSeg === 'all') {
+      pill.className = 'explore-seg-pill active px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer';
+    } else if (pill.dataset.exploreSeg === 'fno') {
+      pill.className = 'explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-500/50 cursor-pointer';
+    } else {
+      pill.className = 'explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer';
+    }
+  });
+
+  const lblRsi = document.getElementById('label-filter-rsi');
+  const lblRvol = document.getElementById('label-filter-rvol');
+  const lblEma = document.getElementById('label-filter-ema');
+  const lblCross = document.getElementById('label-filter-cross');
+  const lbl52wh = document.getElementById('label-filter-52wh');
+  const lblPivot = document.getElementById('label-filter-pivot');
+
+  if (lblRsi) lblRsi.textContent = 'All';
+  if (lblRvol) lblRvol.textContent = 'All';
+  if (lblEma) lblEma.textContent = 'All';
+  if (lblCross) lblCross.textContent = 'All';
+  if (lbl52wh) lbl52wh.textContent = 'All';
+  if (lblPivot) lblPivot.textContent = 'All';
+
+  applyExploreFilters();
+}
+
+function applyExploreFilters() {
+  let list = [...(state.exploreStocks || [])];
+  const f = state.exploreFilters;
+
+  // 1. Segment Filter (All, Large, Mid, Small, Micro, MidSmall, F&O)
+  if (f.segment && f.segment !== 'all') {
+    if (f.segment === 'fno') {
+      list = list.filter(s => s.fno === true);
+    } else if (f.segment === 'midsmall') {
+      list = list.filter(s => s.capCategory === 'mid' || s.capCategory === 'small');
+    } else {
+      list = list.filter(s => s.capCategory === f.segment);
+    }
+  }
+
+  // 2. Search Box (Symbol or Name)
+  if (f.search) {
+    const q = f.search;
+    list = list.filter(s => s.symbol.toLowerCase().includes(q) || (s.name || '').toLowerCase().includes(q));
+  }
+
+  // 3. RSI (14)
+  if (f.rsi && f.rsi !== 'all') {
+    if (f.rsi === 'gt60') list = list.filter(s => s.rsi > 60);
+    else if (f.rsi === 'gt70') list = list.filter(s => s.rsi > 70);
+    else if (f.rsi === '30to70') list = list.filter(s => s.rsi >= 30 && s.rsi <= 70);
+    else if (f.rsi === 'lt40') list = list.filter(s => s.rsi < 40);
+    else if (f.rsi === 'lt30') list = list.filter(s => s.rsi < 30);
+  }
+
+  // 4. RVOL Lookback & Multiplier
+  if (f.rvolMult && f.rvolMult !== 'all') {
+    const minM = parseFloat(f.rvolMult);
+    const periodKey = f.rvolPeriod || 'd20';
+    list = list.filter(s => {
+      const val = s.rvols ? s.rvols[periodKey] : s.rvol;
+      return (val || 0) >= minM;
+    });
+  }
+
+  // 5. EMA Traffic Lights Posture (10, 20, 50, 150)
+  if (f.emaPosture && f.emaPosture !== 'all') {
+    if (f.emaPosture === 'all_green') list = list.filter(s => s.aboveEma10 && s.aboveEma20 && s.aboveEma50 && s.aboveEma150);
+    else if (f.emaPosture === 'gt50') list = list.filter(s => s.aboveEma50);
+    else if (f.emaPosture === 'gt150') list = list.filter(s => s.aboveEma150);
+    else if (f.emaPosture === 'gt20_50') list = list.filter(s => s.aboveEma20 && s.aboveEma50);
+    else if (f.emaPosture === 'below_all') list = list.filter(s => !s.aboveEma10 && !s.aboveEma20 && !s.aboveEma50 && !s.aboveEma150);
+  }
+
+  // 6. Unbounded 10/20 EMA Cross Lookback
+  if (f.crossDir && f.crossDir !== 'all') {
+    list = list.filter(s => s.emaCross && s.emaCross.direction === f.crossDir);
+  }
+  if (f.crossDays && f.crossDays !== 'all') {
+    const maxDays = parseInt(f.crossDays, 10);
+    list = list.filter(s => s.emaCross && s.emaCross.daysAgo <= maxDays);
+  }
+
+  // 7. % From 52-Week High & Lookback Gains
+  if (f.dist52wh && f.dist52wh !== 'all') {
+    if (f.dist52wh === 'at_high') list = list.filter(s => s.pctFrom52wHigh >= -0.5);
+    else if (f.dist52wh === 'within_2') list = list.filter(s => s.pctFrom52wHigh >= -2.0);
+    else if (f.dist52wh === 'within_5') list = list.filter(s => s.pctFrom52wHigh >= -5.0);
+    else if (f.dist52wh === 'within_10') list = list.filter(s => s.pctFrom52wHigh >= -10.0);
+    else if (f.dist52wh === 'gain_20d_10') list = list.filter(s => s.gains && s.gains.d20 >= 10);
+    else if (f.dist52wh === 'gain_30d_20') list = list.filter(s => s.gains && s.gains.d30 >= 20);
+  }
+
+  // 8. Daily Floor Pivots
+  if (f.dailyPivot && f.dailyPivot !== 'all') {
+    list = list.filter(s => s.dailyPivot && s.dailyPivot.regime === f.dailyPivot);
+  }
+
+  // 9. Weekly Floor Pivots
+  if (f.weeklyPivot && f.weeklyPivot !== 'all') {
+    list = list.filter(s => s.weeklyPivot && s.weeklyPivot.regime === f.weeklyPivot);
+  }
+
+  // 10. Sorting
+  list.sort((a, b) => {
+    let vA = a[state.exploreSortField];
+    let vB = b[state.exploreSortField];
+
+    if (state.exploreSortField === 'crossDaysAgo') {
+      vA = a.emaCross ? a.emaCross.daysAgo : 999;
+      vB = b.emaCross ? b.emaCross.daysAgo : 999;
+    } else if (state.exploreSortField === 'gain20d') {
+      vA = a.gains ? a.gains.d20 : 0;
+      vB = b.gains ? b.gains.d20 : 0;
+    } else if (state.exploreSortField === 'dailyPivot') {
+      vA = a.dailyPivot ? a.dailyPivot.regime : '';
+      vB = b.dailyPivot ? b.dailyPivot.regime : '';
+    } else if (state.exploreSortField === 'weeklyPivot') {
+      vA = a.weeklyPivot ? a.weeklyPivot.regime : '';
+      vB = b.weeklyPivot ? b.weeklyPivot.regime : '';
+    }
+
+    if (vA === undefined || vA === null) vA = 0;
+    if (vB === undefined || vB === null) vB = 0;
+    if (typeof vA === 'string') {
+      return state.exploreSortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
+    }
+    return state.exploreSortAsc ? (vA - vB) : (vB - vA);
+  });
+
+  state.exploreFilteredStocks = list;
+
+  // Update Summary Badges
+  const badgeSummary = document.getElementById('badge-explore-summary');
+  if (badgeSummary) {
+    badgeSummary.textContent = `Showing ${list.length} of ${state.exploreStocks.length} Stocks`;
+  }
+
+  renderExploreTable();
+}
+
+function renderExploreTable() {
+  const tbody = document.getElementById('explore-tbody');
+  const paginationInfo = document.getElementById('explore-pagination-info');
+  const pageNumDisplay = document.getElementById('explore-current-page-num');
+  const btnPrev = document.getElementById('btn-explore-prev');
+  const btnNext = document.getElementById('btn-explore-next');
+
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const total = state.exploreFilteredStocks.length;
+  const pageSize = state.explorePageSize === 'all' ? total : parseInt(state.explorePageSize, 10);
+  const totalPages = Math.max(1, Math.ceil(total / (pageSize || 1)));
+
+  if (state.explorePage > totalPages) state.explorePage = totalPages;
+  if (state.explorePage < 1) state.explorePage = 1;
+
+  const startIdx = state.explorePageSize === 'all' ? 0 : (state.explorePage - 1) * pageSize;
+  const endIdx = state.explorePageSize === 'all' ? total : Math.min(startIdx + pageSize, total);
+  const pageStocks = state.exploreFilteredStocks.slice(startIdx, endIdx);
+
+  if (paginationInfo) {
+    paginationInfo.innerHTML = `Showing <strong>${total > 0 ? startIdx + 1 : 0}–${endIdx}</strong> of <strong>${total}</strong> matching stocks (${state.exploreStocks.length} universe)`;
+  }
+  if (pageNumDisplay) pageNumDisplay.textContent = `${state.explorePage} / ${totalPages}`;
+  if (btnPrev) btnPrev.disabled = state.explorePage <= 1;
+  if (btnNext) btnNext.disabled = state.explorePage >= totalPages;
+
+  if (pageStocks.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="14" class="py-10 text-center text-slate-500 font-sans">
+          <i data-lucide="filter-x" class="w-8 h-8 mx-auto mb-2 text-slate-600"></i>
+          <p class="font-bold text-slate-400">No stocks match the selected multi-factor criteria</p>
+          <button onclick="resetExploreFilters()" class="mt-2 px-3 py-1 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer">Reset All Filters</button>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  pageStocks.forEach((stk, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-dark-accent/40 transition-colors group';
+
+    const rowNum = startIdx + idx + 1;
+    const isPos = (stk.changePercent || 0) >= 0;
+    const chgClass = isPos ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+    const chgSign = isPos ? '+' : '';
+
+    // Cap Badge Styling
+    let capBadgeClass = 'bg-slate-800 text-slate-400 border-slate-700';
+    if (stk.capCategory === 'large') capBadgeClass = 'bg-blue-500/15 text-blue-400 border-blue-500/30';
+    else if (stk.capCategory === 'mid') capBadgeClass = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+    else if (stk.capCategory === 'small') capBadgeClass = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+    else if (stk.capCategory === 'micro') capBadgeClass = 'bg-slate-800 text-slate-400 border-slate-700';
+
+    // RSI Tag Color
+    let rsiColor = 'text-slate-300';
+    if (stk.rsi >= 70) rsiColor = 'text-rose-400 font-bold';
+    else if (stk.rsi >= 60) rsiColor = 'text-emerald-400 font-bold';
+    else if (stk.rsi <= 30) rsiColor = 'text-amber-400 font-bold';
+
+    // RVOL Display
+    const currentRvol = stk.rvols ? stk.rvols[state.exploreFilters.rvolPeriod || 'd20'] : stk.rvol;
+    const isHighRvol = (currentRvol || 1) >= 1.5;
+
+    // EMA Dots (10, 20, 50, 150)
+    const dot10 = stk.aboveEma10 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="10 EMA: Price > ₹' + stk.ema10 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="10 EMA: Price < ₹' + stk.ema10 + '"></span>';
+    const dot20 = stk.aboveEma20 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="20 EMA: Price > ₹' + stk.ema20 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="20 EMA: Price < ₹' + stk.ema20 + '"></span>';
+    const dot50 = stk.aboveEma50 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="50 EMA: Price > ₹' + stk.ema50 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="50 EMA: Price < ₹' + stk.ema50 + '"></span>';
+    const dot150 = stk.aboveEma150 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="150 EMA: Price > ₹' + stk.ema150 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="150 EMA: Price < ₹' + stk.ema150 + '"></span>';
+
+    // 10/20 Crossover Lookback Tag
+    const isBullCross = stk.emaCross?.direction === 'bullish';
+    const crossClass = isBullCross ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25' : 'text-rose-400 bg-rose-500/10 border-rose-500/25';
+    const crossLabel = stk.emaCross ? `${isBullCross ? '🟢 Bull' : '🔴 Bear'} (${stk.emaCross.label})` : '--';
+
+    // % From 52WH
+    const pct52whFormatted = stk.pctFrom52wHigh >= -0.5 ? '<span class="text-emerald-400 font-bold">🚀 52WH</span>' : `<span class="${stk.pctFrom52wHigh >= -5 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}">${stk.pctFrom52wHigh}%</span>`;
+
+    // 20D Gain
+    const gain20 = stk.gains?.d20 || 0;
+    const gain20Class = gain20 >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+    // Daily Pivot Badge
+    let dPivotClass = 'bg-dark-card text-slate-300 border-dark-border';
+    if (stk.dailyPivot?.regime === 'above_r1') dPivotClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+    else if (stk.dailyPivot?.regime === 'p_to_r1') dPivotClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30';
+    else if (stk.dailyPivot?.regime === 's1_to_p') dPivotClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+    else if (stk.dailyPivot?.regime === 'below_s1') dPivotClass = 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+
+    // Weekly Pivot Badge
+    let wPivotClass = 'bg-dark-card text-slate-300 border-dark-border';
+    if (stk.weeklyPivot?.regime === 'above_r1') wPivotClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+    else if (stk.weeklyPivot?.regime === 'p_to_r1') wPivotClass = 'bg-blue-500/15 text-blue-300 border-blue-500/30';
+    else if (stk.weeklyPivot?.regime === 's1_to_p') wPivotClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+    else if (stk.weeklyPivot?.regime === 'below_s1') wPivotClass = 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 text-center text-slate-500 font-bold">${rowNum}</td>
+      <td class="py-2.5 px-3">
+        <div class="flex items-center gap-2">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-white group-hover:text-emerald-400 transition-colors cursor-pointer" onclick="openAnalyticsStockChart('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}')">${stk.symbol}</span>
+              ${stk.fno ? '<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30" title="Derivative F&O Stock">F&O</span>' : ''}
+            </div>
+            <span class="text-[10px] text-slate-400 font-sans line-clamp-1 max-w-[150px]">${stk.name || stk.symbol}</span>
+          </div>
+        </div>
+      </td>
+      <td class="py-2.5 px-3 text-center">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${capBadgeClass}">${stk.capLabel}</span>
+      </td>
+      <td class="py-2.5 px-3 text-right font-bold text-slate-100">${fmt.currency(stk.ltp)}</td>
+      <td class="py-2.5 px-3 text-right">
+        <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${chgClass}">
+          ${chgSign}${Number(stk.changePercent || 0).toFixed(2)}%
+        </span>
+      </td>
+      <td class="py-2.5 px-3 text-center ${rsiColor}">${stk.rsi}</td>
+      <td class="py-2.5 px-3 text-right font-semibold ${isHighRvol ? 'text-amber-400 font-bold' : 'text-slate-300'}">
+        ${currentRvol}x
+      </td>
+      <td class="py-2.5 px-3 text-center">
+        <div class="flex items-center justify-center gap-1.5">
+          ${dot10} ${dot20} ${dot50} ${dot150}
+        </div>
+      </td>
+      <td class="py-2.5 px-3 text-center">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${crossClass}">${crossLabel}</span>
+      </td>
+      <td class="py-2.5 px-3 text-right">${pct52whFormatted}</td>
+      <td class="py-2.5 px-3 text-right font-semibold ${gain20Class}">${gain20 >= 0 ? '+' : ''}${gain20}%</td>
+      <td class="py-2.5 px-3 text-center">
+        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${dPivotClass}">${stk.dailyPivot?.label || '--'}</span>
+      </td>
+      <td class="py-2.5 px-3 text-center">
+        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${wPivotClass}">${stk.weeklyPivot?.label || '--'}</span>
+      </td>
+      <td class="py-2.5 px-3 text-center">
+        <button onclick="openAnalyticsStockChart('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}')"
+          class="px-2 py-1 text-[11px] font-semibold bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 rounded-lg transition-all flex items-center justify-center gap-1 mx-auto cursor-pointer shadow-sm"
+          title="See on 6M Candlestick Chart">
+          <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
+          <span>Chart</span>
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  lucide.createIcons();
+}
+
+function handleExploreSort(field) {
+  if (state.exploreSortField === field) {
+    state.exploreSortAsc = !state.exploreSortAsc;
+  } else {
+    state.exploreSortField = field;
+    state.exploreSortAsc = (field === 'symbol' || field === 'capCategory' || field === 'rank');
+  }
+  applyExploreFilters();
+}
+
+function handleExplorePageChange(delta) {
+  state.explorePage += delta;
+  renderExploreTable();
+}
+
+function handleExplorePageSizeChange(size) {
+  state.explorePageSize = size;
+  state.explorePage = 1;
+  renderExploreTable();
+}
+
+// -------------------------------------------------------------
+// Section Collapse / Expand Controller
+// -------------------------------------------------------------
+
+function toggleAnalyticsSection(sectionKey) {
+  const contentEl = document.getElementById(`content-${sectionKey}`);
+  const iconEl = document.getElementById(`icon-collapse-${sectionKey}`);
+  const badgeEl = document.getElementById(`badge-${sectionKey}-summary`);
+  if (!contentEl) return;
+
+  const isCollapsed = contentEl.classList.toggle('hidden');
+  if (iconEl) {
+    iconEl.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+  if (badgeEl) {
+    if (isCollapsed) {
+      badgeEl.classList.remove('hidden');
+    } else {
+      badgeEl.classList.add('hidden');
+    }
+  }
+
+  localStorage.setItem(`sangam_collapse_${sectionKey}`, isCollapsed ? 'true' : 'false');
+}
+
+function initAnalyticsSectionCollapses() {
+  const sections = ['breadth', 'indices', 'sectoral', 'subsectors', 'explore'];
+  sections.forEach(key => {
+    const isCollapsed = localStorage.getItem(`sangam_collapse_${key}`) === 'true';
+    if (isCollapsed) {
+      const contentEl = document.getElementById(`content-${key}`);
+      const iconEl = document.getElementById(`icon-collapse-${key}`);
+      const badgeEl = document.getElementById(`badge-${key}-summary`);
+      if (contentEl) contentEl.classList.add('hidden');
+      if (iconEl) iconEl.style.transform = 'rotate(180deg)';
+      if (badgeEl) badgeEl.classList.remove('hidden');
+    }
+  });
+}
+
+// Segment filter click listener for Explore Pane
+document.getElementById('explore-segment-pills')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-explore-seg]');
+  if (!btn) return;
+  handleExploreSegmentChange(btn.dataset.exploreSeg, btn);
+});
+
 // Window Globals for HTML onclick listeners
+window.toggleAnalyticsSection = toggleAnalyticsSection;
+window.handleBreadthSectorChange = handleBreadthSectorChange;
+window.loadAnalyticsData = loadAnalyticsData;
+window.handleIndicesCategoryChange = handleIndicesCategoryChange;
+window.handleIndicesSort = handleIndicesSort;
+window.sortCustomizeIndices = sortCustomizeIndices;
+window.handleSectoralBreadthSort = handleSectoralBreadthSort;
+window.handleSectoralCategoryFilter = handleSectoralCategoryFilter;
+window.handleSectorSearchInput = handleSectorSearchInput;
+window.openSectoralStocksModal = openSectoralStocksModal;
+window.closeSectoralStocksModal = closeSectoralStocksModal;
+window.setSectoralStockFilter = setSectoralStockFilter;
+window.filterSectoralStockTable = filterSectoralStockTable;
+window.handleSectoralStockSort = handleSectoralStockSort;
+window.handleSubSectorSort = handleSubSectorSort;
+window.openSectorDrilldownModal = openSectorDrilldownModal;
+window.closeSectorDrilldownModal = closeSectorDrilldownModal;
+window.handleConstituentSort = handleConstituentSort;
+window.openAnalyticsCustomizeModal = openAnalyticsCustomizeModal;
+window.closeAnalyticsCustomizeModal = closeAnalyticsCustomizeModal;
+window.saveAnalyticsPreferences = saveAnalyticsPreferences;
+window.openAnalyticsStockChart = openAnalyticsStockChart;
+window.closeAnalyticsChartModal = closeAnalyticsChartModal;
+window.openAuthModal = openAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.switchAuthTab = switchAuthTab;
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
+window.handleLogout = handleLogout;
 window.openAdminConsole = openAdminConsole;
 window.closeAdminConsole = closeAdminConsole;
 window.toggleAdminAddUserPanel = toggleAdminAddUserPanel;
@@ -2740,21 +3320,21 @@ window.setHoverChartRange = setHoverChartRange;
 window.toggleHoverStockWatchlist = toggleHoverStockWatchlist;
 window.closeHoverWatchlistDropdown = closeHoverWatchlistDropdown;
 window.addHoverStockToWatchlist = addHoverStockToWatchlist;
-window.handleIndicesCategoryChange = handleIndicesCategoryChange;
-window.handleIndicesSort = handleIndicesSort;
-window.sortCustomizeIndices = sortCustomizeIndices;
-window.handleSectoralBreadthSort = handleSectoralBreadthSort;
-window.handleSectoralCategoryFilter = handleSectoralCategoryFilter;
-window.handleSectorSearchInput = handleSectorSearchInput;
-window.openSectoralStocksModal = openSectoralStocksModal;
-window.closeSectoralStocksModal = closeSectoralStocksModal;
-window.setSectoralStockFilter = setSectoralStockFilter;
-window.filterSectoralStockTable = filterSectoralStockTable;
-window.handleSectoralStockSort = handleSectoralStockSort;
+
+// Explore Screener Window Globals
+window.loadExploreData = loadExploreData;
+window.handleExploreSegmentChange = handleExploreSegmentChange;
+window.handleExploreSearch = handleExploreSearch;
+window.handleExploreFilterChange = handleExploreFilterChange;
+window.resetExploreFilters = resetExploreFilters;
+window.handleExploreSort = handleExploreSort;
+window.handleExplorePageChange = handleExplorePageChange;
+window.handleExplorePageSizeChange = handleExplorePageSizeChange;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', async () => {
   applyTheme(state.theme);
+  initAnalyticsSectionCollapses();
   await checkAuthStatus();
   lucide.createIcons();
 });

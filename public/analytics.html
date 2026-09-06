@@ -165,34 +165,39 @@
 
     <!-- AUTHENTICATED CONTENT (Displayed when user is logged in) -->
     <div id="analytics-authenticated-content" class="flex flex-col gap-6 w-full">
-      
       <!-- 1. MARKET BREADTH DIAGNOSTICS SECTION -->
-      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4 transition-all" id="section-breadth-matrix">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <i data-lucide="gauge" class="w-4 h-4"></i>
             </div>
             <div>
-              <h2 class="text-sm font-bold text-white tracking-wide uppercase">Market Breadth Diagnostics</h2>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-bold text-white tracking-wide uppercase">Market Breadth Diagnostics</h2>
+                <span id="badge-breadth-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></span>
+              </div>
               <p class="text-xs text-slate-400">20 SMA & 50 SMA institutional participation analysis across universe & sectors</p>
             </div>
           </div>
 
-          <!-- Sector Breadth Filter & Refresh -->
+          <!-- Sector Breadth Filter & Controls -->
           <div class="flex items-center gap-2">
-            <label class="text-xs text-slate-400 font-medium" title="Filter breadth across universe or by specific sector">Filter Breadth:</label>
-            <select id="select-breadth-sector" onchange="handleBreadthSectorChange(this.value)" class="px-3 py-1.5 text-xs font-semibold bg-dark-bg border border-dark-border rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Select sector or universe">
+            <label class="text-xs text-slate-400 font-medium hidden sm:inline" title="Filter breadth across universe or by specific sector">Filter:</label>
+            <select id="select-breadth-sector" onchange="handleBreadthSectorChange(this.value)" class="px-2.5 py-1.5 text-xs font-semibold bg-dark-bg border border-dark-border rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Select sector or universe">
               <option value="all">Universe (All Stocks)</option>
             </select>
             <button onclick="loadAnalyticsData()" class="p-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer" title="Refresh Breadth Data">
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
             </button>
+            <button onclick="toggleAnalyticsSection('breadth')" class="p-1.5 px-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-xs" title="Collapse / Expand Breadth Matrix">
+              <i data-lucide="chevron-up" id="icon-collapse-breadth" class="w-4 h-4 text-emerald-400 transition-transform"></i>
+            </button>
           </div>
         </div>
 
-        <!-- Breadth Diagnostics 3-Card Matrix -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Breadth Diagnostics 3-Card Matrix Content -->
+        <div id="content-breadth" class="grid grid-cols-1 md:grid-cols-3 gap-4 transition-all duration-200">
           
           <!-- DIAL 1: 20 SMA Breadth -->
           <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-4" title="Percentage of stocks trading above their 20-day Simple Moving Average">
@@ -246,70 +251,23 @@
         </div>
       </section>
 
-      <!-- 2. NSE SECTORAL INDICES MARKET BREADTH (INTERACTIVE ADVANCE / DECLINE DONUT CHARTS) -->
-      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4" id="sectoral-breadth-section">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <i data-lucide="pie-chart" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white tracking-wide uppercase">NSE Sectoral Indices Market Breadth</h2>
-              <p class="text-xs text-slate-400">Interactive Advance vs Decline Donut Charts. Click 🟢 Green or 🔴 Red slices to inspect constituent stocks.</p>
-            </div>
-          </div>
-
-          <!-- Controls Toolbar: 1-Click Sort, Category Pills, Search Box -->
-          <div class="flex items-center flex-wrap gap-2 text-xs">
-            <!-- Search Sector Box -->
-            <div class="relative flex items-center">
-              <input type="text" id="input-sector-search" oninput="handleSectorSearchInput(this.value)" placeholder="Search sector..." autocomplete="off"
-                class="w-32 sm:w-44 px-2.5 py-1 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
-              <i data-lucide="search" class="w-3 h-3 text-slate-500 absolute right-2.5 pointer-events-none"></i>
-            </div>
-
-            <!-- 1-Click Sorting Buttons -->
-            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
-              <span class="px-2 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
-              <button onclick="handleSectoralBreadthSort('change')" id="btn-sort-sec-change" class="sec-sort-btn active px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by % Change">Change ▾</button>
-              <button onclick="handleSectoralBreadthSort('adRatio')" id="btn-sort-sec-ad" class="sec-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by A/D Ratio">A/D Ratio</button>
-              <button onclick="handleSectoralBreadthSort('advances')" id="btn-sort-sec-adv" class="sec-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Advances Count">Advances</button>
-              <button onclick="handleSectoralBreadthSort('name')" id="btn-sort-sec-name" class="sec-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort Alphabetically">A-Z</button>
-            </div>
-
-            <!-- Category Filter Pills -->
-            <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="sectoral-cat-filter-bar">
-              <button onclick="handleSectoralCategoryFilter('all', this)" class="sec-cat-pill active px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-emerald-600 text-white cursor-pointer">All (15)</button>
-              <button onclick="handleSectoralCategoryFilter('Banking', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Banking</button>
-              <button onclick="handleSectoralCategoryFilter('Technology', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">IT</button>
-              <button onclick="handleSectoralCategoryFilter('Automobile', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Auto</button>
-              <button onclick="handleSectoralCategoryFilter('Healthcare', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Pharma</button>
-              <button onclick="handleSectoralCategoryFilter('Metals & Mining', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Metals</button>
-              <button onclick="handleSectoralCategoryFilter('Energy', this)" class="sec-cat-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Energy</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sector Cards Grid -->
-        <div id="sectoral-breadth-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <!-- Populated dynamically with interactive Donut chart cards -->
-        </div>
-      </section>
-
-      <!-- 3. STANDARD & SECTORAL INDICES RIBBON (CONTROLLED BY CUSTOMIZE & CATEGORY FILTERS) -->
-      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-3">
+      <!-- 2. STANDARD & SECTORAL INDICES RIBBON (MOVED UP TO 2ND POSITION) -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-3 transition-all" id="section-indices-ribbon">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
               <i data-lucide="layers" class="w-4 h-4"></i>
             </div>
             <div>
-              <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Standard & Sectoral Indices</h3>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Standard & Sectoral Indices</h3>
+                <span id="badge-indices-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30"></span>
+              </div>
               <span class="text-xs text-slate-400">Live Quotes, 20/50 SMA Posture & Filtered by Customize Preferences</span>
             </div>
           </div>
 
-          <!-- Controls Toolbar: 1-Click Sort, Category Pills, Customize Button -->
+          <!-- Controls Toolbar: 1-Click Sort, Category Pills, Customize Button & Collapse -->
           <div class="flex items-center flex-wrap gap-2 text-xs">
             <!-- 1-Click Sorting Buttons -->
             <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
@@ -327,57 +285,382 @@
             </div>
 
             <!-- Customize Indices & Sectors Modal Trigger -->
-            <button onclick="openAnalyticsCustomizeModal()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Pin or unpin specific indices and sub-sectors">
+            <button onclick="openAnalyticsCustomizeModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm" title="Pin or unpin specific indices and sub-sectors">
               <i data-lucide="settings-2" class="w-3.5 h-3.5 text-blue-400"></i>
-              <span>Customize Indices & Sectors</span>
+              <span class="hidden md:inline">Customize</span>
+            </button>
+
+            <!-- Collapse Button -->
+            <button onclick="toggleAnalyticsSection('indices')" class="p-1.5 px-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-xs" title="Collapse / Expand Indices Ribbon">
+              <i data-lucide="chevron-up" id="icon-collapse-indices" class="w-4 h-4 text-blue-400 transition-transform"></i>
             </button>
           </div>
         </div>
 
-        <!-- Horizontal Scrollable Indices Ribbon -->
-        <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1" id="indices-ribbon-container">
-          <!-- Populated dynamically with Index cards -->
+        <!-- Horizontal Scrollable Indices Ribbon Content -->
+        <div id="content-indices" class="transition-all duration-200">
+          <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1" id="indices-ribbon-container">
+            <!-- Populated dynamically with Index cards -->
+          </div>
         </div>
       </section>
 
-      <!-- 3. SUB-SECTORS RANKED BY GROWTH & THERMAL MOMENTUM -->
-      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+      <!-- 3. NSE SECTORAL INDICES MARKET BREADTH (OPTION B LEADERBOARD LIST) -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4 transition-all" id="section-sectoral-breadth">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span>12 sub-sectors, ranked by growth · above ₹1,000 Cr</span>
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">
-              Click any tile to inspect constituent stocks with QoQ/YoY Sales, EPS growth, and Operating Margins. Hover over "View Chart" for instant 6M 10/20/50 MA preview.
-            </p>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-bold text-white tracking-wide uppercase">NSE Sectoral Indices Market Breadth</h2>
+                <span id="badge-sectoral-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></span>
+              </div>
+              <p class="text-xs text-slate-400">Advance vs Decline Horizontal Momentum Strips. Click 🟢 Adv or 🔴 Dec to inspect constituents.</p>
+            </div>
           </div>
 
-          <!-- Filter & 1-Click Sort Toolbar -->
+          <!-- Controls Toolbar: 1-Click Sort, Category Pills, Search Box & Collapse -->
           <div class="flex items-center flex-wrap gap-2 text-xs">
-            <!-- 1-Click Sorting Buttons -->
-            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
-              <span class="px-2 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
-              <button onclick="handleSubSectorSort('rank')" id="btn-sort-rank" class="subsector-sort-btn active px-2.5 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by Rank (#1-12)">Rank ▾</button>
-              <button onclick="handleSubSectorSort('pctGrowing')" id="btn-sort-pctGrowing" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by % of Stocks Growing">% Growing</button>
-              <button onclick="handleSubSectorSort('pe')" id="btn-sort-pe" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Median P/E Valuation">P/E</button>
-              <button onclick="handleSubSectorSort('roce')" id="btn-sort-roce" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Median ROCE %">ROCE</button>
-              <button onclick="handleSubSectorSort('breadth50Sma')" id="btn-sort-breadth50Sma" class="subsector-sort-btn px-2.5 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by 50 SMA Breadth Strength">50 SMA</button>
+            <!-- Search Sector Box -->
+            <div class="relative flex items-center">
+              <input type="text" id="input-sector-search" oninput="handleSectorSearchInput(this.value)" placeholder="Search sector..." autocomplete="off"
+                class="w-28 sm:w-40 px-2.5 py-1 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
+              <i data-lucide="search" class="w-3 h-3 text-slate-500 absolute right-2.5 pointer-events-none"></i>
             </div>
 
-            <!-- Sector Category Filter Pills -->
-            <div class="flex items-center gap-1.5 text-xs overflow-x-auto pb-0.5" id="analytics-sector-filter-bar">
-              <button data-sector-cat="all" class="sector-cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-blue-600 text-white cursor-pointer" title="Show all sub-sectors">All</button>
-              <button data-sector-cat="Capex / Infra" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Capex and Infrastructure">Capex / Infra</button>
-              <button data-sector-cat="Electronics & AI" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Electronics and AI">Electronics & AI</button>
-              <button data-sector-cat="Power / Energy" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Power and Renewables">Power / Energy</button>
-              <button data-sector-cat="Healthcare" class="sector-cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Pharma and CDMO">Healthcare</button>
+            <!-- 1-Click Sorting Buttons -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
+              <span class="px-1.5 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
+              <button onclick="handleSectoralBreadthSort('change')" id="btn-sort-sec-change" class="sec-sort-btn active px-2 py-1 rounded-lg bg-emerald-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by % Change">Change ▾</button>
+              <button onclick="handleSectoralBreadthSort('adRatio')" id="btn-sort-sec-ad" class="sec-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by A/D Ratio">A/D</button>
+              <button onclick="handleSectoralBreadthSort('advances')" id="btn-sort-sec-adv" class="sec-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Advances Count">Adv</button>
+              <button onclick="handleSectoralBreadthSort('name')" id="btn-sort-sec-name" class="sec-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort Alphabetically">A-Z</button>
             </div>
+
+            <!-- Category Filter Pills -->
+            <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="sectoral-cat-filter-bar">
+              <button onclick="handleSectoralCategoryFilter('all', this)" class="sec-cat-pill active px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-emerald-600 text-white cursor-pointer">All (15)</button>
+              <button onclick="handleSectoralCategoryFilter('Banking', this)" class="sec-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Banking</button>
+              <button onclick="handleSectoralCategoryFilter('Technology', this)" class="sec-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">IT</button>
+              <button onclick="handleSectoralCategoryFilter('Automobile', this)" class="sec-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Auto</button>
+              <button onclick="handleSectoralCategoryFilter('Healthcare', this)" class="sec-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Pharma</button>
+              <button onclick="handleSectoralCategoryFilter('Metals & Mining', this)" class="sec-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Metals</button>
+              <button onclick="handleSectoralCategoryFilter('Energy', this)" class="sec-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer">Energy</button>
+            </div>
+
+            <!-- Collapse Button -->
+            <button onclick="toggleAnalyticsSection('sectoral')" class="p-1.5 px-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-xs" title="Collapse / Expand Sectoral Breadth">
+              <i data-lucide="chevron-up" id="icon-collapse-sectoral" class="w-4 h-4 text-emerald-400 transition-transform"></i>
+            </button>
           </div>
         </div>
 
-        <!-- Sub-Sectors Grid (2 Columns layout with zero overlapping) -->
-        <div id="sub-sectors-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <!-- Populated dynamically with sub-sector strength cards -->
+        <!-- Sector Cards Leaderboard Content -->
+        <div id="content-sectoral" class="transition-all duration-200">
+          <div id="sectoral-breadth-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <!-- Populated dynamically with Option B Leaderboard strips -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. SUB-SECTORS RANKED BY GROWTH (OPTION B LEADERBOARD LIST) -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4 transition-all" id="section-sub-sectors">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold text-white uppercase tracking-wide">12 Sub-Sectors Ranked by Growth</h3>
+              <span id="badge-subsectors-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30"></span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Click any strip to inspect constituent stocks with QoQ/YoY Sales, EPS growth, and Margins.
+            </p>
+          </div>
+
+          <!-- Filter & 1-Click Sort Toolbar & Collapse -->
+          <div class="flex items-center flex-wrap gap-2 text-xs">
+            <!-- 1-Click Sorting Buttons -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-mono">
+              <span class="px-1.5 text-slate-500 font-semibold uppercase text-[10px]">Sort:</span>
+              <button onclick="handleSubSectorSort('rank')" id="btn-sort-rank" class="subsector-sort-btn active px-2 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Sort by Rank (#1-12)">Rank ▾</button>
+              <button onclick="handleSubSectorSort('pctGrowing')" id="btn-sort-pctGrowing" class="subsector-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by % of Stocks Growing">% Grow</button>
+              <button onclick="handleSubSectorSort('pe')" id="btn-sort-pe" class="subsector-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Median P/E Valuation">P/E</button>
+              <button onclick="handleSubSectorSort('roce')" id="btn-sort-roce" class="subsector-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by Median ROCE %">ROCE</button>
+              <button onclick="handleSubSectorSort('breadth50Sma')" id="btn-sort-breadth50Sma" class="subsector-sort-btn px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400" title="Sort by 50 SMA Breadth Strength">50 SMA</button>
+            </div>
+
+            <!-- Sector Category Filter Pills -->
+            <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="analytics-sector-filter-bar">
+              <button data-sector-cat="all" class="sector-cat-pill active px-2.5 py-1 rounded-lg text-xs font-medium transition-colors bg-blue-600 text-white cursor-pointer" title="Show all sub-sectors">All</button>
+              <button data-sector-cat="Capex / Infra" class="sector-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Capex and Infrastructure">Capex</button>
+              <button data-sector-cat="Electronics & AI" class="sector-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Electronics and AI">Electronics</button>
+              <button data-sector-cat="Power / Energy" class="sector-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Power and Renewables">Energy</button>
+              <button data-sector-cat="Healthcare" class="sector-cat-pill px-2 py-1 rounded-lg text-xs font-medium transition-colors bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Filter Pharma and CDMO">Health</button>
+            </div>
+
+            <!-- Collapse Button -->
+            <button onclick="toggleAnalyticsSection('subsectors')" class="p-1.5 px-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-xs" title="Collapse / Expand Sub-Sectors">
+              <i data-lucide="chevron-up" id="icon-collapse-subsectors" class="w-4 h-4 text-blue-400 transition-transform"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-Sectors Grid Leaderboard Content -->
+        <div id="content-subsectors" class="transition-all duration-200">
+          <div id="sub-sectors-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+            <!-- Populated dynamically with Option B sub-sector strength strips -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. EXPLORE — INSTITUTIONAL MULTI-FACTOR SCREENER SECTION -->
+      <section class="bg-dark-card border border-dark-border rounded-2xl p-5 shadow-xl flex flex-col gap-4 transition-all" id="section-explore">
+        <!-- Section Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-dark-border/60 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <i data-lucide="compass" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-sm font-bold text-white tracking-wide uppercase">Explore</h2>
+                <span class="text-xs text-slate-400 font-normal">| Multi-Factor Institutional Screener</span>
+                
+                <!-- DHAN API LIVE STATUS BADGE ON HEADER TAB -->
+                <div id="dhan-header-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/10 text-emerald-400 border-emerald-500/30" title="DhanHQ Official Broker API Feed Status">
+                  <span id="dhan-header-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="dhan-header-text">Dhan API Live</span>
+                </div>
+
+                <!-- Live Summary Counter Badge -->
+                <span id="badge-explore-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></span>
+              </div>
+              <p class="text-xs text-slate-400">Multi-attribute screening across Large, Mid, Small, Micro, MidSmall & F&O with unbounded 10/20 EMA cross lookback, RSI, RVOL & Daily/Weekly Pivots.</p>
+            </div>
+          </div>
+
+          <!-- Top Action Controls -->
+          <div class="flex items-center gap-2">
+            <button onclick="resetExploreFilters()" class="px-2.5 py-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer text-xs flex items-center gap-1.5" title="Reset All Explore Filters to Default">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset</span>
+            </button>
+            <button onclick="loadExploreData()" class="p-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer" title="Refresh Explore Screener Data">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="toggleAnalyticsSection('explore')" class="p-1.5 px-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-xs" title="Collapse / Expand Explore Pane">
+              <i data-lucide="chevron-up" id="icon-collapse-explore" class="w-4 h-4 text-emerald-400 transition-transform"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Collapsible Content Wrapper -->
+        <div id="content-explore" class="flex flex-col gap-4 transition-all duration-200">
+          
+          <!-- MULTI-FACTOR FILTER TOOLBAR -->
+          <div class="bg-dark-bg/80 border border-dark-border rounded-xl p-3.5 flex flex-col gap-3">
+            
+            <!-- Row 1: Market Cap & Segment Pills + Search Box -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+              <!-- Segment Pills (All, Large, Mid, Small, Micro, MidSmall, F&O) -->
+              <div class="flex items-center gap-1 overflow-x-auto pb-0.5" id="explore-segment-pills">
+                <span class="text-[10px] uppercase font-mono font-bold text-slate-400 mr-1 hidden sm:inline">Universe:</span>
+                <button data-explore-seg="all" class="explore-seg-pill active px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer">All (1,100)</button>
+                <button data-explore-seg="large" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Large Cap</button>
+                <button data-explore-seg="mid" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Mid Cap</button>
+                <button data-explore-seg="small" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Small Cap</button>
+                <button data-explore-seg="micro" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Micro Cap</button>
+                <button data-explore-seg="midsmall" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">MidSmall</button>
+                <button data-explore-seg="fno" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-500/50 cursor-pointer">⚡ F&O (212)</button>
+              </div>
+
+              <!-- Search Stock Filter Box -->
+              <div class="relative flex items-center min-w-[180px] sm:w-56">
+                <input type="text" id="input-explore-search" oninput="handleExploreSearch(this.value)" placeholder="Filter stock or name..." autocomplete="off"
+                  class="w-full px-3 py-1.5 text-xs bg-dark-card border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute right-3 pointer-events-none"></i>
+              </div>
+            </div>
+
+            <!-- Row 2: Deep Technical & Mathematical Filter Controls Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
+              
+              <!-- Filter 1: RSI (14) Filter -->
+              <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-slate-300">RSI (14):</span>
+                  <span id="label-filter-rsi" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <select id="select-filter-rsi" onchange="handleExploreFilterChange()" class="w-full px-2 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                  <option value="all">Any RSI</option>
+                  <option value="gt60">RSI &gt; 60 (Bullish Momentum)</option>
+                  <option value="gt70">RSI &gt; 70 (Overbought / Strong)</option>
+                  <option value="30to70">30 &le; RSI &le; 70 (Normal Range)</option>
+                  <option value="lt40">RSI &lt; 40 (Oversold / Weak)</option>
+                  <option value="lt30">RSI &lt; 30 (Extreme Oversold)</option>
+                </select>
+              </div>
+
+              <!-- Filter 2: RVOL (Relative Volume Lookback & Multiplier) -->
+              <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-slate-300">RVOL:</span>
+                  <span id="label-filter-rvol" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <select id="select-filter-rvol-period" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="RVOL Lookback Average Period">
+                    <option value="d20">20D Avg</option>
+                    <option value="d5">5D Avg</option>
+                    <option value="d10">10D Avg</option>
+                    <option value="d50">50D Avg</option>
+                  </select>
+                  <select id="select-filter-rvol-mult" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Minimum RVOL Multiplier">
+                    <option value="all">Any Vol</option>
+                    <option value="1.2">&gt; 1.2x</option>
+                    <option value="1.5">&gt; 1.5x ⚡</option>
+                    <option value="2.0">&gt; 2.0x 🚀</option>
+                    <option value="3.0">&gt; 3.0x 🔥</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Filter 3: EMA Traffic Lights Posture (10, 20, 50, 150) -->
+              <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-slate-300">EMA Posture:</span>
+                  <span id="label-filter-ema" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <select id="select-filter-ema-posture" onchange="handleExploreFilterChange()" class="w-full px-2 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                  <option value="all">Any Posture</option>
+                  <option value="all_green">&gt; All 4 EMAs (10/20/50/150) 🟢</option>
+                  <option value="gt50">&gt; 50 EMA (Medium-Term Bullish)</option>
+                  <option value="gt150">&gt; 150 EMA (Long-Term Bullish)</option>
+                  <option value="gt20_50">&gt; 20 & 50 EMAs</option>
+                  <option value="below_all">&lt; All 4 EMAs 🔴</option>
+                </select>
+              </div>
+
+              <!-- Filter 4: Unbounded 10/20 EMA Cross Lookback -->
+              <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-slate-300">10/20 Cross:</span>
+                  <span id="label-filter-cross" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <select id="select-filter-cross-dir" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                    <option value="all">Any</option>
+                    <option value="bullish">🟢 Bullish</option>
+                    <option value="bearish">🔴 Bearish</option>
+                  </select>
+                  <select id="select-filter-cross-days" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Days elapsed since crossover occurred">
+                    <option value="all">Any Days</option>
+                    <option value="5">&le; 5 Days</option>
+                    <option value="15">&le; 15 Days</option>
+                    <option value="30">&le; 30 Days</option>
+                    <option value="60">&le; 60 Days</option>
+                    <option value="120">&le; 120 Days</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Filter 5: % From 52-Week High & Custom Lookback Gain -->
+              <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-slate-300">% 52WH / Gain:</span>
+                  <span id="label-filter-52wh" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <select id="select-filter-52wh" onchange="handleExploreFilterChange()" class="w-full px-2 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                  <option value="all">Any 52WH Dist</option>
+                  <option value="at_high">At 52W High (0%) 🚀</option>
+                  <option value="within_2">Within 2% of 52WH</option>
+                  <option value="within_5">Within 5% of 52WH</option>
+                  <option value="within_10">Within 10% of 52WH</option>
+                  <option value="gain_20d_10">&gt; 10% Gain in past 20d</option>
+                  <option value="gain_30d_20">&gt; 20% Gain in past 30d</option>
+                </select>
+              </div>
+
+              <!-- Filter 6: Daily & Weekly Pivots Selector -->
+              <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-slate-300">Floor Pivots:</span>
+                  <span id="label-filter-pivot" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <select id="select-filter-daily-pivot" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Daily Floor Pivot Regime">
+                    <option value="all">Daily (All)</option>
+                    <option value="above_r1">&gt; R1 🚀</option>
+                    <option value="p_to_r1">P to R1 🟢</option>
+                    <option value="s1_to_p">S1 to P 🟠</option>
+                    <option value="below_s1">&lt; S1 🔴</option>
+                  </select>
+                  <select id="select-filter-weekly-pivot" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Weekly Floor Pivot Regime">
+                    <option value="all">Weekly (All)</option>
+                    <option value="above_r1">&gt; R1 🚀</option>
+                    <option value="p_to_r1">P to R1 🟢</option>
+                    <option value="s1_to_p">S1 to P 🟠</option>
+                    <option value="below_s1">&lt; S1 🔴</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- VERTICAL SCREENER TABLE CONTAINER -->
+          <div class="overflow-x-auto rounded-xl border border-dark-border bg-dark-bg/60 shadow-md">
+            <table class="w-full text-left text-xs border-collapse font-sans" id="table-explore">
+              <thead>
+                <tr class="border-b border-dark-border bg-dark-card/90 text-[11px] font-mono text-slate-400 select-none">
+                  <th class="py-2.5 px-3 font-semibold text-center w-12 cursor-pointer hover:text-white" onclick="handleExploreSort('rank')">#</th>
+                  <th class="py-2.5 px-3 font-semibold cursor-pointer hover:text-white" onclick="handleExploreSort('symbol')">Stock ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('capCategory')">Cap ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('ltp')">LTP (₹) ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('changePercent')">1D % ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('rsi')">RSI(14) ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('rvol')">RVOL ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-center" title="10, 20, 50, 150 EMA Traffic Light Posture (🟢 Above / 🔴 Below)">EMAs (10/20/50/150)</th>
+                  <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('crossDaysAgo')" title="Unbounded historical lookback to the most recent 10/20 EMA crossover">10/20 Cross ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('pctFrom52wHigh')">% 52WH ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('gain20d')">20D Gain ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('dailyPivot')">D-Pivot ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('weeklyPivot')">W-Pivot ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="explore-tbody" class="divide-y divide-dark-border/40 font-mono text-xs">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- FOOTER: Pagination & Summary -->
+          <div class="flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-400 px-1">
+            <div id="explore-pagination-info">
+              Showing <strong>0</strong> of <strong>0</strong> matching stocks
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <label class="text-slate-500">Rows:</label>
+              <select id="select-explore-page-size" onchange="handleExplorePageSizeChange(this.value)" class="px-2 py-1 rounded-lg bg-dark-bg border border-dark-border text-slate-200 text-xs focus:outline-none cursor-pointer">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="500">500</option>
+                <option value="all">All</option>
+              </select>
+
+              <!-- Prev / Next Pagination Buttons -->
+              <div class="flex items-center gap-1">
+                <button id="btn-explore-prev" onclick="handleExplorePageChange(-1)" class="p-1 px-2.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer">‹ Prev</button>
+                <span id="explore-current-page-num" class="px-2 font-bold text-white">1 / 1</span>
+                <button id="btn-explore-next" onclick="handleExplorePageChange(1)" class="p-1 px-2.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer">Next ›</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
