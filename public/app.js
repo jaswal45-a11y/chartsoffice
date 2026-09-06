@@ -228,6 +228,8 @@ const el = {
   chkMc2000: document.getElementById('chk-mc2000'),
   btnNavPrevStock: document.getElementById('btn-nav-prev-stock'),
   btnNavNextStock: document.getElementById('btn-nav-next-stock'),
+  btnFloatingPrevStock: document.getElementById('btn-floating-prev-stock'),
+  btnFloatingNextStock: document.getElementById('btn-floating-next-stock'),
   chartStockLtp: document.getElementById('chart-stock-ltp'),
   chartStockChange: document.getElementById('chart-stock-change'),
   chartStockExchange: document.getElementById('chart-stock-exchange'),
@@ -2040,12 +2042,18 @@ function setupEventListeners() {
     });
   }
 
-  // Next & Previous Stock Quick-Navigation Buttons (Toolbar Capsule)
+  // Next & Previous Stock Quick-Navigation Buttons (Toolbar Capsule & Floating On-Chart Capsule)
   if (el.btnNavPrevStock) {
     el.btnNavPrevStock.addEventListener('click', () => navigateStock(-1));
   }
   if (el.btnNavNextStock) {
     el.btnNavNextStock.addEventListener('click', () => navigateStock(1));
+  }
+  if (el.btnFloatingPrevStock) {
+    el.btnFloatingPrevStock.addEventListener('click', () => navigateStock(-1));
+  }
+  if (el.btnFloatingNextStock) {
+    el.btnFloatingNextStock.addEventListener('click', () => navigateStock(1));
   }
 
   // Initialize Predictive Autocomplete Search on Manual Stock Input
