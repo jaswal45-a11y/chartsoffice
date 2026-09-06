@@ -226,6 +226,8 @@ const el = {
   stockAutocompleteDropdown: document.getElementById('stock-autocomplete-dropdown'),
   chkMc1000: document.getElementById('chk-mc1000'),
   chkMc2000: document.getElementById('chk-mc2000'),
+  btnNavPrevStock: document.getElementById('btn-nav-prev-stock'),
+  btnNavNextStock: document.getElementById('btn-nav-next-stock'),
   chartStockLtp: document.getElementById('chart-stock-ltp'),
   chartStockChange: document.getElementById('chart-stock-change'),
   chartStockExchange: document.getElementById('chart-stock-exchange'),
@@ -2035,6 +2037,14 @@ function setupEventListeners() {
     });
   }
 
+  // Next & Previous Stock Quick-Navigation Buttons (Toolbar Capsule)
+  if (el.btnNavPrevStock) {
+    el.btnNavPrevStock.addEventListener('click', () => navigateStock(-1));
+  }
+  if (el.btnNavNextStock) {
+    el.btnNavNextStock.addEventListener('click', () => navigateStock(1));
+  }
+
   // Initialize Predictive Autocomplete Search on Manual Stock Input
   setupPredictiveSearch();
 
@@ -3211,8 +3221,76 @@ function fallbackCopyText(text, count) {
 }
 
 // -------------------------------------------------------------
-// Keyboard Arrow Navigation (↑ / ↓)
+// Stock Navigation (Next / Previous) & Keyboard Shortcuts (↑ / ↓, J / K)
 // -------------------------------------------------------------
+
+function getActiveDisplayedStocksList() {
+  let list = [];
+  if (state.activeSidebarTab === 'watchlists') {
+    const activeWl = getActiveWatchlist();
+    list = activeWl ? activeWl.stocks || [] : [];
+  } else {
+    list = (state.currentStocks || []).filter(stock => {
+      if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
+      if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+      if (!state.searchQuery) return true;
+      const q = state.searchQuery;
+      const sym = (stock.symbol || '').toLowerCase();
+      const name = (stock.name || '').toLowerCase();
+      return sym.includes(q) || name.includes(q);
+    });
+
+    list.sort((a, b) => {
+      let valA = a[state.sortField];
+      let valB = b[state.sortField];
+      if (typeof valA === 'string') {
+        return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      valA = valA || 0;
+      valB = valB || 0;
+      return state.sortAscending ? valA - valB : valB - valA;
+    });
+  }
+  return list;
+}
+
+function navigateStock(direction) {
+  const list = getActiveDisplayedStocksList();
+  if (!list || list.length === 0) {
+    showToast('No stocks in current list to navigate', 'warning');
+    return;
+  }
+
+  const currentSym = state.selectedStock?.symbol;
+  const currentIndex = list.findIndex(s => s.symbol === currentSym);
+
+  let targetIndex = 0;
+  if (direction > 0) {
+    // Next stock (wrap to top if at end)
+    targetIndex = currentIndex === -1 ? 0 : (currentIndex + 1 >= list.length ? 0 : currentIndex + 1);
+  } else {
+    // Previous stock (wrap to bottom if at top)
+    targetIndex = currentIndex === -1 ? 0 : (currentIndex - 1 < 0 ? list.length - 1 : currentIndex - 1);
+  }
+
+  if (targetIndex >= 0 && targetIndex < list.length) {
+    const nextStock = list[targetIndex];
+    selectStock(nextStock);
+
+    const tbody = state.activeSidebarTab === 'watchlists' ? el.watchlistTbody : el.stocksTbody;
+    if (tbody) {
+      const rows = tbody.querySelectorAll('tr.stock-row');
+      rows.forEach((r, idx) => {
+        if (idx === targetIndex) {
+          r.classList.add('selected', 'bg-blue-600/20');
+          r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else {
+          r.classList.remove('selected', 'bg-blue-600/20');
+        }
+      });
+    }
+  }
+}
 
 function setupKeyboardNavigation() {
   window.addEventListener('keydown', (e) => {
@@ -3230,65 +3308,12 @@ function setupKeyboardNavigation() {
       return;
     }
 
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'j' || e.key === 'k') {
-      let list = [];
-      if (state.activeSidebarTab === 'watchlists') {
-        const activeWl = getActiveWatchlist();
-        list = activeWl ? activeWl.stocks || [] : [];
-      } else {
-        list = (state.currentStocks || []).filter(stock => {
-          if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
-          if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
-          if (!state.searchQuery) return true;
-          const q = state.searchQuery;
-          const sym = (stock.symbol || '').toLowerCase();
-          const name = (stock.name || '').toLowerCase();
-          return sym.includes(q) || name.includes(q);
-        });
-
-        list.sort((a, b) => {
-          let valA = a[state.sortField];
-          let valB = b[state.sortField];
-          if (typeof valA === 'string') {
-            return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-          }
-          valA = valA || 0;
-          valB = valB || 0;
-          return state.sortAscending ? valA - valB : valB - valA;
-        });
-      }
-
-      if (!list || list.length === 0) return;
-
-      const currentSym = state.selectedStock?.symbol;
-      const currentIndex = list.findIndex(s => s.symbol === currentSym);
-
-      let targetIndex = 0;
-      if (e.key === 'ArrowDown' || e.key === 'j') {
-        e.preventDefault();
-        targetIndex = currentIndex === -1 ? 0 : Math.min(currentIndex + 1, list.length - 1);
-      } else if (e.key === 'ArrowUp' || e.key === 'k') {
-        e.preventDefault();
-        targetIndex = currentIndex === -1 ? 0 : Math.max(currentIndex - 1, 0);
-      }
-
-      if (targetIndex >= 0 && targetIndex < list.length && targetIndex !== currentIndex) {
-        const nextStock = list[targetIndex];
-        selectStock(nextStock);
-
-        const tbody = state.activeSidebarTab === 'watchlists' ? el.watchlistTbody : el.stocksTbody;
-        if (tbody) {
-          const rows = tbody.querySelectorAll('tr.stock-row');
-          rows.forEach((r, idx) => {
-            if (idx === targetIndex) {
-              r.classList.add('selected', 'bg-blue-600/20');
-              r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            } else {
-              r.classList.remove('selected', 'bg-blue-600/20');
-            }
-          });
-        }
-      }
+    if (e.key === 'ArrowDown' || e.key === 'j') {
+      e.preventDefault();
+      navigateStock(1);
+    } else if (e.key === 'ArrowUp' || e.key === 'k') {
+      e.preventDefault();
+      navigateStock(-1);
     }
   });
 }

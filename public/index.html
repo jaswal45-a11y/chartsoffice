@@ -580,6 +580,17 @@
               <button id="btn-open-line-settings" onclick="openLineSettingsModal()" class="p-1.5 rounded-xl bg-blue-600/15 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-500 text-xs font-semibold flex items-center justify-center transition-all cursor-pointer shadow-sm" title="Customize chart line thickness, themes, colors, and styles">
                 <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
               </button>
+
+              <!-- Stock Quick-Navigation Segmented Capsule (Previous / Next Stock in Screener & Watchlist) -->
+              <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-slate-400">
+                <button id="btn-nav-prev-stock" class="p-1 px-1.5 rounded-lg hover:bg-dark-card hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Previous stock (Up Arrow / K)">
+                  <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                </button>
+                <span class="text-slate-600 text-[10px] select-none">|</span>
+                <button id="btn-nav-next-stock" class="p-1 px-1.5 rounded-lg hover:bg-dark-card hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Next stock (Down Arrow / J)">
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
             </div>
 
           </div>
