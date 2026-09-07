@@ -21,6 +21,10 @@ const state = {
   searchQuery: '',
   sortField: 'changePercent',
   sortAscending: false,
+  // DarvasScan State
+  pricescanResults: [],
+  pricescanSortField: 'spreadPercent',
+  pricescanSortAscending: true,
   runningScreeners: new Set(),
   isRunAllInProgress: false,
   isAggregatedMode: false,
@@ -195,8 +199,10 @@ const el = {
   // Left Sidebar Tabs & Watchlist Elements
   tabBtnScreeners: document.getElementById('tab-btn-screeners'),
   tabBtnWatchlists: document.getElementById('tab-btn-watchlists'),
+  tabBtnPricescan: document.getElementById('tab-btn-pricescan'),
   sidebarScreenersView: document.getElementById('sidebar-screeners-view'),
   sidebarWatchlistsView: document.getElementById('sidebar-watchlists-view'),
+  sidebarPricescanView: document.getElementById('sidebar-pricescan-view'),
   selectActiveWatchlist: document.getElementById('select-active-watchlist'),
   btnRenameWatchlist: document.getElementById('btn-rename-watchlist'),
   btnAddNewWatchlist: document.getElementById('btn-add-new-watchlist'),
@@ -207,6 +213,20 @@ const el = {
   wlSlotsLeft: document.getElementById('wl-slots-left'),
   watchlistTbody: document.getElementById('watchlist-tbody'),
   btnRefreshWlQuotes: document.getElementById('btn-refresh-wl-quotes'),
+
+  // DarvasScan (Price Position Scanner) Elements
+  btnRunPricescan: document.getElementById('btn-run-pricescan'),
+  btnCopyPricescanStocks: document.getElementById('btn-copy-pricescan-stocks'),
+  selectPricescanEma: document.getElementById('select-pricescan-ema'),
+  selectPricescanScope: document.getElementById('select-pricescan-scope'),
+  pricescanResultsCount: document.getElementById('pricescan-results-count'),
+  pricescanResultsCountBadge: document.getElementById('pricescan-results-count-badge'),
+  btnEma10: document.getElementById('btn-ema-10'),
+  btnEma20: document.getElementById('btn-ema-20'),
+  pricescanStatusBadge: document.getElementById('pricescan-status-badge'),
+  pricescanTbody: document.getElementById('pricescan-tbody'),
+  pricescanFooterInfo: document.getElementById('pricescan-footer-info'),
+  pricescanDynamicEmaCol: document.getElementById('pricescan-dynamic-ema-col'),
 
   // Chart Header Watchlist Elements
   chartWatchlistWrapper: document.getElementById('chart-watchlist-wrapper'),
@@ -1388,17 +1408,26 @@ async function handleLogout() {
 function switchSidebarTab(tab) {
   state.activeSidebarTab = tab;
 
+  // Reset tab button states
+  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan].forEach(btn => {
+    if (!btn) return;
+    btn.classList.remove('bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'text-white', 'text-black', 'shadow-sm');
+    btn.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+  });
+
+  // Reset views
+  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView].forEach(v => {
+    if (!v) return;
+    v.classList.add('hidden');
+    v.classList.remove('flex');
+  });
+
   if (tab === 'screeners') {
     el.tabBtnScreeners?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
     el.tabBtnScreeners?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
-    el.tabBtnWatchlists?.classList.remove('bg-amber-500', 'text-black', 'shadow-sm');
-    el.tabBtnWatchlists?.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
-
     el.sidebarScreenersView?.classList.remove('hidden');
     el.sidebarScreenersView?.classList.add('flex');
-    el.sidebarWatchlistsView?.classList.add('hidden');
-    el.sidebarWatchlistsView?.classList.remove('flex');
-  } else {
+  } else if (tab === 'watchlists') {
     if (!state.user) {
       showToast('Please log in or register to access your 5 custom watchlists.', 'info');
       openAuthModal('login');
@@ -1407,15 +1436,21 @@ function switchSidebarTab(tab) {
 
     el.tabBtnWatchlists?.classList.add('bg-amber-500', 'text-black', 'shadow-sm');
     el.tabBtnWatchlists?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
-    el.tabBtnScreeners?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-    el.tabBtnScreeners?.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
-
     el.sidebarWatchlistsView?.classList.remove('hidden');
     el.sidebarWatchlistsView?.classList.add('flex');
-    el.sidebarScreenersView?.classList.add('hidden');
-    el.sidebarScreenersView?.classList.remove('flex');
 
     loadWatchlists();
+  } else if (tab === 'pricescan') {
+    if (!state.user) {
+      showToast('Please log in or register to access DarvasScan.', 'info');
+      openAuthModal('login');
+      return;
+    }
+
+    el.tabBtnPricescan?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+    el.tabBtnPricescan?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+    el.sidebarPricescanView?.classList.remove('hidden');
+    el.sidebarPricescanView?.classList.add('flex');
   }
 }
 
@@ -1996,7 +2031,7 @@ function setupEventListeners() {
     renderStocksTable();
   });
 
-  // Table Column Sorting
+  // Table Column Sorting (Screeners Table)
   document.querySelectorAll('th[data-sort]').forEach(th => {
     th.addEventListener('click', () => {
       const field = th.dataset.sort;
@@ -2007,6 +2042,20 @@ function setupEventListeners() {
         state.sortAscending = false;
       }
       renderStocksTable();
+    });
+  });
+
+  // Table Column Sorting (DarvasScan Table)
+  document.querySelectorAll('th[data-psort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.psort;
+      if (state.pricescanSortField === field) {
+        state.pricescanSortAscending = !state.pricescanSortAscending;
+      } else {
+        state.pricescanSortField = field;
+        state.pricescanSortAscending = (field === 'spreadPercent' || field === 'symbol');
+      }
+      renderPricescanTable();
     });
   });
 
@@ -2145,6 +2194,60 @@ function setupEventListeners() {
       if (state.selectedStock) loadStockChart(state.selectedStock.symbol);
     });
   }
+
+  // DarvasScan Listeners (Segmented 1-Click Toggle + Enter Shortcut + Copy)
+  const setPricescanEma = (val) => {
+    const vStr = String(val);
+    if (el.selectPricescanEma) el.selectPricescanEma.value = vStr;
+    const btn10 = document.getElementById('btn-ema-10');
+    const btn20 = document.getElementById('btn-ema-20');
+    if (vStr === '10') {
+      btn10?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+      btn10?.classList.remove('text-slate-400');
+      btn20?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+      btn20?.classList.add('text-slate-400');
+      if (el.pricescanDynamicEmaCol) {
+        el.pricescanDynamicEmaCol.textContent = 'EMA 10 (₹)';
+      }
+    } else {
+      btn20?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+      btn20?.classList.remove('text-slate-400');
+      btn10?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+      btn10?.classList.add('text-slate-400');
+      if (el.pricescanDynamicEmaCol) {
+        el.pricescanDynamicEmaCol.textContent = 'EMA 20 (₹)';
+      }
+    }
+    if (el.pricescanFooterInfo) {
+      el.pricescanFooterInfo.textContent = `min(DarvasGreen, EMA${vStr}) ≤ Close ≤ max(DarvasGreen, EMA${vStr})`;
+    }
+    if (state.pricescanResults && state.pricescanResults.length > 0) {
+      renderPricescanTable();
+    }
+  };
+
+  document.getElementById('btn-ema-10')?.addEventListener('click', () => setPricescanEma(10));
+  document.getElementById('btn-ema-20')?.addEventListener('click', () => setPricescanEma(20));
+
+  if (el.selectPricescanEma) {
+    el.selectPricescanEma.addEventListener('change', () => setPricescanEma(el.selectPricescanEma.value));
+  }
+
+  if (el.btnRunPricescan) {
+    el.btnRunPricescan.addEventListener('click', runPricePositionScan);
+  }
+
+  if (el.btnCopyPricescanStocks) {
+    el.btnCopyPricescanStocks.addEventListener('click', handleCopyStocks);
+  }
+
+  // Keyboard Enter Shortcut to run scan when DarvasScan view is open
+  document.addEventListener('keydown', (e) => {
+    if (state.activeSidebarTab === 'pricescan' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
+      e.preventDefault();
+      runPricePositionScan();
+    }
+  });
 
   // Export CSV
   el.btnExportCsv?.addEventListener('click', exportToCsv);
@@ -3572,6 +3675,8 @@ function handleCopyStocks() {
   if (state.activeSidebarTab === 'watchlists') {
     const activeWl = getActiveWatchlist();
     list = activeWl ? activeWl.stocks || [] : [];
+  } else if (state.activeSidebarTab === 'pricescan') {
+    list = state.pricescanResults || [];
   } else {
     list = (state.currentStocks || []).filter(stock => {
       if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
@@ -3630,6 +3735,29 @@ function getActiveDisplayedStocksList() {
   if (state.activeSidebarTab === 'watchlists') {
     const activeWl = getActiveWatchlist();
     list = activeWl ? activeWl.stocks || [] : [];
+  } else if (state.activeSidebarTab === 'pricescan') {
+    list = [...(state.pricescanResults || [])];
+    const sortField = state.pricescanSortField || 'spreadPercent';
+    const isAsc = state.pricescanSortAscending;
+    const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+
+    list.sort((a, b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+      if (sortField === 'close' || sortField === 'ltp') {
+        valA = (typeof a.close === 'number' && a.close > 0) ? a.close : (a.ltp || 0);
+        valB = (typeof b.close === 'number' && b.close > 0) ? b.close : (b.ltp || 0);
+      } else if (sortField === 'selectedEmaValue') {
+        valA = ema === 20 ? (a.ema20 || a.selectedEmaValue) : (a.ema10 || a.selectedEmaValue);
+        valB = ema === 20 ? (b.ema20 || b.selectedEmaValue) : (b.ema10 || b.selectedEmaValue);
+      }
+      if (typeof valA === 'string') {
+        return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      valA = (valA !== undefined && valA !== null && !isNaN(valA)) ? Number(valA) : 0;
+      valB = (valB !== undefined && valB !== null && !isNaN(valB)) ? Number(valB) : 0;
+      return isAsc ? valA - valB : valB - valA;
+    });
   } else {
     list = (state.currentStocks || []).filter(stock => {
       if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
@@ -3678,12 +3806,14 @@ function navigateStock(direction) {
     const nextStock = list[targetIndex];
     selectStock(nextStock);
 
-    const tbody = state.activeSidebarTab === 'watchlists' ? el.watchlistTbody : el.stocksTbody;
+    const tbody = state.activeSidebarTab === 'watchlists' 
+      ? el.watchlistTbody 
+      : (state.activeSidebarTab === 'pricescan' ? el.pricescanTbody : el.stocksTbody);
     if (tbody) {
-      const rows = tbody.querySelectorAll('tr.stock-row');
+      const rows = tbody.querySelectorAll('tr.stock-row, tr.pricescan-stock-row');
       rows.forEach((r, idx) => {
         if (idx === targetIndex) {
-          r.classList.add('selected', 'bg-blue-600/20');
+          r.classList.add('selected', state.activeSidebarTab === 'pricescan' ? 'bg-emerald-600/20' : 'bg-blue-600/20');
           // Smooth internal container scroll only (NEVER scrolls or shifts the page/chart window)
           const container = tbody.closest('.overflow-y-auto') || tbody.parentElement;
           if (container) {
@@ -3697,7 +3827,7 @@ function navigateStock(direction) {
             }
           }
         } else {
-          r.classList.remove('selected', 'bg-blue-600/20');
+          r.classList.remove('selected', 'bg-blue-600/20', 'bg-emerald-600/20');
         }
       });
     }
@@ -4023,14 +4153,294 @@ function selectStock(stock) {
   }
 
   // Highlight selected row in table
-  document.querySelectorAll('.stock-row').forEach(row => row.classList.remove('selected', 'bg-blue-600/20'));
-  const matchingRow = Array.from(document.querySelectorAll('.stock-row')).find(row => {
-    return row.querySelector('span.font-mono')?.textContent?.trim() === stock.symbol;
+  document.querySelectorAll('.stock-row, .pricescan-stock-row').forEach(row => {
+    row.classList.remove('selected', 'bg-blue-600/20', 'bg-emerald-600/20');
   });
-  if (matchingRow) matchingRow.classList.add('selected', 'bg-blue-600/20');
+  const matchingRow = Array.from(document.querySelectorAll('.stock-row, .pricescan-stock-row')).find(row => {
+    return (row.dataset && row.dataset.symbol === stock.symbol) || row.querySelector('span.font-mono')?.textContent?.trim() === stock.symbol;
+  });
+  if (matchingRow) {
+    if (matchingRow.classList.contains('pricescan-stock-row')) {
+      matchingRow.classList.add('selected', 'bg-emerald-600/20');
+    } else {
+      matchingRow.classList.add('selected', 'bg-blue-600/20');
+    }
+  }
 
   if (el.chartStockName) el.chartStockName.textContent = stock.name || stock.symbol;
   loadStockChart(stock.symbol);
+}
+
+// -------------------------------------------------------------
+// DarvasScan Controller (Darvas Green ↔ EMA 10 / 20) (Registered Users Only)
+// -------------------------------------------------------------
+async function runPricePositionScan() {
+  const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+  const scope = el.selectPricescanScope?.value || 'current';
+  const btn = el.btnRunPricescan;
+  const tbody = el.pricescanTbody;
+  const statusBadge = el.pricescanStatusBadge;
+  const countEl = el.pricescanResultsCount;
+  const footerInfo = el.pricescanFooterInfo;
+
+  // Update dynamic table column header
+  if (el.pricescanDynamicEmaCol) {
+    el.pricescanDynamicEmaCol.textContent = ema === 20 ? 'EMA 20 (₹)' : 'EMA 10 (₹)';
+  }
+
+  if (footerInfo) {
+    footerInfo.textContent = `Condition: min(DarvasGreen, EMA${ema}) ≤ Close ≤ max(DarvasGreen, EMA${ema})`;
+  }
+
+  // Determine stock list if scope is current screener stocks
+  let stockList = [];
+  if (scope === 'current') {
+    stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+    if (stockList.length === 0) {
+      showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
+    }
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Scanning...</span>`;
+    lucide.createIcons();
+  }
+
+  if (statusBadge) {
+    statusBadge.textContent = 'Scanning...';
+    statusBadge.className = 'text-[11px] text-amber-400 font-mono animate-pulse';
+  }
+
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-8 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-3">
+            <i data-lucide="loader-2" class="w-8 h-8 text-emerald-400 animate-spin"></i>
+            <p class="text-xs font-semibold text-slate-200">Scanning ${scope === 'universe' ? 'Universe Stocks' : (scope === 'current' ? `${stockList.length} Screener Stocks` : `${scope.toUpperCase()} Stocks`)}...</p>
+            <p class="text-[11px] text-slate-500">Checking Darvas Green Line & EMA ${ema} boundary condition</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/scan/darvas-ema', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        targetEma: ema,
+        scope,
+        stockList
+      })
+    });
+
+    if (res.status === 401) {
+      state.pricescanResults = [];
+      showToast('Please log in or register to run DarvasScan.', 'warning');
+      openAuthModal('login');
+      return;
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Scan failed');
+    }
+
+    const matches = data.results || [];
+    state.pricescanResults = matches;
+
+    if (countEl) countEl.textContent = matches.length;
+    if (el.pricescanResultsCountBadge) el.pricescanResultsCountBadge.textContent = matches.length;
+    if (statusBadge) {
+      statusBadge.textContent = `${matches.length} Matches (${new Date().toLocaleTimeString('en-IN', { hour12: false })})`;
+      statusBadge.className = 'text-[11px] text-emerald-400 font-mono font-semibold';
+    }
+
+    renderPricescanTable();
+    showToast(`DarvasScan complete: Found ${matches.length} matching stocks.`, 'success');
+  } catch (err) {
+    console.error('Scan error:', err);
+    state.pricescanResults = [];
+    if (statusBadge) {
+      statusBadge.textContent = 'Scan Error';
+      statusBadge.className = 'text-[11px] text-rose-400 font-mono';
+    }
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="p-6 text-center text-rose-400">
+            <p class="text-xs font-semibold">Error running scan: ${err.message}</p>
+          </td>
+        </tr>
+      `;
+    }
+    showToast(`Scan error: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-70', 'cursor-not-allowed');
+      btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>RUN</span>`;
+      lucide.createIcons();
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Render DarvasScan Table with Dynamic Sorting
+// -------------------------------------------------------------
+function renderPricescanTable() {
+  const tbody = el.pricescanTbody;
+  if (!tbody) return;
+
+  const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+  const matches = [...(state.pricescanResults || [])];
+
+  // Update dynamic table column header text
+  if (el.pricescanDynamicEmaCol) {
+    el.pricescanDynamicEmaCol.textContent = ema === 20 ? 'EMA 20 (₹)' : 'EMA 10 (₹)';
+  }
+
+  // Update active column header highlight and icon
+  const sortField = state.pricescanSortField || 'spreadPercent';
+  const isAsc = state.pricescanSortAscending;
+
+  document.querySelectorAll('th[data-psort]').forEach(th => {
+    const isThisCol = th.dataset.psort === sortField;
+    const icon = th.querySelector('svg, i');
+    if (isThisCol) {
+      th.classList.add('text-slate-100');
+      if (icon) {
+        icon.setAttribute('data-lucide', isAsc ? 'arrow-up' : 'arrow-down');
+      }
+    } else {
+      th.classList.remove('text-slate-100');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'arrow-up-down');
+      }
+    }
+  });
+
+  if (matches.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-8 text-center text-slate-500">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
+            <p class="text-xs text-slate-300">No stocks matched the condition: <span class="font-mono text-amber-400">min(DarvasGreen, EMA${ema}) ≤ Close ≤ max(DarvasGreen, EMA${ema})</span></p>
+            <p class="text-[11px] text-slate-500">Try changing EMA to ${ema === 10 ? 'EMA 20' : 'EMA 10'} or scanning a broader scope.</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  // Sort matches
+  matches.sort((a, b) => {
+    let valA = a[sortField];
+    let valB = b[sortField];
+    if (sortField === 'close' || sortField === 'ltp') {
+      valA = (typeof a.close === 'number' && a.close > 0) ? a.close : (a.ltp || 0);
+      valB = (typeof b.close === 'number' && b.close > 0) ? b.close : (b.ltp || 0);
+    } else if (sortField === 'selectedEmaValue') {
+      valA = ema === 20 ? (a.ema20 || a.selectedEmaValue) : (a.ema10 || a.selectedEmaValue);
+      valB = ema === 20 ? (b.ema20 || b.selectedEmaValue) : (b.ema10 || b.selectedEmaValue);
+    }
+    if (typeof valA === 'string') {
+      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    valA = (valA !== undefined && valA !== null && !isNaN(valA)) ? Number(valA) : 0;
+    valB = (valB !== undefined && valB !== null && !isNaN(valB)) ? Number(valB) : 0;
+    return isAsc ? valA - valB : valB - valA;
+  });
+
+  tbody.innerHTML = matches.map((m) => {
+    const isSelected = state.selectedStock && state.selectedStock.symbol === m.symbol;
+    const rawChg = typeof m.changePercent === 'number' ? m.changePercent : parseFloat(m.changePercent);
+    const chgVal = isNaN(rawChg) ? 0 : Number(rawChg.toFixed(2));
+    const isBull = chgVal >= 0;
+    const changeBadge = isBull 
+      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+    const ltpPrice = (typeof m.close === 'number' && m.close > 0) ? m.close : (m.ltp || 0);
+    const selectedEmaVal = ema === 20 ? (m.ema20 || m.selectedEmaValue) : (m.ema10 || m.selectedEmaValue);
+
+    return `
+      <tr class="pricescan-stock-row hover:bg-emerald-500/10 cursor-pointer transition-colors group select-none ${isSelected ? 'selected bg-emerald-600/20' : ''}" data-symbol="${m.symbol}">
+        <td class="py-2.5 px-3">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-slate-100 group-hover:text-emerald-300 text-xs">${m.symbol}</span>
+              <span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange || 'NSE'}</span>
+            </div>
+            <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
+          </div>
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-100 text-xs">
+          ${fmt.currency(ltpPrice)}
+        </td>
+        <td class="py-2.5 px-2 text-right">
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${changeBadge}">
+            ${fmt.percent(chgVal)}
+          </span>
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">
+          ${fmt.volume(m.volume)}
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-xs text-blue-400 font-bold bg-blue-500/5 rounded">
+          ${fmt.currency(selectedEmaVal)}
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-xs font-bold text-emerald-400">
+          ${fmt.currency(m.darvasGreen)}
+        </td>
+        <td class="py-2.5 px-2 text-center font-mono text-[11px]">
+          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold" title="Channel width between Darvas Green and EMA${ema}: ${m.spreadPercent}%">
+            ${m.spreadPercent}%
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+
+  // Attach row click listeners to load chart
+  tbody.querySelectorAll('.pricescan-stock-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const sym = row.dataset.symbol;
+      if (sym) {
+        tbody.querySelectorAll('.pricescan-stock-row').forEach(r => r.classList.remove('selected', 'bg-emerald-600/20'));
+        row.classList.add('selected', 'bg-emerald-600/20');
+        selectStock({ symbol: sym, name: sym });
+        // Ensure Darvas and selected EMA toggles are enabled
+        if (state.toggles) {
+          if (!state.toggles.darvas && el.chkDarvas) {
+            el.chkDarvas.checked = true;
+            state.toggles.darvas = true;
+            state.charts.series?.darvasTop?.applyOptions({ visible: true });
+            state.charts.series?.darvasBottom?.applyOptions({ visible: true });
+          }
+          const emaToggleKey = ema === 20 ? 'ema20' : 'ema10';
+          const emaChk = ema === 20 ? el.chkEma20 : el.chkEma10;
+          if (emaChk && !state.toggles[emaToggleKey]) {
+            emaChk.checked = true;
+            state.toggles[emaToggleKey] = true;
+            state.charts.series?.[emaToggleKey]?.applyOptions({ visible: true });
+          }
+        }
+      }
+    });
+  });
 }
 
 // -------------------------------------------------------------

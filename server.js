@@ -1689,7 +1689,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   const yahooRange = '2y';
   const cacheKey = `${rawSymbol.toUpperCase()}_${selectedRange}_${interval}`;
   const cached = historyCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp < 5000)) {
+  if (cached && (Date.now() - cached.timestamp < 60000)) {
     return cached.data;
   }
 
@@ -2051,6 +2051,154 @@ async function searchPredictiveStocks(query) {
   const finalResults = results.slice(0, 10);
   searchCache.set(cacheKey, finalResults);
   return finalResults;
+}
+
+// -------------------------------------------------------------
+// Price Position Scanner Engine (Darvas Green Line ↔ EMA 10 / 20)
+// Condition: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
+// -------------------------------------------------------------
+async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) {
+  const emaPeriod = Number(targetEma) === 20 ? 20 : 10;
+  const universe = getLocalStockUniverse();
+  const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+
+  let targetSymbols = [];
+
+  switch (scope) {
+    case 'current':
+      if (Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE' });
+      } else {
+        targetSymbols = sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      }
+      break;
+
+    case 'large':
+    case 'large_cap':
+      // Large Cap: Top 100 stocks
+      targetSymbols = sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+
+    case 'mid':
+    case 'mid_cap':
+      // Mid Cap: Rank 101 to 250 (150 stocks)
+      targetSymbols = sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+
+    case 'small':
+    case 'small_cap':
+      // Small Cap: Rank 251 to 500 (250 stocks)
+      targetSymbols = sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+
+    case 'micro':
+    case 'micro_cap':
+      // Micro Cap: Rank 501+
+      targetSymbols = sortedUniverse.slice(500, 700).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+
+    case 'midsmall400':
+    case 'midsmall_400':
+      // MidSmall400: Rank 101 to 500 (Mid 150 + Small 250 = 400 stocks)
+      targetSymbols = sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+
+    case 'fno':
+      targetSymbols = sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+
+    case 'universe':
+    case 'all':
+    default:
+      targetSymbols = sortedUniverse.slice(0, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      break;
+  }
+
+  // Deduplicate symbols
+  const uniqueList = [];
+  const seen = new Set();
+  for (const item of targetSymbols) {
+    const s = (item.symbol || '').toUpperCase().trim();
+    if (s && !seen.has(s)) {
+      seen.add(s);
+      uniqueList.push({ symbol: s, name: item.name || s, exchange: item.exchange || 'NSE' });
+    }
+  }
+
+  const matches = [];
+  const concurrency = 15;
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < uniqueList.length) {
+      const idx = cursor++;
+      const item = uniqueList[idx];
+      try {
+        const hist = await fetchStockHistory(item.symbol, '6mo', '1d');
+        if (hist && hist.candles && hist.candles.length >= 10) {
+          const close = Number(hist.ltp || (hist.candles.length > 0 ? hist.candles[hist.candles.length - 1].close : null));
+          const ema10 = Number(hist.latestEMA10);
+          const ema20 = Number(hist.latestEMA20);
+          const darvasGreen = Number(hist.latestDarvasTop);
+          const selectedEmaVal = emaPeriod === 20 ? ema20 : ema10;
+
+          if (!isNaN(close) && !isNaN(darvasGreen) && !isNaN(selectedEmaVal) && darvasGreen > 0 && selectedEmaVal > 0) {
+            const minBound = Math.min(darvasGreen, selectedEmaVal);
+            const maxBound = Math.max(darvasGreen, selectedEmaVal);
+
+            // Mathematical condition: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
+            if (close >= minBound && close <= maxBound) {
+              const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
+              const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
+              const rangeWidth = maxBound - minBound;
+              const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+
+              const lastCandle = hist.candles[hist.candles.length - 1];
+              const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
+
+              matches.push({
+                symbol: item.symbol,
+                name: item.name,
+                exchange: item.exchange || 'NSE',
+                close: Number(close.toFixed(2)),
+                ltp: Number(close.toFixed(2)),
+                changePercent: hist.changePercent || 0,
+                volume,
+                ema10: Number(ema10.toFixed(2)),
+                ema20: Number(ema20.toFixed(2)),
+                darvasGreen: Number(darvasGreen.toFixed(2)),
+                darvasBottom: hist.latestDarvasBottom ? Number(hist.latestDarvasBottom.toFixed(2)) : null,
+                selectedEma: emaPeriod,
+                selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+                spreadPercent,
+                positionPercent,
+                lowerBound: Number(minBound.toFixed(2)),
+                upperBound: Number(maxBound.toFixed(2))
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  const workers = [];
+  for (let i = 0; i < Math.min(concurrency, uniqueList.length); i++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+
+  // Sort by tightest spread percentage first
+  matches.sort((a, b) => a.spreadPercent - b.spreadPercent);
+
+  return {
+    success: true,
+    totalScanned: uniqueList.length,
+    matchesCount: matches.length,
+    targetEma: emaPeriod,
+    scope,
+    results: matches
+  };
 }
 
 // Parse request JSON body helper
@@ -4211,6 +4359,24 @@ const server = http.createServer(async (req, res) => {
         } catch (proxyErr) {
           res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
           return res.end(`<div style="color:#ef4444;padding:20px;font-family:sans-serif;">Error loading Chartink chart: ${proxyErr.message}</div>`);
+        }
+      }
+
+      // 8a. POST /api/scan/darvas-ema - Price Position Scanner (Darvas Green ↔ EMA 10/20) (Registered Users Only)
+      if (pathname === '/api/scan/darvas-ema' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in or register to access the Price Position Scanner.' });
+        }
+
+        try {
+          const body = await parseJsonBody(req);
+          const { targetEma = 10, scope = 'current', stockList = [] } = body;
+          const scanResults = await scanDarvasEma(targetEma, scope, stockList);
+          return sendJson(res, 200, scanResults);
+        } catch (scanErr) {
+          console.error('Error during Darvas-EMA price scan:', scanErr.message);
+          return sendJson(res, 500, { success: false, error: scanErr.message });
         }
       }
 
