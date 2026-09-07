@@ -1861,12 +1861,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         
         const realLtp = meta.regularMarketPrice ? Number(meta.regularMarketPrice.toFixed(2)) : latestCandle.close;
         let changePercent = 0;
-        if (meta.regularMarketChangePercent != null) {
+        if (meta.regularMarketChangePercent != null && !isNaN(meta.regularMarketChangePercent)) {
           changePercent = Number(meta.regularMarketChangePercent.toFixed(2));
-        } else if (meta.chartPreviousClose) {
-          changePercent = Number((((realLtp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
         } else if (prevCandle && prevCandle.close) {
           changePercent = Number((((realLtp - prevCandle.close) / prevCandle.close) * 100).toFixed(2));
+        } else if (meta.chartPreviousClose) {
+          changePercent = Number((((realLtp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
         }
 
         const high52w = meta.fiftyTwoWeekHigh || Math.max(...candles.slice(-250).map(c => c.high));
@@ -2447,8 +2447,12 @@ async function fetchBatchQuotes(symbols) {
       const batch = uncached.slice(i, i + chunkSize);
       const batchPromise = Promise.all(batch.map(async (s) => {
         try {
-          const querySym = YAHOO_SYMBOL_ALIASES[s] || s;
-          const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(querySym)}.NS?range=5d&interval=1d`, {
+          const mapped = GLOBAL_INDEX_SYMBOL_MAP[s] || YAHOO_SYMBOL_ALIASES[s] || s;
+          let targetTicker = mapped;
+          if (!targetTicker.startsWith('^') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO')) {
+            targetTicker = `${targetTicker}.NS`;
+          }
+          const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(targetTicker)}?range=5d&interval=1d`, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
             timeout: 5000
           });
@@ -2457,12 +2461,24 @@ async function fetchBatchQuotes(symbols) {
             const meta = d.chart?.result?.[0]?.meta;
             if (meta && meta.regularMarketPrice) {
               const ltp = Number(meta.regularMarketPrice.toFixed(2));
-              const prev = meta.chartPreviousClose || ltp;
-              const chg = prev ? ((ltp - prev) / prev) * 100 : 0;
+              let chg = 0;
+              if (meta.regularMarketChangePercent != null && !isNaN(meta.regularMarketChangePercent)) {
+                chg = Number(meta.regularMarketChangePercent.toFixed(2));
+              } else {
+                const closes = (d.chart?.result?.[0]?.indicators?.quote?.[0]?.close || []).filter(c => typeof c === 'number');
+                if (closes.length >= 2) {
+                  const yesterdayClose = closes[closes.length - 2];
+                  chg = yesterdayClose ? Number((((ltp - yesterdayClose) / yesterdayClose) * 100).toFixed(2)) : 0;
+                } else if (meta.chartPreviousClose) {
+                  chg = Number((((ltp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
+                }
+              }
+              const prev = ltp / (1 + (chg / 100));
               const quote = {
                 symbol: s,
                 ltp,
-                changePercent: Number(chg.toFixed(2)),
+                changePercent: chg,
+                prevClose: Number(prev.toFixed(2)),
                 dayHigh: meta.regularMarketDayHigh ? Number(meta.regularMarketDayHigh.toFixed(2)) : ltp,
                 dayLow: meta.regularMarketDayLow ? Number(meta.regularMarketDayLow.toFixed(2)) : ltp,
                 volume: meta.regularMarketVolume || 0,
@@ -2546,8 +2562,17 @@ async function fetchBatchIndexQuotes(indicesList) {
           const quotes = r?.indicators?.quote?.[0];
           if (meta && meta.regularMarketPrice) {
             ltp = Number(meta.regularMarketPrice.toFixed(2));
-            const prev = meta.chartPreviousClose || ltp;
-            changePercent = prev ? Number((((ltp - prev) / prev) * 100).toFixed(2)) : 0;
+            if (meta.regularMarketChangePercent != null && !isNaN(meta.regularMarketChangePercent)) {
+              changePercent = Number(meta.regularMarketChangePercent.toFixed(2));
+            } else {
+              const closes = (quotes?.close || []).filter(c => typeof c === 'number');
+              if (closes.length >= 2) {
+                const yesterdayClose = closes[closes.length - 2];
+                changePercent = yesterdayClose ? Number((((ltp - yesterdayClose) / yesterdayClose) * 100).toFixed(2)) : 0;
+              } else if (meta.chartPreviousClose) {
+                changePercent = Number((((ltp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
+              }
+            }
             dayHigh = meta.regularMarketDayHigh ? Number(meta.regularMarketDayHigh.toFixed(2)) : ltp;
             dayLow = meta.regularMarketDayLow ? Number(meta.regularMarketDayLow.toFixed(2)) : ltp;
           }
@@ -2962,11 +2987,11 @@ async function computeExploreStocksData() {
     const lq = liveQuoteMap[symbol] || {};
     if (lq.source === 'dhan') dhanLiveCount++;
 
-    const ltp = Number((lq.price || (stk.price || (stk.ltp ?? (mcap > 50000 ? 2500 : mcap > 15000 ? 1200 : mcap > 5000 ? 450 : 180)))).toFixed(2));
+    const ltp = Number((lq.price || stk.price || 0).toFixed(2));
     const changePercent = Number((lq.changePercent !== undefined ? lq.changePercent : (stk.changePercent !== undefined ? stk.changePercent : 0)).toFixed(2));
-    const dayHigh = Number((lq.dayHigh || stk.dayHigh || (ltp * (1 + Math.abs(changePercent) / 150 + 0.008))).toFixed(2));
-    const dayLow = Number((lq.dayLow || stk.dayLow || (ltp * (1 - Math.abs(changePercent) / 150 - 0.008))).toFixed(2));
-    const volume = lq.volume || stk.volume || Math.round(150000 + (mcap * 120));
+    const dayHigh = Number((lq.dayHigh || stk.dayHigh || ltp).toFixed(2));
+    const dayLow = Number((lq.dayLow || stk.dayLow || ltp).toFixed(2));
+    const volume = lq.volume || stk.volume || 0;
     const stockSource = lq.source || (isDhan ? 'dhan' : 'backup');
 
     // 14-day RSI
@@ -3002,8 +3027,8 @@ async function computeExploreStocksData() {
     const emaCrossLabel = isBullishCross ? `+${crossDaysAgo}d` : `-${crossDaysAgo}d`;
 
     // % From 52-Week High
-    const high52w = Number((stk.high52w || Math.max(dayHigh, (ltp * (1 + (symHash % 25) / 100 + 0.02)))).toFixed(2));
-    const pctFrom52wHigh = Number((((ltp - high52w) / high52w) * 100).toFixed(2));
+    const high52w = Number((stk.high52w || Math.max(dayHigh, ltp)).toFixed(2));
+    const pctFrom52wHigh = high52w > 0 ? Number((((ltp - high52w) / high52w) * 100).toFixed(2)) : 0;
 
     // Custom Lookback Gains (5d, 10d, 20d, 30d, 60d)
     const gain5d = Number((changePercent * 1.8 + (symHash % 6 - 2)).toFixed(2));
@@ -3013,12 +3038,10 @@ async function computeExploreStocksData() {
     const gain60d = Number((changePercent * 5.5 + (symHash % 35 - 8)).toFixed(2));
 
     // Daily Floor Pivot Calculation (P, R1, S1) from previous day
-    const prevHigh = dayHigh * 0.995;
-    const prevLow = dayLow * 0.995;
     const prevClose = ltp / (1 + changePercent / 100);
-    const dailyP = Number(((prevHigh + prevLow + prevClose) / 3).toFixed(2));
-    const dailyR1 = Number(((2 * dailyP) - prevLow).toFixed(2));
-    const dailyS1 = Number(((2 * dailyP) - prevHigh).toFixed(2));
+    const dailyP = Number(((dayHigh + dayLow + prevClose) / 3).toFixed(2));
+    const dailyR1 = Number(((2 * dailyP) - dayLow).toFixed(2));
+    const dailyS1 = Number(((2 * dailyP) - dayHigh).toFixed(2));
 
     let dailyPivotRegime = 'p_to_r1';
     let dailyPivotLabel = 'P to R1 🟢';

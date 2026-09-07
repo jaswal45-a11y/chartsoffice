@@ -433,6 +433,12 @@
                   <span id="dhan-header-text">⚡ Live Feed (NSE/BSE)</span>
                 </div>
 
+                <!-- REAL-TIME PRICE SYNC SIGNAL -->
+                <div id="explore-sync-signal" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/15 text-emerald-300 border-emerald-500/30 transition-all cursor-pointer" onclick="loadExploreData()" title="Click to refresh / sync live market prices">
+                  <span id="explore-sync-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="explore-sync-text">🟢 Prices in Sync</span>
+                </div>
+
                 <!-- Live Summary Counter Badge -->
                 <span id="badge-explore-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></span>
               </div>
