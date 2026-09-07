@@ -1936,6 +1936,24 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
 // Predictive Stock Search Cache (5 mins TTL)
 const searchCache = new Map();
+let localUniverseCache = null;
+
+function getLocalStockUniverse() {
+  if (localUniverseCache) return localUniverseCache;
+  try {
+    if (fs.existsSync(FNO_DATA_FILE)) {
+      const raw = fs.readFileSync(FNO_DATA_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        localUniverseCache = parsed;
+        return localUniverseCache;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading local universe for search:', e.message);
+  }
+  return [];
+}
 
 async function searchPredictiveStocks(query) {
   if (!query || query.trim().length === 0) return [];
@@ -1964,14 +1982,15 @@ async function searchPredictiveStocks(query) {
     }
   };
 
-  // 1. Check local market cap cache
-  if (Array.isArray(cachedMarketCapList) && cachedMarketCapList.length > 0) {
-    for (const item of cachedMarketCapList) {
-      const sym = (item.nsecode || '').toUpperCase();
+  // 1. Instant match from local universe (1,100 stocks & major indices)
+  const universe = getLocalStockUniverse();
+  if (Array.isArray(universe) && universe.length > 0) {
+    for (const item of universe) {
+      const sym = (item.symbol || '').toUpperCase();
       const n = (item.name || '').toUpperCase();
       if (sym.includes(qUpper) || n.includes(qUpper)) {
-        add(item.nsecode, item.name, 'NSE');
-        if (results.length >= 6) break;
+        add(item.symbol, item.name, item.exchange || 'NSE');
+        if (results.length >= 8) break;
       }
     }
   }
@@ -2029,7 +2048,7 @@ async function searchPredictiveStocks(query) {
     return 0;
   });
 
-  const finalResults = results.slice(0, 8);
+  const finalResults = results.slice(0, 10);
   searchCache.set(cacheKey, finalResults);
   return finalResults;
 }
