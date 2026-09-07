@@ -369,6 +369,9 @@ async function init() {
   // Start real-time active chart ticker (4s auto-pull for zero lag)
   startActiveChartLiveTicker();
 
+  // Start periodic screened stocks live price and 1D% change synchronizer (6s)
+  setInterval(syncScreenedStocksLivePrices, 6000);
+
   // Sync Live Data Feed Status Badge (Dhan vs Backup)
   syncDataFeedStatus();
 
@@ -3964,6 +3967,18 @@ async function pollActiveStockLiveQuote() {
       } catch (e) {}
     }
 
+    // Update matching stock in current screened list if present
+    if (state.currentStocks && state.currentStocks.length > 0) {
+      const matchInList = state.currentStocks.find(s => (s.symbol || '').toUpperCase() === cleanSym);
+      if (matchInList && (matchInList.close !== newPrice || matchInList.changePercent !== newChange)) {
+        matchInList.price = newPrice;
+        matchInList.close = newPrice;
+        if (newChange != null && !isNaN(newChange)) matchInList.changePercent = Number(newChange.toFixed(2));
+        if (q.volume) matchInList.volume = q.volume;
+        renderStocksTable();
+      }
+    }
+
     updateDefaultLegend();
   } catch (err) {}
 }
@@ -3974,15 +3989,19 @@ async function syncScreenedStocksLivePrices() {
   if (symbols.length === 0) return;
 
   try {
-    const res = await fetch(`/api/fno/live-quotes?symbols=${encodeURIComponent(symbols.slice(0, 80).join(','))}`);
+    const res = await fetch(`/api/fno/live-quotes?symbols=${encodeURIComponent(symbols.slice(0, 100).join(','))}`);
     const data = await res.json();
     if (data.success && data.quotes) {
       let updated = false;
       state.currentStocks.forEach(s => {
-        const q = data.quotes[s.symbol.toUpperCase()];
+        const q = data.quotes[(s.symbol || '').toUpperCase()];
         if (q && q.price) {
           s.price = q.price;
-          if (q.changePercent != null) s.changePercent = q.changePercent;
+          s.close = q.price;
+          if (q.changePercent !== undefined && q.changePercent !== null && !isNaN(q.changePercent)) {
+            s.changePercent = Number(q.changePercent.toFixed(2));
+          }
+          if (q.volume) s.volume = q.volume;
           updated = true;
         }
       });
@@ -4421,10 +4440,13 @@ function renderStocksTable() {
 
   list.forEach(stock => {
     const isSelected = state.selectedStock && state.selectedStock.symbol === stock.symbol;
-    const isBull = stock.changePercent >= 0;
+    const rawChg = typeof stock.changePercent === 'number' ? stock.changePercent : parseFloat(stock.changePercent);
+    const chgVal = isNaN(rawChg) ? 0 : Number(rawChg.toFixed(2));
+    const isBull = chgVal >= 0;
     const changeBadge = isBull 
       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
       : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+    const closePrice = (typeof stock.close === 'number' && stock.close > 0) ? stock.close : ((typeof stock.price === 'number' && stock.price > 0) ? stock.price : 0);
 
     const tr = document.createElement('tr');
     tr.className = `stock-row border-b border-dark-border/40 hover:bg-dark-accent/40 cursor-pointer transition-colors ${isSelected ? 'selected' : ''}`;
@@ -4468,11 +4490,11 @@ function renderStocksTable() {
         </div>
       </td>
       <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-200">
-        ${fmt.currency(stock.close)}
+        ${fmt.currency(closePrice)}
       </td>
       <td class="py-2.5 px-3 text-right">
         <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${changeBadge}">
-          ${fmt.percent(stock.changePercent)}
+          ${fmt.percent(chgVal)}
         </span>
       </td>
       <td class="py-2.5 px-3 text-right font-mono text-slate-400 text-[11px]">

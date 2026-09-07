@@ -219,6 +219,54 @@ function convertDhanHistoricalToCandles(dhanData) {
   return candles;
 }
 
+// Universal Resilient HTTPS Fetcher with custom agent
+function httpsFetch(url, options = {}) {
+  return new Promise((resolve) => {
+    try {
+      const parsed = new URL(url);
+      const isHttps = parsed.protocol === 'https:';
+      const client = isHttps ? https : http;
+      const agent = isHttps ? new https.Agent({ rejectUnauthorized: false }) : undefined;
+      const req = client.request({
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port || (isHttps ? 443 : 80),
+        path: parsed.pathname + parsed.search,
+        method: (options.method || 'GET').toUpperCase(),
+        headers: options.headers || {},
+        agent,
+        timeout: options.timeout || 12000
+      }, (res) => {
+        let raw = '';
+        res.on('data', chunk => raw += chunk);
+        res.on('end', () => {
+          let json = null;
+          try { json = JSON.parse(raw); } catch (e) {}
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            headers: res.headers,
+            raw,
+            text: () => Promise.resolve(raw),
+            json: () => Promise.resolve(json || {})
+          });
+        });
+      });
+
+      req.on('error', (err) => resolve({ ok: false, status: 0, error: err.message, text: () => Promise.resolve(''), json: () => Promise.resolve({}) }));
+      req.on('timeout', () => { req.destroy(); resolve({ ok: false, status: 408, error: 'Request timeout', text: () => Promise.resolve(''), json: () => Promise.resolve({}) }); });
+
+      if (options.body) {
+        const bodyStr = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+        req.write(bodyStr);
+      }
+      req.end();
+    } catch (err) {
+      resolve({ ok: false, status: 0, error: err.message, text: () => Promise.resolve(''), json: () => Promise.resolve({}) });
+    }
+  });
+}
+
 // Robust Dhan API Request Dispatcher with TLS compatibility
 function dhanFetch(endpoint, options = {}) {
   return new Promise((resolve) => {
@@ -923,16 +971,20 @@ async function getMarketCapSets() {
   }
 
   try {
-    const pageRes = await fetch('https://chartink.com/screener/sumit-turtle-system', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+    const pageRes = await httpsFetch('https://chartink.com/screener/sumit-turtle-system', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
     });
     const html = await pageRes.text();
     const tokenMatch = html.match(/name="csrf-token"\s+content="([^"]+)"/i);
     const csrf = tokenMatch ? tokenMatch[1] : '';
-    const cookies = (pageRes.headers.getSetCookie ? pageRes.headers.getSetCookie() : [pageRes.headers.get('set-cookie') || '']).map(c => c.split(';')[0]).join('; ');
+    const setCookies = pageRes.headers['set-cookie'] || [];
+    const cookies = (Array.isArray(setCookies) ? setCookies : [setCookies]).map(c => c.split(';')[0]).join('; ');
 
     const fetchScan = async (clause) => {
-      const pRes = await fetch('https://chartink.com/screener/process', {
+      const pRes = await httpsFetch('https://chartink.com/screener/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -1005,7 +1057,7 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
   const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
   // Step 1: Fetch screener page to get CSRF token, cookies, and atlas_query / scan_clause
-  const pageRes = await fetch(targetUrl, {
+  const pageRes = await httpsFetch(targetUrl, {
     headers: {
       'User-Agent': userAgent,
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -1018,8 +1070,8 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
   }
 
   const html = await pageRes.text();
-  const rawCookies = pageRes.headers.getSetCookie ? pageRes.headers.getSetCookie() : [];
-  const cookies = rawCookies.map(c => c.split(';')[0]).join('; ');
+  const setCookies = pageRes.headers['set-cookie'] || [];
+  const cookies = (Array.isArray(setCookies) ? setCookies : [setCookies]).map(c => c.split(';')[0]).join('; ');
 
   // Extract CSRF token
   const csrfMatch = html.match(/<meta\s+name=["']csrf-token["']\s+content=["']([^"']+)["']/i);
@@ -1078,7 +1130,7 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
   if (scanRunToken) postBody.append('scan_run_token', scanRunToken);
   if (atlasJson) postBody.append('atlas_json', atlasJson);
 
-  const processRes = await fetch('https://chartink.com/screener/process', {
+  const processRes = await httpsFetch('https://chartink.com/screener/process', {
     method: 'POST',
     headers: {
       'User-Agent': userAgent,
@@ -1109,19 +1161,48 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
     const isOver2000 = (nse && mc2000Set.has(nse)) || (bse && mc2000Set.has(bse)) || mc2000Set.has(sym.toUpperCase());
     const isOver1000 = isOver2000 || (nse && mc1000Set.has(nse)) || (bse && mc1000Set.has(bse)) || mc1000Set.has(sym.toUpperCase());
 
+    const closeVal = typeof s.close === 'number' ? Number(s.close.toFixed(2)) : (parseFloat(String(s.close || '').replace(/,/g, '')) || 0);
+    const rawChg = s.per_chg !== undefined ? s.per_chg : (s.p_change !== undefined ? s.p_change : (s.change !== undefined ? s.change : (s.pct_chg !== undefined ? s.pct_chg : 0)));
+    const changeVal = typeof rawChg === 'number' ? Number(rawChg.toFixed(2)) : (parseFloat(String(rawChg || '').replace(/[%,\s]/g, '')) || 0);
+    const volVal = typeof s.volume === 'number' ? s.volume : (typeof s.vol === 'number' ? s.vol : (parseInt(String(s.volume || s.vol || '0').replace(/,/g, ''), 10) || 0));
+
     return {
       sr: s.sr || idx + 1,
       symbol: sym,
       name: s.name || sym,
       bsecode: bse,
       nsecode: nse,
-      close: typeof s.close === 'number' ? Number(s.close.toFixed(2)) : s.close,
-      changePercent: typeof s.per_chg === 'number' ? Number(s.per_chg.toFixed(2)) : (typeof s.p_change === 'number' ? Number(s.p_change.toFixed(2)) : 0),
-      volume: typeof s.volume === 'number' ? s.volume : (typeof s.vol === 'number' ? s.vol : 0),
+      close: closeVal,
+      price: closeVal,
+      changePercent: changeVal,
+      volume: volVal,
       mcOver1000Cr: Boolean(isOver1000),
       mcOver2000Cr: Boolean(isOver2000)
     };
   });
+
+  // Enrich with Real-Time Live Quotes (LTP, 1D % Change, Volume)
+  if (stocks.length > 0) {
+    try {
+      const symbols = stocks.map(st => st.symbol);
+      const liveQuotes = await getOrFetchLiveQuotes(symbols);
+      stocks.forEach(st => {
+        const q = liveQuotes[st.symbol.toUpperCase()];
+        if (q && q.price) {
+          st.close = q.price;
+          st.price = q.price;
+          if (q.changePercent !== undefined && q.changePercent !== null && !isNaN(q.changePercent)) {
+            st.changePercent = Number(q.changePercent.toFixed(2));
+          }
+          if (q.volume) {
+            st.volume = q.volume;
+          }
+        }
+      });
+    } catch (enrichErr) {
+      console.warn('[SCREENER] Live quote enrichment notice:', enrichErr.message);
+    }
+  }
 
   return {
     success: true,
@@ -1397,7 +1478,7 @@ async function fetchChartDataMultiSource(candidate, range, interval) {
   // Tier 1: Query1 with Crumb + Cookies (Bypasses Cloud Datacenter blocks)
   const tier1Url = `https://query1.finance.yahoo.com/v8/finance/chart/${candidate}?range=${range}&interval=${interval}${crumbParam}`;
   try {
-    const res = await fetch(tier1Url, {
+    const res = await httpsFetch(tier1Url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': '*/*',
@@ -1413,7 +1494,7 @@ async function fetchChartDataMultiSource(candidate, range, interval) {
   // Tier 2: Query2 Mirror (Direct)
   const tier2Url = `https://query2.finance.yahoo.com/v8/finance/chart/${candidate}?range=${range}&interval=${interval}`;
   try {
-    const res = await fetch(tier2Url, {
+    const res = await httpsFetch(tier2Url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': '*/*'
@@ -1428,7 +1509,7 @@ async function fetchChartDataMultiSource(candidate, range, interval) {
   // Tier 3: Query1 Mirror (Direct fallback)
   const tier3Url = `https://query1.finance.yahoo.com/v8/finance/chart/${candidate}?range=${range}&interval=${interval}`;
   try {
-    const res = await fetch(tier3Url, {
+    const res = await httpsFetch(tier3Url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': '*/*'
@@ -1443,6 +1524,55 @@ async function fetchChartDataMultiSource(candidate, range, interval) {
   return null;
 }
 
+const GLOBAL_INDEX_SYMBOL_MAP = {
+  'NIFTY': '^NSEI',
+  'NIFTY 50': '^NSEI',
+  'NIFTY50': '^NSEI',
+  '^NSEI': '^NSEI',
+  'BANKNIFTY': '^NSEBANK',
+  'NIFTY BANK': '^NSEBANK',
+  'NIFTYBANK': '^NSEBANK',
+  '^NSEBANK': '^NSEBANK',
+  'FINNIFTY': 'NIFTY_FIN_SERVICE.NS',
+  'NIFTY FIN SERVICE': 'NIFTY_FIN_SERVICE.NS',
+  'MIDCPNIFTY': '^NSEMDCP50',
+  'NIFTY MIDCAP 50': '^NSEMDCP50',
+  'SENSEX': '^BSESN',
+  'BSESN': '^BSESN',
+  '^BSESN': '^BSESN',
+  'CNXIT': '^CNXIT',
+  'NIFTY IT': '^CNXIT',
+  'CNXAUTO': '^CNXAUTO',
+  'NIFTY AUTO': '^CNXAUTO',
+  'CNXPHARMA': '^CNXPHARMA',
+  'NIFTY PHARMA': '^CNXPHARMA',
+  'CNXMETAL': '^CNXMETAL',
+  'NIFTY METAL': '^CNXMETAL',
+  'CNXFMCG': '^CNXFMCG',
+  'NIFTY FMCG': '^CNXFMCG',
+  'CNXENERGY': '^CNXENERGY',
+  'NIFTY ENERGY': '^CNXENERGY',
+  'CNXINFRA': '^CNXINFRA',
+  'NIFTY INFRA': '^CNXINFRA',
+  'TATAMOTORS': 'TMPV.NS'
+};
+
+function getCandidateSymbols(sym) {
+  const clean = sym.trim().toUpperCase().replace(/&/g, '%26');
+  const candidates = [];
+  if (GLOBAL_INDEX_SYMBOL_MAP[clean]) {
+    candidates.push(GLOBAL_INDEX_SYMBOL_MAP[clean]);
+  }
+  if (clean.startsWith('^') || clean.endsWith('.NS') || clean.endsWith('.BO')) {
+    if (!candidates.includes(clean)) candidates.push(clean);
+  } else if (/^\d+$/.test(clean)) {
+    candidates.push(`${clean}.BO`, `${clean}.NS`);
+  } else {
+    candidates.push(`${clean}.NS`, `${clean}.BO`);
+  }
+  return candidates;
+}
+
 // Traditional Auto Pivot Points (TradingView Standard)
 // Automatically selects reference period based on active timeframe:
 // - Intraday (1m, 5m, 15m, 30m, 1hr) -> Daily (D) base
@@ -1451,8 +1581,7 @@ async function fetchChartDataMultiSource(candidate, range, interval) {
 // - Monthly (1mo) -> Yearly (Y) base
 async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
   let sym = rawSymbol.trim().toUpperCase().replace(/&/g, '%26');
-  let candidates = [`${sym}.NS`, `${sym}.BO`];
-  if (/^\d+$/.test(sym)) candidates = [`${sym}.BO`, `${sym}.NS`];
+  let candidates = getCandidateSymbols(sym);
 
   let refInterval = '1d';
   let refRange = '5d';
@@ -1655,11 +1784,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   }
 
   // 2. Backup Tier: Multi-Source Yahoo/Mirrors Fallback
-  // Try NSE first, fallback to BSE
-  let candidates = [`${sym}.NS`, `${sym}.BO`];
-  if (/^\d+$/.test(sym)) {
-    candidates = [`${sym}.BO`, `${sym}.NS`];
-  }
+  let candidates = getCandidateSymbols(sym);
 
   for (const candidate of candidates) {
     try {
@@ -1854,16 +1979,18 @@ async function searchPredictiveStocks(query) {
   // 2. Fetch from Chartink autocomplete
   try {
     const cUrl = `https://chartink.com/stocks/search?term=${encodeURIComponent(qLower)}`;
-    const cRes = await fetch(cUrl, {
+    const cRes = await httpsFetch(cUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(2500)
+      timeout: 3000
     });
     if (cRes.ok) {
       const cList = await cRes.json();
-      for (const item of cList) {
-        const sym = item.nsecode || item.bsecode;
-        if (sym && !/^\d{6}$/.test(sym)) {
-          add(sym, item.name, 'NSE');
+      if (Array.isArray(cList)) {
+        for (const item of cList) {
+          const sym = item.nsecode || item.bsecode;
+          if (sym && !/^\d{6}$/.test(sym)) {
+            add(sym, item.name, 'NSE');
+          }
         }
       }
     }
@@ -1873,9 +2000,9 @@ async function searchPredictiveStocks(query) {
   if (results.length < 5) {
     try {
       const yUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(qUpper)}&quotesCount=8&newsCount=0`;
-      const yRes = await fetch(yUrl, {
+      const yRes = await httpsFetch(yUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(2000)
+        timeout: 3000
       });
       if (yRes.ok) {
         const yData = await yRes.json();
@@ -2321,13 +2448,13 @@ async function fetchBatchQuotes(symbols) {
       const batchPromise = Promise.all(batch.map(async (s) => {
         try {
           const querySym = YAHOO_SYMBOL_ALIASES[s] || s;
-          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(querySym)}.NS?range=5d&interval=1d`, {
+          const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(querySym)}.NS?range=5d&interval=1d`, {
             headers: { 'User-Agent': 'Mozilla/5.0' },
-            signal: AbortSignal.timeout(4000)
+            timeout: 5000
           });
           if (res.ok) {
             const d = await res.json();
-            const meta = d.chart.result?.[0]?.meta;
+            const meta = d.chart?.result?.[0]?.meta;
             if (meta && meta.regularMarketPrice) {
               const ltp = Number(meta.regularMarketPrice.toFixed(2));
               const prev = meta.chartPreviousClose || ltp;
@@ -2408,13 +2535,13 @@ async function fetchBatchIndexQuotes(indicesList) {
     const promises = uncached.map(async (idx) => {
       let ltp = null, changePercent = 0, dayHigh = null, dayLow = null, sparkline = [];
       try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(idx.symbol)}?range=5d&interval=1d`, {
+        const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(idx.symbol)}?range=5d&interval=1d`, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
-          signal: AbortSignal.timeout(3500)
+          timeout: 5000
         });
         if (res.ok) {
           const d = await res.json();
-          const r = d.chart.result?.[0];
+          const r = d.chart?.result?.[0];
           const meta = r?.meta;
           const quotes = r?.indicators?.quote?.[0];
           if (meta && meta.regularMarketPrice) {
@@ -3996,7 +4123,7 @@ const server = http.createServer(async (req, res) => {
         const targetUrl = `https://chartink.com/stocks/${sym}.html`;
 
         try {
-          const fetchRes = await fetch(targetUrl, {
+          const fetchRes = await httpsFetch(targetUrl, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
