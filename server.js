@@ -48,6 +48,16 @@ const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.j
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+function sanitizeDhanValue(val) {
+  if (!val) return '';
+  let clean = String(val).trim();
+  clean = clean.replace(/^['"]|['"]$/g, '').trim();
+  if (clean.toLowerCase().startsWith('bearer ')) {
+    clean = clean.substring(7).trim();
+  }
+  return clean;
+}
+
 function getDhanConfigValue(key, envKey) {
   const candidateKeys = [
     envKey,
@@ -66,7 +76,7 @@ function getDhanConfigValue(key, envKey) {
 
   for (const k of candidateKeys) {
     if (process.env[k] && String(process.env[k]).trim()) {
-      return String(process.env[k]).trim();
+      return sanitizeDhanValue(process.env[k]);
     }
   }
 
@@ -75,7 +85,7 @@ function getDhanConfigValue(key, envKey) {
       const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8') || '{}');
       for (const k of candidateKeys) {
         if (cfg[k] && String(cfg[k]).trim()) {
-          return String(cfg[k]).trim();
+          return sanitizeDhanValue(cfg[k]);
         }
       }
     }
@@ -131,26 +141,23 @@ async function checkDhanApiHealth() {
   }
 
   try {
-    const res = await fetch(`${DHAN_CONFIG.baseUrl}/marketfeed/quote`, {
+    const res = await dhanFetch('/marketfeed/quote', {
       method: 'POST',
-      headers: {
-        'access-token': DHAN_CONFIG.accessToken,
-        'client-id': DHAN_CONFIG.clientId,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ 'IDX_I': [13] }),
-      signal: AbortSignal.timeout(4000)
+      body: { 'IDX_I': [13] },
+      timeout: 4500
     });
 
-    if (res.status === 200) {
+    if (res.ok && res.status === 200) {
       lastDhanCheckStatus = true;
       lastDhanErrorMsg = '';
       lastDhanCheckTime = now;
       return true;
     } else if (res.status === 401 || res.status === 403) {
+      const isSubError = JSON.stringify(res.json || res.raw || '').includes('806') || JSON.stringify(res.json || res.raw || '').includes('Data APIs not Subscribed');
       lastDhanCheckStatus = false;
-      lastDhanErrorMsg = `Dhan API token invalid or expired (HTTP ${res.status})`;
+      lastDhanErrorMsg = isSubError
+        ? 'Dhan Data API subscription required (Error 806). Subscribe via web.dhan.co -> DhanHQ APIs -> Data API tab.'
+        : `Dhan API token invalid or expired (HTTP ${res.status})`;
       console.warn(`[DHAN] Health check: ${lastDhanErrorMsg}`);
       lastDhanCheckTime = now;
       return false;
@@ -355,7 +362,9 @@ async function fetchDhanLiveQuotes(symbols) {
 
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          console.warn(`[DHAN] Marketfeed quote rejected: Token expired or invalid (HTTP ${res.status})`);
+          const isSubError = JSON.stringify(res.json || res.raw || '').includes('806') || JSON.stringify(res.json || res.raw || '').includes('Data APIs not Subscribed');
+          const detail = isSubError ? 'Dhan Data API subscription required (Error 806: Go to web.dhan.co -> DhanHQ Trading APIs -> Data API tab)' : `Token expired or invalid (HTTP ${res.status})`;
+          console.warn(`[DHAN] Marketfeed quote rejected: ${detail}`);
         }
         return;
       }

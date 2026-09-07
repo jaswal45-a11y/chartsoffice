@@ -2786,12 +2786,9 @@ async function loadExploreData() {
     const data = await exploreRes.json();
     const feedData = await feedRes.json();
 
-    if (feedData && (feedData.dhanActive || feedData.dhanConfigured)) {
-      state.dhanActive = Boolean(feedData.dhanActive || feedData.dhanConfigured);
-    } else if (data.success) {
-      state.dhanActive = Boolean(data.dhanActive);
-    }
-    updateDhanHeaderBadge();
+    state.dhanActive = Boolean(feedData && feedData.dhanActive);
+    state.feedSource = (feedData && feedData.dhanActive) ? 'dhan' : 'backup';
+    updateDhanHeaderBadge(feedData);
 
     if (data.success && Array.isArray(data.stocks)) {
       state.exploreStocks = data.stocks;
@@ -2802,19 +2799,25 @@ async function loadExploreData() {
   }
 }
 
-function updateDhanHeaderBadge() {
+function updateDhanHeaderBadge(feedData = null) {
   const badgeEl = document.getElementById('dhan-header-badge');
   const dotEl = document.getElementById('dhan-header-dot');
   const textEl = document.getElementById('dhan-header-text');
 
   if (state.dhanActive) {
-    if (badgeEl) badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+    if (badgeEl) {
+      badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+      badgeEl.title = 'Dual-Mode Live Engine: Streaming directly via official DhanHQ Broker API';
+    }
     if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse';
-    if (textEl) textEl.textContent = 'Dhan API Live';
+    if (textEl) textEl.textContent = '🟢 Dhan API Live';
   } else {
-    if (badgeEl) badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-slate-800 text-slate-400 border-slate-700';
-    if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-slate-500';
-    if (textEl) textEl.textContent = 'Dhan API Off';
+    if (badgeEl) {
+      badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-cyan-500/15 text-cyan-300 border-cyan-500/30';
+      badgeEl.title = 'Dual-Mode Live Engine: Streaming real-time quotes & technicals via High-Speed Free NSE/BSE Engine';
+    }
+    if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse';
+    if (textEl) textEl.textContent = '⚡ Live Feed (NSE/BSE)';
   }
 }
 
