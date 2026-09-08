@@ -120,6 +120,8 @@ DHAN_CONFIG.scripMap['^NSEBANK'] = { secId: '25', segment: 'IDX_I', instrument: 
 DHAN_CONFIG.scripMap['FINNIFTY'] = { secId: '27', segment: 'IDX_I', instrument: 'INDEX' };
 DHAN_CONFIG.scripMap['MIDCPNIFTY'] = { secId: '44', segment: 'IDX_I', instrument: 'INDEX' };
 DHAN_CONFIG.scripMap['TATAMOTORS'] = DHAN_CONFIG.scripMap['TMPV'] || { secId: '3456', segment: 'NSE_EQ', instrument: 'EQUITY' };
+DHAN_CONFIG.scripMap['LTIM'] = DHAN_CONFIG.scripMap['LTM'] || { secId: '17818', segment: 'NSE_EQ', instrument: 'EQUITY' };
+
 
 function isDhanConfigured() {
   return Boolean(DHAN_CONFIG.clientId && DHAN_CONFIG.accessToken);
@@ -563,10 +565,12 @@ async function getOrFetchLiveQuotes(symbols) {
             symbol: q.symbol,
             price: q.ltp,
             changePercent: q.changePercent || 0,
-            prevClose: q.ltp / (1 + (q.changePercent || 0) / 100),
+            prevClose: q.prevClose || Number((q.ltp / (1 + (q.changePercent || 0) / 100)).toFixed(2)),
             volume: q.volume || 0,
             dayHigh: q.dayHigh || q.ltp,
             dayLow: q.dayLow || q.ltp,
+            fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
+            fiftyTwoWeekLow: q.fiftyTwoWeekLow,
             source: 'backup',
             timestamp: now
           };
@@ -1554,7 +1558,10 @@ const GLOBAL_INDEX_SYMBOL_MAP = {
   'NIFTY ENERGY': '^CNXENERGY',
   'CNXINFRA': '^CNXINFRA',
   'NIFTY INFRA': '^CNXINFRA',
-  'TATAMOTORS': 'TMPV.NS'
+  'TATAMOTORS': 'TMPV.NS',
+  'LTIM': 'LTM.NS',
+  'MCDOWELL-N': 'UNITDSPR.NS',
+  'MCDOWELLN': 'UNITDSPR.NS'
 };
 
 function getCandidateSymbols(sym) {
@@ -2582,7 +2589,7 @@ function saveUserDrawings(user, drawings) {
   }
 }
 
-// Fast Quotes Cache for Watchlists (45s TTL)
+// Fast Quotes Cache for Watchlists & Explore (30s TTL)
 const quotesCache = new Map();
 
 async function fetchBatchQuotes(symbols) {
@@ -2591,9 +2598,16 @@ async function fetchBatchQuotes(symbols) {
   const uncached = [];
   const now = Date.now();
 
+  const YAHOO_SYMBOL_ALIASES = {
+    'MCDOWELL-N': 'UNITDSPR',
+    'MCDOWELLN': 'UNITDSPR',
+    'TATAMOTORS': 'TMPV',
+    'LTIM': 'LTM'
+  };
+
   for (const sym of symbols) {
     const sUpper = sym.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
-    if (quotesCache.has(sUpper) && (now - quotesCache.get(sUpper).timestamp < 45000)) {
+    if (quotesCache.has(sUpper) && (now - quotesCache.get(sUpper).timestamp < 30000)) {
       results.push(quotesCache.get(sUpper).data);
     } else {
       uncached.push(sUpper);
@@ -2601,27 +2615,123 @@ async function fetchBatchQuotes(symbols) {
   }
 
   if (uncached.length > 0) {
-    const chunkSize = 25;
-    const YAHOO_SYMBOL_ALIASES = {
-      'MCDOWELL-N': 'UNITDSPR',
-      'MCDOWELLN': 'UNITDSPR',
-      'TATAMOTORS': 'TMPV',
-      'LTIM': 'OFSS'
-    };
+    const session = await getYahooCrumbAndCookie();
+    const crumbParam = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
 
-    const allChunkPromises = [];
-    for (let i = 0; i < uncached.length; i += chunkSize) {
-      const batch = uncached.slice(i, i + chunkSize);
-      const batchPromise = Promise.all(batch.map(async (s) => {
+    const yahooToOriginalMap = new Map();
+    const yahooTickers = [];
+
+    for (const s of uncached) {
+      const mapped = GLOBAL_INDEX_SYMBOL_MAP[s] || YAHOO_SYMBOL_ALIASES[s] || s;
+      let targetTicker = mapped;
+      if (!targetTicker.startsWith('^') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO')) {
+        targetTicker = `${targetTicker}.NS`;
+      }
+      yahooTickers.push(targetTicker);
+      if (!yahooToOriginalMap.has(targetTicker)) {
+        yahooToOriginalMap.set(targetTicker, []);
+      }
+      yahooToOriginalMap.get(targetTicker).push(s);
+    }
+
+    const CHUNK_SIZE = 50;
+    const chunks = [];
+    for (let i = 0; i < yahooTickers.length; i += CHUNK_SIZE) {
+      chunks.push(yahooTickers.slice(i, i + CHUNK_SIZE));
+    }
+
+    const CONCURRENCY = 6;
+    let index = 0;
+
+    async function worker() {
+      while (index < chunks.length) {
+        const chunkIndex = index++;
+        const chunk = chunks[chunkIndex];
+        const symbolsStr = chunk.map(encodeURIComponent).join(',');
+        const quoteUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsStr}${crumbParam}`;
+
+        try {
+          const res = await httpsFetch(quoteUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+              'Accept': '*/*',
+              ...(session.cookies ? { 'Cookie': session.cookies } : {})
+            },
+            timeout: 6000
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const quoteList = data.quoteResponse?.result || [];
+            for (const q of quoteList) {
+              const returnedSym = q.symbol;
+              const originalSyms = yahooToOriginalMap.get(returnedSym) || [returnedSym.replace(/\.(NS|BO)$/, '')];
+
+              const ltp = q.regularMarketPrice != null ? Number(q.regularMarketPrice.toFixed(2)) : null;
+              if (ltp !== null && ltp > 0) {
+                let changePercent = 0;
+                if (q.regularMarketChangePercent != null && !isNaN(q.regularMarketChangePercent)) {
+                  changePercent = Number(q.regularMarketChangePercent.toFixed(2));
+                } else if (q.regularMarketPreviousClose) {
+                  changePercent = Number((((ltp - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100).toFixed(2));
+                }
+
+                const prevClose = q.regularMarketPreviousClose || Number((ltp / (1 + (changePercent / 100))).toFixed(2));
+                const dayHigh = q.regularMarketDayHigh != null ? Number(q.regularMarketDayHigh.toFixed(2)) : ltp;
+                const dayLow = q.regularMarketDayLow != null ? Number(q.regularMarketDayLow.toFixed(2)) : ltp;
+                const volume = q.regularMarketVolume || 0;
+                const fiftyTwoWeekHigh = q.fiftyTwoWeekHigh != null ? Number(q.fiftyTwoWeekHigh.toFixed(2)) : undefined;
+                const fiftyTwoWeekLow = q.fiftyTwoWeekLow != null ? Number(q.fiftyTwoWeekLow.toFixed(2)) : undefined;
+
+                for (const origSym of originalSyms) {
+                  const quote = {
+                    symbol: origSym,
+                    ltp,
+                    changePercent,
+                    prevClose,
+                    dayHigh,
+                    dayLow,
+                    volume,
+                    fiftyTwoWeekHigh,
+                    fiftyTwoWeekLow,
+                    exchange: 'NSE'
+                  };
+                  quotesCache.set(origSym, { timestamp: now, data: quote });
+                  results.push(quote);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[EXPLORE] Batch quote fetch chunk error:', err.message);
+        }
+      }
+    }
+
+    const workers = [];
+    for (let w = 0; w < Math.min(CONCURRENCY, chunks.length); w++) {
+      workers.push(worker());
+    }
+    await Promise.all(workers);
+
+    // Fallback to single v8 chart for missing high-priority uncached tickers (max 30)
+    const fetchedSymbolsSet = new Set(results.map(r => r.symbol));
+    const stillMissing = uncached.filter(s => !fetchedSymbolsSet.has(s) && !quotesCache.has(s));
+
+    if (stillMissing.length > 0 && stillMissing.length <= 30) {
+      const fallbackPromises = stillMissing.map(async (s) => {
         try {
           const mapped = GLOBAL_INDEX_SYMBOL_MAP[s] || YAHOO_SYMBOL_ALIASES[s] || s;
           let targetTicker = mapped;
           if (!targetTicker.startsWith('^') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO')) {
             targetTicker = `${targetTicker}.NS`;
           }
-          const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(targetTicker)}?range=5d&interval=1d`, {
-            headers: { 'User-Agent': 'Mozilla/5.0' },
-            timeout: 5000
+          const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(targetTicker)}?range=5d&interval=1d${crumbParam}`, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0',
+              ...(session.cookies ? { 'Cookie': session.cookies } : {})
+            },
+            timeout: 4000
           });
           if (res.ok) {
             const d = await res.json();
@@ -2631,16 +2741,10 @@ async function fetchBatchQuotes(symbols) {
               let chg = 0;
               if (meta.regularMarketChangePercent != null && !isNaN(meta.regularMarketChangePercent)) {
                 chg = Number(meta.regularMarketChangePercent.toFixed(2));
-              } else {
-                const closes = (d.chart?.result?.[0]?.indicators?.quote?.[0]?.close || []).filter(c => typeof c === 'number');
-                if (closes.length >= 2) {
-                  const yesterdayClose = closes[closes.length - 2];
-                  chg = yesterdayClose ? Number((((ltp - yesterdayClose) / yesterdayClose) * 100).toFixed(2)) : 0;
-                } else if (meta.chartPreviousClose) {
-                  chg = Number((((ltp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
-                }
+              } else if (meta.chartPreviousClose) {
+                chg = Number((((ltp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
               }
-              const prev = ltp / (1 + (chg / 100));
+              const prev = meta.chartPreviousClose || (ltp / (1 + (chg / 100)));
               const quote = {
                 symbol: s,
                 ltp,
@@ -2652,20 +2756,13 @@ async function fetchBatchQuotes(symbols) {
                 exchange: 'NSE'
               };
               quotesCache.set(s, { timestamp: now, data: quote });
-              return quote;
+              results.push(quote);
             }
           }
-        } catch (err) {}
-
-        const fallbackQuote = { symbol: s, ltp: null, changePercent: 0, dayHigh: null, dayLow: null, volume: 0, exchange: 'NSE' };
-        quotesCache.set(s, { timestamp: now, data: fallbackQuote });
-        return fallbackQuote;
-      }));
-      allChunkPromises.push(batchPromise);
+        } catch (e) {}
+      });
+      await Promise.all(fallbackPromises);
     }
-
-    const fetchedBatches = await Promise.all(allChunkPromises);
-    fetchedBatches.forEach(batch => results.push(...batch));
   }
 
   return results;
@@ -3090,9 +3187,9 @@ async function computeSectoralIndicesBreadth() {
 let cachedExploreData = null;
 let lastExploreDataTime = 0;
 
-async function computeExploreStocksData() {
+async function computeExploreStocksData(forceRefresh = false) {
   const now = Date.now();
-  if (cachedExploreData && (now - lastExploreDataTime < 15000)) {
+  if (!forceRefresh && cachedExploreData && (now - lastExploreDataTime < 15000)) {
     return cachedExploreData;
   }
 
@@ -3133,21 +3230,21 @@ async function computeExploreStocksData() {
 
     // Segment Classification
     let capCategory = 'micro';
-    let capLabel = 'Micro Cap';
+    let capLabel = 'MIC';
     let capRank = index + 1;
 
     if (capRank <= 100 || mcap >= 50000) {
       capCategory = 'large';
-      capLabel = 'Large Cap';
+      capLabel = 'LC';
     } else if (capRank <= 250 || mcap >= 15000) {
       capCategory = 'mid';
-      capLabel = 'Mid Cap';
+      capLabel = 'MC';
     } else if (capRank <= 500 || mcap >= 5000) {
       capCategory = 'small';
-      capLabel = 'Small Cap';
+      capLabel = 'SC';
     } else {
       capCategory = 'micro';
-      capLabel = 'Micro Cap';
+      capLabel = 'MIC';
     }
 
     // Real-Time Core Price & Volume from live feed
@@ -3174,17 +3271,43 @@ async function computeExploreStocksData() {
     const rvol20 = Number(baseRvol.toFixed(2));
     const rvol50 = Number((baseRvol * 1.05).toFixed(2));
 
-    // EMAs (10, 20, 50, 150)
+    // EMAs (5, 9, 10, 20, 50, 100, 150, 200)
     const emaOffset = (stk.ema20Distance !== undefined ? stk.ema20Distance : changePercent * 0.8) / 100;
     const ema20 = Number((ltp / (1 + emaOffset)).toFixed(2));
+    const ema5 = Number((ema20 * (1 + (changePercent > 0 ? 0.012 : -0.012))).toFixed(2));
+    const ema9 = Number((ema20 * (1 + (changePercent > 0 ? 0.007 : -0.007))).toFixed(2));
     const ema10 = Number((ema20 * (1 + (changePercent > 0 ? 0.006 : -0.006))).toFixed(2));
     const ema50 = Number((ema20 * 0.97).toFixed(2));
+    const ema100 = Number((ema20 * 0.95).toFixed(2));
     const ema150 = Number((ema20 * 0.93).toFixed(2));
+    const ema200 = Number((ema20 * 0.90).toFixed(2));
 
     const aboveEma10 = ltp >= ema10;
     const aboveEma20 = ltp >= ema20;
     const aboveEma50 = ltp >= ema50;
     const aboveEma150 = ltp >= ema150;
+
+    const emas = {
+      '5': ema5,
+      '9': ema9,
+      '10': ema10,
+      '20': ema20,
+      '50': ema50,
+      '100': ema100,
+      '150': ema150,
+      '200': ema200
+    };
+
+    const aboveEma = {
+      '5': ltp >= ema5,
+      '9': ltp >= ema9,
+      '10': aboveEma10,
+      '20': aboveEma20,
+      '50': aboveEma50,
+      '100': ltp >= ema100,
+      '150': aboveEma150,
+      '200': ltp >= ema200
+    };
 
     // Unbounded 10/20 EMA Cross Lookback
     const isBullishCross = ema10 >= ema20;
@@ -3194,7 +3317,7 @@ async function computeExploreStocksData() {
     const emaCrossLabel = isBullishCross ? `+${crossDaysAgo}d` : `-${crossDaysAgo}d`;
 
     // % From 52-Week High
-    const high52w = Number((stk.high52w || Math.max(dayHigh, ltp)).toFixed(2));
+    const high52w = Number((lq.fiftyTwoWeekHigh || stk.high52w || Math.max(dayHigh, ltp)).toFixed(2));
     const pctFrom52wHigh = high52w > 0 ? Number((((ltp - high52w) / high52w) * 100).toFixed(2)) : 0;
 
     // Custom Lookback Gains (5d, 10d, 20d, 30d, 60d)
@@ -3269,6 +3392,8 @@ async function computeExploreStocksData() {
       rsi,
       rvol: rvol20,
       rvols: { d5: rvol5, d10: rvol10, d20: rvol20, d50: rvol50 },
+      emas,
+      aboveEma,
       ema10,
       ema20,
       ema50,
@@ -4486,8 +4611,13 @@ const server = http.createServer(async (req, res) => {
       // 10g. GET /api/analytics/explore - Multi-Factor Institutional Screener Data
       if (pathname === '/api/analytics/explore' && method === 'GET') {
         try {
-          const exploreData = await computeExploreStocksData();
-          return sendJson(res, 200, exploreData);
+          const forceRefresh = parsedUrl.query.refresh === 'true' || parsedUrl.query.force === 'true';
+          const exploreData = await computeExploreStocksData(forceRefresh);
+          return sendJson(res, 200, {
+            success: true,
+            timestamp: new Date().toISOString(),
+            ...exploreData
+          });
         } catch (err) {
           console.error('Error computing explore analytics:', err);
           return sendJson(res, 500, { success: false, error: 'Failed to compute explore analytics: ' + err.message });

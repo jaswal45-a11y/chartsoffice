@@ -17,7 +17,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <!-- Lightweight Charts 4.1.1 (TradingView Engine) -->
-  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="libs/lightweight-charts.js"></script>
+  <script>if (typeof LightweightCharts === 'undefined') document.write('<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"><\\/script>')</script>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -469,15 +470,15 @@
             
             <!-- Row 1: Market Cap & Segment Pills + Search Box -->
             <div class="flex flex-wrap items-center justify-between gap-2.5">
-              <!-- Segment Pills (All, Large, Mid, Small, Micro, MidSmall, F&O) -->
+              <!-- Segment Pills (All, LC, MC, SC, MIC, MC+SC, F&O) -->
               <div class="flex items-center gap-1 overflow-x-auto pb-0.5" id="explore-segment-pills">
                 <span class="text-[10px] uppercase font-mono font-bold text-slate-400 mr-1 hidden sm:inline">Universe:</span>
                 <button data-explore-seg="all" class="explore-seg-pill active px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer">All (1,100)</button>
-                <button data-explore-seg="large" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Large Cap</button>
-                <button data-explore-seg="mid" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Mid Cap</button>
-                <button data-explore-seg="small" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Small Cap</button>
-                <button data-explore-seg="micro" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">Micro Cap</button>
-                <button data-explore-seg="midsmall" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">MidSmall</button>
+                <button data-explore-seg="large" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">LC</button>
+                <button data-explore-seg="mid" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">MC</button>
+                <button data-explore-seg="small" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">SC</button>
+                <button data-explore-seg="micro" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">MIC</button>
+                <button data-explore-seg="midsmall" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-slate-400 hover:text-white border border-dark-border cursor-pointer">MC+SC</button>
                 <button data-explore-seg="fno" class="explore-seg-pill px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-dark-card text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-500/50 cursor-pointer">⚡ F&O (212)</button>
               </div>
 
@@ -492,20 +493,16 @@
             <!-- Row 2: Deep Technical & Mathematical Filter Controls Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
               
-              <!-- Filter 1: RSI (14) Filter -->
+              <!-- Filter 1: RSI (14) Filter (> custom input value) -->
               <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
                 <div class="flex items-center justify-between text-[11px]">
                   <span class="font-bold text-slate-300">RSI (14):</span>
                   <span id="label-filter-rsi" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
                 </div>
-                <select id="select-filter-rsi" onchange="handleExploreFilterChange()" class="w-full px-2 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
-                  <option value="all">Any RSI</option>
-                  <option value="gt60">RSI &gt; 60 (Bullish Momentum)</option>
-                  <option value="gt70">RSI &gt; 70 (Overbought / Strong)</option>
-                  <option value="30to70">30 &le; RSI &le; 70 (Normal Range)</option>
-                  <option value="lt40">RSI &lt; 40 (Oversold / Weak)</option>
-                  <option value="lt30">RSI &lt; 30 (Extreme Oversold)</option>
-                </select>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] text-slate-400 font-mono font-semibold">&gt;</span>
+                  <input type="number" id="input-filter-rsi" placeholder="e.g. 50" min="0" max="100" step="1" oninput="handleExploreFilterChange()" class="w-full px-2 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
               </div>
 
               <!-- Filter 2: RVOL (Relative Volume Lookback & Multiplier) -->
@@ -547,15 +544,37 @@
                 </select>
               </div>
 
-              <!-- Filter 4: Unbounded 10/20 EMA Cross Lookback -->
+              <!-- Filter 4: Dynamic EMA Cross (Fast / Slow) Lookback -->
               <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
                 <div class="flex items-center justify-between text-[11px]">
-                  <span class="font-bold text-slate-300">10/20 Cross:</span>
+                  <span class="font-bold text-slate-300">EMA Cross:</span>
                   <span id="label-filter-cross" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1 mb-1">
+                  <div class="flex items-center gap-1 bg-dark-bg px-1.5 py-0.5 rounded border border-dark-border" title="Fast / Small EMA (5, 9, 10, 20, 50)">
+                    <span class="text-[10px] text-slate-400 font-medium">Fast:</span>
+                    <select id="select-filter-ema-fast" onchange="handleExploreFilterChange()" class="w-full bg-transparent text-[11px] text-emerald-400 font-bold focus:outline-none cursor-pointer">
+                      <option value="5">5</option>
+                      <option value="9">9</option>
+                      <option value="10" selected>10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-1 bg-dark-bg px-1.5 py-0.5 rounded border border-dark-border" title="Slow / Bigger EMA (20, 50, 100, 150, 200)">
+                    <span class="text-[10px] text-slate-400 font-medium">Slow:</span>
+                    <select id="select-filter-ema-slow" onchange="handleExploreFilterChange()" class="w-full bg-transparent text-[11px] text-blue-400 font-bold focus:outline-none cursor-pointer">
+                      <option value="20" selected>20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                      <option value="150">150</option>
+                      <option value="200">200</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="flex items-center gap-1">
                   <select id="select-filter-cross-dir" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
-                    <option value="all">Any</option>
+                    <option value="all">Any Dir</option>
                     <option value="bullish">🟢 Bullish</option>
                     <option value="bearish">🔴 Bearish</option>
                   </select>
@@ -628,18 +647,16 @@
                   <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('rsi')">RSI(14) ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('rvol')">RVOL ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-center" title="10, 20, 50, 150 EMA Traffic Light Posture (🟢 Above / 🔴 Below)">EMAs (10/20/50/150)</th>
-                  <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('crossDaysAgo')" title="Unbounded historical lookback to the most recent 10/20 EMA crossover">10/20 Cross ⇅</th>
+                  <th id="th-explore-ema-cross" class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('crossDaysAgo')" title="Days elapsed since the selected EMA crossover occurred">EMA Cross (10/20) ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('pctFrom52wHigh')">% 52WH ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('gain20d')">20D Gain ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('dailyPivot')">D-Pivot ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('weeklyPivot')">W-Pivot ⇅</th>
-                  <th class="py-2.5 px-3 font-semibold text-center">Action</th>
                 </tr>
               </thead>
               <tbody id="explore-tbody" class="divide-y divide-dark-border/40 font-mono text-xs">
                 <!-- Populated dynamically -->
               </tbody>
-            </table>
           </div>
 
           <!-- FOOTER: Pagination & Summary -->
@@ -771,7 +788,6 @@
               <th onclick="handleSectoralStockSort('mcap')" class="py-2.5 px-3 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Sort by Market Cap">
                 <span>M.Cap (₹ Cr)</span> <span id="ssm-sort-mcap" class="text-[10px] text-slate-500">⇅</span>
               </th>
-              <th class="py-2.5 px-3 text-center font-semibold whitespace-nowrap w-28">Action</th>
             </tr>
           </thead>
           <tbody id="sectoral-stocks-tbody" class="divide-y divide-dark-border/40 font-mono">
@@ -782,7 +798,7 @@
 
       <!-- Modal Footer -->
       <div class="p-3 border-t border-dark-border bg-dark-bg/40 flex items-center justify-between text-xs text-slate-400">
-        <span id="ssm-footer-info">Showing stocks • Click <strong>See on Chart</strong> to load candlestick visualizer</span>
+        <span id="ssm-footer-info">Showing stocks • Click any stock name to load interactive chart</span>
         <button onclick="closeSectoralStocksModal()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
           Close
         </button>
@@ -853,7 +869,6 @@
               <th onclick="handleConstituentSort('opmYoY')" class="py-2.5 px-2 text-right font-semibold whitespace-nowrap cursor-pointer hover:text-white select-none transition-colors" title="Operating Profit Margin YoY">
                 <span>OPM YoY</span> <span id="sort-oyoy-icon" class="text-[10px] text-slate-500">⇅</span>
               </th>
-              <th class="py-2.5 px-3 text-center font-semibold whitespace-nowrap">Action</th>
             </tr>
           </thead>
           <tbody id="modal-sector-tbody" class="divide-y divide-dark-border/40 font-mono">
@@ -864,7 +879,7 @@
 
       <!-- Modal Footer -->
       <div class="p-3 border-t border-dark-border bg-dark-bg/40 flex items-center justify-between text-xs text-slate-400">
-        <span>Click <strong>View Chart</strong> on any stock to open its dedicated candlestick visualizer & watchlist manager</span>
+        <span>Click on any stock symbol or name to open its interactive candlestick chart</span>
         <button onclick="closeSectorDrilldownModal()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
           Close
         </button>
@@ -873,59 +888,308 @@
   </div>
 
   <!-- ============================================================== -->
-  <!-- MODAL: Simplified Stock Chart Modal for Analytics Tab          -->
+  <!-- FULL FEATURED STOCK CHART MODAL (100% Replicated from Dashboard)-->
   <!-- ============================================================== -->
-  <div id="analytics-stock-chart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div id="stock-chart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 overflow-hidden">
+    <div id="chart-pane" class="bg-dark-card border border-dark-border rounded-2xl shadow-2xl overflow-hidden flex flex-col relative transition-all duration-150" style="width: 80vw; height: 75vh; min-width: 460px; min-height: 420px; max-width: 98vw; max-height: 96vh;">
       
-      <!-- Modal Header -->
-      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold font-mono text-xs shrink-0" id="asc-avatar">
-            STK
-          </div>
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <h3 id="asc-symbol" class="text-base font-bold text-white font-mono">--</h3>
-              <span id="asc-ltp" class="text-base font-bold font-mono text-white">₹--</span>
-              <span id="asc-change" class="px-2 py-0.5 text-xs font-mono font-bold rounded border bg-slate-800 text-slate-300">--%</span>
+      <!-- Stock Details & Indicator Metrics Header -->
+      <div class="p-3 sm:p-4 border-b border-dark-border bg-dark-card/60 flex flex-col gap-2.5">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <!-- Stock Symbol & Price Info -->
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-sm">
+              <span id="chart-symbol-avatar">REL</span>
             </div>
-            <p id="asc-name" class="text-xs text-slate-400">Stock Name</p>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <!-- Editable Stock Symbol Input Field with Predictive Search -->
+                <div class="relative flex items-center" id="manual-search-wrapper">
+                  <div class="relative flex items-center group">
+                    <input 
+                      type="text" 
+                      id="manual-stock-input" 
+                      value="RELIANCE" 
+                      placeholder="TYPE STOCK..." 
+                      autocomplete="off"
+                      spellcheck="false"
+                      class="min-w-[120px] max-w-[320px] w-auto px-3 py-1 pr-8 text-base font-bold font-mono text-white bg-dark-bg border border-dark-border rounded-lg uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all hover:border-slate-500"
+                      title="Type any stock name or symbol (e.g. TATA, INFY, HDFC)"
+                    >
+                    <span id="chart-stock-symbol" class="hidden">RELIANCE</span>
+                    <button id="btn-manual-stock-search" class="absolute right-1.5 p-1 text-slate-400 hover:text-blue-400 focus:outline-none transition-colors" title="Load Stock Chart (Enter)">
+                      <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+
+                  <!-- Predictive Autocomplete Dropdown List -->
+                  <div id="stock-autocomplete-dropdown" class="hidden absolute left-0 top-full mt-1.5 w-72 sm:w-80 max-h-72 overflow-y-auto bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl z-50 divide-y divide-dark-border/40">
+                  </div>
+                </div>
+
+                <span id="chart-stock-ltp" class="text-base font-bold font-mono text-slate-100">₹0.00</span>
+                <span id="chart-stock-change" class="px-2 py-0.5 text-xs font-semibold rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  +0.00%
+                </span>
+                <span id="chart-stock-exchange" class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border">NSE</span>
+              </div>
+              <p id="chart-stock-name" class="text-xs text-slate-400 mt-0.5">Stock Name</p>
+            </div>
+          </div>
+
+          <!-- Chart Header Actions: Size Presets, External Links & Modal Close -->
+          <div class="flex items-center gap-2">
+            <!-- Modal Size Presets (S, M, L, Maximize) -->
+            <div class="flex items-center bg-dark-bg border border-dark-border rounded-xl p-0.5 text-[11px] font-medium text-slate-400">
+              <button type="button" onclick="setChartModalSizePreset('compact')" id="btn-chart-preset-compact" class="px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer" title="Compact Size (68vw x 62vh)">S</button>
+              <button type="button" onclick="setChartModalSizePreset('standard')" id="btn-chart-preset-standard" class="px-2 py-1 rounded-lg bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" title="Standard Size (80vw x 75vh)">M</button>
+              <button type="button" onclick="setChartModalSizePreset('large')" id="btn-chart-preset-large" class="px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer" title="Large Size (92vw x 86vh)">L</button>
+              <button type="button" onclick="toggleChartModalMaximize()" id="btn-chart-maximize" class="px-1.5 py-1 rounded-lg hover:text-blue-400 transition-colors cursor-pointer" title="Toggle Fullscreen Maximize">
+                <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <a id="link-tradingview" href="https://in.tradingview.com" target="_blank" rel="noopener noreferrer" 
+               title="Open on TradingView" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+            </a>
+            <a id="link-chartink" href="https://chartink.com" target="_blank" rel="noopener noreferrer" 
+               title="Open on Chartink" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-amber-400 hover:bg-dark-accent transition-colors">
+              <i data-lucide="maximize-2" class="w-4 h-4"></i>
+            </a>
+            <button onclick="closeStockChartModal()" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-white hover:bg-dark-accent transition-colors cursor-pointer" title="Close Chart (Esc)">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <!-- Add to Watchlist Dropdown -->
-          <div class="relative" id="asc-watchlist-wrapper">
-            <button id="btn-asc-watchlist-toggle" class="px-3 py-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-all cursor-pointer" title="Add or remove stock from your 5 watchlists">
-              <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
-              <span>Watchlist</span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+        <!-- Metric Pills: 52WH & ATH Only -->
+        <div class="flex items-center flex-wrap gap-2 text-[11px] font-mono pt-1">
+          <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5" id="pill-52w" title="52-Week High price & distance from high">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            <span>52WH: <strong class="text-white font-mono" id="val-52w-high">--</strong></span>
+          </span>
+          <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 font-semibold flex items-center gap-1.5" id="pill-ath" title="All-Time High price & distance from ATH">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span>ATH: <strong class="text-amber-200 font-mono" id="val-ath">--</strong></span>
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Chart Controls Toolbar (Ultra-Dense Space-Optimized Single Row) -->
+      <div class="px-3 py-1.5 border-b border-dark-border bg-dark-card/40 flex items-center justify-between gap-2 text-xs overflow-x-auto select-none">
+        
+        <!-- Left: Timeframe & Range Selectors -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <!-- Timeframes: D & W only -->
+          <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 font-medium text-slate-400 text-[11px]">
+            <button class="timeframe-btn active px-2.5 py-0.5 rounded-md bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" data-interval="1d" title="Daily timeframe (1 day per candle)">D</button>
+            <button class="timeframe-btn px-2.5 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="1wk" title="Weekly timeframe (1 week per candle)">W</button>
+          </div>
+
+          <!-- Range: 3M, 6M (Default), 1Y -->
+          <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 font-medium text-slate-400 text-[11px]">
+            <button class="range-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-range="3mo" title="Show last 3 months">3M</button>
+            <button class="range-btn active px-2 py-0.5 rounded-md bg-indigo-600 text-white font-semibold shadow transition-colors cursor-pointer" data-range="6mo" title="Show last 6 months (Default)">6M</button>
+            <button class="range-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-range="1y" title="Show last 12 months">1Y</button>
+          </div>
+        </div>
+
+        <span class="text-slate-700 select-none flex-shrink-0">|</span>
+
+        <!-- Middle: Compact Overlays & Technical Indicators Checkboxes -->
+        <div class="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap sm:flex-nowrap">
+          <label class="flex items-center gap-1 cursor-pointer hover:text-sky-300 transition-colors" title="10-period Exponential Moving Average">
+            <input type="checkbox" id="chk-ema10" checked class="rounded border-slate-700 text-sky-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>10</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-blue-300 transition-colors" title="20-period Exponential Moving Average">
+            <input type="checkbox" id="chk-ema20" checked class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>20</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-amber-300 transition-colors" title="50-period Exponential Moving Average">
+            <input type="checkbox" id="chk-ema50" checked class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>50</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-purple-300 transition-colors" title="150-period Exponential Moving Average">
+            <input type="checkbox" id="chk-ema150" checked class="rounded border-slate-700 text-purple-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>150</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-rose-300 transition-colors" title="200-period Exponential Moving Average">
+            <input type="checkbox" id="chk-ema200" checked class="rounded border-slate-700 text-rose-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>200</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-teal-300 transition-colors" title="Traded Volume Histogram">
+            <input type="checkbox" id="chk-vol" checked class="rounded border-slate-700 text-teal-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>Vol</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-amber-300 transition-colors" title="9-period Volume SMA">
+            <input type="checkbox" id="chk-vol-avg" checked class="rounded border-slate-700 text-amber-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>SMA9</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-yellow-300 transition-colors" title="Volume Weighted Average Price">
+            <input type="checkbox" id="chk-vwap" checked class="rounded border-slate-700 text-yellow-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>VWAP</span>
+          </label>
+          <div class="flex items-center gap-1">
+            <label class="flex items-center gap-1 cursor-pointer hover:text-cyan-300 transition-colors" title="Pivot Points (P, R1, S1)">
+              <input type="checkbox" id="chk-pivots" checked class="rounded border-slate-700 text-cyan-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+              <span>Pivots</span>
+            </label>
+            <select id="select-pivot-type" class="px-1 py-0.2 text-[9px] font-semibold bg-dark-bg border border-dark-border rounded text-slate-300 focus:outline-none cursor-pointer" title="Select Pivot Points formula">
+              <option value="Traditional (Auto)">Traditional (Auto)</option>
+              <option value="Standard (D)">Standard (D)</option>
+              <option value="Weekly (W)">Weekly (W)</option>
+              <option value="Monthly (M)">Monthly (M)</option>
+              <option value="Fibonacci (D)">Fibonacci (D)</option>
+              <option value="Camarilla (D)">Camarilla (D)</option>
+            </select>
+          </div>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-emerald-300 transition-colors" title="Nicolas Darvas 5-bar High/Low Box">
+            <input type="checkbox" id="chk-darvas" checked class="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>Darvas</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer hover:text-indigo-300 transition-colors" title="Relative Strength Index (14) + 14-SMA">
+            <input type="checkbox" id="chk-rsi" checked class="rounded border-slate-700 text-indigo-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+            <span>RSI</span>
+          </label>
+        </div>
+
+        <!-- Right: Line Customizer, Toolbar Next/Prev Capsule & Watchlist Action -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <!-- Line Thickness & Color Settings Button -->
+          <button id="btn-open-line-settings" onclick="openLineSettingsModal()" class="p-1 px-1.5 rounded-lg bg-blue-600/15 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-500 text-xs font-semibold flex items-center justify-center transition-all cursor-pointer shadow-sm" title="Customize chart line thickness, themes, colors, and styles">
+            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <!-- Stock Quick-Navigation Segmented Capsule -->
+          <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 text-slate-400">
+            <button id="btn-nav-prev-stock" class="p-0.5 px-1 rounded hover:bg-dark-card hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Previous stock (Up Arrow / K)">
+              <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
             </button>
-            <div id="asc-watchlist-menu" class="hidden absolute right-0 mt-2 w-56 p-2 rounded-xl bg-dark-card border border-dark-border shadow-2xl z-50 text-xs flex flex-col gap-1">
-              <span class="text-[10px] text-slate-500 px-2 py-1 uppercase font-semibold">Select Watchlists</span>
-              <div id="asc-watchlist-checklist" class="flex flex-col gap-1 max-h-48 overflow-y-auto">
-                <!-- Checkboxes populated dynamically -->
+            <span class="text-slate-600 text-[10px] select-none">|</span>
+            <button id="btn-nav-next-stock" class="p-0.5 px-1 rounded hover:bg-dark-card hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Next stock (Down Arrow / J)">
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Add to Watchlist Dropdown Button -->
+          <div class="relative" id="chart-watchlist-wrapper">
+            <button id="btn-chart-watchlist-toggle" class="p-1 px-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center" title="Add / Remove current stock from watchlists">
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+            </button>
+
+            <!-- Watchlists Checklist Dropdown Menu -->
+            <div id="chart-watchlist-menu" class="hidden absolute right-0 top-full mt-1.5 w-64 bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl z-50 p-2.5 divide-y divide-dark-border/40">
+              <div class="px-1 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Save to Watchlist</span>
+                <span class="text-[10px] text-amber-400/80 font-mono font-normal">Max 50/list</span>
+              </div>
+              <div id="chart-watchlist-checklist" class="py-1.5 flex flex-col gap-1 max-h-52 overflow-y-auto">
+                <!-- Dynamic watchlist checkboxes -->
               </div>
             </div>
           </div>
-
-          <button onclick="closeAnalyticsChartModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-dark-accent transition-colors cursor-pointer" title="Close chart">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
         </div>
+
       </div>
 
-      <!-- Modal Chart Canvas (Clean Candlestick with 6M Default) -->
-      <div class="p-4 flex-1 flex flex-col min-h-[420px] relative bg-dark-bg/40">
-        <div id="asc-chart-container" class="w-full flex-1 min-h-[380px]"></div>
-        <div id="asc-loading" class="absolute inset-0 bg-dark-bg/80 backdrop-blur-xs flex items-center justify-center z-10 hidden">
-          <div class="flex items-center gap-2 text-xs font-medium text-slate-300">
-            <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading 6M Candlestick Chart...</span>
+      <!-- Native Canvas Chart Container (Price + Bottom Volume Overlay & Sub-Pane for RSI) -->
+      <div class="flex-1 w-full relative bg-dark-bg flex flex-col min-h-[320px] overflow-hidden" id="chart-main-container">
+        
+        <!-- PANE 1: Pure Price Candlestick + Bottom Volume Overlay -->
+        <div id="tv_price_pane" class="w-full flex-1 min-h-[100px] overflow-hidden relative">
+          <div id="tv_main_chart" class="w-full h-full relative overflow-hidden"></div>
+
+          <!-- Floating On-Chart Controls & Badges -->
+          <div class="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none select-none">
+            <!-- Floating On-Chart Stock Symbol & AVWAP Badge -->
+            <div id="floating-avwap-control" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 hover:border-purple-500/80 rounded-lg px-2.5 py-1 shadow-xl transition-all text-xs gap-2 w-fit">
+              <span id="onchart-stock-symbol" class="font-bold text-white tracking-wide font-mono text-xs">RELIANCE</span>
+              <span class="text-slate-600 text-[10px] select-none">|</span>
+              <button id="btn-floating-avwap" class="flex items-center text-purple-300 hover:text-purple-100 font-semibold cursor-pointer p-0.5 rounded hover:bg-purple-500/20 transition-colors" title="Anchored VWAP: Click to place or move Anchor point on any candle">
+                <i data-lucide="anchor" class="w-3.5 h-3.5 text-purple-400"></i>
+              </button>
+              <input type="color" id="color-avwap" value="#a855f7" class="indicator-color-picker" title="Change Anchored VWAP line color">
+              <span id="floating-avwap-divider" class="hidden text-slate-600 select-none">|</span>
+              <span id="floating-avwap-status" class="hidden text-[10px] font-mono text-purple-200"></span>
+              <button id="btn-floating-avwap-clear" class="hidden text-slate-400 hover:text-rose-400 cursor-pointer p-0.5 rounded hover:bg-rose-500/10" title="Remove Anchored VWAP">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <!-- Floating Live Volume Badge on Chart -->
+            <div id="floating-volume-badge" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-lg px-2 py-0.5 shadow-xl text-[11px] font-mono gap-1.5 text-slate-300 w-fit">
+              <span class="text-teal-400 font-semibold">Vol:</span>
+              <strong id="vol-live-badge" class="text-teal-300">--</strong>
+              <span class="text-slate-600">|</span>
+              <span class="text-amber-400 font-medium">Avg:</span>
+              <strong id="vol-avg-live-badge" class="text-amber-300">--</strong>
+            </div>
           </div>
         </div>
+        
+        <!-- RESIZER: Price & RSI Divider -->
+        <div class="pane-resizer h-2.5 bg-dark-card hover:bg-blue-500/80 active:bg-blue-600 border-y border-dark-border/60 cursor-row-resize flex items-center justify-center select-none transition-colors z-20 group" id="resizer-price-rsi" title="Drag up or down to resize Price and RSI panes (Double-click to reset)">
+          <div class="w-14 h-0.5 bg-slate-500 group-hover:bg-blue-300 rounded-full transition-colors"></div>
+        </div>
+
+        <!-- PANE 2: Dedicated RSI (14) Pane -->
+        <div id="tv_rsi_container" class="w-full h-[110px] min-h-[40px] max-h-[350px] overflow-hidden relative flex flex-col bg-dark-bg/60">
+          <div class="px-3 py-1 text-[10px] font-mono text-slate-400 bg-dark-card/50 flex items-center justify-between border-b border-dark-border/50 select-none flex-shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-blue-400">RSI (14)</span>
+              <span class="text-slate-500">|</span>
+              <span class="text-amber-400 font-medium">14-SMA</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span>RSI: <strong id="rsi-live-badge" class="font-mono text-blue-400">--</strong></span>
+              <span>SMA: <strong id="rsi-sma-live-badge" class="font-mono text-amber-400">--</strong></span>
+            </div>
+          </div>
+          <div id="tv_rsi_chart" class="w-full flex-1 relative overflow-hidden"></div>
+        </div>
+
+        <!-- Dedicated RSI Bottom Drag Handle -->
+        <div class="pane-resizer h-2 bg-dark-card/90 hover:bg-indigo-500/80 active:bg-indigo-600 border-b border-dark-border/60 cursor-row-resize flex items-center justify-center select-none transition-colors z-20 group" id="resizer-rsi-bottom" title="Drag up or down to resize RSI from bottom side (Double-click to reset)">
+          <div class="w-12 h-0.5 bg-indigo-400/70 group-hover:bg-indigo-200 rounded-full transition-colors"></div>
+        </div>
+
+        <!-- Bottom Resize Handle for Chart Card -->
+        <div class="pane-resizer h-2.5 bg-dark-card/90 hover:bg-blue-500/80 active:bg-blue-600 border-t border-dark-border cursor-ns-resize flex items-center justify-center select-none transition-colors group z-20" id="resizer-chart-bottom" title="Drag up or down to resize overall chart height (Double-click to reset)">
+          <div class="w-16 h-1 bg-slate-600 group-hover:bg-blue-300 rounded-full transition-colors"></div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="chart-loading-overlay" class="absolute inset-0 bg-dark-bg/80 backdrop-blur-sm z-30 hidden items-center justify-center">
+          <div class="flex flex-col items-center gap-2">
+            <svg class="animate-spin h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-xs font-semibold text-slate-300">Loading live chart data...</span>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Interactive Corner Drag Resizer (Bottom-Right) -->
+      <div id="chart-modal-resize-handle" class="absolute bottom-1 right-1 w-5 h-5 cursor-nwse-resize flex items-end justify-end p-0.5 text-slate-500 hover:text-blue-400 active:text-blue-300 transition-colors z-40 select-none group" title="Drag corner to freely resize chart modal (Width & Height) — Double-click to reset">
+        <svg class="w-3.5 h-3.5 group-hover:scale-110 transition-transform opacity-70 group-hover:opacity-100" viewBox="0 0 14 14" fill="currentColor">
+          <circle cx="11" cy="11" r="1.2"></circle>
+          <circle cx="6.5" cy="11" r="1.2"></circle>
+          <circle cx="11" cy="6.5" r="1.2"></circle>
+          <circle cx="2" cy="11" r="1.2"></circle>
+          <circle cx="6.5" cy="6.5" r="1.2"></circle>
+          <circle cx="11" cy="2" r="1.2"></circle>
+        </svg>
+      </div>
+
+      <!-- Right Edge Drag Resizer -->
+      <div id="chart-modal-resize-right" class="absolute top-0 right-0 w-2 h-full cursor-ew-resize hover:bg-blue-500/20 active:bg-blue-500/40 transition-colors z-30 select-none" title="Drag right edge to resize width — Double-click to reset"></div>
+
     </div>
   </div>
 
@@ -1075,85 +1339,341 @@
     </div>
   </div>
 
-  <!-- ============================================================== -->
-  <!-- POPUP: Responsive Hover Chart with Distinct Price & Volume Panes -->
-  <!-- ============================================================== -->
-  <div id="stock-hover-chart-popup" class="fixed z-50 hidden bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-2xl shadow-2xl p-4 w-[600px] max-w-[95vw] flex-col gap-2.5 transition-all duration-150 pointer-events-auto">
-    
-    <!-- Top Bar: Symbol, Star with Dropdown, Name, Change, MA Legend, 3M/6M Range Selector -->
-    <div class="flex items-center justify-between gap-3 border-b border-dark-border/60 pb-2.5 flex-wrap">
-      <div class="min-w-0 flex items-center gap-2 relative">
-        <!-- Quick Watchlist Star Icon -->
-        <button id="hover-chart-star-btn" onclick="toggleHoverStockWatchlist(event)" class="p-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border transition-colors cursor-pointer text-slate-400 hover:text-amber-400 flex items-center justify-center" title="Click to choose watchlist or toggle">
-          <i data-lucide="star" class="w-4 h-4" id="hover-star-icon"></i>
-        </button>
-
-        <!-- Star Watchlist Selection Dropdown Menu -->
-        <div id="hover-star-watchlist-dropdown" class="hidden absolute top-9 left-0 z-50 bg-dark-card border border-dark-border rounded-xl shadow-2xl p-2 w-52 flex-col gap-1 backdrop-blur-md">
-          <div class="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-dark-border/50 flex items-center justify-between">
-            <span>Select Watchlist</span>
-            <button type="button" onclick="closeHoverWatchlistDropdown(event)" class="text-slate-400 hover:text-white text-xs">✕</button>
-          </div>
-          <div id="hover-watchlist-items-list" class="flex flex-col gap-0.5 max-h-40 overflow-y-auto">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-
-        <div>
-          <div class="flex items-center gap-2">
-            <span id="hover-chart-symbol" class="font-bold font-mono text-white text-sm">--</span>
-            <span id="hover-chart-change" class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+0.00%</span>
-            <span id="hover-chart-ltp" class="text-xs font-mono font-bold text-slate-200">₹--</span>
-          </div>
-          <p id="hover-chart-name" class="text-[11px] text-slate-400 truncate max-w-[200px]">--</p>
-        </div>
-      </div>
-
-      <!-- Right: MA Legend & 3M / 6M Range Switcher -->
-      <div class="flex items-center gap-2.5 flex-wrap">
-        <!-- MA & Vol Legend -->
-        <div class="flex items-center gap-1.5 text-[9px] font-mono shrink-0">
-          <span class="text-sky-400 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>10 MA</span>
-          <span class="text-blue-500 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>20 MA</span>
-          <span class="text-amber-500 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>50 MA</span>
-          <span class="text-emerald-400 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Vol</span>
-          <span class="text-amber-400 font-semibold flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Vol Avg</span>
-        </div>
-
-        <!-- 3M / 6M Range Buttons -->
-        <div class="flex items-center p-0.5 rounded-lg bg-dark-bg border border-dark-border text-[10px] font-mono font-bold">
-          <button type="button" onclick="setHoverChartRange('3mo', event)" id="btn-hover-range-3mo" class="px-2 py-0.5 rounded text-slate-400 hover:text-white transition-colors cursor-pointer">
-            3M
-          </button>
-          <button type="button" onclick="setHoverChartRange('6mo', event)" id="btn-hover-range-6mo" class="px-2 py-0.5 rounded bg-blue-600 text-white shadow-sm transition-colors cursor-pointer">
-            6M
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Live Dynamic Crosshair Tooltip Legend Bar -->
-    <div id="hover-chart-legend" class="flex items-center gap-3 text-[10px] font-mono text-slate-400 px-2 py-1 bg-dark-bg/40 rounded-lg border border-dark-border/40 overflow-x-auto whitespace-nowrap">
-      <span><strong class="text-slate-500 font-normal">O:</strong> <span id="hover-leg-open" class="text-slate-200">--</span></span>
-      <span><strong class="text-slate-500 font-normal">H:</strong> <span id="hover-leg-high" class="text-slate-200">--</span></span>
-      <span><strong class="text-slate-500 font-normal">L:</strong> <span id="hover-leg-low" class="text-slate-200">--</span></span>
-      <span><strong class="text-slate-500 font-normal">C:</strong> <span id="hover-leg-close" class="text-slate-200">--</span></span>
-      <span><strong class="text-slate-500 font-normal">Vol:</strong> <span id="hover-leg-vol" class="text-slate-200">--</span></span>
-    </div>
-
-    <!-- Multi-Pane Container (Separate Price Pane & Separate Volume Pane) -->
-    <div id="hover-chart-panes-wrapper" class="flex flex-col gap-1 w-full">
-      <!-- PANE 1: Price & MAs (Height 210px) -->
-      <div id="hover-chart-price-container" class="w-full h-52 relative bg-dark-bg/60 rounded-xl overflow-hidden"></div>
+  <!-- Chart Line Thickness & Customizer Modal -->
+  <div id="line-settings-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
       
-      <!-- PANE 2: Dedicated Volume Pane (Height 75px) -->
-      <div id="hover-chart-volume-container" class="w-full h-20 relative bg-dark-bg/60 rounded-xl overflow-hidden"></div>
-    </div>
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/80">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm">Chart Theme & Line Thickness Customizer</h3>
+            <p class="text-[11px] text-slate-400">Customize line width, colors & chart canvas appearance</p>
+          </div>
+        </div>
+        <button onclick="closeLineSettingsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-dark-bg transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
 
-    <!-- Bottom Footer Meta -->
-    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-      <span id="hover-chart-meta">Daily Candlesticks · 10/20/50 MA & Dedicated Volume Pane</span>
-      <span class="text-slate-400">Click row for full chart modal</span>
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 overflow-y-auto flex flex-col gap-5 text-xs">
+        
+        <!-- Section 1: Chart Theme Preset & Custom Palette -->
+        <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <label class="font-bold text-slate-200 text-xs flex items-center gap-2">
+              <i data-lucide="palette" class="w-4 h-4 text-blue-400"></i>
+              <span>Chart Theme Preset:</span>
+            </label>
+            <select id="modal-select-chart-theme" onchange="handleModalThemeChange(this.value)" class="bg-dark-card text-slate-100 font-semibold px-3 py-1.5 rounded-lg border border-dark-border text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+              <option value="dark">🌙 Dark (Default)</option>
+              <option value="light">☀️ Light</option>
+              <option value="tv-dark">🟦 TradingView Dark</option>
+              <option value="midnight">⬛ Midnight (OLED Black)</option>
+              <option value="paper">📜 Paper (Warm Sepia)</option>
+              <option value="high-contrast">⚫ High Contrast</option>
+              <option value="custom">🎨 Custom Palette</option>
+            </select>
+          </div>
+
+          <!-- Custom Theme Color Pickers (Visible when Custom is selected) -->
+          <div id="custom-theme-palette" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-dark-border/40">
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Background</span>
+              <input type="color" id="picker-custom-bg" value="#0b0f19" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Text / Scale</span>
+              <input type="color" id="picker-custom-text" value="#94a3b8" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Grid Lines</span>
+              <input type="color" id="picker-custom-grid" value="#2a2e39" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Candle Bullish</span>
+              <input type="color" id="picker-custom-up" value="#10b981" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Candle Bearish</span>
+              <input type="color" id="picker-custom-down" value="#ef4444" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+            <div class="flex items-center justify-between p-2 rounded-lg bg-dark-card border border-dark-border">
+              <span class="text-slate-300 text-[11px]">Axis Borders</span>
+              <input type="color" id="picker-custom-border" value="#1f293d" class="indicator-color-picker" onchange="handleCustomColorChange()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Moving Averages & Overlays Line Thickness -->
+        <div>
+          <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>Price Pane Indicators & Line Thickness</span>
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- EMA 10 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema10" value="#0284c7" class="indicator-color-picker" onchange="updateLineStyle('ema10')">
+                <span class="font-semibold text-slate-200">10 EMA</span>
+              </div>
+              <select id="setting-width-ema10" onchange="updateLineStyle('ema10')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 20 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema20" value="#2563eb" class="indicator-color-picker" onchange="updateLineStyle('ema20')">
+                <span class="font-semibold text-slate-200">20 EMA</span>
+              </div>
+              <select id="setting-width-ema20" onchange="updateLineStyle('ema20')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 50 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema50" value="#f59e0b" class="indicator-color-picker" onchange="updateLineStyle('ema50')">
+                <span class="font-semibold text-slate-200">50 EMA</span>
+              </div>
+              <select id="setting-width-ema50" onchange="updateLineStyle('ema50')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 150 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema150" value="#9333ea" class="indicator-color-picker" onchange="updateLineStyle('ema150')">
+                <span class="font-semibold text-slate-200">150 EMA</span>
+              </div>
+              <select id="setting-width-ema150" onchange="updateLineStyle('ema150')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- EMA 200 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-ema200" value="#e11d48" class="indicator-color-picker" onchange="updateLineStyle('ema200')">
+                <span class="font-semibold text-slate-200">200 EMA</span>
+              </div>
+              <select id="setting-width-ema200" onchange="updateLineStyle('ema200')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- VWAP -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-vwap" value="#eab308" class="indicator-color-picker" onchange="updateLineStyle('vwap')">
+                <span class="font-semibold text-slate-200">VWAP</span>
+              </div>
+              <select id="setting-width-vwap" onchange="updateLineStyle('vwap')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="1.8" selected>1.8 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Darvas Box Top -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-darvas-top" value="#10b981" class="indicator-color-picker" onchange="updateLineStyle('darvasTop')">
+                <span class="font-semibold text-slate-200">Darvas Top Line</span>
+              </div>
+              <select id="setting-width-darvas-top" onchange="updateLineStyle('darvasTop')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px</option>
+                <option value="2.5" selected>2.5 px (Default)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Darvas Box Bottom -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-darvas-bottom" value="#ef4444" class="indicator-color-picker" onchange="updateLineStyle('darvasBottom')">
+                <span class="font-semibold text-slate-200">Darvas Bottom Line</span>
+              </div>
+              <select id="setting-width-darvas-bottom" onchange="updateLineStyle('darvasBottom')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px</option>
+                <option value="2.5" selected>2.5 px (Default)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Anchored VWAP (AVWAP) -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-avwap" value="#a855f7" class="indicator-color-picker" onchange="updateLineStyle('avwap')">
+                <span class="font-semibold text-slate-200">Anchored VWAP (AVWAP)</span>
+              </div>
+              <select id="setting-width-avwap" onchange="updateLineStyle('avwap')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Pivots Lines -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <i data-lucide="split" class="w-4 h-4 text-cyan-400"></i>
+                <span class="font-semibold text-slate-200">Pivot Points (P, R1, S1)</span>
+              </div>
+              <select id="setting-width-pivots" onchange="updateLineStyle('pivots')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px (Fine)</option>
+                <option value="1.2" selected>1.2 px (Default)</option>
+                <option value="1.8">1.8 px</option>
+                <option value="2.5">2.5 px (Thick)</option>
+              </select>
+            </div>
+
+            <!-- Day Close Line (LTP) -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-close-line" value="#10b981" class="indicator-color-picker" onchange="updateLineStyle('closeLine')">
+                <span class="font-semibold text-slate-200">Day Close Line (LTP)</span>
+              </div>
+              <select id="setting-width-close-line" onchange="updateLineStyle('closeLine')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1" selected>1 px (Fine / Default)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+                <option value="4">4 px (Extra Bold)</option>
+              </select>
+            </div>
+
+            <!-- Crosshair (Horz & Vert) -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <input type="color" id="setting-color-crosshair" value="#3b82f6" class="indicator-color-picker" onchange="updateLineStyle('crosshair')">
+                <span class="font-semibold text-slate-200">Crosshair (Horz & Vert)</span>
+              </div>
+              <select id="setting-width-crosshair" onchange="updateLineStyle('crosshair')" class="bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1" selected>1 px (Default)</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2">2 px (Medium)</option>
+                <option value="2.5">2.5 px (Thick)</option>
+                <option value="3">3 px (Bold)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Sub-Panes & Volume Line Thickness -->
+        <div>
+          <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Volume & Sub-Pane Oscillators</span>
+          </h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- Volume 9-SMA -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-200">Volume 9-SMA</span>
+                <input type="color" id="setting-color-vol-avg" value="#fbbf24" class="indicator-color-picker" onchange="updateLineStyle('volAvg')">
+              </div>
+              <select id="setting-width-vol-avg" onchange="updateLineStyle('volAvg')" class="w-full bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px</option>
+                <option value="3">3 px</option>
+              </select>
+            </div>
+
+            <!-- RSI 14 -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-200">RSI (14) Line</span>
+                <input type="color" id="setting-color-rsi" value="#60a5fa" class="indicator-color-picker" onchange="updateLineStyle('rsi')">
+              </div>
+              <select id="setting-width-rsi" onchange="updateLineStyle('rsi')" class="w-full bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px</option>
+                <option value="1.5">1.5 px</option>
+                <option value="2" selected>2 px (Default)</option>
+                <option value="2.5">2.5 px</option>
+                <option value="3">3 px (Bold)</option>
+              </select>
+            </div>
+
+            <!-- RSI 14-SMA -->
+            <div class="p-2.5 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-slate-200">RSI 14-SMA Line</span>
+                <input type="color" id="setting-color-rsi-sma" value="#fbbf24" class="indicator-color-picker" onchange="updateLineStyle('rsiSma')">
+              </div>
+              <select id="setting-width-rsi-sma" onchange="updateLineStyle('rsiSma')" class="w-full bg-dark-card text-slate-200 text-[11px] font-mono py-1 px-2 rounded-lg border border-dark-border">
+                <option value="1">1 px</option>
+                <option value="1.5" selected>1.5 px (Default)</option>
+                <option value="2">2 px</option>
+                <option value="2.5">2.5 px</option>
+                <option value="3">3 px</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3.5 border-t border-dark-border bg-dark-bg/80 flex items-center justify-between gap-3">
+        <button onclick="resetLineStylesToDefaults()" class="px-3.5 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-slate-200 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Reset Defaults</span>
+        </button>
+        <button onclick="closeLineSettingsModal()" class="px-5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Apply & Done</span>
+        </button>
+      </div>
+
     </div>
   </div>
 

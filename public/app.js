@@ -6,6 +6,44 @@
  * - Admin Authentication System (Patent / Patent) for Adding, Editing, Deleting Screeners
  */
 
+// -------------------------------------------------------------
+// Official 212 F&O Preset List & Universal F&O Tagging
+// -------------------------------------------------------------
+const FNO_PRESET_212 = "ITC, ADANIGREEN, PERSISTENT, BHARTIARTL, ADANIPORTS, NAUKRI, MPHASIS, ADANIPOWER, HCLTECH, PFC, RELIANCE, MARICO, ONGC, INFY, HEROMOTOCO, BAJAJ-AUTO, LTM, BLUESTARCO, TATAELXSI, DRREDDY, OIL, HINDUNILVR, VBL, KOTAKBANK, SUPREMEIND, SHREECEM, SRF, PIIND, FORCEMOT, TATAPOWER, DELHIVERY, CIPLA, VOLTAS, FORTIS, PNB, UPL, KPITTECH, DABUR, MAHABANK, OBEROIRLTY, TECHM, NAM-INDIA, ZYDUSLIFE, BANKINDIA, GMRAIRPORT, APLAPOLLO, ATHERENERG, JSWSTEEL, GODREJCP, HDFCBANK, CONCOR, POWERGRID, TMPV, PNBHOUSING, HINDZINC, AMBUJACEM, PATANJALI, EICHERMOT, MAZDOCK, COFORGE, ADANIENT, HAL, RBLBANK, NTPC, CUMMINSIND, SIEMENS, ICICIGI, COALINDIA, SBILIFE, NIFTY, HINDALCO, ETERNAL, UNOMINDA, TATASTEEL, SOLARINDS, RADICO, BAJFINANCE, PAGEIND, BANDHANBNK, BANKBARODA, GLENMARK, PHOENIXLTD, LODHA, ULTRACEMCO, SONACOMS, JSWENERGY, ALKEM, NHPC, HDFCLIFE, TIINDIA, AUBANK, WAAREEENER, LICHSGFIN, TATACONSUM, M&M, HINDPETRO, RVNL, BEL, 360ONE, CDSL, TRENT, MANAPPURAM, ASTRAL, IRFC, CANBK, TITAN, SAIL, BANKNIFTY, IEX, ICICIBANK, HYUNDAI, NBCC, BRITANNIA, BSE, IDFCFIRSTB, INOXWIND, TCS, GODFRYPHLP, SAGILITY, UNITDSPR, LICI, AMBER, VEDL, WIPRO, LT, APOLLOHOSP, LUPIN, HAVELLS, GODREJPROP, ANGELONE, IOC, IDEA, INDIANB, PGEL, SBICARD, DMART, GRASIM, AUROPHARMA, BDL, IREDA, TORNTPHARM, BPCL, UNIONBANK, COLPAL, CROMPTON, FEDERALBNK, SUZLON, COCHINSHIP, PREMIERENE, JIOFIN, KAYNES, CHOLAFIN, DLF, JUBLFOOD, INDUSINDBK, SBIN, BAJAJFINSV, POLICYBZR, MFSL, MUTHOOTFIN, SWIGGY, NATIONALUM, BHARATFORG, ADANIENSOL, MOTILALOFS, MANKIND, DIXON, PIDILITIND, BIOCON, INDHOTEL, GAIL, GVT&D, JINDALSTEL, PETRONET, LAURUSLABS, SUNPHARMA, OFSS, MCX, NMDC, RECLTD, BAJAJHLDNG, BOSCHLTD, ASHOKLEY, ASIANPAINT, HDFCAMC, MOTHERSON, NYKAA, ABB, DIVISLAB, TVSMOTOR, YESBANK, AXISBANK, POWERINDIA, CGPOWER, KFINTECH, INDIGO, INDUSTOWER, BHEL, ABCAPITAL, VMM, LTF, MAXHEALTH, CAMS, PRESTIGE, NESTLEIND, ICICIPRULI, MARUTI, SHRIRAMFIN, KALYANKJIL, PAYTM, POLYCAB, KEI";
+
+const SYMBOL_ALIAS_MAP = {
+  'LTM': 'LTIM',
+  'GMRAIRPORT': 'GMRINFRA',
+  'HINDPETRO': 'HPCL',
+  'LTF': 'L&TFH',
+  'MOTHERSON': 'SAMVARDHANA'
+};
+
+const FNO_SET_212 = new Set(
+  FNO_PRESET_212.split(/[,\s\n\r\t]+/)
+    .map(s => s.trim().toUpperCase().replace(/[^A-Z0-9&\-_]/g, ''))
+    .filter(Boolean)
+);
+Object.entries(SYMBOL_ALIAS_MAP).forEach(([from, to]) => {
+  if (FNO_SET_212.has(from)) FNO_SET_212.add(to);
+});
+
+function isFnoStock(stockOrSymbol) {
+  if (!stockOrSymbol) return false;
+  if (typeof stockOrSymbol === 'object') {
+    if (stockOrSymbol.fno === true) return true;
+    stockOrSymbol = stockOrSymbol.symbol;
+  }
+  if (!stockOrSymbol || typeof stockOrSymbol !== 'string') return false;
+  const sym = stockOrSymbol.toUpperCase().trim().replace(/[^A-Z0-9&\-_]/g, '');
+  return FNO_SET_212.has(sym) || FNO_SET_212.has(SYMBOL_ALIAS_MAP[sym] || '');
+}
+
+function getFnoBadgeHtml(stockOrSymbol, extraClass = '') {
+  if (!isFnoStock(stockOrSymbol)) return '';
+  return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono ${extraClass}" title="F&O Contract Available">F&O</span>`;
+}
+
 // Application State
 const state = {
   screeners: [],
@@ -1547,7 +1585,10 @@ function renderWatchlistStocks() {
     tr.innerHTML = `
       <td class="py-2.5 px-3">
         <div class="flex flex-col">
-          <span class="font-mono font-bold text-slate-100 text-xs">${stock.symbol}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="font-mono font-bold text-slate-100 text-xs">${stock.symbol}</span>
+            ${getFnoBadgeHtml(stock.symbol)}
+          </div>
           <span class="text-[10px] text-slate-400 truncate max-w-[140px]">${stock.name || stock.symbol}</span>
         </div>
       </td>
@@ -2787,7 +2828,33 @@ function switchWorkspaceLayout(mode) {
   if (window.lucide) window.lucide.createIcons();
 }
 
+function toggleDashboardChartMaximize() {
+  const chart = el.chartPane || document.getElementById('chart-pane');
+  const btn = document.getElementById('btn-dashboard-chart-maximize');
+  if (!chart) return;
+
+  const isMax = chart.classList.contains('fixed');
+  if (!isMax) {
+    chart.classList.add('fixed', 'inset-2', 'z-50', 'shadow-2xl');
+    if (btn) {
+      btn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4 text-blue-400"></i>';
+      btn.title = 'Restore Window Size';
+    }
+  } else {
+    chart.classList.remove('fixed', 'inset-2', 'z-50', 'shadow-2xl');
+    if (btn) {
+      btn.innerHTML = '<i data-lucide="maximize" class="w-4 h-4"></i>';
+      btn.title = 'Toggle Fullscreen Maximize Chart';
+    }
+  }
+  if (window.lucide) window.lucide.createIcons();
+  handleResize();
+  setTimeout(handleResize, 60);
+  setTimeout(handleResize, 150);
+}
+
 window.switchWorkspaceLayout = switchWorkspaceLayout;
+window.toggleDashboardChartMaximize = toggleDashboardChartMaximize;
 
 // Draggable Pane Resizers:
 // 1. Workspace Splitter between Sidebar & Chart (Horizontal width / Vertical height)
@@ -3154,6 +3221,7 @@ function setupPredictiveSearch() {
           <div class="flex items-center gap-2">
             <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
             <span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
+            ${getFnoBadgeHtml(item.symbol)}
           </div>
           <div class="text-[11px] text-slate-400 truncate mt-0.5">${item.name || item.symbol}</div>
         </div>
@@ -3935,7 +4003,9 @@ async function loadStockChart(rawSymbol) {
       else el.chartStockSymbol.textContent = cleanSymbol;
     }
     if (el.chartStockLtp) el.chartStockLtp.textContent = fmt.currency(data.ltp);
-    if (el.chartStockExchange) el.chartStockExchange.textContent = data.exchange || 'NSE';
+    if (el.chartStockExchange) {
+      el.chartStockExchange.innerHTML = `${data.exchange || 'NSE'}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+    }
     
     // Percent change pill
     if (el.chartStockChange) {
@@ -4382,6 +4452,7 @@ function renderPricescanTable() {
             <div class="flex items-center gap-1.5">
               <span class="font-mono font-bold text-slate-100 group-hover:text-emerald-300 text-xs">${m.symbol}</span>
               <span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange || 'NSE'}</span>
+              ${getFnoBadgeHtml(m.symbol)}
             </div>
             <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
           </div>
@@ -4892,6 +4963,7 @@ function renderStocksTable() {
           <div>
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${stock.symbol}</span>
+              ${getFnoBadgeHtml(stock.symbol)}
               ${mcBadgeHtml}
               ${confluenceHtml}
             </div>

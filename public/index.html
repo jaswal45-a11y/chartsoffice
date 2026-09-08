@@ -567,8 +567,11 @@
               </div>
             </div>
 
-            <!-- Chart Header Actions: External Links -->
+            <!-- Chart Header Actions: External Links & Maximize -->
             <div class="flex items-center gap-2">
+              <button onclick="toggleDashboardChartMaximize()" id="btn-dashboard-chart-maximize" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors cursor-pointer" title="Toggle Fullscreen Maximize Chart">
+                <i data-lucide="maximize" class="w-4 h-4"></i>
+              </button>
               <a id="link-tradingview" href="https://in.tradingview.com" target="_blank" rel="noopener noreferrer" 
                  title="Open on TradingView" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors">
                 <i data-lucide="external-link" class="w-4 h-4"></i>
