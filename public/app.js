@@ -2392,6 +2392,7 @@ function initNativeCharts() {
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
+      minimumWidth: 75,
       scaleMargins: { top: 0.08, bottom: 0.25 } // Leaves bottom 25% for integrated volume
     },
     timeScale: {
@@ -2531,6 +2532,7 @@ function initNativeCharts() {
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
+      minimumWidth: 75,
       scaleMargins: { top: 0.15, bottom: 0.15 }
     },
     timeScale: {
@@ -2753,32 +2755,50 @@ function updateTimeScalesVisibility() {
   }
 }
 
+function syncChartPriceScales() {
+  if (!state.charts.main || !state.charts.rsi) return;
+  try {
+    const mainScale = state.charts.main.priceScale('right');
+    const rsiScale = state.charts.rsi.priceScale('right');
+    if (!mainScale || !rsiScale) return;
+    const mainW = (typeof mainScale.width === 'function') ? mainScale.width() : 0;
+    const rsiW = (typeof rsiScale.width === 'function') ? rsiScale.width() : 0;
+    const targetW = Math.max(mainW, rsiW, 75);
+    mainScale.applyOptions({ minimumWidth: targetW });
+    rsiScale.applyOptions({ minimumWidth: targetW });
+  } catch (e) {}
+}
+
 function handleResize() {
   if (!state.charts.main) return;
   
+  const chartMainContainer = document.getElementById('chart-main-container') || el.tvPricePane?.parentElement;
   const pricePane = el.tvPricePane || document.getElementById('tv_price_pane');
   const rsiContainer = el.tvRsiContainer || document.getElementById('tv_rsi_container');
   const rsiChartEl = el.tvRsiChart || document.getElementById('tv_rsi_chart');
   
+  const containerWidth = chartMainContainer ? chartMainContainer.clientWidth : (pricePane ? pricePane.clientWidth : 600);
+  const commonWidth = Math.round(containerWidth || 600);
+
   if (pricePane && el.tvMainChart) {
     const pRect = pricePane.getBoundingClientRect();
-    const w = Math.round(pRect.width || 600);
     const h = Math.round(Math.max(80, pRect.height));
     state.charts.main.applyOptions({
-      width: w,
+      width: commonWidth,
       height: h
     });
   }
 
   if (state.charts.rsi && rsiContainer && rsiChartEl && rsiContainer.style.display !== 'none') {
     const rRect = rsiChartEl.getBoundingClientRect();
-    const w = Math.round(rRect.width || 600);
     const h = Math.round(Math.max(30, rRect.height));
     state.charts.rsi.applyOptions({
-      width: w,
+      width: commonWidth,
       height: h
     });
   }
+
+  syncChartPriceScales();
 }
 
 // Set viewport zoom to activeRange (3M, 6M, 12M) without discarding historical candles
@@ -4140,6 +4160,8 @@ async function loadStockChart(rawSymbol) {
     // Set initial visible range based on activeRange (3M, 6M, 12M)
     // while keeping all full history available for backwards scrolling
     applyActiveRangeZoom();
+    syncChartPriceScales();
+    setTimeout(syncChartPriceScales, 50);
 
     if (el.manualStockInput) {
       el.manualStockInput.value = cleanSymbol;

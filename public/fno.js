@@ -2672,6 +2672,7 @@ function initNativeCharts() {
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
+      minimumWidth: 75,
       scaleMargins: { top: 0.08, bottom: 0.25 }
     },
     timeScale: {
@@ -2802,6 +2803,7 @@ function initNativeCharts() {
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
+      minimumWidth: 75,
       scaleMargins: { top: 0.15, bottom: 0.15 }
     },
     timeScale: {
@@ -2988,27 +2990,45 @@ function updateTimeScalesVisibility() {
   }
 }
 
+function syncChartPriceScales() {
+  if (!state.charts.main || !state.charts.rsi) return;
+  try {
+    const mainScale = state.charts.main.priceScale('right');
+    const rsiScale = state.charts.rsi.priceScale('right');
+    if (!mainScale || !rsiScale) return;
+    const mainW = (typeof mainScale.width === 'function') ? mainScale.width() : 0;
+    const rsiW = (typeof rsiScale.width === 'function') ? rsiScale.width() : 0;
+    const targetW = Math.max(mainW, rsiW, 75);
+    mainScale.applyOptions({ minimumWidth: targetW });
+    rsiScale.applyOptions({ minimumWidth: targetW });
+  } catch (e) {}
+}
+
 function handleResize() {
   if (!state.charts.main) return;
   
+  const chartMainContainer = document.getElementById('chart-main-container') || document.getElementById('tv_price_pane')?.parentElement;
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
   const rsiChartEl = document.getElementById('tv_rsi_chart');
   const tvMainChart = document.getElementById('tv_main_chart');
   
+  const containerWidth = chartMainContainer ? chartMainContainer.clientWidth : (pricePane ? pricePane.clientWidth : 600);
+  const commonWidth = Math.round(containerWidth || 600);
+
   if (pricePane && tvMainChart) {
     const pRect = pricePane.getBoundingClientRect();
-    const w = Math.round(pRect.width || 600);
     const h = Math.round(Math.max(80, pRect.height));
-    state.charts.main.applyOptions({ width: w, height: h });
+    state.charts.main.applyOptions({ width: commonWidth, height: h });
   }
 
   if (state.charts.rsi && rsiContainer && rsiChartEl && rsiContainer.style.display !== 'none') {
     const rRect = rsiChartEl.getBoundingClientRect();
-    const w = Math.round(rRect.width || 600);
     const h = Math.round(Math.max(30, rRect.height));
-    state.charts.rsi.applyOptions({ width: w, height: h });
+    state.charts.rsi.applyOptions({ width: commonWidth, height: h });
   }
+
+  syncChartPriceScales();
 }
 
 function applyActiveRangeZoom() {
@@ -4221,6 +4241,8 @@ async function loadStockChart(rawSymbol) {
 
     renderPersistedDrawings();
     applyActiveRangeZoom();
+    syncChartPriceScales();
+    setTimeout(syncChartPriceScales, 50);
 
     if (elManualInput) {
       elManualInput.value = cleanSymbol;
@@ -4617,10 +4639,7 @@ window.openCustomUniverseModal = openCustomUniverseModal;
 window.closeCustomUniverseModal = closeCustomUniverseModal;
 window.applyCustomUniverse = applyCustomUniverse;
 window.resetToFullUniverse = resetToFullUniverse;
-window.loadPresetUniverse = loadPresetUniverse;
 window.handleUniverseTextareaInput = handleUniverseTextareaInput;
-window.clearUniverseTextarea = clearUniverseTextarea;
-window.pasteClipboardToUniverse = pasteClipboardToUniverse;
 window.refreshStockData = refreshStockData;
 window.initTheme = initTheme;
 window.toggleTheme = toggleTheme;

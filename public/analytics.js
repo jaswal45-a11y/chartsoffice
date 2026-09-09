@@ -160,6 +160,7 @@ const state = {
   explorePage: 1,
   explorePageSize: 50,
   dhanActive: false,
+  isExploreChunkSyncActive: false,
 
   // Native Lightweight Charts Engine State
   charts: {
@@ -2365,6 +2366,7 @@ function initNativeCharts() {
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
+      minimumWidth: 75,
       scaleMargins: { top: 0.08, bottom: 0.25 }
     },
     timeScale: {
@@ -2495,6 +2497,7 @@ function initNativeCharts() {
     rightPriceScale: {
       borderColor: borderColor,
       autoScale: true,
+      minimumWidth: 75,
       scaleMargins: { top: 0.15, bottom: 0.15 }
     },
     timeScale: {
@@ -2681,27 +2684,45 @@ function updateTimeScalesVisibility() {
   }
 }
 
+function syncChartPriceScales() {
+  if (!state.charts.main || !state.charts.rsi) return;
+  try {
+    const mainScale = state.charts.main.priceScale('right');
+    const rsiScale = state.charts.rsi.priceScale('right');
+    if (!mainScale || !rsiScale) return;
+    const mainW = (typeof mainScale.width === 'function') ? mainScale.width() : 0;
+    const rsiW = (typeof rsiScale.width === 'function') ? rsiScale.width() : 0;
+    const targetW = Math.max(mainW, rsiW, 75);
+    mainScale.applyOptions({ minimumWidth: targetW });
+    rsiScale.applyOptions({ minimumWidth: targetW });
+  } catch (e) {}
+}
+
 function handleResize() {
   if (!state.charts.main) return;
   
+  const chartMainContainer = document.getElementById('chart-main-container') || document.getElementById('tv_price_pane')?.parentElement;
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
   const rsiChartEl = document.getElementById('tv_rsi_chart');
   const tvMainChart = document.getElementById('tv_main_chart');
   
+  const containerWidth = chartMainContainer ? chartMainContainer.clientWidth : (pricePane ? pricePane.clientWidth : 600);
+  const commonWidth = Math.round(containerWidth || 600);
+
   if (pricePane && tvMainChart) {
     const pRect = pricePane.getBoundingClientRect();
-    const w = Math.round(pRect.width || 600);
     const h = Math.round(Math.max(80, pRect.height));
-    state.charts.main.applyOptions({ width: w, height: h });
+    state.charts.main.applyOptions({ width: commonWidth, height: h });
   }
 
   if (state.charts.rsi && rsiContainer && rsiChartEl && rsiContainer.style.display !== 'none') {
     const rRect = rsiChartEl.getBoundingClientRect();
-    const w = Math.round(rRect.width || 600);
     const h = Math.round(Math.max(30, rRect.height));
-    state.charts.rsi.applyOptions({ width: w, height: h });
+    state.charts.rsi.applyOptions({ width: commonWidth, height: h });
   }
+
+  syncChartPriceScales();
 }
 
 function applyActiveRangeZoom() {
@@ -3916,6 +3937,8 @@ async function loadStockChart(rawSymbol) {
 
     renderPersistedDrawings();
     applyActiveRangeZoom();
+    syncChartPriceScales();
+    setTimeout(syncChartPriceScales, 50);
 
     if (elManualInput) {
       elManualInput.value = cleanSymbol;
@@ -4408,39 +4431,8 @@ function applyTheme(theme) {
     document.documentElement.classList.remove('dark');
     if (icon) icon.setAttribute('data-lucide', 'moon');
   }
-  lucide.createIcons();
-
-  if (analyticsChartInstance) {
-    const isDark = theme === 'dark';
-    const bgColor = isDark ? '#0b0f19' : '#ffffff';
-    const textColor = isDark ? '#94a3b8' : '#334155';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.06)';
-    const borderColor = isDark ? '#1f293d' : '#cbd5e1';
-
-    analyticsChartInstance.applyOptions({
-      layout: { background: { color: bgColor }, textColor },
-      grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
-      rightPriceScale: { borderColor },
-      timeScale: { borderColor }
-    });
-  }
-
-  const hoverCharts = [hoverPriceChartInstance, hoverVolumeChartInstance].filter(Boolean);
-  if (hoverCharts.length > 0) {
-    const isDark = theme === 'dark';
-    const bgColor = isDark ? '#0b0f19' : '#ffffff';
-    const textColor = isDark ? '#94a3b8' : '#334155';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.05)';
-    const borderColor = isDark ? '#1f293d' : '#cbd5e1';
-
-    hoverCharts.forEach(c => {
-      c.applyOptions({
-        layout: { background: { color: bgColor }, textColor },
-        grid: { vertLines: { color: gridColor }, horzLines: { color: gridColor } },
-        rightPriceScale: { borderColor },
-        timeScale: { borderColor }
-      });
-    });
+  if (window.lucide) {
+    lucide.createIcons();
   }
 }
 
@@ -4463,8 +4455,6 @@ window.closeSectorDrilldownModal = closeSectorDrilldownModal;
 window.handleSubSectorSort = handleSubSectorSort;
 window.handleConstituentSort = handleConstituentSort;
 window.sortCustomizeIndices = sortCustomizeIndices;
-window.showHoverChartPopup = showHoverChartPopup;
-window.hideHoverChartPopup = hideHoverChartPopup;
 window.openAnalyticsStockChart = openAnalyticsStockChart;
 window.closeAnalyticsChartModal = closeAnalyticsChartModal;
 window.openAnalyticsCustomizeModal = openAnalyticsCustomizeModal;
@@ -4798,8 +4788,6 @@ async function handleAdminUpdateMaxUsers(e) {
   }
 }
 
-let isExploreChunkSyncActive = false;
-
 function updateExploreSyncSignal(status, message = null) {
   const signalEl = document.getElementById('explore-sync-signal');
   const dotEl = document.getElementById('explore-sync-dot');
@@ -4854,8 +4842,8 @@ async function loadExploreData() {
 }
 
 async function syncAllExploreChunksProgressively(stocks, totalChunks = 11) {
-  if (isExploreChunkSyncActive) return;
-  isExploreChunkSyncActive = true;
+  if (state.isExploreChunkSyncActive) return;
+  state.isExploreChunkSyncActive = true;
 
   const CHUNK_SIZE = 100;
   let completedChunks = 0;
@@ -4928,7 +4916,7 @@ async function syncAllExploreChunksProgressively(stocks, totalChunks = 11) {
   }
   await Promise.all(workers);
 
-  isExploreChunkSyncActive = false;
+  state.isExploreChunkSyncActive = false;
   applyExploreFilters();
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   updateExploreSyncSignal('synced', timeStr);
