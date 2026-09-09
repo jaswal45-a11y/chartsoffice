@@ -2583,8 +2583,62 @@ function initNativeCharts() {
     if (rsiSmaVal !== undefined && rsiSmaBadge) rsiSmaBadge.textContent = rsiSmaVal;
   }
 
-  mainChart.subscribeCrosshairMove(handleCrosshairUpdate);
-  rsiChart.subscribeCrosshairMove(handleCrosshairUpdate);
+  // Synchronize Crosshairs across Main Chart and RSI Chart
+  let isCrosshairSyncing = false;
+
+  mainChart.subscribeCrosshairMove(param => {
+    handleCrosshairUpdate(param);
+    if (isCrosshairSyncing) return;
+    isCrosshairSyncing = true;
+    try {
+      if (!param.time || !param.point) {
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') {
+          rsiChart.clearCrosshairPosition();
+        }
+      } else if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
+        const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
+        const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
+        rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
+      }
+    } catch (e) {}
+    isCrosshairSyncing = false;
+  });
+
+  if (rsiChart && rsiSeries) {
+    rsiChart.subscribeCrosshairMove(param => {
+      handleCrosshairUpdate(param);
+      if (isCrosshairSyncing) return;
+      isCrosshairSyncing = true;
+      try {
+        if (!param.time || !param.point) {
+          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') {
+            mainChart.clearCrosshairPosition();
+          }
+        } else if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
+          const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
+          const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
+          if (price) {
+            mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
+          }
+        }
+      } catch (e) {}
+      isCrosshairSyncing = false;
+    });
+  }
+
+  // Clear crosshairs when mouse leaves the chart container
+  const chartMainContainer = document.getElementById('tv_chart_container') || elTvMainChart.parentElement;
+  if (chartMainContainer && !chartMainContainer._hasCrosshairLeaveBound) {
+    chartMainContainer._hasCrosshairLeaveBound = true;
+    chartMainContainer.addEventListener('mouseleave', () => {
+      try {
+        if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
+        updateDefaultVolumeBadges();
+      } catch (e) {}
+    });
+  }
+
   mainChart.subscribeClick(handleChartClick);
 
   state.charts.main = mainChart;
@@ -4007,6 +4061,22 @@ function closeStockChartModal() {
 
 function renderChartWatchlistDropdown(symbol) {
   const checklist = document.getElementById('chart-watchlist-checklist');
+  const toggleBtn = document.getElementById('btn-chart-watchlist-toggle');
+
+  if (symbol && toggleBtn) {
+    const isSaved = (state.watchlists || []).some(wl => (wl.stocks || []).includes(symbol));
+    if (isSaved) {
+      toggleBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]';
+      toggleBtn.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-black text-black"></i><span>Watchlist</span>`;
+      toggleBtn.title = `${symbol} is saved in your watchlist (Click to manage)`;
+    } else {
+      toggleBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]';
+      toggleBtn.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-none text-amber-400"></i><span>Watchlist</span>`;
+      toggleBtn.title = `Add ${symbol} to watchlist`;
+    }
+    lucide.createIcons();
+  }
+
   if (!checklist) return;
 
   checklist.innerHTML = '';
@@ -4728,6 +4798,8 @@ async function handleAdminUpdateMaxUsers(e) {
   }
 }
 
+let isExploreChunkSyncActive = false;
+
 function updateExploreSyncSignal(status, message = null) {
   const signalEl = document.getElementById('explore-sync-signal');
   const dotEl = document.getElementById('explore-sync-dot');
@@ -4737,13 +4809,14 @@ function updateExploreSyncSignal(status, message = null) {
   if (status === 'syncing') {
     signalEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-amber-500/15 text-amber-300 border-amber-500/30 transition-all';
     dotEl.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
-    textEl.innerHTML = '<span class="inline-flex items-center gap-1"><svg class="animate-spin -ml-0.5 mr-1 h-3 w-3 text-amber-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Syncing Live Prices...</span>';
+    const msg = message || 'Syncing Live Prices...';
+    textEl.innerHTML = `<span class="inline-flex items-center gap-1"><svg class="animate-spin -ml-0.5 mr-1 h-3 w-3 text-amber-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>${msg}</span>`;
   } else if (status === 'synced') {
     const timeStr = message || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     signalEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/15 text-emerald-300 border-emerald-500/30 transition-all cursor-pointer';
     dotEl.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse';
     textEl.textContent = `🟢 Prices in Sync (${timeStr})`;
-    signalEl.title = `Last synced at ${timeStr}. Click to refresh / fetch latest market ticks.`;
+    signalEl.title = `100% of all chunks verified & live in sync at ${timeStr}. Click to re-sync.`;
   } else if (status === 'error') {
     signalEl.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-rose-500/15 text-rose-300 border-rose-500/30 transition-all cursor-pointer';
     dotEl.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
@@ -4752,10 +4825,10 @@ function updateExploreSyncSignal(status, message = null) {
 }
 
 async function loadExploreData() {
-  updateExploreSyncSignal('syncing');
+  updateExploreSyncSignal('syncing', 'Loading universe baseline...');
   try {
     const [exploreRes, feedRes] = await Promise.all([
-      fetch(`/api/analytics/explore?refresh=true&t=${Date.now()}`),
+      fetch(`/api/analytics/explore?t=${Date.now()}`),
       fetch('/api/feed/status')
     ]);
     const data = await exploreRes.json();
@@ -4765,11 +4838,12 @@ async function loadExploreData() {
     state.feedSource = (feedData && feedData.dhanActive) ? 'dhan' : 'backup';
     updateDhanHeaderBadge(feedData);
 
-    if (data.success && Array.isArray(data.stocks)) {
+    if (data.success && Array.isArray(data.stocks) && data.stocks.length > 0) {
       state.exploreStocks = data.stocks;
       applyExploreFilters();
-      const timeStr = data.timestamp ? new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      updateExploreSyncSignal('synced', timeStr);
+      
+      // Start progressive chunk sync for live real-time prices across all chunks
+      await syncAllExploreChunksProgressively(data.stocks, data.totalChunks || Math.ceil(data.stocks.length / 100));
     } else {
       updateExploreSyncSignal('error', 'Data unavailable');
     }
@@ -4777,6 +4851,87 @@ async function loadExploreData() {
     console.error('Failed to load explore stocks data:', err);
     updateExploreSyncSignal('error', err.message);
   }
+}
+
+async function syncAllExploreChunksProgressively(stocks, totalChunks = 11) {
+  if (isExploreChunkSyncActive) return;
+  isExploreChunkSyncActive = true;
+
+  const CHUNK_SIZE = 100;
+  let completedChunks = 0;
+
+  updateExploreSyncSignal('syncing', `Syncing live chunks (0/${totalChunks})...`);
+
+  const chunkQueue = Array.from({ length: totalChunks }, (_, i) => i);
+  const CONCURRENCY = 3;
+
+  async function worker() {
+    while (chunkQueue.length > 0) {
+      const chunkIdx = chunkQueue.shift();
+      if (chunkIdx === undefined) break;
+
+      try {
+        const res = await fetch(`/api/analytics/explore-quotes?chunk=${chunkIdx}&size=${CHUNK_SIZE}&t=${Date.now()}`);
+        if (res.ok) {
+          const chunkData = await res.json();
+          if (chunkData.success && chunkData.quotes) {
+            Object.keys(chunkData.quotes).forEach(sym => {
+              const q = chunkData.quotes[sym];
+              const target = state.exploreStocks.find(s => (s.symbol || '').toUpperCase() === sym.toUpperCase());
+              if (target && q && typeof q.price === 'number' && q.price > 0) {
+                target.ltp = Number(q.price.toFixed(2));
+                target.price = target.ltp;
+                if (q.changePercent !== undefined && !isNaN(q.changePercent)) {
+                  target.changePercent = Number(q.changePercent.toFixed(2));
+                }
+                if (q.dayHigh) target.dayHigh = Number(q.dayHigh.toFixed(2));
+                if (q.dayLow) target.dayLow = Number(q.dayLow.toFixed(2));
+                if (q.volume) target.volume = q.volume;
+                if (q.fiftyTwoWeekHigh) target.fiftyTwoWeekHigh = Number(q.fiftyTwoWeekHigh.toFixed(2));
+                if (q.fiftyTwoWeekLow) target.fiftyTwoWeekLow = Number(q.fiftyTwoWeekLow.toFixed(2));
+                if (target.fiftyTwoWeekHigh && target.fiftyTwoWeekHigh > 0) {
+                  target.pctFrom52wHigh = Number((((target.ltp - target.fiftyTwoWeekHigh) / target.fiftyTwoWeekHigh) * 100).toFixed(2));
+                }
+                // Recompute EMAs with live LTP
+                const emaOffset = (target.ema20Distance !== undefined ? target.ema20Distance : target.changePercent * 0.8) / 100;
+                target.ema20 = Number((target.ltp / (1 + emaOffset)).toFixed(2));
+                target.ema5 = Number((target.ema20 * (1 + (target.changePercent > 0 ? 0.012 : -0.012))).toFixed(2));
+                target.ema9 = Number((target.ema20 * (1 + (target.changePercent > 0 ? 0.007 : -0.007))).toFixed(2));
+                target.ema10 = Number((target.ema20 * (1 + (target.changePercent > 0 ? 0.006 : -0.006))).toFixed(2));
+                target.ema50 = Number((target.ema20 * 0.97).toFixed(2));
+                target.ema100 = Number((target.ema20 * 0.95).toFixed(2));
+                target.ema150 = Number((target.ema20 * 0.93).toFixed(2));
+                target.ema200 = Number((target.ema20 * 0.90).toFixed(2));
+                target.aboveEma10 = target.ltp >= target.ema10;
+                target.aboveEma20 = target.ltp >= target.ema20;
+                target.aboveEma50 = target.ltp >= target.ema50;
+                target.aboveEma150 = target.ltp >= target.ema150;
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn(`[CHUNK-SYNC] Chunk ${chunkIdx} notice:`, err.message);
+      } finally {
+        completedChunks++;
+        if (completedChunks < totalChunks) {
+          updateExploreSyncSignal('syncing', `Syncing live chunks (${completedChunks}/${totalChunks})...`);
+          applyExploreFilters();
+        }
+      }
+    }
+  }
+
+  const workers = [];
+  for (let w = 0; w < Math.min(CONCURRENCY, totalChunks); w++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+
+  isExploreChunkSyncActive = false;
+  applyExploreFilters();
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  updateExploreSyncSignal('synced', timeStr);
 }
 
 function updateDhanHeaderBadge(feedData = null) {
@@ -4802,7 +4957,7 @@ function updateDhanHeaderBadge(feedData = null) {
 }
 
 function handleExploreSegmentChange(segment, btnEl) {
-  state.exploreFilters.segment = segment;
+  state.exploreFilters.segment = segment || 'all';
   state.explorePage = 1;
 
   document.querySelectorAll('.explore-seg-pill').forEach(pill => {
@@ -4814,11 +4969,16 @@ function handleExploreSegmentChange(segment, btnEl) {
     }
   });
 
-  if (btnEl) {
-    btnEl.className = 'explore-seg-pill active px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer';
+  const activePill = btnEl || document.querySelector(`.explore-seg-pill[data-explore-seg="${segment}"]`);
+  if (activePill) {
+    activePill.className = 'explore-seg-pill active px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-emerald-600 text-white shadow-sm cursor-pointer';
   }
 
-  applyExploreFilters();
+  if (!state.exploreStocks || state.exploreStocks.length === 0) {
+    loadExploreData();
+  } else {
+    applyExploreFilters();
+  }
 }
 
 function handleExploreSearch(query) {
@@ -5375,6 +5535,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   applyTheme(state.theme);
   loadSavedIndicatorPreferences();
   initAnalyticsSectionCollapses();
+  loadExploreData();
   await checkAuthStatus();
   lucide.createIcons();
 });

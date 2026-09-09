@@ -1871,12 +1871,12 @@ function renderChartWatchlistDropdown() {
   const anyWlHasStock = state.watchlists.some(wl => wl.stocks.some(s => (s.symbol || '').toUpperCase() === activeSym));
   if (el.btnChartWatchlistToggle) {
     if (anyWlHasStock) {
-      el.btnChartWatchlistToggle.className = 'p-1 px-1.5 rounded-lg bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
-      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-black text-black"></i>`;
+      el.btnChartWatchlistToggle.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]';
+      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-black text-black"></i><span>Watchlist</span>`;
       el.btnChartWatchlistToggle.title = `${activeSym} is in your watchlist (Click to manage)`;
     } else {
-      el.btnChartWatchlistToggle.className = 'p-1 px-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center';
-      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-none text-amber-400"></i>`;
+      el.btnChartWatchlistToggle.className = 'px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]';
+      el.btnChartWatchlistToggle.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-none text-amber-400"></i><span>Watchlist</span>`;
       el.btnChartWatchlistToggle.title = `Add ${activeSym} to watchlist`;
     }
     lucide.createIcons();
@@ -2655,8 +2655,62 @@ function initNativeCharts() {
     }
   }
 
-  mainChart.subscribeCrosshairMove(handleCrosshairUpdate);
-  rsiChart.subscribeCrosshairMove(handleCrosshairUpdate);
+  // Synchronize Crosshairs across Main Chart and RSI Chart
+  let isCrosshairSyncing = false;
+
+  mainChart.subscribeCrosshairMove(param => {
+    handleCrosshairUpdate(param);
+    if (isCrosshairSyncing) return;
+    isCrosshairSyncing = true;
+    try {
+      if (!param.time || !param.point) {
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') {
+          rsiChart.clearCrosshairPosition();
+        }
+      } else if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
+        const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
+        const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
+        rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
+      }
+    } catch (e) {}
+    isCrosshairSyncing = false;
+  });
+
+  if (rsiChart && rsiSeries) {
+    rsiChart.subscribeCrosshairMove(param => {
+      handleCrosshairUpdate(param);
+      if (isCrosshairSyncing) return;
+      isCrosshairSyncing = true;
+      try {
+        if (!param.time || !param.point) {
+          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') {
+            mainChart.clearCrosshairPosition();
+          }
+        } else if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
+          const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
+          const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
+          if (price) {
+            mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
+          }
+        }
+      } catch (e) {}
+      isCrosshairSyncing = false;
+    });
+  }
+
+  // Clear crosshairs when mouse leaves the chart container
+  const chartMainContainer = document.getElementById('tv_chart_container') || el.tvMainChart?.parentElement;
+  if (chartMainContainer && !chartMainContainer._hasCrosshairLeaveBound) {
+    chartMainContainer._hasCrosshairLeaveBound = true;
+    chartMainContainer.addEventListener('mouseleave', () => {
+      try {
+        if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
+        updateDefaultVolumeBadges();
+      } catch (e) {}
+    });
+  }
+
   mainChart.subscribeClick(handleChartClick);
 
   // Store references
@@ -4610,6 +4664,28 @@ async function loadScreeners() {
   } catch (err) {
     showToast('Failed to load screeners: ' + err.message, 'error');
   }
+}
+
+function displayScreener(screener) {
+  if (!screener) return;
+  state.activeScreenerId = screener.id;
+  state.isAggregatedMode = false;
+  if (el.activeScreenerBadge) el.activeScreenerBadge.textContent = screener.category || 'Screener';
+  if (el.activeScreenerTitle) el.activeScreenerTitle.textContent = screener.name;
+  if (el.activeScreenerDesc) el.activeScreenerDesc.textContent = screener.description || screener.url;
+  if (el.lastUpdatedTime) el.lastUpdatedTime.textContent = screener.lastRun ? `Updated: ${fmt.time(screener.lastRun)}` : '';
+
+  const collapsedActiveBadge = document.getElementById('deck-collapsed-active-badge');
+  if (collapsedActiveBadge) {
+    collapsedActiveBadge.textContent = screener.name;
+  }
+
+  if (Array.isArray(screener.lastResults) && screener.lastResults.length > 0) {
+    state.currentStocks = screener.lastResults;
+    if (el.statTotalStocks) el.statTotalStocks.textContent = screener.stockCount || screener.lastResults.length;
+    renderStocksTable();
+  }
+  renderScreeners();
 }
 
 function renderScreeners() {

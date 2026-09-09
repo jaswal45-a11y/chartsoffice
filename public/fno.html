@@ -803,16 +803,35 @@
           </div>
         </div>
 
-        <!-- Metric Pills: 52WH & ATH Only -->
+        <!-- Metric Pills: 52WH & ATH & Watchlist Dropdown -->
         <div class="flex items-center flex-wrap gap-2 text-[11px] font-mono pt-1">
           <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5" id="pill-52w" title="52-Week High price & distance from high">
-            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
             <span>52WH: <strong class="text-white font-mono" id="val-52w-high">--</strong></span>
           </span>
           <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 font-semibold flex items-center gap-1.5" id="pill-ath" title="All-Time High price & distance from ATH">
             <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
             <span>ATH: <strong class="text-amber-200 font-mono" id="val-ath">--</strong></span>
           </span>
+
+          <!-- Add to Watchlist Dropdown Button (Placed right along with ATH label) -->
+          <div class="relative" id="chart-watchlist-wrapper">
+            <button id="btn-chart-watchlist-toggle" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]" title="Add / Remove current stock from watchlists">
+              <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+              <span>Watchlist</span>
+            </button>
+
+            <!-- Watchlists Checklist Dropdown Menu -->
+            <div id="chart-watchlist-menu" class="hidden absolute left-0 top-full mt-1.5 w-64 bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl z-50 p-2.5 divide-y divide-dark-border/40">
+              <div class="px-1 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Save to Watchlist</span>
+                <span class="text-[10px] text-amber-400/80 font-mono font-normal">Max 50/list</span>
+              </div>
+              <div id="chart-watchlist-checklist" class="py-1.5 flex flex-col gap-1 max-h-52 overflow-y-auto">
+                <!-- Dynamic watchlist checkboxes -->
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -914,24 +933,7 @@
             </button>
           </div>
 
-          <!-- Add to Watchlist Dropdown Button -->
-          <div class="relative" id="chart-watchlist-wrapper">
-            <button id="btn-chart-watchlist-toggle" class="p-1 px-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center justify-center" title="Add / Remove current stock from watchlists">
-              <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-            </button>
-
-            <!-- Watchlists Checklist Dropdown Menu -->
-            <div id="chart-watchlist-menu" class="hidden absolute right-0 top-full mt-1.5 w-64 bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl z-50 p-2.5 divide-y divide-dark-border/40">
-              <div class="px-1 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                <span>Save to Watchlist</span>
-                <span class="text-[10px] text-amber-400/80 font-mono font-normal">Max 50/list</span>
-              </div>
-              <div id="chart-watchlist-checklist" class="py-1.5 flex flex-col gap-1 max-h-52 overflow-y-auto">
-                <!-- Dynamic watchlist checkboxes -->
-              </div>
-            </div>
           </div>
-        </div>
 
       </div>
 

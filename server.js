@@ -581,6 +581,10 @@ async function getOrFetchLiveQuotes(symbols) {
     } catch (err) {}
   }
 
+  if (Object.keys(result).length > 0) {
+    persistUniverseQuotes(result);
+  }
+
   return result;
 }
 
@@ -765,6 +769,29 @@ async function syncMongoInitialData() {
       console.log(`[MongoDB] 📥 Loaded system configuration from MongoDB Atlas.`);
     }
 
+    // 4. Universe Stocks Collection (Self-Healing Persistent Quotes Store)
+    const universeCol = db.collection('universe_stocks');
+    const universeCount = await universeCol.countDocuments();
+    if (universeCount === 0) {
+      const localUniverse = getUniverseStocks();
+      if (localUniverse && localUniverse.length > 0) {
+        console.log(`[MongoDB] 🌱 Seeding ${localUniverse.length} universe stocks into MongoDB Atlas...`);
+        const cleanStocks = localUniverse.map(s => {
+          const { _id, ...rest } = s;
+          return { ...rest };
+        });
+        await universeCol.insertMany(cleanStocks);
+      }
+    } else {
+      const dbUniverse = await universeCol.find({}).toArray();
+      memoryUniverse = dbUniverse.map(s => {
+        const { _id, ...rest } = s;
+        return { ...rest };
+      });
+      localUniverseCache = memoryUniverse;
+      console.log(`[MongoDB] 📥 Loaded ${memoryUniverse.length} universe stocks with latest persisted prices from MongoDB Atlas.`);
+    }
+
   } catch (err) {
     console.error('[MongoDB] Error during initial data sync:', err.message);
   }
@@ -903,6 +930,90 @@ function saveSystemConfig(cfg) {
   } catch (err) {}
 
   return true;
+}
+
+// -------------------------------------------------------------
+// Self-Healing Universe Stocks Store (In-Memory + MongoDB + Disk)
+// -------------------------------------------------------------
+let memoryUniverse = null;
+let universeFlushTimer = null;
+
+function getUniverseStocks() {
+  if (memoryUniverse && memoryUniverse.length > 0) return memoryUniverse;
+  try {
+    if (fs.existsSync(FNO_DATA_FILE)) {
+      const raw = fs.readFileSync(FNO_DATA_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        memoryUniverse = parsed;
+        localUniverseCache = parsed;
+        return memoryUniverse;
+      }
+    }
+  } catch (e) {
+    console.error('[UNIVERSE] Error reading universe file:', e.message);
+  }
+  return [];
+}
+
+async function persistUniverseQuotes(quotesMap) {
+  if (!quotesMap || typeof quotesMap !== 'object' || Object.keys(quotesMap).length === 0) return;
+  const universe = getUniverseStocks();
+  if (!universe || universe.length === 0) return;
+
+  let hasUpdates = false;
+  const nowIso = new Date().toISOString();
+
+  universe.forEach(stk => {
+    if (!stk || !stk.symbol) return;
+    const sym = stk.symbol.toUpperCase().trim();
+    const q = quotesMap[sym] || quotesMap[sym.replace(/\.(NS|BO)$/, '')];
+    if (q && typeof q.price === 'number' && q.price > 0) {
+      stk.price = Number(q.price.toFixed(2));
+      stk.ltp = stk.price;
+      if (q.changePercent !== undefined && !isNaN(q.changePercent)) {
+        stk.changePercent = Number(q.changePercent.toFixed(2));
+      }
+      if (q.dayHigh) stk.dayHigh = Number(q.dayHigh.toFixed(2));
+      if (q.dayLow) stk.dayLow = Number(q.dayLow.toFixed(2));
+      if (q.volume) stk.volume = q.volume;
+      if (q.fiftyTwoWeekHigh) stk.fiftyTwoWeekHigh = Number(q.fiftyTwoWeekHigh.toFixed(2));
+      if (q.fiftyTwoWeekLow) stk.fiftyTwoWeekLow = Number(q.fiftyTwoWeekLow.toFixed(2));
+      stk.lastPriceUpdated = nowIso;
+      hasUpdates = true;
+    }
+  });
+
+  if (!hasUpdates) return;
+
+  // Debounced write to Disk & MongoDB
+  if (universeFlushTimer) clearTimeout(universeFlushTimer);
+  universeFlushTimer = setTimeout(async () => {
+    try {
+      // 1. Write to local JSON
+      fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+
+      // 2. Write to MongoDB Atlas
+      if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+        const col = MONGO_CONFIG.db.collection('universe_stocks');
+        const bulkOps = universe.map(s => {
+          const { _id, ...cleanStock } = s;
+          return {
+            updateOne: {
+              filter: { symbol: cleanStock.symbol },
+              update: { $set: cleanStock },
+              upsert: true
+            }
+          };
+        });
+        if (bulkOps.length > 0) {
+          await col.bulkWrite(bulkOps, { ordered: false });
+        }
+      }
+    } catch (err) {
+      console.warn('[UNIVERSE] Error flushing universe updates:', err.message);
+    }
+  }, 1500);
 }
 
 function getMaxUsersLimit() {
@@ -1783,6 +1894,21 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         };
 
         historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+
+        // Self-Healing Write-Back: update universe store with fresh chart price
+        persistUniverseQuotes({
+          [rawSymbol.toUpperCase().replace(/\.(NS|BO)$/, '')]: {
+            price: responsePayload.ltp,
+            changePercent: responsePayload.changePercent,
+            dayHigh: candles[candles.length - 1]?.high || responsePayload.ltp,
+            dayLow: candles[candles.length - 1]?.low || responsePayload.ltp,
+            volume: candles[candles.length - 1]?.volume || 0,
+            fiftyTwoWeekHigh: responsePayload.high52w,
+            fiftyTwoWeekLow: responsePayload.low52w,
+            source: 'dhan'
+          }
+        });
+
         return responsePayload;
       }
     } catch (dhanErr) {
@@ -1931,6 +2057,21 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         };
 
         historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+
+        // Self-Healing Write-Back: update universe store with fresh chart price
+        persistUniverseQuotes({
+          [rawSymbol.toUpperCase().replace(/\.(NS|BO)$/, '')]: {
+            price: responsePayload.ltp,
+            changePercent: responsePayload.changePercent,
+            dayHigh: candles[candles.length - 1]?.high || responsePayload.ltp,
+            dayLow: candles[candles.length - 1]?.low || responsePayload.ltp,
+            volume: candles[candles.length - 1]?.volume || 0,
+            fiftyTwoWeekHigh: responsePayload.high52w,
+            fiftyTwoWeekLow: responsePayload.low52w,
+            source: 'backup'
+          }
+        });
+
         return responsePayload;
       }
     } catch (err) {
@@ -4613,14 +4754,56 @@ const server = http.createServer(async (req, res) => {
         try {
           const forceRefresh = parsedUrl.query.refresh === 'true' || parsedUrl.query.force === 'true';
           const exploreData = await computeExploreStocksData(forceRefresh);
+          const chunkSize = 100;
+          const totalChunks = Math.ceil((exploreData.stocks?.length || 0) / chunkSize);
           return sendJson(res, 200, {
             success: true,
             timestamp: new Date().toISOString(),
+            totalChunks,
+            chunkSize,
             ...exploreData
           });
         } catch (err) {
           console.error('Error computing explore analytics:', err);
           return sendJson(res, 500, { success: false, error: 'Failed to compute explore analytics: ' + err.message });
+        }
+      }
+
+      // 10h. GET /api/analytics/explore-quotes - Chunked Live Quotes Fetcher
+      if (pathname === '/api/analytics/explore-quotes' && method === 'GET') {
+        try {
+          const chunkIndex = parseInt(parsedUrl.query.chunk || '0', 10);
+          const chunkSize = Math.min(200, Math.max(10, parseInt(parsedUrl.query.size || '100', 10)));
+          
+          const universe = getUniverseStocks();
+          const totalCount = universe.length;
+          const totalChunks = Math.ceil(totalCount / chunkSize);
+          
+          const start = chunkIndex * chunkSize;
+          const end = Math.min(totalCount, start + chunkSize);
+          const chunkStocks = universe.slice(start, end);
+          const chunkSymbols = chunkStocks.map(s => s.symbol);
+
+          if (chunkSymbols.length === 0) {
+            return sendJson(res, 200, { success: true, chunkIndex, totalChunks, quotes: {}, count: 0 });
+          }
+
+          const quotes = await getOrFetchLiveQuotes(chunkSymbols);
+          
+          // Automatically persist to MongoDB and Local JSON
+          persistUniverseQuotes(quotes);
+
+          return sendJson(res, 200, {
+            success: true,
+            chunkIndex,
+            totalChunks,
+            count: Object.keys(quotes).length,
+            quotes,
+            timestamp: new Date().toISOString()
+          });
+        } catch (err) {
+          console.error('[EXPLORE-QUOTES] Error in chunked fetch:', err);
+          return sendJson(res, 500, { success: false, error: err.message });
         }
       }
 

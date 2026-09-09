@@ -2890,8 +2890,62 @@ function initNativeCharts() {
     if (rsiSmaVal !== undefined && rsiSmaBadge) rsiSmaBadge.textContent = rsiSmaVal;
   }
 
-  mainChart.subscribeCrosshairMove(handleCrosshairUpdate);
-  rsiChart.subscribeCrosshairMove(handleCrosshairUpdate);
+  // Synchronize Crosshairs across Main Chart and RSI Chart
+  let isCrosshairSyncing = false;
+
+  mainChart.subscribeCrosshairMove(param => {
+    handleCrosshairUpdate(param);
+    if (isCrosshairSyncing) return;
+    isCrosshairSyncing = true;
+    try {
+      if (!param.time || !param.point) {
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') {
+          rsiChart.clearCrosshairPosition();
+        }
+      } else if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
+        const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
+        const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
+        rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
+      }
+    } catch (e) {}
+    isCrosshairSyncing = false;
+  });
+
+  if (rsiChart && rsiSeries) {
+    rsiChart.subscribeCrosshairMove(param => {
+      handleCrosshairUpdate(param);
+      if (isCrosshairSyncing) return;
+      isCrosshairSyncing = true;
+      try {
+        if (!param.time || !param.point) {
+          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') {
+            mainChart.clearCrosshairPosition();
+          }
+        } else if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
+          const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
+          const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
+          if (price) {
+            mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
+          }
+        }
+      } catch (e) {}
+      isCrosshairSyncing = false;
+    });
+  }
+
+  // Clear crosshairs when mouse leaves the chart container
+  const chartMainContainer = document.getElementById('tv_chart_container') || elTvMainChart.parentElement;
+  if (chartMainContainer && !chartMainContainer._hasCrosshairLeaveBound) {
+    chartMainContainer._hasCrosshairLeaveBound = true;
+    chartMainContainer.addEventListener('mouseleave', () => {
+      try {
+        if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
+        updateDefaultVolumeBadges();
+      } catch (e) {}
+    });
+  }
+
   mainChart.subscribeClick(handleChartClick);
 
   state.charts.main = mainChart;
@@ -4317,6 +4371,22 @@ function closeStockChartModal() {
 
 function renderChartWatchlistDropdown(symbol) {
   const checklist = document.getElementById('chart-watchlist-checklist');
+  const toggleBtn = document.getElementById('btn-chart-watchlist-toggle');
+
+  if (symbol && toggleBtn) {
+    const isSaved = (state.watchlists || []).some(wl => (wl.stocks || []).some(s => (typeof s === 'string' ? s : s.symbol) === symbol));
+    if (isSaved) {
+      toggleBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500 text-black border border-amber-400 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]';
+      toggleBtn.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-black text-black"></i><span>Watchlist</span>`;
+      toggleBtn.title = `${symbol} is saved in your watchlist (Click to manage)`;
+    } else {
+      toggleBtn.className = 'px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]';
+      toggleBtn.innerHTML = `<i data-lucide="star" class="w-3.5 h-3.5 fill-none text-amber-400"></i><span>Watchlist</span>`;
+      toggleBtn.title = `Add ${symbol} to watchlist`;
+    }
+    lucide.createIcons();
+  }
+
   if (!checklist) return;
 
   checklist.innerHTML = '';
