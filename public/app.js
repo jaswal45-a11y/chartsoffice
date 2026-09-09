@@ -1489,6 +1489,8 @@ function switchSidebarTab(tab) {
     el.tabBtnPricescan?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
     el.sidebarPricescanView?.classList.remove('hidden');
     el.sidebarPricescanView?.classList.add('flex');
+
+    populatePricescanScopeOptions();
   }
 }
 
@@ -1530,7 +1532,7 @@ function renderWatchlistSelector() {
   state.watchlists.forEach(w => {
     const opt = document.createElement('option');
     opt.value = w.id;
-    opt.textContent = `⭐ ${w.name} (${w.stocks.length}/50)`;
+    opt.textContent = `⭐ ${w.name} (${w.stocks.length}/500)`;
     if (w.id === state.activeWatchlistId) opt.selected = true;
     el.selectActiveWatchlist.appendChild(opt);
   });
@@ -1538,13 +1540,16 @@ function renderWatchlistSelector() {
   const activeWl = getActiveWatchlist();
   if (activeWl) {
     const count = activeWl.stocks.length;
-    const slotsLeft = 50 - count;
-    if (el.wlCapacityLabel) el.wlCapacityLabel.textContent = `${count} of 50 stocks filled`;
+    const slotsLeft = 500 - count;
+    if (el.wlCapacityLabel) el.wlCapacityLabel.textContent = `${count} of 500 stocks filled`;
     if (el.wlSlotsLeft) {
       el.wlSlotsLeft.textContent = slotsLeft === 0 ? 'Full capacity' : `${slotsLeft} slot${slotsLeft > 1 ? 's' : ''} free`;
       el.wlSlotsLeft.className = slotsLeft === 0 ? 'text-rose-400 font-semibold' : 'text-amber-400 font-semibold';
     }
   }
+
+  // Synchronize DarvasScan scope dropdown with active watchlists
+  populatePricescanScopeOptions();
 }
 
 function renderWatchlistStocks() {
@@ -1640,8 +1645,8 @@ async function addStockToActiveWatchlist(symbol, name = '') {
   const cleanSymbol = symbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
   if (!cleanSymbol) return;
 
-  if (activeWl.stocks.length >= 50) {
-    showToast(`Watchlist "${activeWl.name}" is at full capacity (50/50 stocks)`, 'error');
+  if (activeWl.stocks.length >= 500) {
+    showToast(`Watchlist "${activeWl.name}" is at full capacity (500/500 stocks)`, 'error');
     return;
   }
 
@@ -1670,7 +1675,7 @@ async function addStockToActiveWatchlist(symbol, name = '') {
     renderWatchlistStocks();
     renderChartWatchlistDropdown();
     refreshWatchlistQuotes();
-    showToast(`Added ${cleanSymbol} to "${activeWl.name}" (${activeWl.stocks.length}/50)`, 'success');
+    showToast(`Added ${cleanSymbol} to "${activeWl.name}" (${activeWl.stocks.length}/500)`, 'success');
 
     if (el.wlQuickAddInput) el.wlQuickAddInput.value = '';
   } catch (err) {
@@ -1889,7 +1894,7 @@ function renderChartWatchlistDropdown() {
 
   state.watchlists.forEach(wl => {
     const isPresent = wl.stocks.some(s => (s.symbol || '').toUpperCase() === activeSym);
-    const isFull = wl.stocks.length >= 50 && !isPresent;
+    const isFull = wl.stocks.length >= 500 && !isPresent;
 
     const label = document.createElement('label');
     label.className = `flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer select-none transition-colors ${
@@ -1903,7 +1908,7 @@ function renderChartWatchlistDropdown() {
         <span class="text-slate-200 font-medium">${wl.name}</span>
       </div>
       <span class="text-[10px] font-mono ${isPresent ? 'text-amber-400 font-bold' : 'text-slate-500'}">
-        ${wl.stocks.length}/50
+        ${wl.stocks.length}/500
       </span>
     `;
 
@@ -1942,7 +1947,7 @@ async function addStockToSpecificWatchlist(wlId, symbol, name) {
     renderWatchlistStocks();
     renderChartWatchlistDropdown();
     refreshWatchlistQuotes();
-    showToast(`Added ${symbol} to "${wl.name}" (${wl.stocks.length}/50)`, 'success');
+    showToast(`Added ${symbol} to "${wl.name}" (${wl.stocks.length}/500)`, 'success');
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -4320,6 +4325,42 @@ function selectStock(stock) {
 // -------------------------------------------------------------
 // DarvasScan Controller (Darvas Green ↔ EMA 10 / 20) (Registered Users Only)
 // -------------------------------------------------------------
+
+function populatePricescanScopeOptions() {
+  if (!el.selectPricescanScope) return;
+  const currentVal = el.selectPricescanScope.value || 'current';
+
+  let html = `<optgroup label="Active Workspace">`;
+  const screenerStockCount = (state.currentStocks || []).length;
+  html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
+
+  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
+    state.watchlists.forEach(w => {
+      html += `<option value="${w.id}">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</option>`;
+    });
+  }
+
+  html += `
+    </optgroup>
+    <optgroup label="Market Indices & Universes">
+      <option value="fno">🎯 F&O Stocks (~200)</option>
+      <option value="large">🏢 Large Cap (Top 100)</option>
+      <option value="mid">📈 Mid Cap (150)</option>
+      <option value="small">🚀 Small Cap (250)</option>
+      <option value="micro">🔬 Micro Cap</option>
+      <option value="midsmall400">🌐 MidSmall400 (400)</option>
+      <option value="universe">🌍 Full Universe (1.1k)</option>
+    </optgroup>
+  `;
+
+  el.selectPricescanScope.innerHTML = html;
+
+  const exists = Array.from(el.selectPricescanScope.options).some(o => o.value === currentVal);
+  if (exists) {
+    el.selectPricescanScope.value = currentVal;
+  }
+}
+
 async function runPricePositionScan() {
   const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
   const scope = el.selectPricescanScope?.value || 'current';
@@ -4338,13 +4379,33 @@ async function runPricePositionScan() {
     footerInfo.textContent = `Condition: min(DarvasGreen, EMA${ema}) ≤ Close ≤ max(DarvasGreen, EMA${ema})`;
   }
 
-  // Determine stock list if scope is current screener stocks
+  // Determine stock list & scanning label based on scope
   let stockList = [];
+  let scanScopeLabel = '';
+
   if (scope === 'current') {
     stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+    scanScopeLabel = `${stockList.length} Screener Stocks`;
     if (stockList.length === 0) {
       showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
+      return;
     }
+  } else if (scope.startsWith('wl_') || scope === 'watchlist') {
+    const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
+    if (targetWl) {
+      stockList = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
+      scanScopeLabel = `Watchlist "${targetWl.name}" (${stockList.length} stocks)`;
+    } else {
+      scanScopeLabel = 'Watchlist Stocks';
+    }
+    if (stockList.length === 0) {
+      showToast('Selected watchlist is empty. Add stocks to this watchlist first.', 'warning');
+      return;
+    }
+  } else if (scope === 'universe') {
+    scanScopeLabel = 'Universe Stocks';
+  } else {
+    scanScopeLabel = `${scope.toUpperCase()} Stocks`;
   }
 
   if (btn) {
@@ -4365,7 +4426,7 @@ async function runPricePositionScan() {
         <td colspan="7" class="p-8 text-center text-slate-400">
           <div class="flex flex-col items-center justify-center gap-3">
             <i data-lucide="loader-2" class="w-8 h-8 text-emerald-400 animate-spin"></i>
-            <p class="text-xs font-semibold text-slate-200">Scanning ${scope === 'universe' ? 'Universe Stocks' : (scope === 'current' ? `${stockList.length} Screener Stocks` : `${scope.toUpperCase()} Stocks`)}...</p>
+            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel}...</p>
             <p class="text-[11px] text-slate-500">Checking Darvas Green Line & EMA ${ema} boundary condition</p>
           </div>
         </td>
@@ -5089,6 +5150,7 @@ function renderStocksTable() {
     el.stocksTbody.appendChild(tr);
   });
 
+  populatePricescanScopeOptions();
   lucide.createIcons();
 }
 

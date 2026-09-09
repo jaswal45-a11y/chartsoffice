@@ -1023,7 +1023,7 @@ function getMaxUsersLimit() {
 
 // Constants for User and Watchlist Limits
 const MAX_WATCHLISTS = 5;
-const MAX_STOCKS_PER_WATCHLIST = 50;
+const MAX_STOCKS_PER_WATCHLIST = 500;
 
 // Password hashing & verification
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -2214,6 +2214,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
 
   switch (scope) {
     case 'current':
+    case 'watchlist':
       if (Array.isArray(stockList) && stockList.length > 0) {
         targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE' });
       } else {
@@ -2258,7 +2259,11 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
     case 'universe':
     case 'all':
     default:
-      targetSymbols = sortedUniverse.slice(0, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      if (String(scope).startsWith('wl_') && Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE' });
+      } else {
+        targetSymbols = sortedUniverse.slice(0, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      }
       break;
   }
 
@@ -4637,7 +4642,14 @@ const server = http.createServer(async (req, res) => {
 
         try {
           const body = await parseJsonBody(req);
-          const { targetEma = 10, scope = 'current', stockList = [] } = body;
+          let { targetEma = 10, scope = 'current', stockList = [] } = body;
+          if (String(scope).startsWith('wl_') && (!Array.isArray(stockList) || stockList.length === 0)) {
+            const userWls = getUserWatchlists(authUser);
+            const targetWl = userWls.find(w => w.id === scope);
+            if (targetWl && Array.isArray(targetWl.stocks)) {
+              stockList = targetWl.stocks.map(s => s.symbol);
+            }
+          }
           const scanResults = await scanDarvasEma(targetEma, scope, stockList);
           return sendJson(res, 200, scanResults);
         } catch (scanErr) {
