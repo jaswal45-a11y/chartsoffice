@@ -4206,56 +4206,105 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { success: true, message: 'Watchlist deleted', watchlists });
       }
 
-      // W5. POST /api/watchlists/:id/stocks - Add a stock to a watchlist (Max 50 stocks)
+      // W5. POST /api/watchlists/:id/stocks - Add stock(s) to a watchlist (Max 500 stocks)
       const wlStockAddMatch = pathname.match(/^\/api\/watchlists\/([a-zA-Z0-9_\-]+)\/stocks$/);
       if (wlStockAddMatch && method === 'POST') {
         const authUser = getAuthenticatedUser(req);
         if (!authUser) return sendJson(res, 401, { success: false, error: 'Login required' });
         const wlId = wlStockAddMatch[1];
         const body = await parseJsonBody(req);
-        const rawSym = (body.symbol || '').trim().toUpperCase();
-        if (!rawSym) return sendJson(res, 400, { success: false, error: 'Stock symbol is required' });
-        const cleanSymbol = rawSym.replace(/\.(NS|BO)$/, '');
+
+        let rawSymbols = [];
+        if (Array.isArray(body.symbols)) {
+          rawSymbols = body.symbols;
+        } else if (typeof body.symbols === 'string') {
+          rawSymbols = body.symbols.split(/[\s,;\n\r]+/);
+        } else if (typeof body.symbol === 'string') {
+          rawSymbols = body.symbol.split(/[\s,;\n\r]+/);
+        }
+
+        const cleanSymbols = [...new Set(
+          rawSymbols
+            .map(s => String(s || '').trim().toUpperCase().replace(/\.(NS|BO)$/, ''))
+            .filter(Boolean)
+        )];
+
+        if (cleanSymbols.length === 0) {
+          return sendJson(res, 400, { success: false, error: 'Stock symbol is required' });
+        }
 
         const watchlists = getUserWatchlists(authUser);
         const wl = watchlists.find(w => w.id === wlId);
         if (!wl) return sendJson(res, 404, { success: false, error: 'Watchlist not found' });
         if (!Array.isArray(wl.stocks)) wl.stocks = [];
 
-        if (wl.stocks.length >= MAX_STOCKS_PER_WATCHLIST) {
-          return sendJson(res, 400, {
-            success: false,
-            error: `Watchlist capacity full! Maximum ${MAX_STOCKS_PER_WATCHLIST} stocks allowed per watchlist.`
+        const existingSet = new Set(wl.stocks.map(s => (s.symbol || '').toUpperCase()));
+        const universe = getLocalStockUniverse();
+        const universeArr = Array.isArray(universe) ? universe : [];
+
+        const addedStocks = [];
+        let skippedDuplicates = 0;
+        let capacityReached = false;
+
+        for (const sym of cleanSymbols) {
+          if (existingSet.has(sym)) {
+            skippedDuplicates++;
+            continue;
+          }
+          if (wl.stocks.length >= MAX_STOCKS_PER_WATCHLIST) {
+            capacityReached = true;
+            break;
+          }
+
+          let stockName = (cleanSymbols.length === 1 && body.name ? body.name : '').trim();
+          if (!stockName || stockName === sym) {
+            const match = universeArr.find(s => (s.symbol || '').toUpperCase() === sym || (s.nsecode || '').toUpperCase() === sym);
+            if (match && match.name) stockName = match.name;
+          }
+          if (!stockName) stockName = sym;
+
+          const newStock = {
+            symbol: sym,
+            name: stockName,
+            addedAt: new Date().toISOString()
+          };
+
+          wl.stocks.push(newStock);
+          existingSet.add(sym);
+          addedStocks.push(newStock);
+        }
+
+        if (addedStocks.length > 0) {
+          saveUserWatchlists(authUser, watchlists);
+        }
+
+        if (cleanSymbols.length === 1) {
+          if (addedStocks.length === 0) {
+            if (capacityReached) {
+              return sendJson(res, 400, {
+                success: false,
+                error: `Watchlist capacity full! Maximum ${MAX_STOCKS_PER_WATCHLIST} stocks allowed per watchlist.`
+              });
+            }
+            return sendJson(res, 409, { success: false, error: `${cleanSymbols[0]} is already in this watchlist` });
+          }
+          return sendJson(res, 201, {
+            success: true,
+            stock: addedStocks[0],
+            totalStocks: wl.stocks.length,
+            watchlist: wl
           });
         }
 
-        if (wl.stocks.some(s => (s.symbol || '').toUpperCase() === cleanSymbol)) {
-          return sendJson(res, 409, { success: false, error: `${cleanSymbol} is already in this watchlist` });
-        }
-
-        let stockName = (body.name || '').trim();
-        if (!stockName || stockName === cleanSymbol) {
-          const universe = getLocalStockUniverse();
-          if (Array.isArray(universe)) {
-            const match = universe.find(s => (s.symbol || '').toUpperCase() === cleanSymbol || (s.nsecode || '').toUpperCase() === cleanSymbol);
-            if (match && match.name) stockName = match.name;
-          }
-        }
-        if (!stockName) stockName = cleanSymbol;
-
-        const newStock = {
-          symbol: cleanSymbol,
-          name: stockName,
-          addedAt: new Date().toISOString()
-        };
-
-        wl.stocks.push(newStock);
-        saveUserWatchlists(authUser, watchlists);
-        return sendJson(res, 201, {
+        return sendJson(res, 200, {
           success: true,
-          stock: newStock,
+          addedStocks,
+          addedCount: addedStocks.length,
+          skippedDuplicates,
+          capacityReached,
           totalStocks: wl.stocks.length,
-          watchlist: wl
+          watchlist: wl,
+          message: `Added ${addedStocks.length} stock(s)` + (skippedDuplicates > 0 ? ` (${skippedDuplicates} duplicates skipped)` : '') + (capacityReached ? ` (Reached capacity limit of ${MAX_STOCKS_PER_WATCHLIST})` : '')
         });
       }
 

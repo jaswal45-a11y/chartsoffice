@@ -1632,7 +1632,7 @@ function renderWatchlistStocks() {
   lucide.createIcons();
 }
 
-async function addStockToActiveWatchlist(symbol, name = '') {
+async function addStockToActiveWatchlist(symbolOrSymbols, name = '') {
   if (!state.token) {
     showToast('Please login to use watchlists', 'info');
     openAuthModal('login');
@@ -1642,44 +1642,99 @@ async function addStockToActiveWatchlist(symbol, name = '') {
   const activeWl = getActiveWatchlist();
   if (!activeWl) return;
 
-  const cleanSymbol = symbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
-  if (!cleanSymbol) return;
-
-  if (activeWl.stocks.length >= 500) {
-    showToast(`Watchlist "${activeWl.name}" is at full capacity (500/500 stocks)`, 'error');
-    return;
+  // Split multi-symbols if pasted (e.g. from copy button: "RELIANCE, TCS, INFY")
+  let symbols = [];
+  if (Array.isArray(symbolOrSymbols)) {
+    symbols = symbolOrSymbols;
+  } else if (typeof symbolOrSymbols === 'string') {
+    symbols = symbolOrSymbols.split(/[\s,;\n\r]+/);
   }
 
-  if (activeWl.stocks.some(s => s.symbol === cleanSymbol)) {
-    showToast(`${cleanSymbol} is already in "${activeWl.name}"`, 'info');
-    return;
-  }
+  const cleanSymbols = [...new Set(
+    symbols
+      .map(s => String(s || '').trim().toUpperCase().replace(/\.(NS|BO)$/, ''))
+      .filter(Boolean)
+  )];
 
-  try {
-    const res = await fetch(`/api/watchlists/${activeWl.id}/stocks`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
-      },
-      body: JSON.stringify({ symbol: cleanSymbol, name })
-    });
-    const data = await res.json();
+  if (cleanSymbols.length === 0) return;
 
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Failed to add stock');
+  if (cleanSymbols.length === 1) {
+    const cleanSymbol = cleanSymbols[0];
+    if (activeWl.stocks.length >= 500) {
+      showToast(`Watchlist "${activeWl.name}" is at full capacity (500/500 stocks)`, 'error');
+      return;
     }
 
-    activeWl.stocks.push(data.stock);
-    renderWatchlistSelector();
-    renderWatchlistStocks();
-    renderChartWatchlistDropdown();
-    refreshWatchlistQuotes();
-    showToast(`Added ${cleanSymbol} to "${activeWl.name}" (${activeWl.stocks.length}/500)`, 'success');
+    if (activeWl.stocks.some(s => (s.symbol || '').toUpperCase() === cleanSymbol)) {
+      showToast(`${cleanSymbol} is already in "${activeWl.name}"`, 'info');
+      return;
+    }
 
-    if (el.wlQuickAddInput) el.wlQuickAddInput.value = '';
-  } catch (err) {
-    showToast(err.message, 'error');
+    try {
+      const res = await fetch(`/api/watchlists/${activeWl.id}/stocks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ symbol: cleanSymbol, name })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to add stock');
+      }
+
+      activeWl.stocks.push(data.stock);
+      renderWatchlistSelector();
+      renderWatchlistStocks();
+      renderChartWatchlistDropdown();
+      refreshWatchlistQuotes();
+      showToast(`Added ${cleanSymbol} to "${activeWl.name}" (${activeWl.stocks.length}/500)`, 'success');
+
+      if (el.wlQuickAddInput) el.wlQuickAddInput.value = '';
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  } else {
+    // Multi-stock batch add (e.g. pasting copied screener results)
+    try {
+      showToast(`Adding ${cleanSymbols.length} stocks to "${activeWl.name}"...`, 'info');
+      const res = await fetch(`/api/watchlists/${activeWl.id}/stocks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ symbols: cleanSymbols })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to add stocks');
+      }
+
+      if (Array.isArray(data.addedStocks) && data.addedStocks.length > 0) {
+        activeWl.stocks.push(...data.addedStocks);
+        renderWatchlistSelector();
+        renderWatchlistStocks();
+        renderChartWatchlistDropdown();
+        refreshWatchlistQuotes();
+      }
+
+      let toastMsg = `Added ${data.addedCount || 0} stocks to "${activeWl.name}" (${activeWl.stocks.length}/500)`;
+      if (data.skippedDuplicates > 0) {
+        toastMsg += ` (${data.skippedDuplicates} duplicates skipped)`;
+      }
+      if (data.capacityReached) {
+        toastMsg += ` (Capacity limit 500 reached)`;
+      }
+      showToast(toastMsg, (data.addedCount > 0 ? 'success' : 'info'));
+
+      if (el.wlQuickAddInput) el.wlQuickAddInput.value = '';
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
   }
 }
 
