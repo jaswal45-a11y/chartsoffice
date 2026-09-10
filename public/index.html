@@ -351,8 +351,14 @@
                 </select>
               </div>
 
-              <!-- Action buttons: Rename, Create new (up to 5), Delete -->
-              <div class="flex items-center gap-1">
+              <!-- Action buttons: Copy Symbols, Export CSV, Rename, Create new (up to 5), Delete -->
+              <div class="flex items-center gap-1 shrink-0">
+                <button id="btn-copy-wl-stocks" title="Copy Watchlist Symbols (Ready for TradingView / Dhan / Chartink)" class="p-1.5 text-slate-400 hover:text-amber-400 bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-lg transition-colors cursor-pointer">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                </button>
+                <button id="btn-export-wl-csv" title="Export Watchlist to CSV" class="p-1.5 text-slate-400 hover:text-white bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-lg transition-colors cursor-pointer">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                </button>
                 <button id="btn-rename-watchlist" title="Rename Watchlist" class="p-1.5 text-slate-400 hover:text-white bg-dark-bg hover:bg-dark-accent border border-dark-border rounded-lg transition-colors cursor-pointer">
                   <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                 </button>
@@ -387,12 +393,35 @@
           <!-- Watchlist Stocks Table Container -->
           <div class="flex-1 overflow-y-auto max-h-[560px] divide-y divide-dark-border/50" id="watchlist-stocks-container">
             <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-dark-bg/80 sticky top-0 z-10 text-slate-400 font-semibold uppercase tracking-wider text-[10px] border-b border-dark-border">
+              <thead class="bg-dark-bg/80 sticky top-0 z-10 text-slate-400 font-semibold uppercase tracking-wider text-[10px] border-b border-dark-border select-none">
                 <tr>
-                  <th class="py-2.5 px-3">Stock</th>
-                  <th class="py-2.5 px-3 text-right">LTP (₹)</th>
-                  <th class="py-2.5 px-3 text-right">% Chg</th>
-                  <th class="py-2.5 px-2 text-center w-8">Remove</th>
+                  <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="symbol" title="Sort by Stock Symbol / Name">
+                    <div class="flex items-center gap-1">
+                      <span>Stock</span>
+                      <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
+                    </div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="ltp" title="Sort by Last Traded Price">
+                    <div class="flex items-center justify-end gap-1">
+                      <span>LTP (₹)</span>
+                      <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
+                    </div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="changePercent" title="Sort by % Change">
+                    <div class="flex items-center justify-end gap-1">
+                      <span>% Chg</span>
+                      <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
+                    </div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="volume" title="Sort by Volume">
+                    <div class="flex items-center justify-end gap-1">
+                      <span>Vol</span>
+                      <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
+                    </div>
+                  </th>
+                  <th class="py-2.5 px-1 text-center w-7 text-slate-500" title="Remove stock">
+                    <span class="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody id="watchlist-tbody" class="divide-y divide-dark-border/30">
@@ -1559,7 +1588,7 @@
   <script src="libs/lightweight-charts.js"></script>
 
   <!-- Application Script -->
-  <script src="app.js?v=3.0.6"></script>
+  <script src="app.js?v=3.0.8"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.0.0"></script>
 </body>

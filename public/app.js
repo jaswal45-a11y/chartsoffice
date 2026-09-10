@@ -59,6 +59,9 @@ const state = {
   searchQuery: '',
   sortField: 'changePercent',
   sortAscending: false,
+  // Watchlists Table State
+  watchlistSortField: 'symbol',
+  watchlistSortAscending: true,
   // DarvasScan State
   pricescanResults: [],
   pricescanSortField: 'spreadPercent',
@@ -245,6 +248,8 @@ const el = {
   btnRenameWatchlist: document.getElementById('btn-rename-watchlist'),
   btnAddNewWatchlist: document.getElementById('btn-add-new-watchlist'),
   btnDeleteWatchlist: document.getElementById('btn-delete-watchlist'),
+  btnCopyWlStocks: document.getElementById('btn-copy-wl-stocks'),
+  btnExportWlCsv: document.getElementById('btn-export-wl-csv'),
   wlQuickAddInput: document.getElementById('wl-quick-add-input'),
   btnWlQuickAdd: document.getElementById('btn-wl-quick-add'),
   wlCapacityLabel: document.getElementById('wl-capacity-label'),
@@ -1556,17 +1561,39 @@ function renderWatchlistStocks() {
   if (!el.watchlistTbody) return;
   el.watchlistTbody.innerHTML = '';
 
+  const sortField = state.watchlistSortField || 'symbol';
+  const isAsc = state.watchlistSortAscending;
+
+  // Update Table Header Sort Indicators
+  document.querySelectorAll('th[data-wlsort]').forEach(th => {
+    const isThisCol = th.dataset.wlsort === sortField;
+    const icon = th.querySelector('svg, i');
+    if (isThisCol) {
+      th.classList.add('text-amber-400');
+      th.classList.remove('text-slate-400');
+      if (icon) {
+        icon.setAttribute('data-lucide', isAsc ? 'arrow-up' : 'arrow-down');
+      }
+    } else {
+      th.classList.remove('text-amber-400');
+      th.classList.add('text-slate-400');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'arrow-up-down');
+      }
+    }
+  });
+
   const activeWl = getActiveWatchlist();
   if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
     el.watchlistTbody.innerHTML = `
       <tr>
-        <td colspan="4" class="py-16 text-center text-slate-500">
+        <td colspan="5" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <div class="w-10 h-10 rounded-full bg-dark-bg flex items-center justify-center text-slate-600">
               <i data-lucide="star" class="w-5 h-5 text-amber-500/40"></i>
             </div>
             <p class="text-xs font-semibold text-slate-300">Watchlist is Empty</p>
-            <p class="text-[11px] text-slate-500 max-w-xs">Type a stock symbol above or click the "⭐ Watchlist" button on any chart to save stocks here.</p>
+            <p class="text-[11px] text-slate-500 max-w-xs">Type stock symbols above or paste copied screener lists to save stocks here.</p>
           </div>
         </td>
       </tr>
@@ -1575,11 +1602,46 @@ function renderWatchlistStocks() {
     return;
   }
 
-  activeWl.stocks.forEach(stock => {
+  // Clone and sort stocks
+  const sortedStocks = [...activeWl.stocks];
+
+  sortedStocks.sort((a, b) => {
+    const quoteA = state.watchlistQuotes[a.symbol] || {};
+    const quoteB = state.watchlistQuotes[b.symbol] || {};
+
+    if (sortField === 'symbol') {
+      const symA = (a.symbol || '').toUpperCase();
+      const symB = (b.symbol || '').toUpperCase();
+      return isAsc ? symA.localeCompare(symB) : symB.localeCompare(symA);
+    } else if (sortField === 'name') {
+      const nameA = (a.name || a.symbol || '').toUpperCase();
+      const nameB = (b.name || b.symbol || '').toUpperCase();
+      return isAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    } else if (sortField === 'ltp') {
+      const valA = (typeof quoteA.ltp === 'number' && quoteA.ltp > 0) ? quoteA.ltp : 0;
+      const valB = (typeof quoteB.ltp === 'number' && quoteB.ltp > 0) ? quoteB.ltp : 0;
+      return isAsc ? valA - valB : valB - valA;
+    } else if (sortField === 'changePercent') {
+      const valA = (typeof quoteA.changePercent === 'number' && !isNaN(quoteA.changePercent)) ? quoteA.changePercent : (isAsc ? 99999 : -99999);
+      const valB = (typeof quoteB.changePercent === 'number' && !isNaN(quoteB.changePercent)) ? quoteB.changePercent : (isAsc ? 99999 : -99999);
+      return isAsc ? valA - valB : valB - valA;
+    } else if (sortField === 'volume') {
+      const valA = (typeof quoteA.volume === 'number' && quoteA.volume > 0) ? quoteA.volume : 0;
+      const valB = (typeof quoteB.volume === 'number' && quoteB.volume > 0) ? quoteB.volume : 0;
+      return isAsc ? valA - valB : valB - valA;
+    }
+
+    const symA = (a.symbol || '').toUpperCase();
+    const symB = (b.symbol || '').toUpperCase();
+    return isAsc ? symA.localeCompare(symB) : symB.localeCompare(symA);
+  });
+
+  sortedStocks.forEach(stock => {
     const isSelected = state.selectedStock && state.selectedStock.symbol === stock.symbol;
     const quote = state.watchlistQuotes[stock.symbol] || {};
     const ltpStr = quote.ltp ? fmt.currency(quote.ltp) : '...';
     const chgStr = quote.changePercent !== undefined ? fmt.percent(quote.changePercent) : '...';
+    const volStr = (quote.volume && quote.volume > 0) ? fmt.volume(quote.volume) : '--';
     const isBull = (quote.changePercent || 0) >= 0;
     const chgBadge = quote.changePercent !== undefined
       ? (isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20')
@@ -1594,14 +1656,15 @@ function renderWatchlistStocks() {
             <span class="font-mono font-bold text-slate-100 text-xs">${stock.symbol}</span>
             ${getFnoBadgeHtml(stock.symbol)}
           </div>
-          <span class="text-[10px] text-slate-400 truncate max-w-[140px]">${stock.name || stock.symbol}</span>
+          <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${stock.name || stock.symbol}">${stock.name || stock.symbol}</span>
         </div>
       </td>
-      <td class="py-2.5 px-3 text-right font-mono font-semibold text-slate-200">${ltpStr}</td>
-      <td class="py-2.5 px-3 text-right">
+      <td class="py-2.5 px-2 text-right font-mono font-semibold text-slate-200 text-xs">${ltpStr}</td>
+      <td class="py-2.5 px-2 text-right">
         <span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold ${chgBadge}">${chgStr}</span>
       </td>
-      <td class="py-2.5 px-2 text-center">
+      <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">${volStr}</td>
+      <td class="py-2.5 px-1 text-center">
         <button class="btn-remove-wl-stock p-1 rounded hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer" data-symbol="${stock.symbol}" title="Remove from watchlist">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
         </button>
@@ -1614,7 +1677,8 @@ function renderWatchlistStocks() {
         symbol: stock.symbol,
         name: stock.name || stock.symbol,
         close: quote.ltp || 0,
-        changePercent: quote.changePercent || 0
+        changePercent: quote.changePercent || 0,
+        volume: quote.volume || 0
       });
     });
 
@@ -2057,6 +2121,8 @@ function setupEventListeners() {
     refreshWatchlistQuotes();
   });
 
+  el.btnCopyWlStocks?.addEventListener('click', handleCopyWatchlistStocks);
+  el.btnExportWlCsv?.addEventListener('click', exportWatchlistToCsv);
   el.btnAddNewWatchlist?.addEventListener('click', handleCreateNewWatchlist);
   el.btnRenameWatchlist?.addEventListener('click', openRenameModal);
   el.btnDeleteWatchlist?.addEventListener('click', handleDeleteWatchlist);
@@ -2157,6 +2223,20 @@ function setupEventListeners() {
         state.pricescanSortAscending = (field === 'spreadPercent' || field === 'symbol');
       }
       renderPricescanTable();
+    });
+  });
+
+  // Table Column Sorting (Watchlists Table)
+  document.querySelectorAll('th[data-wlsort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.wlsort;
+      if (state.watchlistSortField === field) {
+        state.watchlistSortAscending = !state.watchlistSortAscending;
+      } else {
+        state.watchlistSortField = field;
+        state.watchlistSortAscending = (field === 'symbol' || field === 'name');
+      }
+      renderWatchlistStocks();
     });
   });
 
@@ -5242,6 +5322,65 @@ function exportToCsv() {
   showToast('Exported results to CSV successfully', 'success');
 }
 
+function handleCopyWatchlistStocks() {
+  const activeWl = getActiveWatchlist();
+  const list = activeWl ? activeWl.stocks || [] : [];
+
+  if (!list || list.length === 0) {
+    showToast('No stocks in current watchlist to copy', 'error');
+    return;
+  }
+
+  const symbols = list.map(s => s.symbol).filter(Boolean);
+  const textToCopy = symbols.join(', ');
+
+  const copySuccess = () => {
+    showToast(`Copied ${symbols.length} symbols from "${activeWl.name}"! (Ready for TradingView / Dhan / Chartink)`, 'success');
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textToCopy).then(copySuccess).catch(() => {
+      fallbackCopyText(textToCopy, symbols.length);
+    });
+  } else {
+    fallbackCopyText(textToCopy, symbols.length);
+  }
+}
+
+function exportWatchlistToCsv() {
+  const activeWl = getActiveWatchlist();
+  if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
+    showToast('No stocks in current watchlist to export', 'error');
+    return;
+  }
+
+  const wlName = activeWl.name || 'Watchlist';
+  const headers = ['Sr', 'Symbol', 'Name', 'LTP (INR)', 'Change (%)', 'Volume', 'Added At'];
+  const rows = activeWl.stocks.map((s, idx) => {
+    const q = state.watchlistQuotes[s.symbol] || {};
+    return [
+      idx + 1,
+      `"${s.symbol}"`,
+      `"${(s.name || s.symbol || '').replace(/"/g, '""')}"`,
+      q.ltp != null ? q.ltp : '',
+      q.changePercent != null ? q.changePercent : '',
+      q.volume != null ? q.volume : '',
+      `"${s.addedAt || ''}"`
+    ];
+  });
+
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `${wlName.replace(/[^a-zA-Z0-9_-]/g, '_')}_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  showToast(`Exported "${wlName}" (${activeWl.stocks.length} stocks) to CSV successfully`, 'success');
+}
+
 // -------------------------------------------------------------
 // Modal Workflows (Admin Only)
 // -------------------------------------------------------------
@@ -5791,6 +5930,8 @@ window.clearStockAvwaps = clearStockAvwaps;
 window.cancelActiveDrawingTool = cancelActiveDrawingTool;
 window.handleAltHShortcut = handleAltHShortcut;
 window.handleCopyStocks = handleCopyStocks;
+window.handleCopyWatchlistStocks = handleCopyWatchlistStocks;
+window.exportWatchlistToCsv = exportWatchlistToCsv;
 window.toggleScreenerDeck = toggleScreenerDeck;
 window.handleChartThemeChange = handleChartThemeChange;
 window.handleModalThemeChange = handleModalThemeChange;
