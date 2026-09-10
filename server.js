@@ -1385,21 +1385,40 @@ function calculateRSI(closes, period = 14) {
   return rsi;
 }
 
-function calculateSMA(data, period) {
+function calculateSMA(data, period, decimals = 0) {
   const sma = [];
-  let sum = 0;
   for (let i = 0; i < data.length; i++) {
-    sum += (data[i] || 0);
-    if (i >= period) {
-      sum -= (data[i - period] || 0);
+    if (i < period - 1) {
+      sma.push(null);
+      continue;
     }
-    if (i >= period - 1) {
-      sma.push(Number((sum / period).toFixed(0)));
+    let sum = 0;
+    let validCount = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      const v = data[j];
+      if (v !== null && v !== undefined && !isNaN(v)) {
+        sum += v;
+        validCount++;
+      }
+    }
+    if (validCount === period) {
+      sma.push(decimals > 0 ? Number((sum / period).toFixed(decimals)) : Number((sum / period).toFixed(0)));
     } else {
       sma.push(null);
     }
   }
   return sma;
+}
+
+// Map indicators to Lightweight Charts whitespace-compatible format preserving 1-to-1 candle indices
+function mapSeriesWithWhitespace(candles, values) {
+  if (!candles || !values) return [];
+  return candles.map((c, idx) => {
+    const val = values[idx];
+    return (val !== null && val !== undefined && !isNaN(val))
+      ? { time: c.time, value: val }
+      : { time: c.time };
+  });
 }
 
 function calculateVWAP(candles, isIntraday) {
@@ -1903,15 +1922,15 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             value: c.volume,
             color: c.close >= c.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
           })),
-          volAvg9: candles.map((c, idx) => ({ time: c.time, value: volAvg9[idx] })).filter(e => e.value !== null),
-          vwapSeries: candles.map((c, idx) => ({ time: c.time, value: vwap[idx] })).filter(e => e.value !== null),
-          ema10: candles.map((c, idx) => ({ time: c.time, value: ema10[idx] })).filter(e => e.value !== null),
-          ema20: candles.map((c, idx) => ({ time: c.time, value: ema20[idx] })).filter(e => e.value !== null),
-          ema50: candles.map((c, idx) => ({ time: c.time, value: ema50[idx] })).filter(e => e.value !== null),
-          ema150: candles.map((c, idx) => ({ time: c.time, value: ema150[idx] })).filter(e => e.value !== null),
-          ema200: candles.map((c, idx) => ({ time: c.time, value: ema200[idx] })).filter(e => e.value !== null),
-          rsi14: candles.map((c, idx) => ({ time: c.time, value: rsi14[idx] })).filter(e => e.value !== null),
-          rsiSma14: candles.map((c, idx) => ({ time: c.time, value: rsiSma14[idx] })).filter(e => e.value !== null)
+          volAvg9: mapSeriesWithWhitespace(candles, volAvg9),
+          vwapSeries: mapSeriesWithWhitespace(candles, vwap),
+          ema10: mapSeriesWithWhitespace(candles, ema10),
+          ema20: mapSeriesWithWhitespace(candles, ema20),
+          ema50: mapSeriesWithWhitespace(candles, ema50),
+          ema150: mapSeriesWithWhitespace(candles, ema150),
+          ema200: mapSeriesWithWhitespace(candles, ema200),
+          rsi14: mapSeriesWithWhitespace(candles, rsi14),
+          rsiSma14: mapSeriesWithWhitespace(candles, rsiSma14)
         };
 
         historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
@@ -2066,15 +2085,15 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             value: c.volume,
             color: c.close >= c.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
           })),
-          volAvg9: candles.map((c, idx) => ({ time: c.time, value: volAvg9[idx] })).filter(e => e.value !== null),
-          vwapSeries: candles.map((c, idx) => ({ time: c.time, value: vwap[idx] })).filter(e => e.value !== null),
-          ema10: candles.map((c, idx) => ({ time: c.time, value: ema10[idx] })).filter(e => e.value !== null),
-          ema20: candles.map((c, idx) => ({ time: c.time, value: ema20[idx] })).filter(e => e.value !== null),
-          ema50: candles.map((c, idx) => ({ time: c.time, value: ema50[idx] })).filter(e => e.value !== null),
-          ema150: candles.map((c, idx) => ({ time: c.time, value: ema150[idx] })).filter(e => e.value !== null),
-          ema200: candles.map((c, idx) => ({ time: c.time, value: ema200[idx] })).filter(e => e.value !== null),
-          rsi14: candles.map((c, idx) => ({ time: c.time, value: rsi14[idx] })).filter(e => e.value !== null),
-          rsiSma14: candles.map((c, idx) => ({ time: c.time, value: rsiSma14[idx] })).filter(e => e.value !== null)
+          volAvg9: mapSeriesWithWhitespace(candles, volAvg9),
+          vwapSeries: mapSeriesWithWhitespace(candles, vwap),
+          ema10: mapSeriesWithWhitespace(candles, ema10),
+          ema20: mapSeriesWithWhitespace(candles, ema20),
+          ema50: mapSeriesWithWhitespace(candles, ema50),
+          ema150: mapSeriesWithWhitespace(candles, ema150),
+          ema200: mapSeriesWithWhitespace(candles, ema200),
+          rsi14: mapSeriesWithWhitespace(candles, rsi14),
+          rsiSma14: mapSeriesWithWhitespace(candles, rsiSma14)
         };
 
         historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });

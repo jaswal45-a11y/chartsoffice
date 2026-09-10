@@ -2859,9 +2859,9 @@ function initNativeCharts() {
     crosshairMarkerVisible: false
   });
 
-  rsiSeries.createPriceLine({ price: 70, color: 'rgba(239, 68, 68, 0.75)', lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: '70' });
+  rsiSeries.createPriceLine({ price: 70, color: 'rgba(239, 68, 68, 0.75)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '70' });
   rsiSeries.createPriceLine({ price: 50, color: 'rgba(148, 163, 184, 0.4)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '50' });
-  rsiSeries.createPriceLine({ price: 30, color: 'rgba(16, 185, 129, 0.75)', lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: '30' });
+  rsiSeries.createPriceLine({ price: 30, color: 'rgba(16, 185, 129, 0.75)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '30' });
 
   // Synchronize TimeScales
   const allCharts = [mainChart, rsiChart];

@@ -2737,7 +2737,7 @@ function initNativeCharts() {
     color: 'rgba(239, 68, 68, 0.75)',
     lineWidth: 1,
     lineStyle: 2,
-    axisLabelVisible: true,
+    axisLabelVisible: false,
     title: '70'
   });
 
@@ -2755,7 +2755,7 @@ function initNativeCharts() {
     color: 'rgba(16, 185, 129, 0.75)',
     lineWidth: 1,
     lineStyle: 2,
-    axisLabelVisible: true,
+    axisLabelVisible: false,
     title: '30'
   });
 
