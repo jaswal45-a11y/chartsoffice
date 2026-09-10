@@ -4235,8 +4235,9 @@ const server = http.createServer(async (req, res) => {
 
         let stockName = (body.name || '').trim();
         if (!stockName || stockName === cleanSymbol) {
-          if (Array.isArray(cachedMarketCapList)) {
-            const match = cachedMarketCapList.find(s => (s.nsecode || '').toUpperCase() === cleanSymbol);
+          const universe = getLocalStockUniverse();
+          if (Array.isArray(universe)) {
+            const match = universe.find(s => (s.symbol || '').toUpperCase() === cleanSymbol || (s.nsecode || '').toUpperCase() === cleanSymbol);
             if (match && match.name) stockName = match.name;
           }
         }
