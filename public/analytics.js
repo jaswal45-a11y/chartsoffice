@@ -2292,6 +2292,7 @@ function updateDefaultVolumeBadges() {
   const volAvgArr = state.currentStockData?.volAvg9;
   const volBadge = document.getElementById('vol-live-badge');
   const volAvgBadge = document.getElementById('vol-avg-live-badge');
+  const candleChgBadge = document.getElementById('candle-chg-badge');
   const rsiBadge = document.getElementById('rsi-live-badge');
   const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');
 
@@ -2302,6 +2303,21 @@ function updateDefaultVolumeBadges() {
   if (volAvgArr && volAvgArr.length > 0 && volAvgBadge) {
     const lastVolAvg = volAvgArr[volAvgArr.length - 1];
     volAvgBadge.textContent = fmt.volume(lastVolAvg?.value || 0);
+  }
+  const candles = state.currentStockData?.candles;
+  if (candles && candles.length > 0 && candleChgBadge) {
+    const lastIdx = candles.length - 1;
+    const lastCandle = candles[lastIdx];
+    let chgPercent = 0;
+    if (lastIdx > 0 && candles[lastIdx - 1]?.close) {
+      const prevClose = candles[lastIdx - 1].close;
+      chgPercent = Number((((lastCandle.close - prevClose) / prevClose) * 100).toFixed(2));
+    } else if (lastCandle.open) {
+      chgPercent = Number((((lastCandle.close - lastCandle.open) / lastCandle.open) * 100).toFixed(2));
+    }
+    const isUp = chgPercent >= 0;
+    candleChgBadge.textContent = (isUp ? '+' : '') + chgPercent.toFixed(2) + '%';
+    candleChgBadge.className = isUp ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
   }
   const rsiArr = state.currentStockData?.rsi14;
   const rsiSmaArr = state.currentStockData?.rsiSma14;
@@ -2577,11 +2593,29 @@ function initNativeCharts() {
 
     const volBadge = document.getElementById('vol-live-badge');
     const volAvgBadge = document.getElementById('vol-avg-live-badge');
+    const candleChgBadge = document.getElementById('candle-chg-badge');
     const rsiBadge = document.getElementById('rsi-live-badge');
     const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');
 
     if (vol && volBadge) volBadge.textContent = fmt.volume(vol.value);
     if (volAvg && volAvgBadge) volAvgBadge.textContent = fmt.volume(volAvg.value);
+    if (candleChgBadge && state.currentStockData?.candles) {
+      const candles = state.currentStockData.candles;
+      const candleIdx = candles.findIndex(c => c.time === param.time);
+      if (candleIdx !== -1) {
+        const c = candles[candleIdx];
+        let chgPercent = 0;
+        if (candleIdx > 0 && candles[candleIdx - 1]?.close) {
+          const prevClose = candles[candleIdx - 1].close;
+          chgPercent = Number((((c.close - prevClose) / prevClose) * 100).toFixed(2));
+        } else if (c.open) {
+          chgPercent = Number((((c.close - c.open) / c.open) * 100).toFixed(2));
+        }
+        const isUp = chgPercent >= 0;
+        candleChgBadge.textContent = (isUp ? '+' : '') + chgPercent.toFixed(2) + '%';
+        candleChgBadge.className = isUp ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
+      }
+    }
     if (rsiVal !== undefined && rsiBadge) rsiBadge.textContent = rsiVal;
     if (rsiSmaVal !== undefined && rsiSmaBadge) rsiSmaBadge.textContent = rsiSmaVal;
   }
@@ -3823,12 +3857,27 @@ function updateDefaultLegend() {
 
     const volBadge = document.getElementById('vol-live-badge');
     const volAvgBadge = document.getElementById('vol-avg-live-badge');
+    const candleChgBadge = document.getElementById('candle-chg-badge');
     const rsiBadge = document.getElementById('rsi-live-badge');
     const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');
 
     if (volBadge) volBadge.textContent = fmt.volume(last.volume);
     const lastVolAvg = state.currentStockData.volAvg9?.[state.currentStockData.volAvg9.length - 1]?.value;
     if (volAvgBadge) volAvgBadge.textContent = lastVolAvg ? fmt.volume(lastVolAvg) : '--';
+    if (candleChgBadge) {
+      const candles = state.currentStockData.candles;
+      const lastIdx = candles.length - 1;
+      let chgPercent = 0;
+      if (lastIdx > 0 && candles[lastIdx - 1]?.close) {
+        const prevClose = candles[lastIdx - 1].close;
+        chgPercent = Number((((last.close - prevClose) / prevClose) * 100).toFixed(2));
+      } else if (last.open) {
+        chgPercent = Number((((last.close - last.open) / last.open) * 100).toFixed(2));
+      }
+      const isUp = chgPercent >= 0;
+      candleChgBadge.textContent = (isUp ? '+' : '') + chgPercent.toFixed(2) + '%';
+      candleChgBadge.className = isUp ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
+    }
     if (rsiBadge) rsiBadge.textContent = state.currentStockData.latestRSI || '--';
     if (rsiSmaBadge) rsiSmaBadge.textContent = state.currentStockData.latestRsiSMA || '--';
   }

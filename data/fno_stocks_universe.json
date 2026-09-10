@@ -500,7 +500,7 @@
     "volume": 10885839,
     "fiftyTwoWeekHigh": 453.2,
     "fiftyTwoWeekLow": 345.5,
-    "lastPriceUpdated": "2026-09-09T18:16:24.669Z",
+    "lastPriceUpdated": "2026-09-10T02:44:07.108Z",
     "ltp": 414
   },
   {
@@ -948,10 +948,10 @@
     "low52w": 430.75,
     "dayHigh": 608.75,
     "dayLow": 593.1,
-    "volume": 6310982,
+    "volume": 6313228,
     "fiftyTwoWeekHigh": 733,
-    "fiftyTwoWeekLow": 430.75,
-    "lastPriceUpdated": "2026-09-09T18:16:26.627Z",
+    "fiftyTwoWeekLow": 433.55,
+    "lastPriceUpdated": "2026-09-10T02:44:02.005Z",
     "ltp": 605.4
   },
   {
@@ -1882,10 +1882,10 @@
     "low52w": 390,
     "dayHigh": 504.9,
     "dayLow": 496,
-    "volume": 2470648,
+    "volume": 2471923,
     "fiftyTwoWeekHigh": 531,
-    "fiftyTwoWeekLow": 390,
-    "lastPriceUpdated": "2026-09-09T18:16:35.754Z",
+    "fiftyTwoWeekLow": 392.45,
+    "lastPriceUpdated": "2026-09-10T02:44:06.612Z",
     "ltp": 498.95
   },
   {
@@ -1987,21 +1987,21 @@
     "marketCap": 102400,
     "sector": "Automobile",
     "industry": "Auto Ancillaries & Components",
-    "price": 49100,
-    "changePercent": 0.65,
+    "price": 48825,
+    "changePercent": -0.56,
     "rsi": 41.1,
     "rvol": 1.8,
     "ema20Distance": -1.9,
     "fno": true,
     "high52w": 50000,
     "low52w": 28610,
-    "dayHigh": 49100,
-    "dayLow": 48360,
-    "volume": 28271,
+    "dayHigh": 49080,
+    "dayLow": 48480,
+    "volume": 12083,
     "fiftyTwoWeekHigh": 50000,
     "fiftyTwoWeekLow": 28610,
-    "lastPriceUpdated": "2026-09-09T18:16:36.126Z",
-    "ltp": 49100
+    "lastPriceUpdated": "2026-09-10T07:04:48.296Z",
+    "ltp": 48825
   },
   {
     "symbol": "POLYCAB",
@@ -2138,7 +2138,7 @@
     "volume": 17725525,
     "fiftyTwoWeekHigh": 89.22,
     "fiftyTwoWeekLow": 71.62,
-    "lastPriceUpdated": "2026-09-09T18:16:36.983Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 76.69
   },
   {
@@ -2358,8 +2358,8 @@
     "dayLow": 1672,
     "volume": 600562,
     "fiftyTwoWeekHigh": 1717,
-    "fiftyTwoWeekLow": 1048,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "fiftyTwoWeekLow": 1061.3,
+    "lastPriceUpdated": "2026-09-10T02:44:00.607Z",
     "ltp": 1698.9
   },
   {
@@ -2428,7 +2428,7 @@
     "volume": 4590947,
     "fiftyTwoWeekHigh": 1221.9,
     "fiftyTwoWeekLow": 903,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 1037.5
   },
   {
@@ -2704,7 +2704,7 @@
     "volume": 7296139,
     "fiftyTwoWeekHigh": 648.95,
     "fiftyTwoWeekLow": 327.05,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:57:11.861Z",
     "ltp": 607.6
   },
   {
@@ -3224,7 +3224,7 @@
     "volume": 5366168,
     "fiftyTwoWeekHigh": 95.58,
     "fiftyTwoWeekLow": 63.02,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 66.88
   },
   {
@@ -3267,10 +3267,10 @@
     "low52w": 58.08,
     "dayHigh": 86.95,
     "dayLow": 85.9,
-    "volume": 20234502,
+    "volume": 20235616,
     "fiftyTwoWeekHigh": 88.76,
     "fiftyTwoWeekLow": 58.08,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:44:17.510Z",
     "ltp": 86
   },
   {
@@ -3281,7 +3281,7 @@
     "sector": "Financial Services",
     "industry": "Non-Banking Financial Company (NBFC)",
     "price": 4728,
-    "changePercent": 0.32,
+    "changePercent": 0.33,
     "rsi": 65.5,
     "rvol": 4.2,
     "ema20Distance": 0.5,
@@ -3293,7 +3293,7 @@
     "volume": 24537,
     "fiftyTwoWeekHigh": 5642,
     "fiftyTwoWeekLow": 4000,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:43:55.205Z",
     "ltp": 4728
   },
   {
@@ -3474,10 +3474,10 @@
     "low52w": 1792.6,
     "dayHigh": 2486.9,
     "dayLow": 2400.1,
-    "volume": 424450,
+    "volume": 424753,
     "fiftyTwoWeekHigh": 2537.6,
     "fiftyTwoWeekLow": 1792.6,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:43:53.803Z",
     "ltp": 2435
   },
   {
@@ -3569,7 +3569,7 @@
     "volume": 10268628,
     "fiftyTwoWeekHigh": 447.15,
     "fiftyTwoWeekLow": 337.05,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 395
   },
   {
@@ -3612,10 +3612,10 @@
     "low52w": 116.97,
     "dayHigh": 210.2,
     "dayLow": 201.38,
-    "volume": 10799006,
+    "volume": 10799389,
     "fiftyTwoWeekHigh": 242.6,
     "fiftyTwoWeekLow": 116.97,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:55:07.248Z",
     "ltp": 205.51
   },
   {
@@ -3661,7 +3661,7 @@
     "volume": 8246127,
     "fiftyTwoWeekHigh": 1758.9,
     "fiftyTwoWeekLow": 930.6,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:31:28.404Z",
     "ltp": 1751.5
   },
   {
@@ -3721,7 +3721,7 @@
     "volume": 270132,
     "fiftyTwoWeekHigh": 2301.4,
     "fiftyTwoWeekLow": 1653.3,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:43:54.311Z",
     "ltp": 2168
   },
   {
@@ -3810,10 +3810,10 @@
     "low52w": 52.28,
     "dayHigh": 84.8,
     "dayLow": 83.6,
-    "volume": 11712678,
+    "volume": 11713367,
     "fiftyTwoWeekHigh": 94.5,
-    "fiftyTwoWeekLow": 52.56,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "fiftyTwoWeekLow": 53.52,
+    "lastPriceUpdated": "2026-09-10T02:44:17.507Z",
     "ltp": 84.56
   },
   {
@@ -4020,7 +4020,7 @@
     "volume": 126114,
     "fiftyTwoWeekHigh": 2001.5,
     "fiftyTwoWeekLow": 1251.6,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T02:43:55.005Z",
     "ltp": 1963.6
   },
   {
@@ -4204,7 +4204,7 @@
     "volume": 8039408,
     "fiftyTwoWeekHigh": 614,
     "fiftyTwoWeekLow": 361.15,
-    "lastPriceUpdated": "2026-09-09T17:49:26.780Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 369.1
   },
   {
@@ -4813,21 +4813,21 @@
     "marketCap": 25000,
     "sector": "Diversified",
     "industry": "Equities",
-    "price": 17355,
-    "changePercent": -1.53,
+    "price": 17994,
+    "changePercent": 3.68,
     "rsi": 56.4,
     "rvol": 1.25,
     "ema20Distance": 1.8,
     "fno": true,
     "high52w": 26450,
     "low52w": 14911,
-    "dayHigh": 17645,
-    "dayLow": 17340,
-    "volume": 36752,
+    "dayHigh": 18071,
+    "dayLow": 17349,
+    "volume": 98351,
     "fiftyTwoWeekHigh": 26450,
     "fiftyTwoWeekLow": 14911,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
-    "ltp": 17355
+    "lastPriceUpdated": "2026-09-10T07:04:46.437Z",
+    "ltp": 17994
   },
   {
     "symbol": "UPL",
@@ -4883,10 +4883,10 @@
     "low52w": 492.7,
     "dayHigh": 1599.6,
     "dayLow": 1572.8,
-    "volume": 1668845,
+    "volume": 1669212,
     "fiftyTwoWeekHigh": 1744,
-    "fiftyTwoWeekLow": 522.05,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "fiftyTwoWeekLow": 529.2,
+    "lastPriceUpdated": "2026-09-10T02:54:49.249Z",
     "ltp": 1580
   },
   {
@@ -5274,10 +5274,10 @@
     "low52w": 35.83,
     "dayHigh": 45.7,
     "dayLow": 44.83,
-    "volume": 9771262,
+    "volume": 9776027,
     "fiftyTwoWeekHigh": 57.89,
     "fiftyTwoWeekLow": 35.83,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:44:18.205Z",
     "ltp": 45.2
   },
   {
@@ -5343,10 +5343,10 @@
     "low52w": 565.45,
     "dayHigh": 674.45,
     "dayLow": 657.25,
-    "volume": 2198898,
+    "volume": 2199393,
     "fiftyTwoWeekHigh": 965,
     "fiftyTwoWeekLow": 565.45,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:44:01.827Z",
     "ltp": 668.4
   },
   {
@@ -5392,7 +5392,7 @@
     "volume": 850759,
     "fiftyTwoWeekHigh": 3411.1,
     "fiftyTwoWeekLow": 2502.5,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:43:54.009Z",
     "ltp": 3300
   },
   {
@@ -5504,10 +5504,10 @@
     "low52w": 614.9,
     "dayHigh": 1049.6,
     "dayLow": 1019,
-    "volume": 488722,
+    "volume": 489071,
     "fiftyTwoWeekHigh": 1097.1,
     "fiftyTwoWeekLow": 614.9,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:44:01.906Z",
     "ltp": 1025
   },
   {
@@ -5691,7 +5691,7 @@
     "volume": 309537,
     "fiftyTwoWeekHigh": 7924.5,
     "fiftyTwoWeekLow": 4637.5,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 7401.5
   },
   {
@@ -5757,10 +5757,10 @@
     "low52w": 525.5,
     "dayHigh": 930.55,
     "dayLow": 910,
-    "volume": 3454443,
+    "volume": 3454657,
     "fiftyTwoWeekHigh": 980.9,
     "fiftyTwoWeekLow": 525.5,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:44:01.306Z",
     "ltp": 926.95
   },
   {
@@ -5898,7 +5898,7 @@
     "volume": 7428276,
     "fiftyTwoWeekHigh": 204.5,
     "fiftyTwoWeekLow": 138.12,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 149.67
   },
   {
@@ -6322,21 +6322,21 @@
     "marketCap": 19400,
     "sector": "Metals",
     "industry": "Iron & Steel Production",
-    "price": 2608.5,
-    "changePercent": 0.35,
+    "price": 2693.7,
+    "changePercent": 3.27,
     "rsi": 72.2,
     "rvol": 2.7,
     "ema20Distance": -2.8,
     "fno": false,
     "high52w": 2676,
     "low52w": 710,
-    "dayHigh": 2652,
-    "dayLow": 2586.1,
-    "volume": 759833,
-    "fiftyTwoWeekHigh": 2676,
+    "dayHigh": 2698.9,
+    "dayLow": 2606.5,
+    "volume": 673627,
+    "fiftyTwoWeekHigh": 2698.9,
     "fiftyTwoWeekLow": 710,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
-    "ltp": 2608.5
+    "lastPriceUpdated": "2026-09-10T05:28:40.370Z",
+    "ltp": 2693.7
   },
   {
     "symbol": "RRKABEL",
@@ -6355,10 +6355,10 @@
     "low52w": 1181.6,
     "dayHigh": 2465.4,
     "dayLow": 2411,
-    "volume": 386067,
+    "volume": 386308,
     "fiftyTwoWeekHigh": 2983.8,
     "fiftyTwoWeekLow": 1181.6,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:54:48.652Z",
     "ltp": 2419.8
   },
   {
@@ -6542,7 +6542,7 @@
     "volume": 87296,
     "fiftyTwoWeekHigh": 1070.1,
     "fiftyTwoWeekLow": 691.35,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T02:44:00.910Z",
     "ltp": 889.7
   },
   {
@@ -6621,21 +6621,21 @@
     "marketCap": 18200,
     "sector": "Pharmaceuticals",
     "industry": "Pharmaceuticals & Formulations",
-    "price": 23195,
-    "changePercent": -3.33,
+    "price": 23855,
+    "changePercent": 2.85,
     "rsi": 48.4,
     "rvol": 1.9,
     "ema20Distance": -1.6,
     "fno": false,
     "high52w": 23881,
     "low52w": 11500,
-    "dayHigh": 24225,
-    "dayLow": 23000,
-    "volume": 57901,
+    "dayHigh": 23900,
+    "dayLow": 23235,
+    "volume": 26572,
     "fiftyTwoWeekHigh": 24225,
     "fiftyTwoWeekLow": 11500,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
-    "ltp": 23195
+    "lastPriceUpdated": "2026-09-10T07:04:48.238Z",
+    "ltp": 23855
   },
   {
     "symbol": "NAVINFLUOR",
@@ -6657,7 +6657,7 @@
     "volume": 294151,
     "fiftyTwoWeekHigh": 8949.5,
     "fiftyTwoWeekLow": 4498.5,
-    "lastPriceUpdated": "2026-09-09T17:49:26.774Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 8775.5
   },
   {
@@ -7154,7 +7154,7 @@
     "volume": 8400107,
     "fiftyTwoWeekHigh": 1619,
     "fiftyTwoWeekLow": 716.8,
-    "lastPriceUpdated": "2026-09-09T17:49:27.004Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 1604.4
   },
   {
@@ -7220,10 +7220,10 @@
     "low52w": 1320,
     "dayHigh": 1945.1,
     "dayLow": 1900.2,
-    "volume": 89429,
+    "volume": 89506,
     "fiftyTwoWeekHigh": 2497.5,
     "fiftyTwoWeekLow": 1320,
-    "lastPriceUpdated": "2026-09-09T17:49:27.004Z",
+    "lastPriceUpdated": "2026-09-10T02:54:48.953Z",
     "ltp": 1922.6
   },
   {
@@ -7269,7 +7269,7 @@
     "volume": 543540,
     "fiftyTwoWeekHigh": 767.2,
     "fiftyTwoWeekLow": 398.4,
-    "lastPriceUpdated": "2026-09-09T17:49:27.004Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 561.5
   },
   {
@@ -7684,21 +7684,21 @@
     "marketCap": 12400,
     "sector": "Pharmaceuticals",
     "industry": "Pharmaceuticals & Formulations",
-    "price": 330.15,
-    "changePercent": -1.71,
+    "price": 333.05,
+    "changePercent": 0.88,
     "rsi": 52,
     "rvol": 1.1,
     "ema20Distance": -2,
     "fno": false,
     "high52w": 345.5,
     "low52w": 155,
-    "dayHigh": 340,
-    "dayLow": 328.65,
-    "volume": 1780866,
+    "dayHigh": 334.55,
+    "dayLow": 323.8,
+    "volume": 876225,
     "fiftyTwoWeekHigh": 349.95,
     "fiftyTwoWeekLow": 155,
-    "lastPriceUpdated": "2026-09-09T17:49:27.004Z",
-    "ltp": 330.15
+    "lastPriceUpdated": "2026-09-10T07:05:50.309Z",
+    "ltp": 333.05
   },
   {
     "symbol": "BALRAMCHIN",
@@ -9321,7 +9321,7 @@
     "volume": 156030,
     "fiftyTwoWeekHigh": 1317.7,
     "fiftyTwoWeekLow": 893.7,
-    "lastPriceUpdated": "2026-09-09T17:49:27.103Z",
+    "lastPriceUpdated": "2026-09-10T02:43:59.806Z",
     "ltp": 1202.3
   },
   {
@@ -12309,7 +12309,7 @@
     "volume": 1722455,
     "fiftyTwoWeekHigh": 379.4,
     "fiftyTwoWeekLow": 215.7,
-    "lastPriceUpdated": "2026-09-09T17:49:27.362Z",
+    "lastPriceUpdated": "2026-09-10T02:44:12.112Z",
     "ltp": 374.4
   },
   {
@@ -12856,10 +12856,10 @@
     "low52w": 28.43,
     "dayHigh": 46.96,
     "dayLow": 46.14,
-    "volume": 8184904,
+    "volume": 8187411,
     "fiftyTwoWeekHigh": 49.9,
     "fiftyTwoWeekLow": 28.5,
-    "lastPriceUpdated": "2026-09-09T17:49:27.362Z",
+    "lastPriceUpdated": "2026-09-10T02:44:18.006Z",
     "ltp": 46.41
   },
   {
@@ -12879,10 +12879,10 @@
     "low52w": 795.7,
     "dayHigh": 1387,
     "dayLow": 1354,
-    "volume": 109434,
+    "volume": 109451,
     "fiftyTwoWeekHigh": 1600,
     "fiftyTwoWeekLow": 795.7,
-    "lastPriceUpdated": "2026-09-09T17:49:27.362Z",
+    "lastPriceUpdated": "2026-09-10T02:54:53.746Z",
     "ltp": 1360.8
   },
   {
@@ -13520,7 +13520,7 @@
     "volume": 4381670,
     "fiftyTwoWeekHigh": 865.9,
     "fiftyTwoWeekLow": 84.6,
-    "lastPriceUpdated": "2026-09-09T17:49:27.486Z",
+    "lastPriceUpdated": "2026-09-10T03:33:16.781Z",
     "ltp": 865.9
   },
   {
@@ -14649,21 +14649,21 @@
     "marketCap": 4900,
     "sector": "Chemicals",
     "industry": "Specialty & Agro Chemicals",
-    "price": 188.28,
-    "changePercent": 1.73,
+    "price": 197.64,
+    "changePercent": 4.97,
     "rsi": 37.3,
     "rvol": 1.4,
     "ema20Distance": 3.3,
     "fno": false,
     "high52w": 204.5,
     "low52w": 125.31,
-    "dayHigh": 189.5,
-    "dayLow": 181,
-    "volume": 2843811,
+    "dayHigh": 200.49,
+    "dayLow": 187.12,
+    "volume": 4494558,
     "fiftyTwoWeekHigh": 204.5,
     "fiftyTwoWeekLow": 125.31,
-    "lastPriceUpdated": "2026-09-09T17:49:27.595Z",
-    "ltp": 188.28
+    "lastPriceUpdated": "2026-09-10T07:05:16.360Z",
+    "ltp": 197.64
   },
   {
     "symbol": "ORIENTLABS",
@@ -14877,21 +14877,21 @@
     "marketCap": 4800,
     "sector": "Metals",
     "industry": "Iron & Steel Production",
-    "price": 910.4,
-    "changePercent": 0.29,
+    "price": 977.65,
+    "changePercent": 7.36,
     "rsi": 32.4,
     "rvol": 2.1,
     "ema20Distance": -1.6,
     "fno": false,
     "high52w": 982.55,
     "low52w": 574,
-    "dayHigh": 925,
-    "dayLow": 901.4,
-    "volume": 61181,
+    "dayHigh": 992.6,
+    "dayLow": 906,
+    "volume": 434532,
     "fiftyTwoWeekHigh": 982.55,
     "fiftyTwoWeekLow": 574,
-    "lastPriceUpdated": "2026-09-09T17:49:27.595Z",
-    "ltp": 910.4
+    "lastPriceUpdated": "2026-09-10T07:04:47.568Z",
+    "ltp": 977.65
   },
   {
     "symbol": "COSMOCHEM",
@@ -17233,10 +17233,10 @@
     "low52w": 89.9,
     "dayHigh": 115.99,
     "dayLow": 112.9,
-    "volume": 1456874,
+    "volume": 1456925,
     "fiftyTwoWeekHigh": 202,
     "fiftyTwoWeekLow": 89.9,
-    "lastPriceUpdated": "2026-09-09T17:49:27.704Z",
+    "lastPriceUpdated": "2026-09-10T02:44:16.213Z",
     "ltp": 115.17
   },
   {
@@ -17381,21 +17381,21 @@
     "marketCap": 1940,
     "sector": "Pharmaceuticals",
     "industry": "Pharmaceuticals & Formulations",
-    "price": 388.55,
-    "changePercent": 0.06,
+    "price": 383,
+    "changePercent": -1.43,
     "rsi": 56.8,
     "rvol": 1.5,
     "ema20Distance": 4.8,
     "fno": false,
     "high52w": 389.5,
     "low52w": 87.15,
-    "dayHigh": 404,
-    "dayLow": 381.35,
-    "volume": 702492,
+    "dayHigh": 387.45,
+    "dayLow": 378,
+    "volume": 277026,
     "fiftyTwoWeekHigh": 404,
     "fiftyTwoWeekLow": 87.15,
-    "lastPriceUpdated": "2026-09-09T18:18:33.544Z",
-    "ltp": 388.55
+    "lastPriceUpdated": "2026-09-10T08:00:05.759Z",
+    "ltp": 383
   },
   {
     "symbol": "NEXUSSTEEL",
