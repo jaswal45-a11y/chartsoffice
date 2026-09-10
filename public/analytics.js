@@ -2765,7 +2765,17 @@ function applyActiveRangeZoom() {
 
   let barCount = 250;
   const isWeekly = state.activeInterval === '1wk';
-  if (state.activeRange === '3mo') {
+  const is5m = state.activeInterval === '5m';
+  const is15m = state.activeInterval === '15m';
+  const is60m = state.activeInterval === '60m' || state.activeInterval === '1h';
+
+  if (is5m) {
+    barCount = state.activeRange === '3mo' ? 75 : (state.activeRange === '6mo' ? 225 : 375);
+  } else if (is15m) {
+    barCount = state.activeRange === '3mo' ? 50 : (state.activeRange === '6mo' ? 125 : 250);
+  } else if (is60m) {
+    barCount = state.activeRange === '3mo' ? 40 : (state.activeRange === '6mo' ? 100 : 200);
+  } else if (state.activeRange === '3mo') {
     barCount = isWeekly ? 13 : 65;
   } else if (state.activeRange === '6mo') {
     barCount = isWeekly ? 26 : 130;

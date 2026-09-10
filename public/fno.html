@@ -841,10 +841,13 @@
         
         <!-- Left: Timeframe & Range Selectors -->
         <div class="flex items-center gap-1.5 flex-shrink-0">
-          <!-- Timeframes: D & W only -->
-          <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 font-medium text-slate-400 text-[11px]">
-            <button class="timeframe-btn active px-2.5 py-0.5 rounded-md bg-purple-600 text-white font-semibold shadow transition-colors cursor-pointer" data-interval="1d" title="Daily timeframe (1 day per candle)">D</button>
-            <button class="timeframe-btn px-2.5 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="1wk" title="Weekly timeframe (1 week per candle)">W</button>
+          <!-- Timeframes: 5, 15, 1H, D, W -->
+          <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 font-medium text-slate-400 text-[11px] gap-0.5">
+            <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="5m" title="5 Minutes timeframe (5m per candle)">5</button>
+            <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="15m" title="15 Minutes timeframe (15m per candle)">15</button>
+            <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="60m" title="1 Hour timeframe (60m per candle)">1H</button>
+            <button class="timeframe-btn active px-2 py-0.5 rounded-md bg-purple-600 text-white font-semibold shadow transition-colors cursor-pointer" data-interval="1d" title="Daily timeframe (1 day per candle)">D</button>
+            <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="1wk" title="Weekly timeframe (1 week per candle)">W</button>
           </div>
 
           <!-- Range: 3M, 6M (Default), 1Y -->
@@ -1378,7 +1381,7 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="fno.js?v=1.3.3"></script>
+  <script src="fno.js?v=1.3.4"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js"></script>
 </body>

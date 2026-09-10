@@ -1795,26 +1795,47 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
 const historyCache = new Map();
 
 async function fetchStockHistory(rawSymbol, customRange = null, customInterval = '1d') {
-  const interval = customInterval === '1wk' ? '1wk' : '1d';
-  const isIntraday = false;
+  let interval = '1d';
+  let isIntraday = false;
+  let yahooRange = '2y';
 
-  let selectedRange = customRange || '1y';
+  if (['5m', '5min', '5'].includes(customInterval)) {
+    interval = '5m';
+    isIntraday = true;
+    yahooRange = '1mo';
+  } else if (['15m', '15min', '15'].includes(customInterval)) {
+    interval = '15m';
+    isIntraday = true;
+    yahooRange = '1mo';
+  } else if (['60m', '1h', '1hr', '60'].includes(customInterval)) {
+    interval = '60m';
+    isIntraday = true;
+    yahooRange = '6mo';
+  } else if (customInterval === '1wk' || customInterval === 'w') {
+    interval = '1wk';
+    isIntraday = false;
+    yahooRange = '2y';
+  } else {
+    interval = '1d';
+    isIntraday = false;
+    yahooRange = '2y';
+  }
+
+  let selectedRange = customRange || (isIntraday ? (interval === '5m' ? '5d' : '1mo') : '1y');
   if (selectedRange === '3m') selectedRange = '3mo';
   if (selectedRange === '6m') selectedRange = '6mo';
   if (selectedRange === '12m' || selectedRange === '12mo') selectedRange = '1y';
 
-  // Always fetch 2 years so EMAs (especially EMA 150) and RSI 14 have ample warmup data
-  const yahooRange = '2y';
   const cacheKey = `${rawSymbol.toUpperCase()}_${selectedRange}_${interval}`;
   const cached = historyCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp < 60000)) {
+  if (cached && (Date.now() - cached.timestamp < (isIntraday ? 10000 : 60000))) {
     return cached.data;
   }
 
   let sym = rawSymbol.trim().toUpperCase().replace(/&/g, '%26');
 
-  // 1. Try Primary Tier: DhanHQ Broker API (if configured)
-  if (isDhanConfigured()) {
+  // 1. Try Primary Tier: DhanHQ Broker API (if configured and not intraday)
+  if (isDhanConfigured() && !isIntraday) {
     try {
       const dhanRes = await fetchDhanHistorical(rawSymbol);
       if (dhanRes && dhanRes.candles && dhanRes.candles.length > 0) {
@@ -1951,7 +1972,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           }
         }
 
-        const candleTime = new Date(timestamps[i] * 1000).toISOString().split('T')[0];
+        const candleTime = isIntraday ? timestamps[i] : new Date(timestamps[i] * 1000).toISOString().split('T')[0];
 
         candles.push({
           time: candleTime,
@@ -1963,7 +1984,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         });
       }
 
-      // Merge latest live intraday quote from meta if available
+      // Merge latest live quote from meta if available
       if (candles.length > 0 && meta.regularMarketPrice) {
         const livePrice = Number(meta.regularMarketPrice.toFixed(2));
         const lastC = candles[candles.length - 1];
@@ -2002,8 +2023,8 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           changePercent = Number((((realLtp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
         }
 
-        const high52w = meta.fiftyTwoWeekHigh || Math.max(...candles.slice(-250).map(c => c.high));
-        const low52w = meta.fiftyTwoWeekLow || Math.min(...candles.slice(-250).map(c => c.low));
+        const high52w = meta.fiftyTwoWeekHigh || Math.max(...candles.map(c => c.high));
+        const low52w = meta.fiftyTwoWeekLow || Math.min(...candles.map(c => c.low));
         const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
         const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
         const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
