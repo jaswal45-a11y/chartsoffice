@@ -4887,6 +4887,10 @@ async function loadExploreData() {
 
     if (data.success && Array.isArray(data.stocks) && data.stocks.length > 0) {
       state.exploreStocks = data.stocks;
+      const allPill = document.getElementById('btn-explore-seg-all') || document.querySelector('.explore-seg-pill[data-explore-seg="all"]');
+      if (allPill) {
+        allPill.textContent = `All (${data.stocks.length.toLocaleString()})`;
+      }
       applyExploreFilters();
       
       // Start progressive chunk sync for live real-time prices across all chunks

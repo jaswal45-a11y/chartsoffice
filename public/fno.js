@@ -945,6 +945,8 @@ async function loadStockUniverse() {
     const data = await res.json();
     if (data.success && Array.isArray(data.stocks)) {
       state.rawStocks = data.stocks;
+      const countSpan = document.getElementById('span-reset-universe-count');
+      if (countSpan) countSpan.textContent = `Reset to Full Universe (${data.stocks.length.toLocaleString()}+)`;
       populateSectorOptions();
       populateIndustryOptions();
     }

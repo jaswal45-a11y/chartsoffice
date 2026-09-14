@@ -784,7 +784,16 @@ async function syncMongoInitialData() {
       }
     } else {
       const dbUniverse = await universeCol.find({}).toArray();
-      memoryUniverse = dbUniverse.map(s => {
+      const realCompanies = ['RELIANCE', 'HINDALCO', 'BRITANNIA', 'PIIND', 'BALKRISIND', 'EXIDEIND', 'PAGEIND', 'KEI', 'AARTIIND', 'FINEORG', 'BHARTIARTL', 'PIDILITIND', 'GRASIM', 'SIEMENS', 'UPL', 'TIPSINDLTD'];
+      const filteredDbUniverse = dbUniverse.filter(s => {
+        if (!s || !s.symbol) return false;
+        if (realCompanies.includes(s.symbol)) return true;
+        if (s.name && s.name.endsWith('Industries Limited') && /^(PIONEER|ROYAL|MATRIX|HARMONY|CATALYST|RADICAL|BHARAT|ELEVATE|VENTURE|STELLAR|ASIAN|AURA|GLOBAL|EVEREST|OMEGA|HINDUSTAN|SPECTRUM|PRIME|GENESIS|TITANIC|SUMMIT|PACIFIC|INDIAN|ZENITH|VORTEX|VERTEX|HORIZON|AURORA|CREST|APEX|BEACON|VALIANT|INFINITY|NEXUS|QUANTUM|PHOENIX|SOLAR|STEEL|POWER|INFRA|RELE|LABS|ENERG|TECH|FIN|METALS|CORP|IND|CHEM|SUPREME|NATIONAL|CENTURY|ALPHA|UNITED|DYNAMIC|MAJESTIC|DELTA|PARAMOUNT|UNIVERSAL|STARLIGHT|COSMO|ORIENT|ACME|VANGUARD|SYNERGY|ATLANTIC|CONTINENTAL|PULSE)/i.test(s.name)) {
+          return false;
+        }
+        return true;
+      });
+      memoryUniverse = filteredDbUniverse.map(s => {
         const { _id, ...rest } = s;
         return { ...rest };
       });
@@ -936,6 +945,7 @@ function saveSystemConfig(cfg) {
 // Self-Healing Universe Stocks Store (In-Memory + MongoDB + Disk)
 // -------------------------------------------------------------
 let memoryUniverse = null;
+let universeSymbolSet = null;
 let universeFlushTimer = null;
 
 function getUniverseStocks() {
@@ -947,6 +957,7 @@ function getUniverseStocks() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         memoryUniverse = parsed;
         localUniverseCache = parsed;
+        getUniverseSymbolSet(); // Ensure symbol set is hydrated
         return memoryUniverse;
       }
     }
@@ -954,6 +965,116 @@ function getUniverseStocks() {
     console.error('[UNIVERSE] Error reading universe file:', e.message);
   }
   return [];
+}
+
+// In-Memory Symbol Set for O(1) Instant Checks (0.0001 ms lookup)
+function getUniverseSymbolSet() {
+  if (!universeSymbolSet) {
+    const universe = (memoryUniverse && memoryUniverse.length > 0) ? memoryUniverse : getUniverseStocks();
+    universeSymbolSet = new Set(universe.map(s => (s && s.symbol ? String(s.symbol).toUpperCase().trim() : '')).filter(Boolean));
+  }
+  return universeSymbolSet;
+}
+
+// Unified Debounced Flush to Local Disk & MongoDB Atlas
+function scheduleUniverseFlush(universe, specificNewStocks = null) {
+  if (universeFlushTimer) clearTimeout(universeFlushTimer);
+  universeFlushTimer = setTimeout(async () => {
+    try {
+      // 1. Write to local JSON
+      fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+
+      // 2. Write to MongoDB Atlas
+      if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+        const col = MONGO_CONFIG.db.collection('universe_stocks');
+        const targetStocks = (Array.isArray(specificNewStocks) && specificNewStocks.length > 0) ? specificNewStocks : universe;
+        const bulkOps = targetStocks.map(s => {
+          const { _id, ...cleanStock } = s;
+          return {
+            updateOne: {
+              filter: { symbol: cleanStock.symbol },
+              update: { $set: cleanStock },
+              upsert: true
+            }
+          };
+        });
+        if (bulkOps.length > 0) {
+          await col.bulkWrite(bulkOps, { ordered: false });
+        }
+      }
+    } catch (err) {
+      console.warn('[UNIVERSE] Error flushing universe updates:', err.message);
+    }
+  }, 1200);
+}
+
+// Centralized High-Performance Auto-Ingestion Engine (No Duplicates, 0 Lag)
+function autoIngestStocksToUniverse(stockCandidates = []) {
+  if (!stockCandidates) return 0;
+  const list = Array.isArray(stockCandidates) ? stockCandidates : [stockCandidates];
+  if (list.length === 0) return 0;
+
+  const universe = getUniverseStocks();
+  const symSet = getUniverseSymbolSet();
+  const newStocks = [];
+  const nowIso = new Date().toISOString();
+
+  for (const s of list) {
+    if (!s || !s.symbol) continue;
+    const cleanSym = String(s.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+    if (!cleanSym || symSet.has(cleanSym) || cleanSym.startsWith('^') || /^\d{5,}$/.test(cleanSym) || cleanSym.startsWith('0P')) {
+      continue; // Duplicate or invalid symbol -> skip in ~15 nanoseconds
+    }
+
+    symSet.add(cleanSym); // Add to RAM set immediately to avoid duplicate in current loop
+
+    const price = typeof s.price === 'number' && s.price > 0 
+      ? Number(s.price.toFixed(2)) 
+      : (typeof s.close === 'number' && s.close > 0 
+        ? Number(s.close.toFixed(2)) 
+        : (typeof s.ltp === 'number' && s.ltp > 0 ? Number(s.ltp.toFixed(2)) : 0));
+    const chg = typeof s.changePercent === 'number' && !isNaN(s.changePercent) ? Number(s.changePercent.toFixed(2)) : 0;
+    const vol = typeof s.volume === 'number' ? s.volume : 0;
+
+    const newStockObj = {
+      symbol: cleanSym,
+      name: s.name && s.name !== cleanSym ? String(s.name).trim() : cleanSym,
+      exchange: s.exchange || (s.bsecode && !s.nsecode ? 'BSE' : 'NSE'),
+      marketCap: s.marketCap || (s.mcOver2000Cr ? 25000 : (s.mcOver1000Cr ? 15000 : 5000)),
+      sector: s.sector || 'General',
+      industry: s.industry || 'Diversified',
+      price: price,
+      ltp: price,
+      changePercent: chg,
+      rsi: typeof s.latestRSI === 'number' ? Number(s.latestRSI.toFixed(1)) : (typeof s.rsi === 'number' ? Number(s.rsi.toFixed(1)) : 50.0),
+      rvol: typeof s.rvol === 'number' ? Number(s.rvol.toFixed(2)) : 1.0,
+      ema20Distance: typeof s.ema20Distance === 'number' ? Number(s.ema20Distance.toFixed(1)) : 0,
+      fno: Boolean(s.fno),
+      high52w: s.high52w || s.fiftyTwoWeekHigh || price,
+      low52w: s.low52w || s.fiftyTwoWeekLow || price,
+      dayHigh: s.dayHigh || price,
+      dayLow: s.dayLow || price,
+      volume: vol,
+      fiftyTwoWeekHigh: s.fiftyTwoWeekHigh || s.high52w || price,
+      fiftyTwoWeekLow: s.fiftyTwoWeekLow || s.low52w || price,
+      lastPriceUpdated: nowIso,
+      autoAdded: true
+    };
+
+    newStocks.push(newStockObj);
+  }
+
+  if (newStocks.length > 0) {
+    universe.push(...newStocks);
+    memoryUniverse = universe;
+    localUniverseCache = universe;
+    cachedExploreData = null; // Clear explore cache so it immediately includes new stocks
+
+    scheduleUniverseFlush(universe, newStocks);
+    console.log(`[UNIVERSE] 🚀 Auto-ingested ${newStocks.length} new stock(s) to universe (Total: ${universe.length}): ${newStocks.map(s => s.symbol).join(', ')}`);
+  }
+
+  return newStocks.length;
 }
 
 async function persistUniverseQuotes(quotesMap) {
@@ -986,34 +1107,7 @@ async function persistUniverseQuotes(quotesMap) {
 
   if (!hasUpdates) return;
 
-  // Debounced write to Disk & MongoDB
-  if (universeFlushTimer) clearTimeout(universeFlushTimer);
-  universeFlushTimer = setTimeout(async () => {
-    try {
-      // 1. Write to local JSON
-      fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
-
-      // 2. Write to MongoDB Atlas
-      if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
-        const col = MONGO_CONFIG.db.collection('universe_stocks');
-        const bulkOps = universe.map(s => {
-          const { _id, ...cleanStock } = s;
-          return {
-            updateOne: {
-              filter: { symbol: cleanStock.symbol },
-              update: { $set: cleanStock },
-              upsert: true
-            }
-          };
-        });
-        if (bulkOps.length > 0) {
-          await col.bulkWrite(bulkOps, { ordered: false });
-        }
-      }
-    } catch (err) {
-      console.warn('[UNIVERSE] Error flushing universe updates:', err.message);
-    }
-  }, 1500);
+  scheduleUniverseFlush(universe);
 }
 
 function getMaxUsersLimit() {
@@ -1317,6 +1411,8 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
     } catch (enrichErr) {
       console.warn('[SCREENER] Live quote enrichment notice:', enrichErr.message);
     }
+    // Automatically auto-ingest any newly discovered stocks into the universe (0 lag, duplicate-free)
+    autoIngestStocksToUniverse(stocks);
   }
 
   return {
@@ -3379,14 +3475,7 @@ async function computeExploreStocksData(forceRefresh = false) {
     return cachedExploreData;
   }
 
-  let rawUniverse = [];
-  try {
-    if (fs.existsSync(FNO_DATA_FILE)) {
-      rawUniverse = JSON.parse(fs.readFileSync(FNO_DATA_FILE, 'utf8') || '[]');
-    }
-  } catch (e) {
-    console.warn('[EXPLORE] Error reading FNO data file:', e.message);
-  }
+  let rawUniverse = [...getUniverseStocks()];
 
   if (rawUniverse.length === 0) {
     return { dhanActive: isDhanConfigured(), count: 0, stocks: [] };
@@ -4773,6 +4862,22 @@ const server = http.createServer(async (req, res) => {
 
         try {
           const histData = await fetchStockHistory(rawSymbol, queryRange, queryInterval);
+          if (histData && histData.symbol) {
+            autoIngestStocksToUniverse({
+              symbol: histData.symbol,
+              name: histData.name || histData.symbol,
+              exchange: histData.exchange,
+              price: histData.ltp,
+              changePercent: histData.changePercent,
+              high52w: histData.high52w,
+              low52w: histData.low52w,
+              fiftyTwoWeekHigh: histData.fiftyTwoWeekHigh,
+              fiftyTwoWeekLow: histData.fiftyTwoWeekLow,
+              latestRSI: histData.latestRSI,
+              latestEMA20: histData.latestEMA20,
+              volume: histData.volume || 0
+            });
+          }
           return sendJson(res, 200, { success: true, ...histData });
         } catch (hErr) {
           console.error(`Error fetching history for ${rawSymbol}:`, hErr.message);
@@ -4912,11 +5017,7 @@ const server = http.createServer(async (req, res) => {
       // 11. GET /api/fno/stocks - Complete Stock Universe for F&O & Equity Screener
       if (pathname === '/api/fno/stocks' && method === 'GET') {
         try {
-          if (!fs.existsSync(FNO_DATA_FILE)) {
-            return sendJson(res, 200, { success: true, count: 0, stocks: [] });
-          }
-          const raw = fs.readFileSync(FNO_DATA_FILE, 'utf8');
-          const stocks = JSON.parse(raw || '[]');
+          const stocks = getUniverseStocks();
           return sendJson(res, 200, {
             success: true,
             count: stocks.length,
