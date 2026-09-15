@@ -2218,6 +2218,76 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   throw new Error(`Historical data not available for ${rawSymbol}`);
 }
 
+// In-memory cache for MF Bulk / Block Deals (3 min TTL)
+let mfDealsCache = { timestamp: 0, data: null };
+
+async function fetchMutualFundBulkDeals(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && mfDealsCache.data && (now - mfDealsCache.timestamp < 180000)) {
+    return mfDealsCache.data;
+  }
+
+  const targetUrl = 'https://prudent.accordhostings.com/MutualFund/BulkBlockReport.aspx';
+  const fetchRes = await httpsFetch(targetUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    },
+    timeout: 10000
+  });
+
+  if (!fetchRes.ok) {
+    if (mfDealsCache.data) return mfDealsCache.data;
+    throw new Error(`Upstream server responded with status ${fetchRes.status}`);
+  }
+
+  const html = await fetchRes.text();
+  const deals = [];
+  const tableMatches = html.match(/<table[^>]*>[\s\S]*?<\/table>/gi) || [];
+
+  for (const tbl of tableMatches) {
+    if (tbl.includes('Exchange') && (tbl.includes('Client Name') || tbl.includes('Company Name'))) {
+      const rows = tbl.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const cells = (r.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || []).map(c =>
+          c.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+        );
+        // Skip header row
+        if (cells.length >= 7 && cells[0].toLowerCase() !== 'exchange') {
+          const [exchange, date, clientName, companyName, dealType, volume, dealPrice] = cells;
+          if (exchange && companyName && dealType) {
+            const id = crypto.createHash('md5').update([date, exchange, clientName, companyName, dealType, volume, dealPrice].join('_')).digest('hex').substring(0, 12);
+            deals.push({
+              id,
+              exchange: exchange.toUpperCase(),
+              date,
+              clientName,
+              companyName,
+              dealType: dealType.toUpperCase(),
+              volume: volume,
+              dealPrice: dealPrice
+            });
+          }
+        }
+      }
+      break;
+    }
+  }
+
+  const latestDealId = deals.length > 0 ? deals[0].id : '';
+  const resultPayload = {
+    success: true,
+    count: deals.length,
+    lastUpdated: new Date().toISOString(),
+    latestDealId,
+    deals
+  };
+
+  mfDealsCache = { timestamp: now, data: resultPayload };
+  return resultPayload;
+}
+
 // Predictive Stock Search Cache (5 mins TTL)
 const searchCache = new Map();
 let localUniverseCache = null;
@@ -4850,6 +4920,18 @@ const server = http.createServer(async (req, res) => {
         } catch (sErr) {
           console.error(`Search error for "${query}":`, sErr.message);
           return sendJson(res, 200, { success: true, results: [] });
+        }
+      }
+
+      // 8c. GET /api/mf-deals - Live Mutual Fund Bulk & Block Deals Report
+      if (pathname === '/api/mf-deals' && method === 'GET') {
+        try {
+          const forceRefresh = parsedUrl.query.refresh === 'true' || parsedUrl.query.refresh === '1';
+          const data = await fetchMutualFundBulkDeals(forceRefresh);
+          return sendJson(res, 200, data);
+        } catch (err) {
+          console.error('Error fetching MF Bulk Deals:', err.message);
+          return sendJson(res, 500, { success: false, error: err.message });
         }
       }
 

@@ -122,6 +122,13 @@
           <span>Notes</span>
         </button>
 
+        <!-- Mutual Fund Bulk & Block Deals Launcher Tile -->
+        <button id="btn-open-mf-deals" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
+          <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+          <span>MF Deals</span>
+          <span id="mf-deals-unread-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-dark-bg animate-ping"></span>
+        </button>
+
         <!-- User Auth Button (Visible when Logged Out) -->
         <button id="btn-open-auth-modal" onclick="openAuthModal('login')" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 rounded-lg shadow-sm transition-all cursor-pointer">
           <i data-lucide="user" class="w-3.5 h-3.5"></i>
@@ -1596,5 +1603,7 @@
   <script src="app.js?v=3.1.1"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.0.0"></script>
+  <!-- Mutual Fund Deals Script -->
+  <script src="mf_deals.js?v=1.0.0"></script>
 </body>
 </html>
