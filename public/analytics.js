@@ -166,6 +166,7 @@ const state = {
   charts: {
     main: null,
     rsi: null,
+    volIntel: null,
     series: {},
     pivotLines: []
   },
@@ -183,7 +184,16 @@ const state = {
     rsiSma: '#fbbf24',
     avwap: '#a855f7',
     crosshair: '#3b82f6',
-    closeLine: '#10b981'
+    closeLine: '#10b981',
+    viBs: '#a855f7',
+    viPp: '#0ea5e9',
+    viPv: '#06b6d4',
+    viDv: '#f59e0b',
+    viSup: '#10b981',
+    viSdn: '#ef4444',
+    viNup: '#34d399',
+    viNdn: '#f87171',
+    volIntelMa: '#fbbf24'
   },
   lineWidths: {
     ema10: 1.5,
@@ -200,7 +210,15 @@ const state = {
     avwap: 2,
     pivots: 1.2,
     crosshair: 1,
-    closeLine: 1
+    closeLine: 1,
+    volIntelMa: 1.5
+  },
+  volIntelSettings: {
+    volMaPeriod: 50,
+    ppLookback: 10,
+    bsMult: 3.0,
+    dryThresh: 0.20,
+    paintBars: false
   },
   customThemeColors: {
     bg: '#0b0f19',
@@ -224,6 +242,7 @@ const state = {
     volAvg: true,
     darvas: false,
     rsi: true,
+    volIntel: true,
     pivots: false
   },
   pivotType: 'Traditional (Auto)',
@@ -1947,7 +1966,14 @@ function updateLineStyle(indicatorKey) {
     rsiSma: ['setting-color-rsi-sma', 'color-rsi-sma'],
     avwap: ['setting-color-avwap', 'color-avwap'],
     crosshair: ['setting-color-crosshair', null],
-    closeLine: ['setting-color-close-line', null]
+    closeLine: ['setting-color-close-line', null],
+    viBs: ['setting-color-vi-bs', null],
+    viPp: ['setting-color-vi-pp', null],
+    viPv: ['setting-color-vi-pv', null],
+    viDv: ['setting-color-vi-dv', null],
+    viSup: ['setting-color-vi-sup', null],
+    viSdn: ['setting-color-vi-sdn', null],
+    volIntelMa: ['setting-color-vi-volma', null]
   };
 
   const widthMap = {
@@ -1965,7 +1991,8 @@ function updateLineStyle(indicatorKey) {
     avwap: 'setting-width-avwap',
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
-    closeLine: 'setting-width-close-line'
+    closeLine: 'setting-width-close-line',
+    volIntelMa: 'setting-width-vi-volma'
   };
 
   if (colorMap[indicatorKey]) {
@@ -2015,6 +2042,7 @@ function updateLineStyle(indicatorKey) {
     if (indicatorKey === 'volAvg' && s.volAvg) s.volAvg.applyOptions(opts);
     if (indicatorKey === 'rsi' && s.rsi) s.rsi.applyOptions(opts);
     if (indicatorKey === 'rsiSma' && s.rsiSma) s.rsiSma.applyOptions(opts);
+    if (indicatorKey === 'volIntelMa' && s.volIntelMa) s.volIntelMa.applyOptions(opts);
     if (indicatorKey === 'closeLine' && s.candles) {
       s.candles.applyOptions({
         priceLineVisible: true,
@@ -2024,6 +2052,10 @@ function updateLineStyle(indicatorKey) {
         lastValueVisible: true
       });
     }
+  }
+
+  if (['viBs', 'viPp', 'viPv', 'viDv', 'viSup', 'viSdn', 'volIntelMa'].includes(indicatorKey)) {
+    renderVolumeIntelligence();
   }
 
   if (indicatorKey === 'crosshair') {
@@ -2043,6 +2075,7 @@ function updateLineStyle(indicatorKey) {
     };
     if (state.charts?.main) state.charts.main.applyOptions(crosshairOpts);
     if (state.charts?.rsi) state.charts.rsi.applyOptions(crosshairOpts);
+    if (state.charts?.volIntel) state.charts.volIntel.applyOptions(crosshairOpts);
   }
 
   if (indicatorKey === 'avwap') {
@@ -2053,6 +2086,303 @@ function updateLineStyle(indicatorKey) {
 
   saveIndicatorPreferences();
 }
+
+/**
+ * Volume Intelligence Indicator Mathematical Engine
+ */
+function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
+  if (!candles || !Array.isArray(candles) || candles.length === 0) {
+    return { histogram: [], volMaSeries: [], markers: [], paintedCandles: [], stats: {} };
+  }
+
+  const volMaPeriod = parseInt(options.volMaPeriod, 10) || 50;
+  const ppLookback = parseInt(options.ppLookback, 10) || 10;
+  const bsMult = parseFloat(options.bsMult) || 3.0;
+  const dryThresh = parseFloat(options.dryThresh) || 0.20;
+  const paintBars = Boolean(options.paintBars);
+
+  const colors = {
+    viBs: customColors.viBs || '#a855f7',
+    viPp: customColors.viPp || '#0ea5e9',
+    viPv: customColors.viPv || '#06b6d4',
+    viDv: customColors.viDv || '#f59e0b',
+    viSup: customColors.viSup || '#10b981',
+    viSdn: customColors.viSdn || '#ef4444',
+    viNup: customColors.viNup || '#34d399',
+    viNdn: customColors.viNdn || '#f87171'
+  };
+
+  const n = candles.length;
+  const volValues = candles.map(c => Number(c.volume || 0));
+
+  // Calculate Volume MA (SMA)
+  const volMa = [];
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    sum += volValues[i];
+    if (i >= volMaPeriod) {
+      sum -= volValues[i - volMaPeriod];
+      volMa.push(sum / volMaPeriod);
+    } else {
+      volMa.push(sum / (i + 1));
+    }
+  }
+
+  const histogram = [];
+  const volMaSeries = [];
+  const markers = [];
+  const paintedCandles = [];
+  const barSignals = [];
+
+  let ppCount = 0;
+  let bsCount = 0;
+
+  for (let i = 0; i < n; i++) {
+    const c = candles[i];
+    const prevC = i > 0 ? candles[i - 1] : c;
+    const vol = volValues[i];
+    const ma = volMa[i] || 1;
+    const isUp = i > 0 ? c.close > prevC.close : c.close >= c.open;
+    const isDown = i > 0 ? c.close < prevC.close : c.close < c.open;
+    const range = c.high - c.low;
+    const clv = range > 0 ? (c.close - c.low) / range : 0.5;
+    const pctChg = (i > 0 && prevC.close > 0) ? ((c.close - prevC.close) / prevC.close) * 100 : 0;
+    const rvol = ma > 0 ? (vol / ma) : 1.0;
+
+    const signals = [];
+
+    // 1. Dry Volume (DV): Volume <= dryThresh * VolMA
+    const isDry = i >= 5 && vol <= (dryThresh * ma);
+    if (isDry) signals.push('DV');
+
+    // 2. Bull Snort (BS): Volume >= bsMult * VolMA && Close in upper 35% of bar range && Up bar
+    const isBullSnort = i >= 5 && (vol >= bsMult * ma) && (clv >= 0.65) && isUp;
+    if (isBullSnort) {
+      signals.push('BS');
+      bsCount++;
+    }
+
+    // 3. Pocket Pivot (PP): Up bar with Volume > max qualifying Down bar volume in lookback
+    let isPocketPivot = false;
+    if (i >= 5 && isUp) {
+      const startIdx = Math.max(0, i - ppLookback);
+      let maxDownVol = 0;
+      let hasDownBar = false;
+      for (let k = startIdx; k < i; k++) {
+        const kPrev = k > 0 ? candles[k - 1] : candles[k];
+        const kIsDown = k > 0 ? (candles[k].close < kPrev.close) : (candles[k].close < candles[k].open);
+        if (kIsDown) {
+          hasDownBar = true;
+          if (volValues[k] > maxDownVol) maxDownVol = volValues[k];
+        }
+      }
+      if (hasDownBar && vol > maxDownVol) {
+        isPocketPivot = true;
+        signals.push('PP');
+        ppCount++;
+      }
+    }
+
+    // 4. Highest Volume Events (HV)
+    let isHVE = false;
+    let isHVY = false;
+    let isHVQ = false;
+    if (i >= 10) {
+      const allPrevMax = Math.max(...volValues.slice(0, i));
+      if (vol >= allPrevMax) {
+        isHVE = true;
+        signals.push('HVE');
+      }
+      if (i >= 20) {
+        const yStart = Math.max(0, i - 251);
+        const yMax = Math.max(...volValues.slice(yStart, i));
+        if (vol >= yMax) {
+          isHVY = true;
+          signals.push('HVY');
+        }
+      }
+      const qStart = Math.max(0, i - 62);
+      const qMax = Math.max(...volValues.slice(qStart, i));
+      if (vol >= qMax) {
+        isHVQ = true;
+        signals.push('HVQ');
+      }
+    }
+
+    // 5. Lowest Volume Events (LV)
+    if (i >= 10) {
+      const qStart = Math.max(0, i - 62);
+      const qMin = Math.min(...volValues.slice(qStart, i));
+      if (vol <= qMin) signals.push('LVQ');
+      if (i >= 20) {
+        const yStart = Math.max(0, i - 251);
+        const yMin = Math.min(...volValues.slice(yStart, i));
+        if (vol <= yMin) signals.push('LVY');
+      }
+    }
+
+    // 6. Power Volume (PV): Volume >= 2.5x VolMA (or >500k) & |pctChg| >= 5%
+    const isPowerVol = (vol >= 2.5 * ma || vol >= 500000) && Math.abs(pctChg) >= 5.0;
+    if (isPowerVol) signals.push('PV');
+
+    // Hierarchy Priority: Bull Snort > Pocket Pivot > Power Volume > HVE/HVY > Dry Volume > Strong Up > Strong Down > Normal Up > Normal Down
+    let barColor = colors.viNup;
+    if (isBullSnort) {
+      barColor = colors.viBs;
+    } else if (isPocketPivot) {
+      barColor = colors.viPp;
+    } else if (isPowerVol) {
+      barColor = colors.viPv;
+    } else if (isHVE || isHVY) {
+      barColor = '#d946ef';
+    } else if (isDry) {
+      barColor = colors.viDv;
+    } else if (isUp && vol > ma) {
+      barColor = colors.viSup;
+    } else if (isDown && vol > ma) {
+      barColor = colors.viSdn;
+    } else if (isUp) {
+      barColor = colors.viNup;
+    } else if (isDown) {
+      barColor = colors.viNdn;
+    } else {
+      barColor = '#64748b';
+    }
+
+    histogram.push({
+      time: c.time,
+      value: vol,
+      color: barColor
+    });
+
+    volMaSeries.push({
+      time: c.time,
+      value: Number(ma.toFixed(0))
+    });
+
+    // Markers on Vol Intel Chart
+    if (isBullSnort) {
+      markers.push({
+        time: c.time,
+        position: 'aboveBar',
+        color: colors.viBs,
+        shape: 'arrowDown',
+        text: 'BS'
+      });
+    } else if (isPocketPivot) {
+      markers.push({
+        time: c.time,
+        position: 'aboveBar',
+        color: colors.viPp,
+        shape: 'circle',
+        text: 'PP'
+      });
+    }
+
+    // Paint Bars formatting
+    paintedCandles.push({
+      time: c.time,
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+      ...(paintBars ? {
+        color: barColor,
+        borderColor: barColor,
+        wickColor: barColor
+      } : {})
+    });
+
+    barSignals.push({
+      time: c.time,
+      rvol: Number(rvol.toFixed(2)),
+      vol,
+      ma: Number(ma.toFixed(0)),
+      signals,
+      isBullSnort,
+      isPocketPivot,
+      isDry,
+      isPowerVol,
+      barColor
+    });
+  }
+
+  // Calculate latest U/D Volume Ratio over past 20 bars
+  const udLookback = Math.min(20, n);
+  let sumUp = 0;
+  let sumDown = 0;
+  for (let i = n - udLookback; i < n; i++) {
+    if (i < 0) continue;
+    const c = candles[i];
+    const prevC = i > 0 ? candles[i - 1] : c;
+    const isUp = i > 0 ? c.close > prevC.close : c.close >= c.open;
+    const isDown = i > 0 ? c.close < prevC.close : c.close < c.open;
+    if (isUp) sumUp += volValues[i];
+    if (isDown) sumDown += volValues[i];
+  }
+  const udRatio = sumDown > 0 ? Number((sumUp / sumDown).toFixed(2)) : (sumUp > 0 ? 9.99 : 1.0);
+  const udStatus = udRatio > 1.2 ? 'Bullish' : (udRatio < 0.8 ? 'Bearish' : 'Neutral');
+
+  const latestSignal = barSignals[barSignals.length - 1] || {};
+
+  return {
+    histogram,
+    volMaSeries,
+    markers,
+    paintedCandles,
+    barSignals,
+    stats: {
+      ppCount,
+      bsCount,
+      latestRVol: latestSignal.rvol || 1.0,
+      latestUD: udRatio,
+      udStatus,
+      signals: latestSignal.signals || []
+    }
+  };
+}
+
+function renderVolumeIntelligence() {
+  if (!state.currentStockData?.candles) return;
+  const candles = state.currentStockData.candles;
+  const viData = calculateVolumeIntelligence(candles, state.volIntelSettings, state.colors);
+  state.currentStockData.volIntel = viData;
+
+  if (state.charts?.series?.volIntelHist && viData.histogram) {
+    state.charts.series.volIntelHist.setData(viData.histogram);
+    if (typeof state.charts.series.volIntelHist.setMarkers === 'function') {
+      state.charts.series.volIntelHist.setMarkers(viData.markers || []);
+    }
+  }
+
+  if (state.charts?.series?.volIntelMa && viData.volMaSeries) {
+    state.charts.series.volIntelMa.setData(viData.volMaSeries);
+  }
+
+  // Paint Bars on Main Candlesticks when toggled on
+  if (state.charts?.series?.candles) {
+    if (state.volIntelSettings?.paintBars && viData.paintedCandles) {
+      state.charts.series.candles.setData(viData.paintedCandles);
+    } else {
+      state.charts.series.candles.setData(candles);
+    }
+  }
+
+  updateDefaultVolumeBadges();
+}
+
+function updateVolIntelSetting(key, val) {
+  if (!state.volIntelSettings) {
+    state.volIntelSettings = { volMaPeriod: 50, ppLookback: 10, bsMult: 3.0, dryThresh: 0.20, paintBars: false };
+  }
+  state.volIntelSettings[key] = (key === 'paintBars') ? Boolean(val) : (typeof val === 'string' && !isNaN(val) ? Number(val) : val);
+  saveIndicatorPreferences();
+
+  if (state.currentStockData?.candles) {
+    renderVolumeIntelligence();
+  }
+}
+window.updateVolIntelSetting = updateVolIntelSetting;
 
 function openLineSettingsModal() {
   const modal = document.getElementById('line-settings-modal');
@@ -2072,7 +2402,14 @@ function openLineSettingsModal() {
     rsiSma: 'setting-color-rsi-sma',
     avwap: 'setting-color-avwap',
     crosshair: 'setting-color-crosshair',
-    closeLine: 'setting-color-close-line'
+    closeLine: 'setting-color-close-line',
+    viBs: 'setting-color-vi-bs',
+    viPp: 'setting-color-vi-pp',
+    viPv: 'setting-color-vi-pv',
+    viDv: 'setting-color-vi-dv',
+    viSup: 'setting-color-vi-sup',
+    viSdn: 'setting-color-vi-sdn',
+    volIntelMa: 'setting-color-vi-volma'
   };
   Object.entries(colorMap).forEach(([key, id]) => {
     const colInput = document.getElementById(id);
@@ -2094,12 +2431,30 @@ function openLineSettingsModal() {
     avwap: 'setting-width-avwap',
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
-    closeLine: 'setting-width-close-line'
+    closeLine: 'setting-width-close-line',
+    volIntelMa: 'setting-width-vi-volma'
   };
   Object.entries(widthSelectMap).forEach(([key, id]) => {
     const sel = document.getElementById(id);
     if (sel && state.lineWidths[key] !== undefined) sel.value = String(state.lineWidths[key]);
   });
+
+  // Sync Volume Intelligence Parameters
+  const vi = state.volIntelSettings || {};
+  const chkPaint = document.getElementById('setting-vi-paint-bars');
+  if (chkPaint) chkPaint.checked = Boolean(vi.paintBars);
+
+  const selVolMa = document.getElementById('setting-vi-volma-period');
+  if (selVolMa && vi.volMaPeriod) selVolMa.value = String(vi.volMaPeriod);
+
+  const selPp = document.getElementById('setting-vi-pp-lookback');
+  if (selPp && vi.ppLookback) selPp.value = String(vi.ppLookback);
+
+  const selBs = document.getElementById('setting-vi-bs-mult');
+  if (selBs && vi.bsMult) selBs.value = String(vi.bsMult);
+
+  const selDry = document.getElementById('setting-vi-dry-thresh');
+  if (selDry && vi.dryThresh) selDry.value = String(vi.dryThresh);
 
   const modalTheme = document.getElementById('modal-select-chart-theme');
   if (modalTheme) modalTheme.value = state.chartTheme || 'dark';
@@ -2150,7 +2505,16 @@ function resetLineStylesToDefaults() {
     rsiSma: '#fbbf24',
     avwap: '#a855f7',
     crosshair: '#3b82f6',
-    closeLine: '#10b981'
+    closeLine: '#10b981',
+    viBs: '#a855f7',
+    viPp: '#0ea5e9',
+    viPv: '#06b6d4',
+    viDv: '#f59e0b',
+    viSup: '#10b981',
+    viSdn: '#ef4444',
+    viNup: '#34d399',
+    viNdn: '#f87171',
+    volIntelMa: '#fbbf24'
   };
   state.lineWidths = {
     ema10: 1.5,
@@ -2167,7 +2531,15 @@ function resetLineStylesToDefaults() {
     avwap: 2,
     pivots: 1.2,
     crosshair: 1,
-    closeLine: 1
+    closeLine: 1,
+    volIntelMa: 1.5
+  };
+  state.volIntelSettings = {
+    volMaPeriod: 50,
+    ppLookback: 10,
+    bsMult: 3.0,
+    dryThresh: 0.20,
+    paintBars: false
   };
   state.customThemeColors = {
     bg: '#0b0f19',
@@ -2183,11 +2555,13 @@ function resetLineStylesToDefaults() {
     toggles: state.toggles,
     colors: state.colors,
     lineWidths: state.lineWidths,
+    volIntelSettings: state.volIntelSettings,
     chartTheme: state.chartTheme,
     customThemeColors: state.customThemeColors,
     pivotType: state.pivotType
   });
   saveIndicatorPreferences();
+  renderVolumeIntelligence();
   showToast('Line styles and thicknesses reset to default', 'info');
 }
 
@@ -2196,6 +2570,7 @@ function saveIndicatorPreferences() {
   const prefs = {
     toggles: { ...state.toggles },
     colors: { ...state.colors },
+    volIntelSettings: state.volIntelSettings ? { ...state.volIntelSettings } : undefined,
     pivotType: state.pivotType || document.getElementById('select-pivot-type')?.value || 'Traditional (Auto)',
     chartTheme: state.chartTheme || 'dark',
     customThemeColors: { ...state.customThemeColors },
@@ -2225,6 +2600,10 @@ function saveIndicatorPreferences() {
 function applyLoadedIndicatorPreferences(prefs) {
   if (!prefs) return;
 
+  if (prefs.volIntelSettings) {
+    state.volIntelSettings = { ...state.volIntelSettings, ...prefs.volIntelSettings };
+  }
+
   if (prefs.toggles) {
     state.toggles = { ...state.toggles, ...prefs.toggles };
     const checkboxMap = {
@@ -2238,6 +2617,7 @@ function applyLoadedIndicatorPreferences(prefs) {
       volAvg: 'chk-vol-avg',
       darvas: 'chk-darvas',
       rsi: 'chk-rsi',
+      volIntel: 'chk-vol-intel',
       pivots: 'chk-pivots'
     };
 
@@ -2268,6 +2648,13 @@ function applyLoadedIndicatorPreferences(prefs) {
     if (rsiCont) rsiCont.style.display = state.toggles.rsi ? '' : 'none';
     if (rsiResizer) rsiResizer.style.display = state.toggles.rsi ? '' : 'none';
     if (rsiBottomResizer) rsiBottomResizer.style.display = state.toggles.rsi ? '' : 'none';
+
+    const viCont = document.getElementById('tv_vol_intel_container');
+    const viResizer = document.getElementById('resizer-rsi-volintel');
+    const viBottomResizer = document.getElementById('resizer-volintel-bottom');
+    if (viCont) viCont.style.display = state.toggles.volIntel ? '' : 'none';
+    if (viResizer) viResizer.style.display = state.toggles.volIntel ? '' : 'none';
+    if (viBottomResizer) viBottomResizer.style.display = state.toggles.volIntel ? '' : 'none';
 
     updateTimeScalesVisibility();
     handleResize();
@@ -2361,6 +2748,7 @@ function initNativeCharts() {
 
   const elTvMainChart = document.getElementById('tv_main_chart');
   const elTvRsiChart = document.getElementById('tv_rsi_chart');
+  const elTvVolIntelChart = document.getElementById('tv_vol_intel_chart');
   if (!elTvMainChart || !elTvRsiChart) return;
 
   const themeCfg = getThemeConfig(state.chartTheme || 'dark');
@@ -2579,8 +2967,55 @@ function initNativeCharts() {
   rsiSeries.createPriceLine({ price: 50, color: 'rgba(148, 163, 184, 0.4)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '50' });
   rsiSeries.createPriceLine({ price: 30, color: 'rgba(16, 185, 129, 0.75)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '30' });
 
+  // PANE 3: Dedicated Volume Intelligence Sub-Pane
+  let volIntelChart = null;
+  let volIntelHist = null;
+  let volIntelMa = null;
+  if (elTvVolIntelChart) {
+    elTvVolIntelChart.innerHTML = '';
+    const viRect = elTvVolIntelChart.getBoundingClientRect();
+    volIntelChart = LightweightCharts.createChart(elTvVolIntelChart, {
+      ...baseChartOptions,
+      width: viRect.width || 600,
+      height: viRect.height || 120,
+      rightPriceScale: {
+        borderColor: borderColor,
+        autoScale: true,
+        minimumWidth: 75,
+        scaleMargins: { top: 0.1, bottom: 0 }
+      },
+      timeScale: {
+        borderColor: borderColor,
+        visible: true,
+        timeVisible: false,
+        secondsVisible: false,
+        fixLeftEdge: false,
+        fixRightEdge: false,
+        rightOffset: 6,
+        barSpacing: 8,
+        minBarSpacing: 1
+      }
+    });
+
+    volIntelHist = volIntelChart.addHistogramSeries({
+      color: '#34d399',
+      priceFormat: { type: 'volume' },
+      priceLineVisible: false,
+      lastValueVisible: false
+    });
+
+    volIntelMa = volIntelChart.addLineSeries({
+      color: state.colors.volIntelMa || '#fbbf24',
+      lineWidth: Number(state.lineWidths?.volIntelMa || 1.5),
+      priceFormat: { type: 'volume' },
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false
+    });
+  }
+
   // Synchronize TimeScales
-  const allCharts = [mainChart, rsiChart];
+  const allCharts = [mainChart, rsiChart, volIntelChart].filter(Boolean);
   let isSyncing = false;
   allCharts.forEach(source => {
     source.timeScale().subscribeVisibleLogicalRangeChange(range => {
@@ -2640,9 +3075,39 @@ function initNativeCharts() {
     }
     if (rsiVal !== undefined && rsiBadge) rsiBadge.textContent = rsiVal;
     if (rsiSmaVal !== undefined && rsiSmaBadge) rsiSmaBadge.textContent = rsiSmaVal;
+
+    // Volume Intelligence Badges
+    const viData = state.currentStockData?.volIntel;
+    if (viData) {
+      const viBar = viData.barSignals?.find(b => b.time === param.time);
+      const viRvolEl = document.getElementById('vi-rvol-badge');
+      const viVolEl = document.getElementById('vi-vol-badge');
+      const viSmaEl = document.getElementById('vi-sma-badge');
+      const viSigEl = document.getElementById('vi-signals-badge');
+      const viPpEl = document.getElementById('vi-pp-badge');
+      const viBsEl = document.getElementById('vi-bs-badge');
+      const viUdEl = document.getElementById('vi-ud-badge');
+
+      if (viBar) {
+        if (viRvolEl) viRvolEl.textContent = `${viBar.rvol}x`;
+        if (viVolEl) viVolEl.textContent = fmt.volume(viBar.vol);
+        if (viSmaEl) viSmaEl.textContent = fmt.volume(viBar.ma);
+        if (viSigEl) {
+          if (viBar.signals && viBar.signals.length > 0) {
+            viSigEl.textContent = viBar.signals.join(' | ');
+            viSigEl.classList.remove('hidden');
+          } else {
+            viSigEl.classList.add('hidden');
+          }
+        }
+      }
+      if (viPpEl) viPpEl.textContent = viData.stats?.ppCount || '0';
+      if (viBsEl) viBsEl.textContent = viData.stats?.bsCount || '0';
+      if (viUdEl) viUdEl.textContent = `${viData.stats?.latestUD || '1.0'} (${viData.stats?.udStatus || 'Neutral'})`;
+    }
   }
 
-  // Synchronize Crosshairs across Main Chart and RSI Chart
+  // Synchronize Crosshairs across Main Chart, RSI Chart, and Vol Intel Chart
   let isCrosshairSyncing = false;
 
   mainChart.subscribeCrosshairMove(param => {
@@ -2651,13 +3116,19 @@ function initNativeCharts() {
     isCrosshairSyncing = true;
     try {
       if (!param.time || !param.point) {
-        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') {
-          rsiChart.clearCrosshairPosition();
+        if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
+        if (volIntelChart && typeof volIntelChart.clearCrosshairPosition === 'function') volIntelChart.clearCrosshairPosition();
+      } else {
+        if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
+          const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
+          const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
+          rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
         }
-      } else if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
-        const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
-        const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
-        rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
+        if (volIntelChart && volIntelHist && typeof volIntelChart.setCrosshairPosition === 'function') {
+          const viBar = state.currentStockData?.volIntel?.barSignals?.find(b => b.time === param.time);
+          const viVal = viBar ? viBar.vol : 0;
+          volIntelChart.setCrosshairPosition(viVal, param.time, volIntelHist);
+        }
       }
     } catch (e) {}
     isCrosshairSyncing = false;
@@ -2670,14 +3141,44 @@ function initNativeCharts() {
       isCrosshairSyncing = true;
       try {
         if (!param.time || !param.point) {
-          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') {
-            mainChart.clearCrosshairPosition();
+          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
+          if (volIntelChart && typeof volIntelChart.clearCrosshairPosition === 'function') volIntelChart.clearCrosshairPosition();
+        } else {
+          if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
+            const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
+            const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
+            if (price) mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
           }
-        } else if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
-          const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
-          const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
-          if (price) {
-            mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
+          if (volIntelChart && volIntelHist && typeof volIntelChart.setCrosshairPosition === 'function') {
+            const viBar = state.currentStockData?.volIntel?.barSignals?.find(b => b.time === param.time);
+            const viVal = viBar ? viBar.vol : 0;
+            volIntelChart.setCrosshairPosition(viVal, param.time, volIntelHist);
+          }
+        }
+      } catch (e) {}
+      isCrosshairSyncing = false;
+    });
+  }
+
+  if (volIntelChart && volIntelHist) {
+    volIntelChart.subscribeCrosshairMove(param => {
+      handleCrosshairUpdate(param);
+      if (isCrosshairSyncing) return;
+      isCrosshairSyncing = true;
+      try {
+        if (!param.time || !param.point) {
+          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
+          if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
+        } else {
+          if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
+            const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
+            const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
+            if (price) mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
+          }
+          if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
+            const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
+            const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
+            rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
           }
         }
       } catch (e) {}
@@ -2693,6 +3194,7 @@ function initNativeCharts() {
       try {
         if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
         if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
+        if (volIntelChart && typeof volIntelChart.clearCrosshairPosition === 'function') volIntelChart.clearCrosshairPosition();
         updateDefaultVolumeBadges();
       } catch (e) {}
     });
@@ -2702,6 +3204,7 @@ function initNativeCharts() {
 
   state.charts.main = mainChart;
   state.charts.rsi = rsiChart;
+  state.charts.volIntel = volIntelChart;
   state.charts.series = {
     candles: candlestickSeries,
     ema10: ema10Series,
@@ -2715,7 +3218,9 @@ function initNativeCharts() {
     volume: volumeSeries,
     volAvg: volAvgSeries,
     rsi: rsiSeries,
-    rsiSma: rsiSmaSeries
+    rsiSma: rsiSmaSeries,
+    volIntelHist: volIntelHist,
+    volIntelMa: volIntelMa
   };
 
   updateTimeScalesVisibility();
@@ -2724,33 +3229,44 @@ function initNativeCharts() {
 
 function updateTimeScalesVisibility() {
   const tvRsiCont = document.getElementById('tv_rsi_container');
+  const tvViCont = document.getElementById('tv_vol_intel_container');
   const isRsiVisible = tvRsiCont && tvRsiCont.style.display !== 'none';
+  const isViVisible = tvViCont && tvViCont.style.display !== 'none';
   const isIntraday = state.currentStockData?.isIntraday || false;
+
+  // The bottom-most visible pane should show the time scale labels
+  if (state.charts.volIntel) {
+    state.charts.volIntel.applyOptions({
+      timeScale: { visible: isViVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
+    });
+  }
 
   if (state.charts.rsi) {
     state.charts.rsi.applyOptions({
-      timeScale: { visible: isRsiVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
+      timeScale: { visible: !isViVisible && isRsiVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
   }
 
   if (state.charts.main) {
     state.charts.main.applyOptions({
-      timeScale: { visible: true, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
+      timeScale: { visible: !isViVisible && !isRsiVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
   }
 }
 
 function syncChartPriceScales() {
-  if (!state.charts.main || !state.charts.rsi) return;
+  if (!state.charts.main) return;
   try {
     const mainScale = state.charts.main.priceScale('right');
-    const rsiScale = state.charts.rsi.priceScale('right');
-    if (!mainScale || !rsiScale) return;
-    const mainW = (typeof mainScale.width === 'function') ? mainScale.width() : 0;
-    const rsiW = (typeof rsiScale.width === 'function') ? rsiScale.width() : 0;
-    const targetW = Math.max(mainW, rsiW, 75);
-    mainScale.applyOptions({ minimumWidth: targetW });
-    rsiScale.applyOptions({ minimumWidth: targetW });
+    const rsiScale = state.charts.rsi?.priceScale('right');
+    const viScale = state.charts.volIntel?.priceScale('right');
+    const mainW = (mainScale && typeof mainScale.width === 'function') ? mainScale.width() : 0;
+    const rsiW = (rsiScale && typeof rsiScale.width === 'function') ? rsiScale.width() : 0;
+    const viW = (viScale && typeof viScale.width === 'function') ? viScale.width() : 0;
+    const targetW = Math.max(mainW, rsiW, viW, 75);
+    if (mainScale) mainScale.applyOptions({ minimumWidth: targetW });
+    if (rsiScale) rsiScale.applyOptions({ minimumWidth: targetW });
+    if (viScale) viScale.applyOptions({ minimumWidth: targetW });
   } catch (e) {}
 }
 
@@ -2761,6 +3277,8 @@ function handleResize() {
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
   const rsiChartEl = document.getElementById('tv_rsi_chart');
+  const viContainer = document.getElementById('tv_vol_intel_container');
+  const viChartEl = document.getElementById('tv_vol_intel_chart');
   const tvMainChart = document.getElementById('tv_main_chart');
   
   const containerWidth = chartMainContainer ? chartMainContainer.clientWidth : (pricePane ? pricePane.clientWidth : 600);
@@ -2776,6 +3294,12 @@ function handleResize() {
     const rRect = rsiChartEl.getBoundingClientRect();
     const h = Math.round(Math.max(30, rRect.height));
     state.charts.rsi.applyOptions({ width: commonWidth, height: h });
+  }
+
+  if (state.charts.volIntel && viContainer && viChartEl && viContainer.style.display !== 'none') {
+    const vRect = viChartEl.getBoundingClientRect();
+    const h = Math.round(Math.max(30, vRect.height));
+    state.charts.volIntel.applyOptions({ width: commonWidth, height: h });
   }
 
   syncChartPriceScales();
@@ -2816,25 +3340,41 @@ function applyActiveRangeZoom() {
   if (state.charts.rsi) {
     state.charts.rsi.timeScale().setVisibleLogicalRange({ from: fromIndex, to: toIndex });
   }
+
+  if (state.charts.volIntel) {
+    state.charts.volIntel.timeScale().setVisibleLogicalRange({ from: fromIndex, to: toIndex });
+  }
 }
 
 function setupPaneResizers() {
   const resizerPriceRsi = document.getElementById('resizer-price-rsi');
   const resizerRsiBottom = document.getElementById('resizer-rsi-bottom');
+  const resizerRsiVolIntel = document.getElementById('resizer-rsi-volintel');
+  const resizerVolIntelBottom = document.getElementById('resizer-volintel-bottom');
   const resizerChartBottom = document.getElementById('resizer-chart-bottom');
   const chartMainContainer = document.getElementById('chart-main-container');
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
+  const volIntelContainer = document.getElementById('tv_vol_intel_container');
   const tvMainChart = document.getElementById('tv_main_chart');
   const tvRsiChart = document.getElementById('tv_rsi_chart');
+  const tvVolIntelChart = document.getElementById('tv_vol_intel_chart');
 
-  if (!chartMainContainer || !pricePane || !rsiContainer) return;
+  if (!chartMainContainer || !pricePane) return;
 
   const savedRsiH = localStorage.getItem('sangam_rsi_height');
-  if (savedRsiH) {
+  if (savedRsiH && rsiContainer) {
     const parsedRsiH = parseInt(savedRsiH, 10);
     if (parsedRsiH >= 35 && parsedRsiH <= 400) {
       rsiContainer.style.height = `${parsedRsiH}px`;
+    }
+  }
+
+  const savedVolIntelH = localStorage.getItem('sangam_volintel_height');
+  if (savedVolIntelH && volIntelContainer) {
+    const parsedVolIntelH = parseInt(savedVolIntelH, 10);
+    if (parsedVolIntelH >= 35 && parsedVolIntelH <= 400) {
+      volIntelContainer.style.height = `${parsedVolIntelH}px`;
     }
   }
 
@@ -2846,7 +3386,8 @@ function setupPaneResizers() {
     }
   }
 
-  if (resizerPriceRsi) {
+  // 1. Resizer: Price & RSI divider
+  if (resizerPriceRsi && rsiContainer) {
     let isDraggingRsi = false;
     let startY = 0;
     let startPriceH = 0;
@@ -2865,6 +3406,7 @@ function setupPaneResizers() {
       document.body.style.userSelect = 'none';
       if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
 
       window.addEventListener('mousemove', onRsiMove, { passive: false });
       window.addEventListener('mouseup', onRsiEnd);
@@ -2899,6 +3441,7 @@ function setupPaneResizers() {
       document.body.style.userSelect = '';
       if (tvMainChart) tvMainChart.style.pointerEvents = '';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
 
       window.removeEventListener('mousemove', onRsiMove);
       window.removeEventListener('mouseup', onRsiEnd);
@@ -2919,7 +3462,8 @@ function setupPaneResizers() {
     });
   }
 
-  if (resizerRsiBottom) {
+  // 2. Resizer: Dedicated RSI Bottom Drag Handle
+  if (resizerRsiBottom && rsiContainer) {
     let isDraggingRsiBottom = false;
     let startY = 0;
     let startRsiH = 0;
@@ -2934,6 +3478,7 @@ function setupPaneResizers() {
       document.body.style.userSelect = 'none';
       if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
 
       window.addEventListener('mousemove', onRsiBottomMove, { passive: false });
       window.addEventListener('mouseup', onRsiBottomEnd);
@@ -2963,6 +3508,7 @@ function setupPaneResizers() {
       document.body.style.userSelect = '';
       if (tvMainChart) tvMainChart.style.pointerEvents = '';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
 
       window.removeEventListener('mousemove', onRsiBottomMove);
       window.removeEventListener('mouseup', onRsiBottomEnd);
@@ -2981,6 +3527,150 @@ function setupPaneResizers() {
     });
   }
 
+  // 3. Resizer: RSI & Vol Intel Divider
+  if (resizerRsiVolIntel && volIntelContainer) {
+    let isDraggingRsiVi = false;
+    let startY = 0;
+    let startViH = 0;
+    let startRsiH = 0;
+    let combinedH = 0;
+
+    const onRsiViStart = (e) => {
+      e.preventDefault();
+      isDraggingRsiVi = true;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startRsiH = rsiContainer ? rsiContainer.getBoundingClientRect().height : 105;
+      startViH = volIntelContainer.getBoundingClientRect().height;
+      combinedH = startRsiH + startViH;
+
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
+      if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
+
+      window.addEventListener('mousemove', onRsiViMove, { passive: false });
+      window.addEventListener('mouseup', onRsiViEnd);
+      window.addEventListener('touchmove', onRsiViMove, { passive: false });
+      window.addEventListener('touchend', onRsiViEnd);
+    };
+
+    const onRsiViMove = (e) => {
+      if (!isDraggingRsiVi) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = clientY - startY;
+
+      if (rsiContainer && rsiContainer.style.display !== 'none') {
+        const maxVi = Math.max(35, combinedH - 40);
+        const newViH = Math.round(Math.max(35, Math.min(maxVi, startViH - deltaY)));
+        const newRsiH = Math.round(combinedH - newViH);
+        volIntelContainer.style.height = `${newViH}px`;
+        rsiContainer.style.height = `${newRsiH}px`;
+        localStorage.setItem('sangam_volintel_height', newViH);
+        localStorage.setItem('sangam_rsi_height', newRsiH);
+      } else {
+        const newViH = Math.round(Math.max(35, Math.min(400, startViH - deltaY)));
+        volIntelContainer.style.height = `${newViH}px`;
+        localStorage.setItem('sangam_volintel_height', newViH);
+      }
+      handleResize();
+    };
+
+    const onRsiViEnd = () => {
+      if (!isDraggingRsiVi) return;
+      isDraggingRsiVi = false;
+
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      if (tvMainChart) tvMainChart.style.pointerEvents = '';
+      if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
+
+      window.removeEventListener('mousemove', onRsiViMove);
+      window.removeEventListener('mouseup', onRsiViEnd);
+      window.removeEventListener('touchmove', onRsiViMove);
+      window.removeEventListener('touchend', onRsiViEnd);
+      handleResize();
+    };
+
+    resizerRsiVolIntel.addEventListener('mousedown', onRsiViStart);
+    resizerRsiVolIntel.addEventListener('touchstart', onRsiViStart, { passive: false });
+    resizerRsiVolIntel.addEventListener('dblclick', () => {
+      const defaultVi = 120;
+      volIntelContainer.style.height = `${defaultVi}px`;
+      localStorage.setItem('sangam_volintel_height', defaultVi);
+      handleResize();
+    });
+  }
+
+  // 4. Resizer: Vol Intel Bottom Drag Handle
+  if (resizerVolIntelBottom && volIntelContainer) {
+    let isDraggingViBottom = false;
+    let startY = 0;
+    let startViH = 0;
+
+    const onViBottomStart = (e) => {
+      e.preventDefault();
+      isDraggingViBottom = true;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startViH = volIntelContainer.getBoundingClientRect().height;
+
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
+      if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
+
+      window.addEventListener('mousemove', onViBottomMove, { passive: false });
+      window.addEventListener('mouseup', onViBottomEnd);
+      window.addEventListener('touchmove', onViBottomMove, { passive: false });
+      window.addEventListener('touchend', onViBottomEnd);
+    };
+
+    const onViBottomMove = (e) => {
+      if (!isDraggingViBottom) return;
+      if (e.cancelable) e.preventDefault();
+
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = clientY - startY;
+
+      const newViH = Math.round(Math.max(35, Math.min(400, startViH + deltaY)));
+      volIntelContainer.style.height = `${newViH}px`;
+
+      localStorage.setItem('sangam_volintel_height', newViH);
+      handleResize();
+    };
+
+    const onViBottomEnd = () => {
+      if (!isDraggingViBottom) return;
+      isDraggingViBottom = false;
+
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      if (tvMainChart) tvMainChart.style.pointerEvents = '';
+      if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
+
+      window.removeEventListener('mousemove', onViBottomMove);
+      window.removeEventListener('mouseup', onViBottomEnd);
+      window.removeEventListener('touchmove', onViBottomMove);
+      window.removeEventListener('touchend', onViBottomEnd);
+      handleResize();
+    };
+
+    resizerVolIntelBottom.addEventListener('mousedown', onViBottomStart);
+    resizerVolIntelBottom.addEventListener('touchstart', onViBottomStart, { passive: false });
+    resizerVolIntelBottom.addEventListener('dblclick', () => {
+      const defaultVi = 120;
+      volIntelContainer.style.height = `${defaultVi}px`;
+      localStorage.setItem('sangam_volintel_height', defaultVi);
+      handleResize();
+    });
+  }
+
+  // 5. Resizer: Overall Chart Card Bottom Handle
   if (resizerChartBottom) {
     let isDraggingChart = false;
     let startY = 0;
@@ -2996,6 +3686,7 @@ function setupPaneResizers() {
       document.body.style.userSelect = 'none';
       if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
 
       window.addEventListener('mousemove', onChartMove, { passive: false });
       window.addEventListener('mouseup', onChartEnd);
@@ -3027,6 +3718,7 @@ function setupPaneResizers() {
       document.body.style.userSelect = '';
       if (tvMainChart) tvMainChart.style.pointerEvents = '';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
+      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
 
       window.removeEventListener('mousemove', onChartMove);
       window.removeEventListener('mouseup', onChartEnd);
@@ -4016,6 +4708,8 @@ async function loadStockChart(rawSymbol) {
       if (rsiSmaBadge) rsiSmaBadge.textContent = data.latestRsiSMA || '--';
     }
 
+    renderVolumeIntelligence();
+
     renderPersistedDrawings();
     applyActiveRangeZoom();
     syncChartPriceScales();
@@ -4263,6 +4957,16 @@ function initIndicatorToggles() {
       if (rsiCont) rsiCont.style.display = checked ? '' : 'none';
       if (rsiResizer) rsiResizer.style.display = checked ? '' : 'none';
       if (rsiBottomResizer) rsiBottomResizer.style.display = checked ? '' : 'none';
+      updateTimeScalesVisibility();
+      handleResize();
+    }},
+    { id: 'chk-vol-intel', key: 'volIntel', custom: (checked) => {
+      const viCont = document.getElementById('tv_vol_intel_container');
+      const viResizer = document.getElementById('resizer-rsi-volintel');
+      const viBottomResizer = document.getElementById('resizer-volintel-bottom');
+      if (viCont) viCont.style.display = checked ? '' : 'none';
+      if (viResizer) viResizer.style.display = checked ? '' : 'none';
+      if (viBottomResizer) viBottomResizer.style.display = checked ? '' : 'none';
       updateTimeScalesVisibility();
       handleResize();
     }},
