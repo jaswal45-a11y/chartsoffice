@@ -12,10 +12,12 @@
   var dealsState = {
     isOpen: false,
     isMinimized: false,
+    isMaximized: false,
     deals: [],
     lastUpdated: null,
     latestDealId: null,
     filterType: 'ALL', // 'ALL', 'BUY', 'SELL'
+    rowDensity: 'auto', // 'auto', 'compact', 'normal', 'comfortable'
     searchQuery: '',
     isLoading: false,
     hasUnread: false
@@ -49,7 +51,6 @@
   var tableBodyEl = null;
   var searchInputEl = null;
   var countBadgeEl = null;
-  var unreadBadgeEl = null;
   var minimizeBtnEl = null;
   var maximizeBtnEl = null;
   var bodyContainerEl = null;
@@ -84,6 +85,7 @@
         min-height: 260px;
         max-width: 98vw;
         max-height: 94vh;
+        z-index: 99999 !important;
         transition: box-shadow 0.2s ease, opacity 0.15s ease;
       }
       #mf-deals-widget.minimized {
@@ -161,11 +163,14 @@
 
   // 3. Construct Widget DOM
   function createWidgetDom() {
-    if (document.getElementById('mf-deals-widget')) return;
+    if (document.getElementById('mf-deals-widget')) {
+      widgetEl = document.getElementById('mf-deals-widget');
+      return;
+    }
 
     var el = document.createElement('div');
     el.id = 'mf-deals-widget';
-    el.className = 'fixed z-50 bg-dark-card/95 backdrop-blur-xl border border-dark-border rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 text-xs select-none';
+    el.className = 'fixed z-[99999] bg-dark-card/95 backdrop-blur-xl border border-dark-border rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 text-xs select-none';
     el.style.display = 'none';
     el.style.width = Math.min(window.innerWidth - 20, Math.max(500, settings.width)) + 'px';
     el.style.height = Math.min(window.innerHeight - 20, Math.max(280, settings.height)) + 'px';
@@ -393,11 +398,11 @@
       if (filterType !== 'ALL' && d.dealType !== filterType) return false;
       if (!query) return true;
       return (
-        d.companyName.toLowerCase().includes(query) ||
-        d.clientName.toLowerCase().includes(query) ||
-        d.date.toLowerCase().includes(query) ||
-        d.exchange.toLowerCase().includes(query) ||
-        d.dealType.toLowerCase().includes(query)
+        (d.companyName && d.companyName.toLowerCase().includes(query)) ||
+        (d.clientName && d.clientName.toLowerCase().includes(query)) ||
+        (d.date && d.date.toLowerCase().includes(query)) ||
+        (d.exchange && d.exchange.toLowerCase().includes(query)) ||
+        (d.dealType && d.dealType.toLowerCase().includes(query))
       );
     });
 
@@ -434,10 +439,10 @@
       html += `
         <tr class="hover:bg-slate-800/40 transition-colors group cursor-pointer" onclick="window.__loadMfDealStock('${escapeJsString(d.companyName)}')">
           <td class="py-2 px-3 text-center">${exchBadge}</td>
-          <td class="py-2 px-3 text-slate-300 whitespace-nowrap text-[10px]">${d.date}</td>
-          <td class="py-2 px-3 font-sans font-medium text-slate-200">${d.clientName}</td>
+          <td class="py-2 px-3 text-slate-300 whitespace-nowrap text-[10px]">${d.date || '--'}</td>
+          <td class="py-2 px-3 font-sans font-medium text-slate-200">${d.clientName || '--'}</td>
           <td class="py-2 px-3 font-sans font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center gap-1.5">
-            <span>${d.companyName}</span>
+            <span>${d.companyName || '--'}</span>
             <svg class="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
           </td>
           <td class="py-2 px-3 text-center">${typeBadge}</td>
@@ -563,7 +568,10 @@
   }
 
   function toggleWidget() {
-    if (dealsState.isOpen) {
+    if (!widgetEl) {
+      createWidgetDom();
+    }
+    if (widgetEl && widgetEl.style.display !== 'none' && dealsState.isOpen) {
       closeWidget();
     } else {
       openWidget();
@@ -630,9 +638,9 @@
       if (filterType !== 'ALL' && d.dealType !== filterType) return false;
       if (!query) return true;
       return (
-        d.companyName.toLowerCase().includes(query) ||
-        d.clientName.toLowerCase().includes(query) ||
-        d.date.toLowerCase().includes(query)
+        (d.companyName && d.companyName.toLowerCase().includes(query)) ||
+        (d.clientName && d.clientName.toLowerCase().includes(query)) ||
+        (d.date && d.date.toLowerCase().includes(query))
       );
     });
 
@@ -653,11 +661,11 @@
     var rows = [['Exchange', 'Date', 'Client Name', 'Company Name', 'Deal Type', 'Volume', 'Deal Price']];
     dealsState.deals.forEach(function (d) {
       rows.push([
-        '"' + d.exchange + '"',
-        '"' + d.date + '"',
-        '"' + d.clientName.replace(/"/g, '""') + '"',
-        '"' + d.companyName.replace(/"/g, '""') + '"',
-        '"' + d.dealType + '"',
+        '"' + (d.exchange || '') + '"',
+        '"' + (d.date || '') + '"',
+        '"' + (d.clientName || '').replace(/"/g, '""') + '"',
+        '"' + (d.companyName || '').replace(/"/g, '""') + '"',
+        '"' + (d.dealType || '') + '"',
         d.volume,
         d.dealPrice
       ]);
@@ -676,7 +684,7 @@
 
   function showToast(msg, isErr) {
     var toast = document.createElement('div');
-    toast.className = 'fixed bottom-5 right-5 z-[9999] px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-2xl flex items-center gap-2 ' +
+    toast.className = 'fixed bottom-5 right-5 z-[999999] px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-2xl flex items-center gap-2 ' +
       (isErr ? 'bg-rose-600' : 'bg-emerald-600');
     toast.textContent = msg;
     document.body.appendChild(toast);
@@ -788,6 +796,7 @@
   function init() {
     injectStyles();
     loadSettings();
+    createWidgetDom();
 
     // Bind all launcher buttons on page
     document.querySelectorAll('#btn-open-mf-deals, .btn-mf-deals-launcher').forEach(function (btn) {

@@ -1,0 +1,208 @@
+{
+  "success": true,
+  "count": 20,
+  "lastUpdated": "2026-09-15T17:13:20.029Z",
+  "latestDealId": "3e5cb1a4e15a",
+  "deals": [
+    {
+      "id": "3e5cb1a4e15a",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Westlife Foodworld",
+      "dealType": "BUY",
+      "volume": "2980072",
+      "dealPrice": "569.6"
+    },
+    {
+      "id": "4deb688d2367",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Westlife Foodworld",
+      "dealType": "BUY",
+      "volume": "4000000",
+      "dealPrice": "569.6"
+    },
+    {
+      "id": "d8d558d1750f",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Westlife Foodworld",
+      "dealType": "SELL",
+      "volume": "3033125",
+      "dealPrice": "569.6"
+    },
+    {
+      "id": "47ffc7cbed76",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Westlife Foodworld",
+      "dealType": "SELL",
+      "volume": "4000000",
+      "dealPrice": "569.6"
+    },
+    {
+      "id": "1033264f60c0",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "360 ONE ASSET MANAGEMENT LIMITED",
+      "companyName": "Jamna Auto Inds.",
+      "dealType": "BUY",
+      "volume": "5468750",
+      "dealPrice": "128"
+    },
+    {
+      "id": "f71f5cabb450",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "360 ONE MUTUL FUND",
+      "companyName": "Jamna Auto Inds.",
+      "dealType": "BUY",
+      "volume": "2573125",
+      "dealPrice": "128"
+    },
+    {
+      "id": "83b795da8d4c",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "DSP MUTUAL FUND",
+      "companyName": "Jamna Auto Inds.",
+      "dealType": "BUY",
+      "volume": "7812500",
+      "dealPrice": "128"
+    },
+    {
+      "id": "842af9684330",
+      "exchange": "NSE",
+      "date": "11-Sep-26",
+      "clientName": "ABAKKUS INVESTMENT MANAGERS PRIVATE LIMITED",
+      "companyName": "BlackBuck",
+      "dealType": "BUY",
+      "volume": "2100000",
+      "dealPrice": "576.05"
+    },
+    {
+      "id": "d16c492fd837",
+      "exchange": "BSE",
+      "date": "10-Sep-26",
+      "clientName": "MOTILAL OSWAL MUTUAL FUND",
+      "companyName": "Spectrum Elec. Inds.",
+      "dealType": "BUY",
+      "volume": "115000",
+      "dealPrice": "2651"
+    },
+    {
+      "id": "122555dd4ece",
+      "exchange": "BSE",
+      "date": "10-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "CORONA Remedies",
+      "dealType": "BUY",
+      "volume": "680000",
+      "dealPrice": "2050"
+    },
+    {
+      "id": "efc26d2cb7f7",
+      "exchange": "BSE",
+      "date": "10-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "CORONA Remedies",
+      "dealType": "BUY",
+      "volume": "860000",
+      "dealPrice": "2050"
+    },
+    {
+      "id": "f670e54a7bbd",
+      "exchange": "BSE",
+      "date": "07-Sep-26",
+      "clientName": "SB OPPORTUNITIES FUND II",
+      "companyName": "Phychem Technologies",
+      "dealType": "BUY",
+      "volume": "86000",
+      "dealPrice": "56"
+    },
+    {
+      "id": "76caf0d1a406",
+      "exchange": "NSE",
+      "date": "07-Sep-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "HEG Advanced Materi.",
+      "dealType": "BUY",
+      "volume": "993201",
+      "dealPrice": "266.21"
+    },
+    {
+      "id": "933a07289e53",
+      "exchange": "BSE",
+      "date": "04-Sep-26",
+      "clientName": "AXIS MUTUAL FUND",
+      "companyName": "Gland Pharma",
+      "dealType": "BUY",
+      "volume": "1357000",
+      "dealPrice": "2826.6"
+    },
+    {
+      "id": "ea6aa58a7512",
+      "exchange": "BSE",
+      "date": "04-Sep-26",
+      "clientName": "ICICI PRUDENTIAL MUTUAL FUND",
+      "companyName": "Gland Pharma",
+      "dealType": "BUY",
+      "volume": "1039000",
+      "dealPrice": "2826.6"
+    },
+    {
+      "id": "55df17e59586",
+      "exchange": "BSE",
+      "date": "04-Sep-26",
+      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
+      "companyName": "Gland Pharma",
+      "dealType": "BUY",
+      "volume": "2793000",
+      "dealPrice": "2826.6"
+    },
+    {
+      "id": "67c134725bfd",
+      "exchange": "NSE",
+      "date": "03-Sep-26",
+      "clientName": "TAURUS MUTUAL FUND FLEXICAP SHARE MULTI CAP",
+      "companyName": "Advit Jewels",
+      "dealType": "SELL",
+      "volume": "482650",
+      "dealPrice": "241"
+    },
+    {
+      "id": "ddda63a5f47f",
+      "exchange": "BSE",
+      "date": "03-Sep-26",
+      "clientName": "SB OPPORTUNITIES FUND II",
+      "companyName": "Kwick Forensic Solut",
+      "dealType": "BUY",
+      "volume": "128000",
+      "dealPrice": "153.05"
+    },
+    {
+      "id": "75c6fb0d8cdb",
+      "exchange": "NSE",
+      "date": "01-Sep-26",
+      "clientName": "360 ONE ASSET MANAGEMENT LIMITED",
+      "companyName": "EPL",
+      "dealType": "BUY",
+      "volume": "1847147",
+      "dealPrice": "240.1"
+    },
+    {
+      "id": "382d1a00f901",
+      "exchange": "NSE",
+      "date": "01-Sep-26",
+      "clientName": "360 ONE MUTUAL FUND",
+      "companyName": "EPL",
+      "dealType": "BUY",
+      "volume": "1874218",
+      "dealPrice": "240.1"
+    }
+  ]
+}

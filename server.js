@@ -2218,8 +2218,30 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   throw new Error(`Historical data not available for ${rawSymbol}`);
 }
 
-// In-memory cache for MF Bulk / Block Deals (3 min TTL)
+// In-memory & disk cache for MF Bulk / Block Deals (3 min TTL)
+const MF_DEALS_CACHE_FILE = path.join(__dirname, 'data', 'mf_deals_cache.json');
 let mfDealsCache = { timestamp: 0, data: null };
+
+function loadPersistedMfDeals() {
+  try {
+    if (fs.existsSync(MF_DEALS_CACHE_FILE)) {
+      const raw = fs.readFileSync(MF_DEALS_CACHE_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.deals)) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+function savePersistedMfDeals(data) {
+  try {
+    const dir = path.dirname(MF_DEALS_CACHE_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(MF_DEALS_CACHE_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {}
+}
 
 async function fetchMutualFundBulkDeals(forceRefresh = false) {
   const now = Date.now();
@@ -2228,64 +2250,103 @@ async function fetchMutualFundBulkDeals(forceRefresh = false) {
   }
 
   const targetUrl = 'https://prudent.accordhostings.com/MutualFund/BulkBlockReport.aspx';
-  const fetchRes = await httpsFetch(targetUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-    },
-    timeout: 10000
-  });
+  let html = '';
 
-  if (!fetchRes.ok) {
-    if (mfDealsCache.data) return mfDealsCache.data;
-    throw new Error(`Upstream server responded with status ${fetchRes.status}`);
-  }
+  try {
+    const fetchRes = await httpsFetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      },
+      timeout: 10000
+    });
 
-  const html = await fetchRes.text();
-  const deals = [];
-  const tableMatches = html.match(/<table[^>]*>[\s\S]*?<\/table>/gi) || [];
-
-  for (const tbl of tableMatches) {
-    if (tbl.includes('Exchange') && (tbl.includes('Client Name') || tbl.includes('Company Name'))) {
-      const rows = tbl.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i];
-        const cells = (r.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || []).map(c =>
-          c.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
-        );
-        // Skip header row
-        if (cells.length >= 7 && cells[0].toLowerCase() !== 'exchange') {
-          const [exchange, date, clientName, companyName, dealType, volume, dealPrice] = cells;
-          if (exchange && companyName && dealType) {
-            const id = crypto.createHash('md5').update([date, exchange, clientName, companyName, dealType, volume, dealPrice].join('_')).digest('hex').substring(0, 12);
-            deals.push({
-              id,
-              exchange: exchange.toUpperCase(),
-              date,
-              clientName,
-              companyName,
-              dealType: dealType.toUpperCase(),
-              volume: volume,
-              dealPrice: dealPrice
-            });
-          }
+    if (fetchRes.ok) {
+      html = await fetchRes.text();
+    }
+  } catch (netErr) {
+    console.warn('[MF Deals] httpsFetch error, trying native fetch:', netErr.message);
+    try {
+      const nativeRes = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
+      });
+      if (nativeRes.ok) {
+        html = await nativeRes.text();
       }
-      break;
+    } catch (e2) {
+      console.warn('[MF Deals] Native fetch error:', e2.message);
     }
   }
 
-  const latestDealId = deals.length > 0 ? deals[0].id : '';
-  const resultPayload = {
-    success: true,
-    count: deals.length,
-    lastUpdated: new Date().toISOString(),
-    latestDealId,
-    deals
-  };
+  const deals = [];
+  if (html) {
+    const tableMatches = html.match(/<table[^>]*>[\s\S]*?<\/table>/gi) || [];
 
-  mfDealsCache = { timestamp: now, data: resultPayload };
-  return resultPayload;
+    for (const tbl of tableMatches) {
+      if (tbl.includes('Exchange') && (tbl.includes('Client Name') || tbl.includes('Company Name'))) {
+        const rows = tbl.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
+        for (let i = 0; i < rows.length; i++) {
+          const r = rows[i];
+          const cells = (r.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || []).map(c =>
+            c.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+          );
+          // Skip header row
+          if (cells.length >= 7 && cells[0].toLowerCase() !== 'exchange') {
+            const [exchange, date, clientName, companyName, dealType, volume, dealPrice] = cells;
+            if (exchange && companyName && dealType) {
+              const id = crypto.createHash('md5').update([date, exchange, clientName, companyName, dealType, volume, dealPrice].join('_')).digest('hex').substring(0, 12);
+              deals.push({
+                id,
+                exchange: exchange.toUpperCase(),
+                date,
+                clientName,
+                companyName,
+                dealType: dealType.toUpperCase(),
+                volume: volume,
+                dealPrice: dealPrice
+              });
+            }
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  if (deals.length > 0) {
+    const latestDealId = deals[0].id;
+    const resultPayload = {
+      success: true,
+      count: deals.length,
+      lastUpdated: new Date().toISOString(),
+      latestDealId,
+      deals
+    };
+    mfDealsCache = { timestamp: now, data: resultPayload };
+    savePersistedMfDeals(resultPayload);
+    return resultPayload;
+  }
+
+  // Fallback to in-memory or persisted disk cache
+  if (mfDealsCache.data) {
+    return mfDealsCache.data;
+  }
+
+  const persisted = loadPersistedMfDeals();
+  if (persisted) {
+    mfDealsCache = { timestamp: now, data: persisted };
+    return persisted;
+  }
+
+  return {
+    success: true,
+    count: 0,
+    lastUpdated: new Date().toISOString(),
+    latestDealId: '',
+    deals: []
+  };
 }
 
 // Predictive Stock Search Cache (5 mins TTL)
