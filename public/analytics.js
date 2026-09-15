@@ -333,10 +333,22 @@ function updateAuthUI(user) {
   const authContent = document.getElementById('analytics-authenticated-content');
 
   const btnNavFno = document.getElementById('btn-nav-fno');
+  const btnOpenNotes = document.getElementById('btn-open-notes');
+  const btnMfDeals = document.getElementById('btn-open-mf-deals');
 
   if (user) {
     btnNavFno?.classList.remove('hidden');
     btnNavFno?.classList.add('flex');
+    btnOpenNotes?.classList.remove('hidden');
+    btnOpenNotes?.classList.add('flex');
+    if (window.SangamNotes?.refreshAuth) {
+      window.SangamNotes.refreshAuth();
+    }
+    btnMfDeals?.classList.remove('hidden');
+    btnMfDeals?.classList.add('flex');
+    if (window.SangamMfDeals?.refreshAuth) {
+      window.SangamMfDeals.refreshAuth();
+    }
     btnOpenModal?.classList.add('hidden');
     userBox?.classList.remove('hidden');
     userBox?.classList.add('flex');
@@ -362,6 +374,16 @@ function updateAuthUI(user) {
   } else {
     btnNavFno?.classList.add('hidden');
     btnNavFno?.classList.remove('flex');
+    btnOpenNotes?.classList.add('hidden');
+    btnOpenNotes?.classList.remove('flex');
+    if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
+      window.SangamNotes.close();
+    }
+    btnMfDeals?.classList.add('hidden');
+    btnMfDeals?.classList.remove('flex');
+    if (window.closeMfDeals) {
+      window.closeMfDeals();
+    }
     btnOpenModal?.classList.remove('hidden');
     userBox?.classList.add('hidden');
     userBox?.classList.remove('flex');

@@ -43,11 +43,41 @@
   var minimizeBtnEl = null;
   var bodyContainerEl = null;
 
+  function getAuthToken() {
+    try {
+      return localStorage.getItem('authToken') || localStorage.getItem('adminToken') || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function isUserAuthenticated() {
+    return Boolean(getAuthToken());
+  }
+
+  function updateAuthVisibility() {
+    var isAuth = isUserAuthenticated();
+    document.querySelectorAll('#btn-open-notes, .btn-notes-launcher, [data-notes-toggle]').forEach(function (btn) {
+      if (isAuth) {
+        btn.classList.remove('hidden');
+        btn.classList.add('flex');
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('flex');
+      }
+    });
+
+    if (!isAuth && widgetEl) {
+      closeWidget();
+    }
+  }
+
   function loadPersistedState() {
     try {
       var savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
       if (savedSettings) {
         settings = Object.assign({}, defaultSettings, JSON.parse(savedSettings));
+        settings.isOpen = false; // Always start closed on fresh load
       }
     } catch (e) {}
 
@@ -91,7 +121,7 @@
   }
 
   function syncToServer() {
-    var token = localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+    var token = getAuthToken();
     if (!token) return;
 
     try {
@@ -107,13 +137,20 @@
   }
 
   function loadFromServer() {
-    var token = localStorage.getItem('authToken') || localStorage.getItem('adminToken');
-    if (!token) return;
+    var token = getAuthToken();
+    if (!token) {
+      updateAuthVisibility();
+      return;
+    }
 
     try {
       fetch('/api/user/notes', {
         headers: { 'Authorization': 'Bearer ' + token }
       }).then(function (res) {
+        if (res.status === 401) {
+          updateAuthVisibility();
+          return null;
+        }
         return res.json();
       }).then(function (data) {
         if (data && data.success && typeof data.notes === 'string') {
@@ -676,6 +713,15 @@
   }
 
   function openWidget() {
+    if (!isUserAuthenticated()) {
+      if (typeof window.openAuthModal === 'function') {
+        window.openAuthModal('login');
+      } else if (typeof openAuthModal === 'function') {
+        openAuthModal('login');
+      }
+      return;
+    }
+
     createWidget();
     settings.isOpen = true;
     saveSettings();
@@ -691,11 +737,16 @@
     if (widgetEl) widgetEl.style.display = 'none';
   }
 
+  var lastNotesToggleTime = 0;
   function toggleWidget() {
+    var now = Date.now();
+    if (now - lastNotesToggleTime < 150) return;
+    lastNotesToggleTime = now;
+
     if (!widgetEl) {
       createWidget();
     }
-    if (settings.isOpen) {
+    if (widgetEl && widgetEl.style.display === 'flex') {
       closeWidget();
     } else {
       openWidget();
@@ -707,6 +758,12 @@
     close: closeWidget,
     toggle: toggleWidget,
     syncFromServer: loadFromServer,
+    refreshAuth: function () {
+      updateAuthVisibility();
+      if (isUserAuthenticated()) {
+        loadFromServer();
+      }
+    },
     minimize: function () { settings.isMinimized = true; saveSettings(); applyGeometry(); },
     restore: function () { settings.isMinimized = false; saveSettings(); applyGeometry(); },
     getNotes: function () { return currentContent; },
@@ -722,15 +779,41 @@
   function initNotes() {
     loadPersistedState();
     createWidget();
-    loadFromServer();
+    updateAuthVisibility();
+    if (isUserAuthenticated()) {
+      loadFromServer();
+    }
 
     document.querySelectorAll('[data-notes-toggle], #btn-open-notes, .btn-notes-launcher').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.preventDefault();
+      btn.onclick = function (e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         toggleWidget();
-      });
+        return false;
+      };
+    });
+
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'authToken' || e.key === 'adminToken') {
+        updateAuthVisibility();
+        if (isUserAuthenticated()) {
+          loadFromServer();
+        }
+      }
     });
   }
+
+  // Document level click delegation
+  document.addEventListener('click', function (e) {
+    var launcher = e.target.closest('#btn-open-notes, .btn-notes-launcher, [data-notes-toggle]');
+    if (launcher) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleWidget();
+    }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initNotes);

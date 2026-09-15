@@ -51,7 +51,8 @@
     open: function() { openWidget(); },
     close: function() { closeWidget(); },
     toggle: function() { toggleWidget(); },
-    refresh: function () { fetchDeals(true); }
+    refresh: function () { fetchDeals(true); },
+    refreshAuth: function () { updateAuthVisibility(); if (isUserAuthenticated()) fetchDeals(false); }
   };
 
   var widgetEl = null;
@@ -569,14 +570,59 @@
     }
   };
 
+  function getAuthToken() {
+    try {
+      return localStorage.getItem('authToken') || localStorage.getItem('adminToken') || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function isUserAuthenticated() {
+    return Boolean(getAuthToken());
+  }
+
+  function updateAuthVisibility() {
+    var isAuth = isUserAuthenticated();
+    document.querySelectorAll('#btn-open-mf-deals, .btn-mf-deals-launcher').forEach(function (btn) {
+      if (isAuth) {
+        btn.classList.remove('hidden');
+        btn.classList.add('flex');
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('flex');
+      }
+    });
+
+    if (!isAuth && widgetEl) {
+      closeWidget();
+    }
+  }
+
   // 8. Fetch Deals from API & Check Unread
   async function fetchDeals(forceRefresh) {
+    var token = getAuthToken();
+    if (!token) {
+      updateAuthVisibility();
+      return;
+    }
+
     isLoading = true;
     var refreshIcon = document.getElementById('mf-refresh-icon');
     if (refreshIcon) refreshIcon.textContent = '⏳';
 
     try {
-      var res = await fetch('/api/mf-deals' + (forceRefresh ? '?refresh=true' : ''));
+      var res = await fetch('/api/mf-deals' + (forceRefresh ? '?refresh=true' : ''), {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      if (res.status === 401) {
+        updateAuthVisibility();
+        return;
+      }
+
       var data = await res.json();
 
       if (data && data.success && Array.isArray(data.deals)) {
@@ -635,6 +681,15 @@
 
   // 10. Open / Close / Toggle / Maximize Modal
   function openWidget() {
+    if (!isUserAuthenticated()) {
+      if (typeof window.openAuthModal === 'function') {
+        window.openAuthModal('login');
+      } else if (typeof openAuthModal === 'function') {
+        openAuthModal('login');
+      }
+      return;
+    }
+
     createWidget();
     settings.isOpen = true;
     saveSettings();
@@ -855,6 +910,7 @@
     loadSettings();
     injectStyles();
     createWidget();
+    updateAuthVisibility();
 
     // Bind all launcher buttons on page directly
     document.querySelectorAll('#btn-open-mf-deals, .btn-mf-deals-launcher').forEach(function (btn) {
@@ -868,18 +924,34 @@
       };
     });
 
-    // Initial silent check for new unviewed deals
-    fetchDeals(false);
+    // Initial silent check for new unviewed deals if authenticated
+    if (isUserAuthenticated()) {
+      fetchDeals(false);
+    }
 
     // Periodic Background Polling every 2.5 minutes
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(function () {
-      fetchDeals(false);
+      if (isUserAuthenticated()) {
+        fetchDeals(false);
+      }
     }, 150000);
 
     // Check on window focus
     window.addEventListener('focus', function () {
-      fetchDeals(false);
+      if (isUserAuthenticated()) {
+        fetchDeals(false);
+      }
+    });
+
+    // React to login / logout across tabs
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'authToken' || e.key === 'adminToken') {
+        updateAuthVisibility();
+        if (isUserAuthenticated()) {
+          fetchDeals(false);
+        }
+      }
     });
   }
 

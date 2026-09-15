@@ -694,6 +694,8 @@ function updateAuthUI(user) {
   state.isAdmin = (user && user.role === 'admin');
 
   const btnOpenModal = document.getElementById('btn-open-auth-modal');
+  const btnOpenNotes = document.getElementById('btn-open-notes');
+  const btnMfDeals = document.getElementById('btn-open-mf-deals');
   const userBox = document.getElementById('user-auth-box');
   const userName = document.getElementById('user-badge-name');
   const userRole = document.getElementById('user-badge-role');
@@ -702,6 +704,16 @@ function updateAuthUI(user) {
 
   if (user) {
     btnOpenModal?.classList.add('hidden');
+    btnOpenNotes?.classList.remove('hidden');
+    btnOpenNotes?.classList.add('flex');
+    if (window.SangamNotes?.refreshAuth) {
+      window.SangamNotes.refreshAuth();
+    }
+    btnMfDeals?.classList.remove('hidden');
+    btnMfDeals?.classList.add('flex');
+    if (window.SangamMfDeals?.refreshAuth) {
+      window.SangamMfDeals.refreshAuth();
+    }
     userBox?.classList.remove('hidden');
     userBox?.classList.add('flex');
     if (userName) userName.textContent = user.username;
@@ -716,6 +728,16 @@ function updateAuthUI(user) {
     authContent?.classList.add('flex');
   } else {
     btnOpenModal?.classList.remove('hidden');
+    btnOpenNotes?.classList.add('hidden');
+    btnOpenNotes?.classList.remove('flex');
+    if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
+      window.SangamNotes.close();
+    }
+    btnMfDeals?.classList.add('hidden');
+    btnMfDeals?.classList.remove('flex');
+    if (window.closeMfDeals) {
+      window.closeMfDeals();
+    }
     userBox?.classList.add('hidden');
     userBox?.classList.remove('flex');
 

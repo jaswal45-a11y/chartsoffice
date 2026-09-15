@@ -201,6 +201,8 @@ const el = {
   btnNavAnalytics: document.getElementById('btn-nav-analytics'),
   btnNavFno: document.getElementById('btn-nav-fno'),
   btnAdminConsole: document.getElementById('btn-admin-console'),
+  btnOpenNotes: document.getElementById('btn-open-notes'),
+  btnOpenMfDeals: document.getElementById('btn-open-mf-deals'),
 
   // Floating On-Chart Controls & Badges (Symbol & AVWAP)
   onchartStockSymbol: document.getElementById('onchart-stock-symbol'),
@@ -1236,9 +1238,18 @@ function updateAuthUI(user) {
       el.userBadgeRole.textContent = user.role === 'admin' ? '(Admin)' : '(User)';
       el.userBadgeRole.className = user.role === 'admin' ? 'text-emerald-400 text-[10px] font-bold' : 'text-slate-400 text-[10px] font-normal';
     }
-    // Add screener button visible to logged-in user or admin
-    el.btnOpenAddModal?.classList.remove('hidden');
-    el.btnOpenAddModal?.classList.add('flex');
+    // Notes & MF Deals buttons visible strictly to logged-in/registered user
+    el.btnOpenNotes?.classList.remove('hidden');
+    el.btnOpenNotes?.classList.add('flex');
+    if (window.SangamNotes?.refreshAuth) {
+      window.SangamNotes.refreshAuth();
+    }
+
+    el.btnOpenMfDeals?.classList.remove('hidden');
+    el.btnOpenMfDeals?.classList.add('flex');
+    if (window.SangamMfDeals?.refreshAuth) {
+      window.SangamMfDeals.refreshAuth();
+    }
 
     // Admin Console button visible strictly to admin
     if (user.role === 'admin') {
@@ -1258,6 +1269,16 @@ function updateAuthUI(user) {
     el.userAuthBox?.classList.remove('flex');
     el.btnOpenAddModal?.classList.add('hidden');
     el.btnOpenAddModal?.classList.remove('flex');
+    el.btnOpenNotes?.classList.add('hidden');
+    el.btnOpenNotes?.classList.remove('flex');
+    if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
+      window.SangamNotes.close();
+    }
+    el.btnOpenMfDeals?.classList.add('hidden');
+    el.btnOpenMfDeals?.classList.remove('flex');
+    if (window.closeMfDeals) {
+      window.closeMfDeals();
+    }
     el.btnAdminConsole?.classList.add('hidden');
     el.btnAdminConsole?.classList.remove('flex');
   }

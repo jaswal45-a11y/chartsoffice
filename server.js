@@ -4360,20 +4360,24 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { success: true, message: 'Indicator preferences saved successfully', preferences: payload });
       }
 
-      // 0g. GET, POST, PUT /api/user/notes - User Synchronized Sticky Notes
+      // 0g. GET, POST, PUT /api/user/notes - User Synchronized Sticky Notes (Registered Users Only)
       if (pathname === '/api/user/notes' && method === 'GET') {
         const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in to access Notes.' });
+        }
         const notes = getUserNotes(authUser);
         return sendJson(res, 200, { success: true, notes: notes || '' });
       }
 
       if (pathname === '/api/user/notes' && (method === 'POST' || method === 'PUT')) {
         const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in to save Notes.' });
+        }
         const payload = await parseJsonBody(req);
         const notesContent = typeof payload.notes === 'string' ? payload.notes : (typeof payload.content === 'string' ? payload.content : '');
-        if (authUser) {
-          saveUserNotes(authUser, notesContent);
-        }
+        saveUserNotes(authUser, notesContent);
         return sendJson(res, 200, { success: true, message: 'Notes saved successfully', notes: notesContent });
       }
 
@@ -4984,8 +4988,12 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 8c. GET /api/mf-deals - Live Mutual Fund Bulk & Block Deals Report
+      // 8c. GET /api/mf-deals - Live Mutual Fund Bulk & Block Deals Report (Registered Users Only)
       if (pathname === '/api/mf-deals' && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in to view MF Deals.' });
+        }
         try {
           const forceRefresh = parsedUrl.query.refresh === 'true' || parsedUrl.query.refresh === '1';
           const data = await fetchMutualFundBulkDeals(forceRefresh);

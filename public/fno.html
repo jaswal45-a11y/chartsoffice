@@ -193,14 +193,14 @@
           <span>Login / Sign Up</span>
         </button>
 
-        <!-- Notes Sticky Window Launcher -->
-        <button id="btn-open-notes" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 active:scale-95 transition-all cursor-pointer" title="Open Sticky Notes & Scratchpad (Synchronized across all tabs)">
+        <!-- Notes Sticky Window Launcher (Visible only to Registered Users) -->
+        <button id="btn-open-notes" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 active:scale-95 transition-all cursor-pointer" title="Open Sticky Notes & Scratchpad (Synchronized across all tabs)">
           <i data-lucide="sticky-note" class="w-3.5 h-3.5 text-amber-400"></i>
           <span>Notes</span>
         </button>
 
-        <!-- Mutual Fund Bulk & Block Deals Launcher -->
-        <button id="btn-open-mf-deals" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-semibold text-emerald-300 active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
+        <!-- Mutual Fund Bulk & Block Deals Launcher (Visible only to Registered Users) -->
+        <button id="btn-open-mf-deals" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-semibold text-emerald-300 active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
           <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-400"></i>
           <span>MF Deals</span>
           <span id="mf-deals-unread-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-dark-bg animate-ping"></span>
@@ -1388,10 +1388,10 @@
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="fno.js?v=1.3.5"></script>
+  <script src="fno.js?v=1.3.6"></script>
   <!-- Sticky Synchronized Notes Script -->
-  <script src="notes.js"></script>
+  <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->
-  <script src="mf_deals.js?v=1.2.0"></script>
+  <script src="mf_deals.js?v=1.3.0"></script>
 </body>
 </html>
