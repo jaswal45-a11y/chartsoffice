@@ -9,30 +9,28 @@
   var STORAGE_KEY_LAST_VIEWED = 'sangam_mf_deals_last_viewed_id';
   var STORAGE_KEY_SETTINGS = 'sangam_mf_deals_settings';
 
-  var dealsState = {
+  var defaultSettings = {
     isOpen: false,
     isMinimized: false,
     isMaximized: false,
-    deals: [],
-    lastUpdated: null,
-    latestDealId: null,
-    filterType: 'ALL', // 'ALL', 'BUY', 'SELL'
-    rowDensity: 'auto', // 'auto', 'compact', 'normal', 'comfortable'
-    searchQuery: '',
-    isLoading: false,
-    hasUnread: false
-  };
-
-  var defaultSettings = {
-    width: 740,
+    width: 780,
     height: 520,
-    top: 75,
+    top: 80,
     left: null,
     rowDensity: 'auto'
   };
 
   var settings = Object.assign({}, defaultSettings);
+  var deals = [];
+  var lastUpdated = null;
+  var latestDealId = null;
+  var filterType = 'ALL'; // 'ALL', 'BUY', 'SELL'
+  var searchQuery = '';
+  var isLoading = false;
+  var hasUnread = false;
   var pollTimer = null;
+  var lastToggleTime = 0;
+
   var isDragging = false;
   var isResizing = false;
   var dragStartX = 0;
@@ -44,7 +42,17 @@
   var initialWidgetW = 0;
   var initialWidgetH = 0;
   var restoreGeom = null;
-  var resizeObserver = null;
+
+  // Global window functions assigned early
+  window.openMfDeals = function() { openWidget(); };
+  window.closeMfDeals = function() { closeWidget(); };
+  window.toggleMfDeals = function() { toggleWidget(); };
+  window.SangamMfDeals = {
+    open: function() { openWidget(); },
+    close: function() { closeWidget(); },
+    toggle: function() { toggleWidget(); },
+    refresh: function () { fetchDeals(true); }
+  };
 
   var widgetEl = null;
   var headerEl = null;
@@ -56,11 +64,11 @@
   var bodyContainerEl = null;
   var resizeHandleEl = null;
 
-  // 1. Inject Styles for Blinking Button, Modal & Dynamic Rows
+  // 1. Inject Pure Self-Contained Styles
   function injectStyles() {
-    if (document.getElementById('mf-deals-styles')) return;
+    if (document.getElementById('sangam-mf-deals-styles')) return;
     var style = document.createElement('style');
-    style.id = 'mf-deals-styles';
+    style.id = 'sangam-mf-deals-styles';
     style.textContent = `
       @keyframes mfDealsPulseGlow {
         0%, 100% {
@@ -80,28 +88,71 @@
         animation: mfDealsPulseGlow 1.4s infinite ease-in-out !important;
         position: relative;
       }
-      #mf-deals-widget {
+      #sangam-mf-deals-widget {
+        position: fixed;
+        z-index: 999999;
+        display: none;
+        flex-direction: column;
+        background: rgba(15, 23, 42, 0.97);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 30px 2px rgba(16, 185, 129, 0.2);
+        color: #f1f5f9;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        box-sizing: border-box;
+        overflow: hidden;
         min-width: 480px;
         min-height: 260px;
         max-width: 98vw;
         max-height: 94vh;
-        z-index: 99999 !important;
-        transition: box-shadow 0.2s ease, opacity 0.15s ease;
       }
-      #mf-deals-widget.minimized {
-        height: 44px !important;
-        min-height: 44px !important;
+      #sangam-mf-deals-widget.minimized {
+        height: auto !important;
+        min-height: 0 !important;
+        resize: none !important;
       }
-      #mf-deals-widget.minimized #mf-deals-body,
-      #mf-deals-widget.minimized #mf-deals-resize-handle {
+      #sangam-mf-deals-widget.minimized #mf-deals-body,
+      #sangam-mf-deals-widget.minimized #mf-deals-resize-handle {
         display: none !important;
+      }
+      .mf-header-drag {
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+      }
+      .mf-header-drag:active {
+        cursor: grabbing;
+      }
+      .mf-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(51, 65, 85, 0.8);
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .mf-btn:hover {
+        background: rgba(51, 65, 85, 0.95);
+        color: #ffffff;
+        border-color: rgba(100, 116, 139, 0.8);
+      }
+      .mf-btn:active {
+        transform: scale(0.95);
       }
       #mf-deals-table-container::-webkit-scrollbar {
         width: 6px;
         height: 6px;
       }
       #mf-deals-table-container::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(15, 23, 42, 0.7);
       }
       #mf-deals-table-container::-webkit-scrollbar-thumb {
         background: rgba(51, 65, 85, 0.8);
@@ -111,85 +162,66 @@
         background: rgba(100, 116, 139, 1);
       }
       
-      /* Dynamic Density Rules */
+      /* Density Rules */
       .mf-density-compact td, .mf-density-compact th {
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+        padding: 4px 8px !important;
         font-size: 10.5px !important;
       }
       .mf-density-normal td, .mf-density-normal th {
-        padding-top: 7px !important;
-        padding-bottom: 7px !important;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
+        padding: 7px 10px !important;
         font-size: 11px !important;
       }
       .mf-density-comfortable td, .mf-density-comfortable th {
-        padding-top: 10px !important;
-        padding-bottom: 10px !important;
-        padding-left: 12px !important;
-        padding-right: 12px !important;
+        padding: 10px 12px !important;
         font-size: 12px !important;
       }
     `;
     document.head.appendChild(style);
   }
 
-  // 2. Load Persisted Settings
+  // 2. Load / Save Settings
   function loadSettings() {
     try {
       var saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
       if (saved) {
         settings = Object.assign({}, defaultSettings, JSON.parse(saved));
-        dealsState.rowDensity = settings.rowDensity || 'auto';
+        settings.isOpen = false; // Always start closed on fresh load
       }
     } catch (e) {}
   }
 
   function saveSettings() {
     try {
-      if (widgetEl && !dealsState.isMaximized && !dealsState.isMinimized) {
+      if (widgetEl && !settings.isMaximized && !settings.isMinimized) {
         settings.width = Math.round(widgetEl.offsetWidth);
         settings.height = Math.round(widgetEl.offsetHeight);
         settings.top = Math.round(widgetEl.offsetTop);
         settings.left = Math.round(widgetEl.offsetLeft);
       }
-      settings.rowDensity = dealsState.rowDensity;
       localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
     } catch (e) {}
   }
 
   // 3. Construct Widget DOM
-  function createWidgetDom() {
-    if (document.getElementById('mf-deals-widget')) {
-      widgetEl = document.getElementById('mf-deals-widget');
+  function createWidget() {
+    if (document.getElementById('sangam-mf-deals-widget')) {
+      widgetEl = document.getElementById('sangam-mf-deals-widget');
       return;
     }
 
-    var el = document.createElement('div');
-    el.id = 'mf-deals-widget';
-    el.className = 'fixed z-[99999] bg-dark-card/95 backdrop-blur-xl border border-dark-border rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-200 text-xs select-none';
-    el.style.display = 'none';
-    el.style.width = Math.min(window.innerWidth - 20, Math.max(500, settings.width)) + 'px';
-    el.style.height = Math.min(window.innerHeight - 20, Math.max(280, settings.height)) + 'px';
-    el.style.top = Math.max(10, Math.min(window.innerHeight - 100, settings.top)) + 'px';
+    injectStyles();
 
-    if (settings.left !== null) {
-      el.style.left = Math.max(10, Math.min(window.innerWidth - 100, settings.left)) + 'px';
-      el.style.right = 'auto';
-    } else {
-      el.style.right = '24px';
-      el.style.left = 'auto';
-    }
+    var el = document.createElement('div');
+    el.id = 'sangam-mf-deals-widget';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-label', 'Mutual Fund Bulk & Block Deals');
 
     el.innerHTML = `
-      <!-- Header / Drag Handle -->
-      <div id="mf-deals-header" class="px-4 py-2.5 bg-dark-bg/85 border-b border-dark-border flex items-center justify-between cursor-move flex-shrink-0 select-none">
+      <!-- Header Bar / Drag Handle -->
+      <div id="mf-deals-header" class="mf-header-drag flex items-center justify-between px-3.5 py-2.5 bg-slate-800/90 border-b border-slate-700/70 select-none">
         <div class="flex items-center gap-2.5">
-          <div class="p-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+          <div class="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs">
+            🏛️
           </div>
           <div>
             <div class="flex items-center gap-1.5 font-bold text-slate-100 text-xs tracking-wide">
@@ -201,44 +233,44 @@
         </div>
 
         <div class="flex items-center gap-1">
-          <button id="btn-mf-refresh" class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer" title="Refresh Live Deals">
-            <svg id="mf-refresh-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <button id="btn-mf-refresh" class="mf-btn p-1 px-2" title="Refresh Live Deals">
+            <span id="mf-refresh-icon">🔄</span>
           </button>
-          <button id="btn-mf-maximize" class="p-1.5 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-slate-800 transition-colors cursor-pointer" title="Maximize / Restore Size">
-            <svg id="mf-max-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+          <button id="btn-mf-maximize" class="mf-btn p-1 px-2" title="Maximize / Restore Size">
+            <span id="mf-max-icon">🗖</span>
           </button>
-          <button id="btn-mf-minimize" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer" title="Minimize Window">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+          <button id="btn-mf-minimize" class="mf-btn p-1 px-2" title="Minimize Window">
+            <span id="mf-min-icon">➖</span>
           </button>
-          <button id="btn-mf-close" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer" title="Close Window">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          <button id="btn-mf-close" class="mf-btn p-1 px-2 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40" title="Close Window">
+            ✕
           </button>
         </div>
       </div>
 
       <!-- Main Body Container -->
-      <div id="mf-deals-body" class="flex flex-col flex-1 min-h-0 overflow-hidden bg-dark-card/60">
+      <div id="mf-deals-body" class="flex flex-col flex-1 min-h-0 overflow-hidden bg-slate-900/60">
         <!-- Filter Toolbar -->
-        <div class="p-2 border-b border-dark-border/70 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap bg-dark-bg/40 flex-shrink-0">
+        <div class="p-2 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap bg-slate-900/90 flex-shrink-0">
           <div class="relative flex-1 min-w-[140px]">
             <input 
               type="text" 
               id="mf-deals-search" 
               placeholder="Search fund, company or date..." 
-              class="w-full bg-dark-bg border border-dark-border text-slate-200 text-[11px] rounded-lg pl-7 pr-3 py-1 focus:outline-none focus:border-emerald-500 placeholder-slate-500"
+              class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-[11px] rounded-lg pl-7 pr-3 py-1 focus:outline-none focus:border-emerald-500 placeholder-slate-500"
             />
-            <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <span class="absolute left-2 top-1.5 text-slate-500 text-[11px] pointer-events-none">🔍</span>
           </div>
 
           <!-- Filter Pills: BUY / SELL -->
-          <div class="flex items-center gap-1 bg-dark-bg border border-dark-border rounded-lg p-0.5 text-[10px] font-semibold text-slate-400">
+          <div class="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-[10px] font-semibold text-slate-400">
             <button class="mf-filter-btn active px-2 py-0.5 rounded-md bg-emerald-600 text-white transition-colors cursor-pointer" data-filter="ALL">All</button>
             <button class="mf-filter-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-filter="BUY">BUY</button>
             <button class="mf-filter-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-filter="SELL">SELL</button>
           </div>
 
           <!-- Density Controls -->
-          <div class="hidden sm:flex items-center gap-1 bg-dark-bg border border-dark-border rounded-lg p-0.5 text-[10px] font-semibold text-slate-400" title="Row Size & Height Density">
+          <div class="hidden sm:flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-[10px] font-semibold text-slate-400" title="Row Size & Height Density">
             <span class="px-1 text-[9px] text-slate-500">Rows:</span>
             <button class="mf-density-btn active px-1.5 py-0.5 rounded-md bg-slate-700 text-white transition-colors cursor-pointer" data-density="auto">Auto</button>
             <button class="mf-density-btn px-1.5 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-density="compact">Compact</button>
@@ -248,21 +280,19 @@
 
           <!-- Actions: Copy & CSV -->
           <div class="flex items-center gap-1">
-            <button id="btn-mf-copy" class="p-1 rounded-lg bg-dark-bg border border-dark-border text-slate-400 hover:text-emerald-300 hover:border-emerald-500/40 text-[10px] font-semibold flex items-center gap-1 transition-all cursor-pointer px-2 py-1" title="Copy table to clipboard">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-              <span>Copy</span>
+            <button id="btn-mf-copy" class="mf-btn text-[10px] px-2 py-1" title="Copy table to clipboard">
+              <span>📋 Copy</span>
             </button>
-            <button id="btn-mf-export-csv" class="p-1 rounded-lg bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-300 hover:border-blue-500/40 text-[10px] font-semibold flex items-center gap-1 transition-all cursor-pointer px-2 py-1" title="Export as CSV file">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-              <span>CSV</span>
+            <button id="btn-mf-export-csv" class="mf-btn text-[10px] px-2 py-1" title="Export as CSV file">
+              <span>📥 CSV</span>
             </button>
           </div>
         </div>
 
-        <!-- Table Container (Fully dynamic & auto-scrolling) -->
+        <!-- Table Container -->
         <div id="mf-deals-table-container" class="flex-1 min-h-0 overflow-y-auto overflow-x-auto select-text">
           <table class="w-full text-left border-collapse text-[11px]">
-            <thead class="bg-dark-bg/95 text-slate-400 font-semibold sticky top-0 z-10 border-b border-dark-border select-none shadow-sm">
+            <thead class="bg-slate-950/95 text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800 select-none shadow-sm">
               <tr>
                 <th class="py-2 px-3 text-center w-14">Exch</th>
                 <th class="py-2 px-3 whitespace-nowrap">Date</th>
@@ -273,7 +303,7 @@
                 <th class="py-2 px-3 text-right">Deal Price</th>
               </tr>
             </thead>
-            <tbody id="mf-deals-table-body" class="divide-y divide-dark-border/40 font-mono">
+            <tbody id="mf-deals-table-body" class="divide-y divide-slate-800/60 font-mono">
               <tr>
                 <td colspan="7" class="py-8 text-center text-slate-500 font-sans">Loading deals...</td>
               </tr>
@@ -282,7 +312,7 @@
         </div>
 
         <!-- Footer / Status Bar with Corner Resizer -->
-        <div class="px-3 py-1.5 border-t border-dark-border/80 bg-dark-bg/75 flex items-center justify-between text-[10px] text-slate-400 select-none flex-shrink-0 relative">
+        <div class="px-3 py-1.5 border-t border-slate-800/90 bg-slate-950/90 flex items-center justify-between text-[10px] text-slate-400 select-none flex-shrink-0 relative">
           <div class="flex items-center gap-2">
             <span id="mf-deals-status-text">Chronological Date Order (Latest First)</span>
             <span class="text-slate-600">·</span>
@@ -292,7 +322,7 @@
           <!-- Bottom-Right Corner Resize Grip Handle -->
           <div id="mf-deals-resize-handle" class="flex items-center gap-1 cursor-nwse-resize p-1 -mr-2 -mb-0.5 text-slate-500 hover:text-emerald-400 transition-colors" title="Drag to resize window">
             <span class="text-[9px] text-slate-500 hidden md:inline font-mono mr-1" id="mf-window-dims"></span>
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 19L19 13M19 19L13 19M19 9L9 19"></path></svg>
+            <span class="text-xs">⤡</span>
           </div>
         </div>
       </div>
@@ -316,7 +346,69 @@
     setupResizeObserver();
   }
 
-  // 4. Format numbers with Indian commas
+  // 4. Geometry & Visibility
+  function applyGeometry() {
+    if (!widgetEl) return;
+
+    if (settings.isOpen) {
+      widgetEl.style.display = 'flex';
+    } else {
+      widgetEl.style.display = 'none';
+      return;
+    }
+
+    if (settings.isMinimized) {
+      widgetEl.classList.add('minimized');
+      var minIcon = document.getElementById('mf-min-icon');
+      if (minIcon) minIcon.textContent = '🗖';
+    } else {
+      widgetEl.classList.remove('minimized');
+      var minIcon = document.getElementById('mf-min-icon');
+      if (minIcon) minIcon.textContent = '➖';
+
+      if (settings.isMaximized) {
+        widgetEl.style.width = 'calc(100vw - 32px)';
+        widgetEl.style.height = 'calc(100vh - 48px)';
+        widgetEl.style.top = '24px';
+        widgetEl.style.left = '16px';
+        widgetEl.style.right = '16px';
+      } else {
+        var winW = window.innerWidth;
+        var winH = window.innerHeight;
+        var targetW = Math.min(settings.width || defaultSettings.width, winW - 20);
+        var targetH = Math.min(settings.height || defaultSettings.height, winH - 40);
+        widgetEl.style.width = Math.max(460, targetW) + 'px';
+        widgetEl.style.height = Math.max(250, targetH) + 'px';
+      }
+    }
+
+    if (!settings.isMaximized) {
+      var winW = window.innerWidth;
+      var winH = window.innerHeight;
+      var curW = widgetEl.offsetWidth || settings.width || defaultSettings.width;
+      var curH = widgetEl.offsetHeight || settings.height || defaultSettings.height;
+      var left = settings.left;
+      var top = settings.top;
+
+      if (left === null || left === undefined || isNaN(left)) {
+        left = Math.max(10, winW - curW - 30);
+      }
+      if (top === null || top === undefined || isNaN(top)) {
+        top = 80;
+      }
+
+      left = Math.max(10, Math.min(left, winW - curW - 10));
+      top = Math.max(10, Math.min(top, winH - 60));
+
+      widgetEl.style.left = left + 'px';
+      widgetEl.style.top = top + 'px';
+      widgetEl.style.right = 'auto';
+    }
+
+    applyRowDensity();
+  }
+
+  // 5. Format numbers with Indian commas
   function formatIndianNumber(val) {
     if (!val) return '--';
     var num = Number(String(val).replace(/,/g, ''));
@@ -331,7 +423,7 @@
     return '₹' + num.toFixed(2);
   }
 
-  // 5. Automatic Row Sizing & Density Calculations
+  // Automatic Row Sizing & Density Calculations
   function applyRowDensity() {
     if (!widgetEl) return;
     var container = document.getElementById('mf-deals-table-container');
@@ -343,7 +435,7 @@
     if (!container) return;
     container.classList.remove('mf-density-compact', 'mf-density-normal', 'mf-density-comfortable');
 
-    var effectiveDensity = dealsState.rowDensity;
+    var effectiveDensity = settings.rowDensity || 'auto';
     if (effectiveDensity === 'auto') {
       var h = widgetEl.offsetHeight;
       if (h < 400) {
@@ -359,7 +451,7 @@
   }
 
   function setRowDensity(density) {
-    dealsState.rowDensity = density;
+    settings.rowDensity = density;
     updateDensityButtonsUI();
     applyRowDensity();
     saveSettings();
@@ -367,7 +459,7 @@
 
   function updateDensityButtonsUI() {
     document.querySelectorAll('.mf-density-btn').forEach(function (btn) {
-      if (btn.dataset.density === dealsState.rowDensity) {
+      if (btn.dataset.density === (settings.rowDensity || 'auto')) {
         btn.classList.add('active', 'bg-slate-700', 'text-white');
         btn.classList.remove('hover:text-white');
       } else {
@@ -379,9 +471,7 @@
 
   function setupResizeObserver() {
     if (typeof ResizeObserver === 'undefined' || !widgetEl) return;
-    if (resizeObserver) resizeObserver.disconnect();
-
-    resizeObserver = new ResizeObserver(function () {
+    var resizeObserver = new ResizeObserver(function () {
       applyRowDensity();
     });
     resizeObserver.observe(widgetEl);
@@ -391,10 +481,9 @@
   function renderTable() {
     if (!tableBodyEl) return;
 
-    var query = dealsState.searchQuery.toLowerCase().trim();
-    var filterType = dealsState.filterType;
+    var query = (searchQuery || '').toLowerCase().trim();
 
-    var filtered = dealsState.deals.filter(function (d) {
+    var filtered = deals.filter(function (d) {
       if (filterType !== 'ALL' && d.dealType !== filterType) return false;
       if (!query) return true;
       return (
@@ -407,7 +496,7 @@
     });
 
     if (countBadgeEl) {
-      countBadgeEl.textContent = filtered.length + ' / ' + dealsState.deals.length + ' Deals';
+      countBadgeEl.textContent = filtered.length + ' / ' + deals.length + ' Deals';
     }
 
     if (filtered.length === 0) {
@@ -415,8 +504,7 @@
         <tr>
           <td colspan="7" class="py-10 text-center text-slate-500 font-sans">
             <div class="flex flex-col items-center justify-center gap-1">
-              <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span>No deals found matching your filter</span>
+              <span>🔍 No deals found matching your filter</span>
             </div>
           </td>
         </tr>
@@ -429,21 +517,21 @@
       var d = filtered[i];
       var isBuy = d.dealType === 'BUY';
       var exchBadge = d.exchange === 'NSE' 
-        ? '<span class="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/25 text-[9px] font-bold">NSE</span>'
-        : '<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/25 text-[9px] font-bold">BSE</span>';
+        ? '<span class="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-bold">NSE</span>'
+        : '<span class="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[9px] font-bold">BSE</span>';
 
       var typeBadge = isBuy
-        ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">BUY</span>'
-        : '<span class="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 text-[10px] font-bold">SELL</span>';
+        ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 text-[10px] font-bold">BUY</span>'
+        : '<span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/35 text-[10px] font-bold">SELL</span>';
 
       html += `
-        <tr class="hover:bg-slate-800/40 transition-colors group cursor-pointer" onclick="window.__loadMfDealStock('${escapeJsString(d.companyName)}')">
+        <tr class="hover:bg-slate-800/60 transition-colors cursor-pointer group" onclick="window.__loadMfDealStock('${escapeJsString(d.companyName)}')">
           <td class="py-2 px-3 text-center">${exchBadge}</td>
           <td class="py-2 px-3 text-slate-300 whitespace-nowrap text-[10px]">${d.date || '--'}</td>
           <td class="py-2 px-3 font-sans font-medium text-slate-200">${d.clientName || '--'}</td>
           <td class="py-2 px-3 font-sans font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center gap-1.5">
             <span>${d.companyName || '--'}</span>
-            <svg class="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            <span class="text-slate-500 opacity-0 group-hover:opacity-100 text-[10px]">↗</span>
           </td>
           <td class="py-2 px-3 text-center">${typeBadge}</td>
           <td class="py-2 px-3 text-right text-slate-300 font-semibold">${formatIndianNumber(d.volume)}</td>
@@ -460,7 +548,7 @@
     return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
   }
 
-  // 7. Global Stock Loader (Hook to Main Screener / Chart)
+  // 7. Global Stock Loader
   window.__loadMfDealStock = function (companyName) {
     if (!companyName) return;
     var clean = companyName.trim();
@@ -483,18 +571,18 @@
 
   // 8. Fetch Deals from API & Check Unread
   async function fetchDeals(forceRefresh) {
-    dealsState.isLoading = true;
+    isLoading = true;
     var refreshIcon = document.getElementById('mf-refresh-icon');
-    if (refreshIcon) refreshIcon.classList.add('animate-spin');
+    if (refreshIcon) refreshIcon.textContent = '⏳';
 
     try {
       var res = await fetch('/api/mf-deals' + (forceRefresh ? '?refresh=true' : ''));
       var data = await res.json();
 
       if (data && data.success && Array.isArray(data.deals)) {
-        dealsState.deals = data.deals;
-        dealsState.lastUpdated = data.lastUpdated;
-        dealsState.latestDealId = data.latestDealId || (data.deals[0] ? data.deals[0].id : null);
+        deals = data.deals;
+        lastUpdated = data.lastUpdated;
+        latestDealId = data.latestDealId || (data.deals[0] ? data.deals[0].id : null);
 
         var lastUpdatedEl = document.getElementById('mf-deals-last-updated');
         if (lastUpdatedEl && data.lastUpdated) {
@@ -508,18 +596,18 @@
     } catch (err) {
       console.warn('[MF Deals] Fetch error:', err.message);
     } finally {
-      dealsState.isLoading = false;
-      if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+      isLoading = false;
+      if (refreshIcon) refreshIcon.textContent = '🔄';
     }
   }
 
   // 9. Check Unread Status & Trigger Blinking Button
   function checkUnreadStatus() {
-    if (!dealsState.latestDealId) return;
+    if (!latestDealId) return;
 
     var lastViewedId = localStorage.getItem(STORAGE_KEY_LAST_VIEWED);
-    var isUnread = Boolean(!lastViewedId || (lastViewedId !== dealsState.latestDealId));
-    dealsState.hasUnread = isUnread;
+    var isUnread = Boolean(!lastViewedId || (lastViewedId !== latestDealId));
+    hasUnread = isUnread;
 
     updateButtonBlinking(isUnread);
   }
@@ -538,23 +626,22 @@
   }
 
   function markAsViewed() {
-    if (dealsState.latestDealId) {
-      localStorage.setItem(STORAGE_KEY_LAST_VIEWED, dealsState.latestDealId);
-      dealsState.hasUnread = false;
+    if (latestDealId) {
+      localStorage.setItem(STORAGE_KEY_LAST_VIEWED, latestDealId);
+      hasUnread = false;
       updateButtonBlinking(false);
     }
   }
 
   // 10. Open / Close / Toggle / Maximize Modal
   function openWidget() {
-    createWidgetDom();
-    if (!widgetEl) return;
-
-    dealsState.isOpen = true;
-    widgetEl.style.display = 'flex';
+    createWidget();
+    settings.isOpen = true;
+    saveSettings();
+    applyGeometry();
     markAsViewed();
 
-    if (dealsState.deals.length === 0) {
+    if (deals.length === 0) {
       fetchDeals(false);
     } else {
       renderTable();
@@ -562,16 +649,24 @@
   }
 
   function closeWidget() {
-    if (!widgetEl) return;
-    dealsState.isOpen = false;
-    widgetEl.style.display = 'none';
+    settings.isOpen = false;
+    saveSettings();
+    if (widgetEl) widgetEl.style.display = 'none';
   }
 
   function toggleWidget() {
-    if (!widgetEl) {
-      createWidgetDom();
+    var now = Date.now();
+    if (now - lastToggleTime < 150) {
+      return;
     }
-    if (widgetEl && widgetEl.style.display !== 'none' && dealsState.isOpen) {
+    lastToggleTime = now;
+
+    if (!widgetEl) {
+      createWidget();
+    }
+
+    var isCurrentlyVisible = Boolean(widgetEl && widgetEl.style.display === 'flex');
+    if (isCurrentlyVisible) {
       closeWidget();
     } else {
       openWidget();
@@ -580,61 +675,24 @@
 
   function toggleMinimize() {
     if (!widgetEl) return;
-    dealsState.isMinimized = !dealsState.isMinimized;
-    if (dealsState.isMinimized) {
-      widgetEl.classList.add('minimized');
-    } else {
-      widgetEl.classList.remove('minimized');
-    }
+    settings.isMinimized = !settings.isMinimized;
+    saveSettings();
+    applyGeometry();
   }
 
   function toggleMaximize() {
     if (!widgetEl) return;
-    dealsState.isMaximized = !dealsState.isMaximized;
-
-    if (dealsState.isMaximized) {
-      restoreGeom = {
-        width: widgetEl.style.width,
-        height: widgetEl.style.height,
-        top: widgetEl.style.top,
-        left: widgetEl.style.left,
-        right: widgetEl.style.right
-      };
-      widgetEl.style.width = 'calc(100vw - 32px)';
-      widgetEl.style.height = 'calc(100vh - 48px)';
-      widgetEl.style.top = '24px';
-      widgetEl.style.left = '16px';
-      widgetEl.style.right = '16px';
-      if (maximizeBtnEl) {
-        maximizeBtnEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0l5 0m-5 0l0 5m6 6l5 5m0 0l-5 0m5 0l0-5"></path></svg>';
-        maximizeBtnEl.title = 'Restore Window Size';
-      }
-    } else {
-      if (restoreGeom) {
-        widgetEl.style.width = restoreGeom.width;
-        widgetEl.style.height = restoreGeom.height;
-        widgetEl.style.top = restoreGeom.top;
-        widgetEl.style.left = restoreGeom.left;
-        widgetEl.style.right = restoreGeom.right;
-      } else {
-        widgetEl.style.width = settings.width + 'px';
-        widgetEl.style.height = settings.height + 'px';
-      }
-      if (maximizeBtnEl) {
-        maximizeBtnEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>';
-        maximizeBtnEl.title = 'Maximize Window';
-      }
-    }
-    applyRowDensity();
+    settings.isMaximized = !settings.isMaximized;
+    saveSettings();
+    applyGeometry();
   }
 
   // 11. Copy & CSV Export
   function copyTableToClipboard() {
-    if (!dealsState.deals || dealsState.deals.length === 0) return;
-    var query = dealsState.searchQuery.toLowerCase().trim();
-    var filterType = dealsState.filterType;
+    if (!deals || deals.length === 0) return;
+    var query = (searchQuery || '').toLowerCase().trim();
 
-    var filtered = dealsState.deals.filter(function (d) {
+    var filtered = deals.filter(function (d) {
       if (filterType !== 'ALL' && d.dealType !== filterType) return false;
       if (!query) return true;
       return (
@@ -657,9 +715,9 @@
   }
 
   function exportCsv() {
-    if (!dealsState.deals || dealsState.deals.length === 0) return;
+    if (!deals || deals.length === 0) return;
     var rows = [['Exchange', 'Date', 'Client Name', 'Company Name', 'Deal Type', 'Volume', 'Deal Price']];
-    dealsState.deals.forEach(function (d) {
+    deals.forEach(function (d) {
       rows.push([
         '"' + (d.exchange || '') + '"',
         '"' + (d.date || '') + '"',
@@ -684,7 +742,7 @@
 
   function showToast(msg, isErr) {
     var toast = document.createElement('div');
-    toast.className = 'fixed bottom-5 right-5 z-[999999] px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-2xl flex items-center gap-2 ' +
+    toast.className = 'fixed bottom-5 right-5 z-[9999999] px-4 py-2 rounded-xl text-xs font-semibold text-white shadow-2xl flex items-center gap-2 ' +
       (isErr ? 'bg-rose-600' : 'bg-emerald-600');
     toast.textContent = msg;
     document.body.appendChild(toast);
@@ -705,7 +763,7 @@
     document.getElementById('btn-mf-export-csv')?.addEventListener('click', exportCsv);
 
     searchInputEl?.addEventListener('input', function (e) {
-      dealsState.searchQuery = e.target.value;
+      searchQuery = e.target.value;
       renderTable();
     });
 
@@ -717,7 +775,7 @@
         });
         btn.classList.add('active', 'bg-emerald-600', 'text-white');
         btn.classList.remove('hover:text-white');
-        dealsState.filterType = btn.dataset.filter;
+        filterType = btn.dataset.filter;
         renderTable();
       });
     });
@@ -730,7 +788,7 @@
 
     // A. Draggable Window Header Handler
     headerEl?.addEventListener('mousedown', function (e) {
-      if (e.target.closest('button') || dealsState.isMaximized) return;
+      if (e.target.closest('button') || settings.isMaximized) return;
       isDragging = true;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
@@ -742,7 +800,7 @@
 
     // B. Corner Resizer Handler
     resizeHandleEl?.addEventListener('mousedown', function (e) {
-      if (dealsState.isMaximized) return;
+      if (settings.isMaximized) return;
       isResizing = true;
       resizeStartX = e.clientX;
       resizeStartY = e.clientY;
@@ -753,7 +811,7 @@
     });
 
     window.addEventListener('mousemove', function (e) {
-      if (isDragging && widgetEl && !dealsState.isMaximized) {
+      if (isDragging && widgetEl && !settings.isMaximized) {
         var dx = e.clientX - dragStartX;
         var dy = e.clientY - dragStartY;
         var newX = Math.max(10, Math.min(window.innerWidth - widgetEl.offsetWidth - 10, initialWidgetX + dx));
@@ -765,7 +823,7 @@
 
         settings.left = newX;
         settings.top = newY;
-      } else if (isResizing && widgetEl && !dealsState.isMaximized) {
+      } else if (isResizing && widgetEl && !settings.isMaximized) {
         var dw = e.clientX - resizeStartX;
         var dh = e.clientY - resizeStartY;
         var maxW = window.innerWidth - (widgetEl.offsetLeft || 20) - 10;
@@ -794,17 +852,20 @@
 
   // 13. Setup Launcher Buttons & Polling
   function init() {
-    injectStyles();
     loadSettings();
-    createWidgetDom();
+    injectStyles();
+    createWidget();
 
-    // Bind all launcher buttons on page
+    // Bind all launcher buttons on page directly
     document.querySelectorAll('#btn-open-mf-deals, .btn-mf-deals-launcher').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
+      btn.onclick = function (e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         toggleWidget();
-      });
+        return false;
+      };
     });
 
     // Initial silent check for new unviewed deals
@@ -822,14 +883,20 @@
     });
   }
 
+  // Document level click listener for bulletproof launcher delegation
+  document.addEventListener('click', function (e) {
+    var launcher = e.target.closest('#btn-open-mf-deals, .btn-mf-deals-launcher');
+    if (launcher) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleWidget();
+    }
+  });
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
-  // Global window handle
-  window.openMfDeals = openWidget;
-  window.closeMfDeals = closeWidget;
-  window.toggleMfDeals = toggleWidget;
 })();
