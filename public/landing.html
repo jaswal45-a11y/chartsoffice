@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SANGAM — Peaceful Investing</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            teal: {
+              300: '#5eead4',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+              950: '#042f2e'
+            },
+            cyan: {
+              400: '#22d3ee',
+              500: '#06b6d4'
+            },
+            sangam: {
+              bg: '#040711',
+              card: '#0a101f',
+              border: '#16233b',
+              glow: '#0ea5e9'
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.6s ease-out forwards',
+            'pulse-glow': 'pulseGlow 3s infinite',
+            'float-slow': 'float 6s ease-in-out infinite'
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(8px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4', filter: 'drop-shadow(0 0 15px rgba(20, 184, 166, 0.4))' },
+              '50%': { opacity: '0.8', filter: 'drop-shadow(0 0 25px rgba(20, 184, 166, 0.7))' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar & Glassmorphic Highlights */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #040711; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #0d9488; }
+
+    /* Custom Glass Panel Backdrop */
+    .glass-card {
+      background: rgba(10, 17, 32, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(45, 212, 191, 0.25);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 35px rgba(20, 184, 166, 0.15);
+    }
+    .glass-card-subtle {
+      background: rgba(8, 14, 27, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-subtle:hover {
+      background: rgba(14, 23, 42, 0.8);
+      border-color: rgba(45, 212, 191, 0.4);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(45, 212, 191, 0.18);
+    }
+
+    /* Gradient CTA Button */
+    .btn-sangam-primary {
+      background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 50%, #10b981 100%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-sangam-primary:hover {
+      background: linear-gradient(135deg, #2dd4bf 0%, #22d3ee 50%, #34d399 100%);
+      box-shadow: 0 0 25px rgba(45, 212, 191, 0.55), 0 4px 15px rgba(0, 0, 0, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-sangam-primary:active {
+      transform: translateY(1px);
+    }
+
+    /* Hero Background Overlay */
+    .hero-bg-container {
+      background-image: linear-gradient(to bottom, rgba(4, 7, 17, 0.45) 0%, rgba(4, 7, 17, 0.2) 40%, rgba(4, 7, 17, 0.85) 85%, #040711 100%), url('/images/landing_hero_bg.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+<body class="bg-sangam-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-slate-950 relative overflow-x-hidden font-sans">
+
+  <!-- Main Hero Screen (Full Viewport) -->
+  <div class="relative min-h-screen flex flex-col justify-between hero-bg-container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="w-full z-40 px-6 lg:px-12 py-5 flex items-center justify-between border-b border-white/5 bg-slate-950/20 backdrop-blur-md">
+      
+      <!-- Brand Logo (Mountain Emblem + SANGAM) -->
+      <a href="/" class="flex items-center gap-3.5 group cursor-pointer select-none">
+        <div class="relative w-10 h-10 flex items-center justify-center">
+          <!-- 3-Peak Mountain SVG Icon -->
+          <svg viewBox="0 0 100 85" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 transform transition-transform group-hover:scale-105 filter drop-shadow-[0_0_12px_rgba(45,212,191,0.5)]">
+            <polygon points="50,10 78,75 22,75" fill="url(#peakMain)" opacity="0.95"/>
+            <polygon points="28,30 52,75 4,75" fill="url(#peakLeft)" opacity="0.85"/>
+            <polygon points="72,25 96,75 48,75" fill="url(#peakRight)" opacity="0.75"/>
+            <path d="M50 10 L62 38 L50 48 L38 38 Z" fill="white" opacity="0.9"/>
+            <path d="M28 30 L37 49 L28 55 L19 49 Z" fill="white" opacity="0.8"/>
+            <path d="M72 25 L81 44 L72 50 L63 44 Z" fill="white" opacity="0.8"/>
+            <defs>
+              <linearGradient id="peakMain" x1="50" y1="10" x2="50" y2="75" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#2dd4bf"/>
+                <stop offset="1" stop-color="#0f766e"/>
+              </linearGradient>
+              <linearGradient id="peakLeft" x1="28" y1="30" x2="28" y2="75" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#06b6d4"/>
+                <stop offset="1" stop-color="#164e63"/>
+              </linearGradient>
+              <linearGradient id="peakRight" x1="72" y1="25" x2="72" y2="75" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#38bdf8"/>
+                <stop offset="1" stop-color="#0e7490"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-extrabold tracking-[0.22em] text-white leading-tight font-sans">
+            S A N G A M
+          </span>
+          <span class="text-[9px] tracking-[0.32em] text-teal-300 font-semibold uppercase opacity-90 -mt-0.5">
+            Peaceful Investing
+          </span>
+        </div>
+      </a>
+
+      <!-- Center Nav Links -->
+      <nav class="hidden md:flex items-center gap-7 lg:gap-9 text-sm font-medium text-slate-300">
+        <a href="/screener" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
+          Screener
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="/screener#watchlist" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
+          Watchlist
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="/analytics" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
+          Market Insights
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="/fno" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
+          Tools
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <button onclick="openResourcesModal()" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
+          Resources
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+        </button>
+        <button onclick="openAboutModal()" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
+          About
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
+        </button>
+      </nav>
+
+      <!-- Right Header Actions (Login CTA + Theme Icon) -->
+      <div class="flex items-center gap-4">
+        <button id="btn-header-login" onclick="focusAuthCard()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-teal-500/20 text-slate-200 hover:text-teal-300 border border-white/10 hover:border-teal-400/40 backdrop-blur-md transition-all duration-300 shadow-sm cursor-pointer">
+          Login
+        </button>
+        
+        <button id="theme-toggle-btn" onclick="toggleTwilightMode()" class="w-9 h-9 rounded-xl flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-teal-300 transition-all cursor-pointer" title="Toggle Calm Twilight Mood">
+          <i data-lucide="moon" class="w-4 h-4 text-teal-300"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Right Side Vertical Step Rail (OBSERVE • ANALYSE • INVEST • GROW • REPEAT) -->
+    <div class="absolute right-4 2xl:right-8 top-1/2 -translate-y-1/2 z-10 hidden 2xl:flex flex-col items-center gap-5 select-none pointer-events-none opacity-75">
+      <div class="flex flex-col items-center gap-6 text-[9px] tracking-[0.3em] font-mono uppercase font-semibold text-slate-400">
+        <span class="hover:text-teal-300 transition-colors">OBSERVE</span>
+        <span class="hover:text-teal-300 transition-colors">ANALYSE</span>
+        <span class="hover:text-teal-300 transition-colors">INVEST</span>
+        <span class="hover:text-teal-300 transition-colors">GROW</span>
+        <span class="hover:text-teal-300 transition-colors text-teal-400">REPEAT</span>
+      </div>
+      <div class="w-0.5 h-16 bg-gradient-to-b from-teal-400 to-transparent rounded-full mt-2"></div>
+    </div>
+
+    <!-- Hero Content (Left Brand Copy + Right Column with Quotes & Glassmorphic Login Card) -->
+    <main class="w-full max-w-7xl mx-auto px-6 lg:px-12 py-8 sm:py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center z-20">
+      
+      <!-- Left Column: Emotional Brand Hook & Philosophy -->
+      <div class="lg:col-span-6 flex flex-col gap-5 text-left select-none">
+        
+        <!-- Tagline / Mantra -->
+        <div class="flex items-center gap-2 text-[11px] lg:text-xs font-mono font-semibold tracking-[0.25em] text-teal-300/90 uppercase">
+          <span>DISCIPLINE</span>
+          <span class="text-teal-500">•</span>
+          <span>RESEARCH</span>
+          <span class="text-teal-500">•</span>
+          <span>PATIENCE</span>
+          <span class="text-teal-500">•</span>
+          <span>GROWTH</span>
+        </div>
+
+        <!-- Huge Main Title -->
+        <div class="flex flex-col">
+          <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[0.16em] text-white drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)] font-sans">
+            SANGAM
+          </h1>
+          <span class="text-base sm:text-lg lg:text-xl font-light tracking-[0.38em] text-slate-300 uppercase mt-1">
+            PEACEFUL INVESTING
+          </span>
+        </div>
+
+        <!-- Teal Accent Line -->
+        <div class="w-20 h-1 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 shadow-[0_0_12px_rgba(45,212,191,0.8)]"></div>
+
+        <!-- Clear Headline -->
+        <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-snug">
+          Find clarity in the noise.
+        </h2>
+
+        <!-- Subtext -->
+        <p class="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-lg">
+          Powerful stock screening, insightful institutional data and a calmer, systematic way to invest without emotional chaos.
+        </p>
+
+        <!-- Quick Trust Badges -->
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-700/40 text-xs text-slate-300 backdrop-blur-md">
+            <i data-lucide="shield-check" class="w-4 h-4 text-teal-400"></i>
+            <span>Multi-Screener Automation</span>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-700/40 text-xs text-slate-300 backdrop-blur-md">
+            <i data-lucide="zap" class="w-4 h-4 text-cyan-400"></i>
+            <span>Volume Intelligence</span>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-700/40 text-xs text-slate-300 backdrop-blur-md">
+            <i data-lucide="compass" class="w-4 h-4 text-emerald-400"></i>
+            <span>Market Breadth & Sectors</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Rotating Wisdom Quote + Glassmorphic Auth Gateway Card -->
+      <div class="lg:col-span-6 flex flex-col items-center lg:items-end gap-3.5">
+        
+        <!-- Rotating Quote Box (Sitting Cleanly Above Auth Card) -->
+        <div id="wisdom-quote-box" onclick="rotateNextQuote()" class="w-full max-w-md cursor-pointer group px-4 py-2.5 rounded-2xl bg-slate-950/60 hover:bg-slate-950/80 border border-teal-500/25 hover:border-teal-400/50 backdrop-blur-md transition-all duration-300 shadow-xl" title="Click to see next master quote">
+          <p id="wisdom-quote-text" class="text-xs lg:text-sm text-slate-200 font-light italic leading-relaxed transition-all duration-500">
+            "Better a peaceful investor than a busy trader."
+          </p>
+          <div class="flex items-center justify-between mt-1.5">
+            <span id="wisdom-quote-tag" class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-300 font-mono font-medium">Mindset</span>
+            <div class="flex items-center gap-2">
+              <span id="wisdom-quote-author" class="text-[11px] font-semibold text-teal-300/90 font-mono">
+                — Naval Ravikant
+              </span>
+              <i data-lucide="refresh-cw" class="w-3 h-3 text-slate-400 group-hover:text-teal-400 transition-transform group-hover:rotate-180 duration-500"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auth Gateway Card -->
+        <div id="auth-gateway-card" class="w-full max-w-md glass-card rounded-3xl p-7 sm:p-8 flex flex-col gap-4 relative shadow-2xl transition-all duration-300">
+          
+          <!-- Subtle Top Card Glow Light -->
+          <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-10 bg-teal-400/20 blur-2xl rounded-full pointer-events-none"></div>
+
+          <!-- Card Header (Unauthenticated State) -->
+          <div id="auth-header-unauthed" class="flex flex-col text-center">
+            <h3 class="text-2xl font-bold text-white tracking-tight">
+              Welcome Back
+            </h3>
+            <p class="text-xs text-slate-400 mt-1 font-light">
+              Continue your peaceful investing journey
+            </p>
+          </div>
+
+          <!-- Card Header (Recognized User State - Dynamic) -->
+          <div id="auth-header-authed" class="hidden flex-col text-center">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-slate-950 font-bold text-lg mx-auto shadow-lg shadow-teal-500/20 mb-2">
+              <span id="recognized-user-avatar">S</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white tracking-tight">
+              Welcome back, <span id="recognized-username" class="text-teal-300">User</span>!
+            </h3>
+            <p class="text-xs text-slate-400 mt-1 font-light">
+              Your personalized screeners, watchlists & notes are ready.
+            </p>
+          </div>
+
+          <!-- Error / Success Alert Banner -->
+          <div id="auth-alert-banner" class="hidden px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-2 border"></div>
+
+          <!-- Login Form (Visible when unauthenticated) -->
+          <form id="landing-login-form" onsubmit="handleLandingLogin(event)" class="flex flex-col gap-4">
+            
+            <!-- Username or Email Input -->
+            <div class="flex flex-col gap-1.5 text-left">
+              <label for="input-username" class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="user" class="w-3.5 h-3.5 text-teal-400"></i>
+                <span>Username or Email</span>
+              </label>
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="input-username" 
+                  name="username" 
+                  required 
+                  autocomplete="username"
+                  placeholder="Enter your username or email" 
+                  class="w-full px-4 py-3 pl-10 rounded-xl bg-slate-950/70 border border-slate-700/60 hover:border-teal-500/40 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
+                >
+                <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              </div>
+            </div>
+
+            <!-- Password Input with Toggle Visibility -->
+            <div class="flex flex-col gap-1.5 text-left">
+              <label for="input-password" class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-teal-400"></i>
+                <span>Password</span>
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="input-password" 
+                  name="password" 
+                  required 
+                  autocomplete="current-password"
+                  placeholder="Enter your password" 
+                  class="w-full px-4 py-3 pl-10 pr-10 rounded-xl bg-slate-950/70 border border-slate-700/60 hover:border-teal-500/40 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
+                >
+                <i data-lucide="lock" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <button 
+                  type="button" 
+                  id="btn-toggle-pwd" 
+                  onclick="togglePasswordVisibility()" 
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1 cursor-pointer"
+                  title="Show / Hide Password"
+                >
+                  <i data-lucide="eye" id="icon-pwd-eye" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Remember Me & Forgot Password Row -->
+            <div class="flex items-center justify-between text-xs pt-0.5">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300 select-none">
+                <input type="checkbox" id="chk-remember-me" checked class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-teal-500 focus:ring-teal-400/30">
+                <span>Remember me</span>
+              </label>
+              <button type="button" onclick="openForgotPasswordModal()" class="text-teal-400 hover:text-teal-300 hover:underline transition-all cursor-pointer">
+                Forgot password?
+              </button>
+            </div>
+
+            <!-- Submit Button: Enter SANGAM -->
+            <button 
+              type="submit" 
+              id="btn-submit-login" 
+              class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-1"
+            >
+              <span id="btn-login-text">Enter SANGAM</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </form>
+
+          <!-- Authed Actions View (Visible when already logged in) -->
+          <div id="landing-authed-actions" class="hidden flex-col gap-3">
+            <a 
+              href="/screener" 
+              class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+            >
+              <span>Enter SANGAM Dashboard</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <a href="/analytics" class="py-2.5 px-3 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-700/50 hover:border-emerald-500/40 text-xs font-semibold text-slate-200 hover:text-emerald-300 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Market Analytics</span>
+              </a>
+              <a href="/fno" class="py-2.5 px-3 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-700/50 hover:border-purple-500/40 text-xs font-semibold text-slate-200 hover:text-purple-300 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                <i data-lucide="crosshair" class="w-3.5 h-3.5 text-purple-400"></i>
+                <span>F&O Screener</span>
+              </a>
+            </div>
+
+            <button 
+              onclick="handleLandingLogout()" 
+              class="text-xs text-slate-400 hover:text-rose-400 py-1.5 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              <span>Switch Account / Log Out</span>
+            </button>
+          </div>
+
+          <!-- Divider 'or' (Visible when unauthed) -->
+          <div id="auth-divider" class="flex items-center gap-3 text-xs text-slate-500 font-mono">
+            <div class="flex-1 h-px bg-slate-700/50"></div>
+            <span>or</span>
+            <div class="flex-1 h-px bg-slate-700/50"></div>
+          </div>
+
+          <!-- Secondary Button: Continue as Guest -->
+          <div id="auth-guest-section" class="flex flex-col gap-2">
+            <button 
+              type="button" 
+              onclick="continueAsGuest()" 
+              class="w-full py-3 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-slate-950/50 hover:bg-slate-900/80 border border-slate-700/70 hover:border-teal-400/40 flex items-center justify-center gap-2 transition-all duration-300 shadow-sm cursor-pointer"
+            >
+              <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
+              <span>Continue as Guest</span>
+            </button>
+          </div>
+
+          <!-- Register Link / Toggle -->
+          <div id="auth-register-footer" class="text-center text-[11px] text-slate-400 pt-0.5">
+            <span>Don't have an account? </span>
+            <button type="button" onclick="openRegisterModal()" class="text-teal-400 hover:text-teal-300 font-semibold hover:underline transition-colors cursor-pointer">
+              Create one
+            </button>
+          </div>
+
+          <!-- Bottom Card Micro-Caption -->
+          <div class="text-center text-[11px] font-mono tracking-wider text-teal-300/60 uppercase pt-0.5">
+            Same Markets. A Calmer You.
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Bottom Section: Live Tickers Bar -->
+    <div class="w-full max-w-7xl mx-auto px-6 lg:px-12 pb-4 z-20">
+      
+      <!-- Glassmorphic Index Tickers Bar -->
+      <div class="w-full rounded-2xl glass-card-subtle px-5 py-3 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        
+        <!-- Live Indices Pills -->
+        <div class="flex items-center flex-wrap gap-4 sm:gap-6 text-xs">
+          
+          <!-- NIFTY 50 -->
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-semibold text-slate-400">NIFTY 50</span>
+            <span id="ticker-nifty-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-nifty-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              --
+            </span>
+          </div>
+
+          <div class="hidden sm:block w-px h-4 bg-slate-700/50"></div>
+
+          <!-- SENSEX -->
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-semibold text-slate-400">SENSEX</span>
+            <span id="ticker-sensex-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-sensex-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              --
+            </span>
+          </div>
+
+          <div class="hidden md:block w-px h-4 bg-slate-700/50"></div>
+
+          <!-- NIFTY BANK -->
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-semibold text-slate-400">NIFTY BANK</span>
+            <span id="ticker-bank-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-bank-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              --
+            </span>
+          </div>
+
+        </div>
+
+        <!-- Right Side Quote Pill: "Peace is a position too." -->
+        <div class="flex items-center gap-2 text-xs italic text-teal-300/80 font-light select-none">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-400 animate-pulse"></i>
+          <span id="bottom-bar-quote">"Peace is a position too."</span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Feature Quick-Access Section (5 Cards in a Row) -->
+  <section class="w-full bg-[#040711] py-12 px-6 lg:px-12 border-t border-slate-800/80 relative z-30">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        
+        <!-- Card 1: Powerful Screener -->
+        <a href="/screener" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-teal-500/10 group-hover:bg-teal-500/20 text-teal-400 border border-teal-500/20 flex items-center justify-center transition-colors">
+            <i data-lucide="search" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white group-hover:text-teal-300 transition-colors">
+              Powerful Screener
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Find high-probability setups
+            </p>
+          </div>
+        </a>
+
+        <!-- Card 2: Smart Watchlists -->
+        <a href="/screener#watchlist" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-cyan-500/10 group-hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 flex items-center justify-center transition-colors">
+            <i data-lucide="bookmark" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
+              Smart Watchlists
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Track what matters
+            </p>
+          </div>
+        </a>
+
+        <!-- Card 3: Market Insights -->
+        <a href="/analytics" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center transition-colors">
+            <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
+              Market Insights
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Data that makes sense
+            </p>
+          </div>
+        </a>
+
+        <!-- Card 4: Learning Hub -->
+        <a href="/cheatsheet.html" target="_blank" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 flex items-center justify-center transition-colors">
+            <i data-lucide="lightbulb" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+              Learning Hub
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Build a better you
+            </p>
+          </div>
+        </a>
+
+        <!-- Card 5: Useful Tools -->
+        <a href="/fno" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 flex items-center justify-center transition-colors">
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">
+              Useful Tools
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Everything in one place
+            </p>
+          </div>
+        </a>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="w-full bg-[#02040a] border-t border-slate-900 py-8 px-6 lg:px-12 z-30 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
+      
+      <!-- Left Footer Brand & Philosophy -->
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-slate-300 tracking-wider">S A N G A M</span>
+        <span class="text-slate-700">|</span>
+        <span class="text-slate-400">Markets change. Principles don't.</span>
+      </div>
+
+      <!-- Center & Right Links -->
+      <div class="flex flex-wrap items-center gap-6">
+        <button onclick="openTermsModal()" class="hover:text-teal-300 transition-colors cursor-pointer">Terms</button>
+        <button onclick="openPrivacyModal()" class="hover:text-teal-300 transition-colors cursor-pointer">Privacy</button>
+        <button onclick="openContactModal()" class="hover:text-teal-300 transition-colors cursor-pointer">Contact</button>
+        
+        <!-- Social Icons -->
+        <div class="flex items-center gap-3 pl-2 border-l border-slate-800 text-slate-400">
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="hover:text-teal-400 transition-colors" title="Follow on X">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="hover:text-red-400 transition-colors" title="YouTube Channel">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 transition-colors" title="LinkedIn">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          </a>
+        </div>
+
+        <div class="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
+          <span>Built for thoughtful investors in India</span>
+          <span class="text-rose-500">♥</span>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- MODAL: Resources Hub -->
+  <div id="modal-resources" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-lg glass-card rounded-2xl p-6 flex flex-col gap-5 border border-teal-500/30">
+      <div class="flex items-center justify-between border-b border-slate-700/50 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5 text-teal-400"></i>
+          <h3 class="text-base font-bold text-white">Sangam Resources & Architecture</h3>
+        </div>
+        <button onclick="closeResourcesModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <a href="/cheatsheet.html" target="_blank" class="p-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 hover:border-teal-500/40 flex flex-col gap-1.5 transition-all cursor-pointer">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white">Screener Cheatsheet</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-teal-400"></i>
+          </div>
+          <p class="text-slate-400 text-[11px]">Trading rules, Darvas boxes, EMA strategies & cheat codes.</p>
+        </a>
+
+        <a href="/architecture.html" target="_blank" class="p-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 hover:border-teal-500/40 flex flex-col gap-1.5 transition-all cursor-pointer">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-white">System Architecture</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-cyan-400"></i>
+          </div>
+          <p class="text-slate-400 text-[11px]">Technical design, data ingestion, and pipeline overview.</p>
+        </a>
+      </div>
+
+      <div class="text-right pt-1">
+        <button onclick="closeResourcesModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: About Sangam Philosophy -->
+  <div id="modal-about" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-lg glass-card rounded-2xl p-6 flex flex-col gap-5 border border-teal-500/30">
+      <div class="flex items-center justify-between border-b border-slate-700/50 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="compass" class="w-5 h-5 text-teal-400"></i>
+          <h3 class="text-base font-bold text-white">The Sangam Philosophy</h3>
+        </div>
+        <button onclick="closeAboutModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs text-slate-300 leading-relaxed font-light">
+        <p>
+          <strong class="text-white font-semibold">Sangam</strong> represents the sacred confluence of timeless market principles: <span class="text-teal-300">Price Action</span>, <span class="text-cyan-300">Volume Intelligence</span>, and <span class="text-emerald-300">Emotional Mastery</span>.
+        </p>
+        <p>
+          In a world overwhelmed by 24/7 financial noise, panic selling, and FOMO, Sangam provides systematic clarity. We believe that true compounding happens through calmness, strict risk control, and sitting tight with high-probability leaders.
+        </p>
+        <div class="p-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-[11px] text-teal-300 italic">
+          "The stock market is designed to transfer money from the Active to the Patient." — Warren Buffett
+        </div>
+      </div>
+
+      <div class="text-right pt-1">
+        <button onclick="closeAboutModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">
+          Understood
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Forgot Password / Account Recovery Help -->
+  <div id="modal-forgot-password" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-md glass-card rounded-2xl p-6 flex flex-col gap-4 border border-teal-500/30">
+      <div class="flex items-center justify-between border-b border-slate-700/50 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="key" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="text-base font-bold text-white">Account Recovery</h3>
+        </div>
+        <button onclick="closeForgotPasswordModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        If you forgot your login password, please contact the platform administrator or use the master admin credentials to reset your user account in the Users management panel.
+      </p>
+
+      <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 font-mono">
+        Admin Password resets can also be executed directly via the Admin Console on the Screener dashboard.
+      </div>
+
+      <div class="text-right pt-2">
+        <button onclick="closeForgotPasswordModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">
+          Got It
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Register New Account (Capacity-Aware) -->
+  <div id="modal-register" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-md glass-card rounded-2xl p-6 flex flex-col gap-4 border border-teal-500/30">
+      <div class="flex items-center justify-between border-b border-slate-700/50 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="user-plus" class="w-5 h-5 text-teal-400"></i>
+          <h3 class="text-base font-bold text-white">Register New Account</h3>
+        </div>
+        <button onclick="closeRegisterModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="register-alert-banner" class="hidden px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 border"></div>
+
+      <form id="landing-register-form" onsubmit="handleLandingRegister(event)" class="flex flex-col gap-3.5 text-xs text-left">
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-300 font-medium">Desired Username</label>
+          <input type="text" id="reg-username" required placeholder="Choose a username (3-20 chars)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 outline-none focus:border-teal-400">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-300 font-medium">Password</label>
+          <input type="password" id="reg-password" required placeholder="Create password (min 6 chars)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 outline-none focus:border-teal-400">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-slate-300 font-medium">Confirm Password</label>
+          <input type="password" id="reg-confirm" required placeholder="Re-enter password" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 outline-none focus:border-teal-400">
+        </div>
+
+        <button type="submit" id="btn-reg-submit" class="w-full py-3 rounded-xl font-bold text-slate-950 btn-sangam-primary mt-2 cursor-pointer">
+          Create Account & Enter
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Landing Page Logic -->
+  <script src="/landing.js"></script>
+</body>
+</html>

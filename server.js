@@ -5290,7 +5290,8 @@ const server = http.createServer(async (req, res) => {
 
   // Static File Serving
   let reqTarget = pathname;
-  if (reqTarget === '/' || reqTarget === '') reqTarget = 'index.html';
+  if (reqTarget === '/' || reqTarget === '') reqTarget = 'landing.html';
+  else if (reqTarget === '/screener' || reqTarget === '/charts' || reqTarget === '/app') reqTarget = 'index.html';
   else if (reqTarget === '/analytics') reqTarget = 'analytics.html';
   else if (reqTarget === '/fno') reqTarget = 'fno.html';
 
@@ -5305,8 +5306,16 @@ const server = http.createServer(async (req, res) => {
 
   fs.stat(resolvedPath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // If file not found and doesn't have an extension, try fno.html, analytics.html or index.html
+      // If file not found and doesn't have an extension, route appropriately
       if (!path.extname(resolvedPath)) {
+        if (pathname === '/' || pathname === '') {
+          const landingPath = path.join(PUBLIC_DIR, 'landing.html');
+          if (fs.existsSync(landingPath)) {
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            return fs.createReadStream(landingPath).pipe(res);
+          }
+        }
+
         const fnoPath = path.join(PUBLIC_DIR, 'fno.html');
         if (pathname.startsWith('/fno') && fs.existsSync(fnoPath)) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
