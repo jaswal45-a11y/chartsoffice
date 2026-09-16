@@ -46,6 +46,7 @@ const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 const SECTORS_FILE = path.join(__dirname, 'data', 'sectors_data.json');
 const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.json');
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
+const COMPANY_METADATA_FILE = path.join(__dirname, 'data', 'company_metadata.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 function sanitizeDhanValue(val) {
@@ -801,6 +802,31 @@ async function syncMongoInitialData() {
       console.log(`[MongoDB] 📥 Loaded ${memoryUniverse.length} universe stocks with latest persisted prices from MongoDB Atlas.`);
     }
 
+    // 5. Company Metadata Collection (Fast Factual Profiles Cache)
+    const companyCol = db.collection('company_metadata');
+    const companyCount = await companyCol.countDocuments();
+    if (companyCount === 0) {
+      loadCompanyMetadata();
+      const localMetadata = Array.from(memoryCompanyMetadata.values());
+      if (localMetadata.length > 0) {
+        console.log(`[MongoDB] 🌱 Seeding ${localMetadata.length} company profiles into MongoDB Atlas...`);
+        const cleanDocs = localMetadata.map(c => {
+          const { _id, ...rest } = c;
+          return { ...rest };
+        });
+        await companyCol.insertMany(cleanDocs);
+      }
+    } else {
+      const dbMetadata = await companyCol.find({}).toArray();
+      dbMetadata.forEach(c => {
+        if (c && c.ticker) {
+          const { _id, ...rest } = c;
+          memoryCompanyMetadata.set(c.ticker.toUpperCase(), rest);
+        }
+      });
+      console.log(`[MongoDB] 📥 Loaded ${memoryCompanyMetadata.size} company metadata profiles from MongoDB Atlas.`);
+    }
+
   } catch (err) {
     console.error('[MongoDB] Error during initial data sync:', err.message);
   }
@@ -1075,6 +1101,273 @@ function autoIngestStocksToUniverse(stockCandidates = []) {
   }
 
   return newStocks.length;
+}
+
+function addStockToUniverse(stockData) {
+  if (!stockData || !stockData.symbol) return { success: false, error: 'Symbol is required' };
+  const cleanSym = String(stockData.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  if (!cleanSym || !/^[A-Z0-9_\-\^]+$/.test(cleanSym)) {
+    return { success: false, error: 'Invalid stock symbol format' };
+  }
+
+  const universe = getUniverseStocks();
+  const symSet = getUniverseSymbolSet();
+
+  if (symSet.has(cleanSym)) {
+    return { success: false, error: `Stock symbol "${cleanSym}" already exists in the universe` };
+  }
+
+  const price = typeof stockData.price === 'number' && stockData.price > 0
+    ? Number(stockData.price.toFixed(2))
+    : (typeof stockData.ltp === 'number' && stockData.ltp > 0 ? Number(stockData.ltp.toFixed(2)) : 100.0);
+  const mcap = typeof stockData.marketCap === 'number' && stockData.marketCap > 0
+    ? stockData.marketCap
+    : 5000;
+
+  const newStock = {
+    symbol: cleanSym,
+    name: stockData.name && stockData.name.trim() ? stockData.name.trim() : cleanSym,
+    exchange: stockData.exchange || 'NSE',
+    marketCap: mcap,
+    sector: stockData.sector || 'General',
+    industry: stockData.industry || 'Diversified',
+    price: price,
+    ltp: price,
+    changePercent: typeof stockData.changePercent === 'number' ? Number(stockData.changePercent.toFixed(2)) : 0.0,
+    rsi: typeof stockData.rsi === 'number' ? Number(stockData.rsi.toFixed(1)) : 50.0,
+    rvol: typeof stockData.rvol === 'number' ? Number(stockData.rvol.toFixed(2)) : 1.0,
+    ema20Distance: typeof stockData.ema20Distance === 'number' ? Number(stockData.ema20Distance.toFixed(1)) : 0.0,
+    fno: Boolean(stockData.fno),
+    high52w: stockData.high52w || price * 1.25,
+    low52w: stockData.low52w || price * 0.75,
+    dayHigh: stockData.dayHigh || price,
+    dayLow: stockData.dayLow || price,
+    fiftyTwoWeekHigh: stockData.high52w || price * 1.25,
+    fiftyTwoWeekLow: stockData.low52w || price * 0.75,
+    lastPriceUpdated: new Date().toISOString(),
+    adminAdded: true
+  };
+
+  universe.unshift(newStock);
+  symSet.add(cleanSym);
+  memoryUniverse = universe;
+  localUniverseCache = universe;
+  cachedExploreData = null;
+
+  try {
+    fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[UNIVERSE] Error saving universe file on add:', e.message);
+  }
+
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('universe_stocks');
+        const { _id, ...cleanObj } = newStock;
+        await col.updateOne({ symbol: cleanSym }, { $set: cleanObj }, { upsert: true });
+      } catch (err) {
+        console.error('[MongoDB] Error adding stock to universe:', err.message);
+      }
+    })();
+  }
+
+  return { success: true, stock: newStock };
+}
+
+function deleteStockFromUniverse(symbol) {
+  if (!symbol) return { success: false, error: 'Symbol is required' };
+  const cleanSym = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  
+  let universe = getUniverseStocks();
+  const symSet = getUniverseSymbolSet();
+
+  const idx = universe.findIndex(s => s && s.symbol && s.symbol.toUpperCase().trim() === cleanSym);
+  if (idx === -1) {
+    return { success: false, error: `Stock symbol "${cleanSym}" was not found in the universe` };
+  }
+
+  const removedStock = universe[idx];
+  universe.splice(idx, 1);
+  symSet.delete(cleanSym);
+  memoryUniverse = universe;
+  localUniverseCache = universe;
+  cachedExploreData = null;
+
+  try {
+    fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[UNIVERSE] Error saving universe file on delete:', e.message);
+  }
+
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('universe_stocks');
+        await col.deleteOne({ symbol: cleanSym });
+      } catch (err) {
+        console.error('[MongoDB] Error deleting stock from universe:', err.message);
+      }
+    })();
+  }
+
+  return { success: true, symbol: cleanSym, stock: removedStock };
+}
+
+// -------------------------------------------------------------
+// Centralized Company Metadata Store (In-Memory + MongoDB + Disk)
+// -------------------------------------------------------------
+let memoryCompanyMetadata = new Map();
+let companyMetadataFlushTimer = null;
+
+function loadCompanyMetadata() {
+  if (memoryCompanyMetadata.size > 0) return memoryCompanyMetadata;
+  try {
+    if (fs.existsSync(COMPANY_METADATA_FILE)) {
+      const raw = fs.readFileSync(COMPANY_METADATA_FILE, 'utf8');
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        list.forEach(item => {
+          if (item && item.ticker) {
+            memoryCompanyMetadata.set(item.ticker.toUpperCase().trim(), item);
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[COMPANY-METADATA] Error loading metadata file:', err.message);
+  }
+  return memoryCompanyMetadata;
+}
+
+function scheduleCompanyMetadataFlush() {
+  if (companyMetadataFlushTimer) clearTimeout(companyMetadataFlushTimer);
+  companyMetadataFlushTimer = setTimeout(async () => {
+    try {
+      const arrayData = Array.from(memoryCompanyMetadata.values());
+      fs.writeFileSync(COMPANY_METADATA_FILE, JSON.stringify(arrayData, null, 2), 'utf8');
+
+      if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+        const col = MONGO_CONFIG.db.collection('company_metadata');
+        const bulkOps = arrayData.map(c => {
+          const { _id, ...cleanMeta } = c;
+          return {
+            updateOne: {
+              filter: { ticker: cleanMeta.ticker },
+              update: { $set: cleanMeta },
+              upsert: true
+            }
+          };
+        });
+        if (bulkOps.length > 0) {
+          await col.bulkWrite(bulkOps, { ordered: false });
+        }
+      }
+    } catch (err) {
+      console.warn('[COMPANY-METADATA] Error flushing metadata:', err.message);
+    }
+  }, 1000);
+}
+
+function synthesizeCompanyMetadata(ticker, stock = null) {
+  const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+  const companyName = stock?.name && stock.name !== cleanTicker ? stock.name : cleanTicker;
+  const sector = stock?.sector || 'Diversified';
+  const industry = stock?.industry || 'General';
+  const exchange = stock?.exchange || 'NSE';
+
+  // Factual business type classification
+  let businessType = 'Commercial Operations';
+  const lowerInd = industry.toLowerCase();
+  const lowerSec = sector.toLowerCase();
+
+  if (lowerInd.includes('bank') || lowerSec.includes('finan') || lowerInd.includes('nbfc') || lowerInd.includes('insurance')) {
+    businessType = 'Financial Services & Banking';
+  } else if (lowerInd.includes('it ') || lowerInd.includes('software') || lowerSec.includes('technol') || lowerInd.includes('consulting')) {
+    businessType = 'IT Services & Software Consulting';
+  } else if (lowerInd.includes('pharma') || lowerInd.includes('health') || lowerInd.includes('biotech')) {
+    businessType = 'Pharmaceuticals & Healthcare';
+  } else if (lowerInd.includes('manufactur') || lowerInd.includes('auto') || lowerInd.includes('chemical') || lowerInd.includes('textile') || lowerInd.includes('steel') || lowerInd.includes('metal')) {
+    businessType = 'Industrial Manufacturing';
+  } else if (lowerInd.includes('retail') || lowerInd.includes('fmcg') || lowerInd.includes('consumer')) {
+    businessType = 'Consumer Goods & Retail';
+  } else if (lowerInd.includes('power') || lowerInd.includes('energy') || lowerInd.includes('oil') || lowerInd.includes('gas')) {
+    businessType = 'Energy & Utilities';
+  } else if (lowerInd.includes('infra') || lowerInd.includes('epc') || lowerInd.includes('construct') || lowerInd.includes('engineer')) {
+    businessType = 'Infrastructure & Engineering';
+  }
+
+  // Factual concise description (max 35-40 words, strictly factual, zero investment advice)
+  const description = `${companyName} operates in the ${sector} sector, providing ${industry.toLowerCase()} products, commercial services, and operational solutions for domestic and export markets.`;
+
+  // 2-5 thematic tags describing the actual business
+  const themes = [sector];
+  if (industry && industry !== sector) themes.push(industry);
+  if (stock?.fno) themes.push('F&O');
+  if (stock?.marketCap && stock.marketCap >= 20000) themes.push('Large Cap');
+  else if (stock?.marketCap && stock.marketCap >= 5000) themes.push('Mid Cap');
+  else themes.push('Small Cap');
+  
+  const uniqueThemes = [...new Set(themes)].slice(0, 4);
+
+  const meta = {
+    ticker: cleanTicker,
+    exchange,
+    company_name: companyName,
+    sector,
+    industry,
+    description,
+    business_type: businessType,
+    products: [industry, `${sector} Products`],
+    themes: uniqueThemes,
+    geographic_exposure: 'Domestic & Global Markets',
+    key_revenue_driver: `Core operations in ${industry}`,
+    source: 'Company Filings / Public Disclosures',
+    last_updated: 'Sep 2026',
+    ai_generated: true,
+    data_version: '1.0'
+  };
+
+  return meta;
+}
+
+function getCompanyMetadata(ticker) {
+  loadCompanyMetadata();
+  const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+  if (!cleanTicker) return null;
+
+  if (memoryCompanyMetadata.has(cleanTicker)) {
+    return memoryCompanyMetadata.get(cleanTicker);
+  }
+
+  // Look up in stock universe to synthesize
+  const universe = getUniverseStocks();
+  const stock = universe.find(s => (s.symbol || '').toUpperCase().trim() === cleanTicker) || null;
+
+  const synthesized = synthesizeCompanyMetadata(cleanTicker, stock);
+  memoryCompanyMetadata.set(cleanTicker, synthesized);
+  scheduleCompanyMetadataFlush();
+
+  return synthesized;
+}
+
+function updateCompanyMetadata(ticker, updates) {
+  loadCompanyMetadata();
+  const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+  if (!cleanTicker) return null;
+
+  const current = getCompanyMetadata(cleanTicker);
+  const updated = {
+    ...current,
+    ...updates,
+    ticker: cleanTicker,
+    last_updated: updates.last_updated || 'Sep 2026',
+    data_version: updates.data_version || '1.1'
+  };
+
+  memoryCompanyMetadata.set(cleanTicker, updated);
+  scheduleCompanyMetadataFlush();
+  return updated;
 }
 
 async function persistUniverseQuotes(quotesMap) {
@@ -2666,6 +2959,13 @@ function getAuthenticatedUser(req) {
     if (m) token = m[1];
   }
 
+  if (!token && req.url) {
+    try {
+      const q = url.parse(req.url, true).query;
+      if (q && q.token) token = String(q.token).trim();
+    } catch (e) {}
+  }
+
   if (!token) return null;
 
   if (token === ADMIN_TOKEN) {
@@ -2825,7 +3125,8 @@ function getUserWatchlists(user) {
       id: targetId,
       username: user.username,
       role: user.role || 'user',
-      watchlists: createDefaultWatchlists()
+      watchlists: createDefaultWatchlists(),
+      maxWatchlists: MAX_WATCHLISTS
     };
     users.push(u);
     saveUsers(users);
@@ -2835,6 +3136,33 @@ function getUserWatchlists(user) {
     saveUsers(users);
   }
   return u.watchlists;
+}
+
+function getUserMaxWatchlists(user) {
+  if (!user) return MAX_WATCHLISTS;
+  const users = readUsers();
+  const u = findUserRecord(users, user);
+  if (u && typeof u.maxWatchlists === 'number' && u.maxWatchlists > 0) {
+    return u.maxWatchlists;
+  }
+  return MAX_WATCHLISTS;
+}
+
+function setUserMaxWatchlists(targetUserIdOrUsername, limit) {
+  const users = readUsers();
+  let u = users.find(x => x.id === targetUserIdOrUsername || x.username.toLowerCase() === targetUserIdOrUsername.toLowerCase());
+  if (!u) {
+    if (targetUserIdOrUsername === 'usr_admin' || targetUserIdOrUsername.toLowerCase() === 'admin') {
+      u = { id: 'usr_admin', username: 'admin', role: 'admin', watchlists: createDefaultWatchlists() };
+      users.push(u);
+    } else {
+      return null;
+    }
+  }
+  const cleanLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 5));
+  u.maxWatchlists = cleanLimit;
+  saveUsers(users);
+  return u;
 }
 
 function saveUserWatchlists(user, watchlists) {
@@ -2851,7 +3179,8 @@ function saveUserWatchlists(user, watchlists) {
       id: targetId,
       username: user.username,
       role: user.role || 'user',
-      watchlists
+      watchlists,
+      maxWatchlists: MAX_WATCHLISTS
     });
     saveUsers(users);
     return true;
@@ -4101,11 +4430,13 @@ const server = http.createServer(async (req, res) => {
             createdAt: u.createdAt || 'Initial',
             screenersCount: scrs.length,
             watchlistsCount: wls.length,
+            maxWatchlists: u.maxWatchlists || MAX_WATCHLISTS,
             totalStocksTracked: totalStocks
           };
         });
 
         // Add master admin entry at the top
+        const adminWls = getUserWatchlists({ role: 'admin', userId: 'usr_admin' });
         const allUsers = [
           {
             id: 'usr_admin',
@@ -4113,8 +4444,9 @@ const server = http.createServer(async (req, res) => {
             role: 'admin',
             createdAt: 'System Root',
             screenersCount: readScreeners().length,
-            watchlistsCount: getUserWatchlists({ role: 'admin', userId: 'usr_admin' }).length,
-            totalStocksTracked: getUserWatchlists({ role: 'admin', userId: 'usr_admin' }).reduce((acc, w) => acc + (w.stocks?.length || 0), 0),
+            watchlistsCount: adminWls.length,
+            maxWatchlists: getUserMaxWatchlists({ role: 'admin', userId: 'usr_admin' }),
+            totalStocksTracked: adminWls.reduce((acc, w) => acc + (w.stocks?.length || 0), 0),
             isMaster: true
           },
           ...sanitizedUsers.filter(u => u.username !== 'admin')
@@ -4173,7 +4505,8 @@ const server = http.createServer(async (req, res) => {
           role,
           createdAt: new Date().toISOString(),
           screeners: readScreeners(),
-          watchlists: createDefaultWatchlists()
+          watchlists: createDefaultWatchlists(),
+          maxWatchlists: MAX_WATCHLISTS
         };
 
         users.push(newUser);
@@ -4186,7 +4519,8 @@ const server = http.createServer(async (req, res) => {
             id: newUser.id,
             username: newUser.username,
             role: newUser.role,
-            createdAt: newUser.createdAt
+            createdAt: newUser.createdAt,
+            maxWatchlists: newUser.maxWatchlists
           }
         });
       }
@@ -4302,6 +4636,152 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // A6. PUT /api/admin/users/:id/watchlists-limit - Admin Update Watchlist Limit for Any User
+      const adminWlLimitMatch = pathname.match(/^\/api\/admin\/users\/([a-zA-Z0-9_\-]+)\/watchlists-limit$/);
+      if (adminWlLimitMatch && method === 'PUT') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const targetId = adminWlLimitMatch[1];
+        const body = await parseJsonBody(req);
+        const limitNum = parseInt(body.maxWatchlists, 10);
+
+        if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+          return sendJson(res, 400, { success: false, error: 'Watchlist limit must be an integer between 1 and 100' });
+        }
+
+        const updatedUser = setUserMaxWatchlists(targetId, limitNum);
+        if (!updatedUser) {
+          return sendJson(res, 404, { success: false, error: 'User not found' });
+        }
+
+        return sendJson(res, 200, {
+          success: true,
+          message: `Watchlist limit updated to ${limitNum} for user "${updatedUser.username}"`,
+          maxWatchlists: limitNum,
+          username: updatedUser.username,
+          userId: updatedUser.id
+        });
+      }
+
+      // A7. GET /api/admin/universe - Get complete stock universe with metadata, indicators, and tags
+      if (pathname === '/api/admin/universe' && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const universe = getUniverseStocks();
+        let fnoCount = 0;
+        let autoAddedCount = 0;
+        let adminAddedCount = 0;
+        const sectorCounts = {};
+
+        const enrichedStocks = universe.map((s, idx) => {
+          if (!s) return null;
+          const sym = (s.symbol || '').toUpperCase().trim();
+          const isFno = Boolean(s.fno);
+          if (isFno) fnoCount++;
+          if (s.autoAdded) autoAddedCount++;
+          if (s.adminAdded) adminAddedCount++;
+
+          const sec = s.sector || 'General';
+          sectorCounts[sec] = (sectorCounts[sec] || 0) + 1;
+
+          const mcap = typeof s.marketCap === 'number' ? s.marketCap : 5000;
+          let capCategory = 'Small Cap';
+          if (mcap >= 50000) capCategory = 'Mega Cap';
+          else if (mcap >= 20000) capCategory = 'Large Cap';
+          else if (mcap >= 5000) capCategory = 'Mid Cap';
+          else if (mcap >= 1000) capCategory = 'Small Cap';
+          else capCategory = 'Micro Cap';
+
+          const price = typeof s.price === 'number' ? s.price : (typeof s.ltp === 'number' ? s.ltp : 0);
+          const chg = typeof s.changePercent === 'number' ? s.changePercent : 0;
+
+          return {
+            id: 'stk_' + idx,
+            symbol: sym,
+            name: s.name && s.name !== sym ? s.name : sym,
+            exchange: s.exchange || 'NSE',
+            sector: sec,
+            industry: s.industry || 'Diversified',
+            marketCap: mcap,
+            capCategory,
+            price: Number(price.toFixed(2)),
+            ltp: Number(price.toFixed(2)),
+            changePercent: Number(chg.toFixed(2)),
+            rsi: typeof s.rsi === 'number' ? Number(s.rsi.toFixed(1)) : 50.0,
+            rvol: typeof s.rvol === 'number' ? Number(s.rvol.toFixed(2)) : 1.0,
+            ema20Distance: typeof s.ema20Distance === 'number' ? Number(s.ema20Distance.toFixed(1)) : 0.0,
+            fno: isFno,
+            high52w: s.high52w || s.fiftyTwoWeekHigh || price,
+            low52w: s.low52w || s.fiftyTwoWeekLow || price,
+            dayHigh: s.dayHigh || price,
+            dayLow: s.dayLow || price,
+            autoAdded: Boolean(s.autoAdded),
+            adminAdded: Boolean(s.adminAdded),
+            lastPriceUpdated: s.lastPriceUpdated || new Date().toISOString()
+          };
+        }).filter(Boolean);
+
+        return sendJson(res, 200, {
+          success: true,
+          totalCount: enrichedStocks.length,
+          fnoCount,
+          autoAddedCount,
+          adminAddedCount,
+          sectorsCount: Object.keys(sectorCounts).length,
+          sectors: sectorCounts,
+          stocks: enrichedStocks
+        });
+      }
+
+      // A8. POST /api/admin/universe - Admin Add New Stock to Universe
+      if (pathname === '/api/admin/universe' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const body = await parseJsonBody(req);
+        const result = addStockToUniverse(body);
+        if (!result.success) {
+          return sendJson(res, 400, { success: false, error: result.error });
+        }
+
+        return sendJson(res, 201, {
+          success: true,
+          message: `Stock "${result.stock.symbol}" added to universe successfully`,
+          stock: result.stock,
+          totalCount: getUniverseStocks().length
+        });
+      }
+
+      // A9. DELETE /api/admin/universe/:symbol - Admin Remove Stock from Universe
+      const adminDeleteUniverseStockMatch = pathname.match(/^\/api\/admin\/universe\/([a-zA-Z0-9_\-\.\^]+)$/);
+      if (adminDeleteUniverseStockMatch && method === 'DELETE') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const targetSymbol = adminDeleteUniverseStockMatch[1];
+        const result = deleteStockFromUniverse(targetSymbol);
+        if (!result.success) {
+          return sendJson(res, 404, { success: false, error: result.error });
+        }
+
+        return sendJson(res, 200, {
+          success: true,
+          message: `Stock "${result.symbol}" removed from universe successfully`,
+          symbol: result.symbol,
+          totalCount: getUniverseStocks().length
+        });
+      }
+
       // 0d. GET /api/auth/me or verify - Current user session profile
       if ((pathname === '/api/auth/me' || pathname === '/api/auth/verify') && method === 'GET') {
         const authUser = getAuthenticatedUser(req);
@@ -4310,6 +4790,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         const watchlists = getUserWatchlists(authUser);
+        const userMaxWatchlists = getUserMaxWatchlists(authUser);
         const screeners = getUserScreeners(authUser);
         const indicatorPreferences = getUserIndicatorPreferences(authUser);
         const analyticsPreferences = getUserAnalyticsPreferences(authUser);
@@ -4323,6 +4804,7 @@ const server = http.createServer(async (req, res) => {
           username: authUser.username,
           role: authUser.role,
           watchlistsCount: watchlists.length,
+          maxWatchlists: userMaxWatchlists,
           screenersCount: screeners.length,
           watchlists,
           screeners,
@@ -4400,7 +4882,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       // ==========================================
-      // WATCHLISTS ROUTES (5 Watchlists x 50 Stocks)
+      // WATCHLISTS ROUTES (Dynamic Watchlists x 500 Stocks)
       // ==========================================
 
       // W1. GET /api/watchlists - Get all watchlists for current user
@@ -4410,20 +4892,22 @@ const server = http.createServer(async (req, res) => {
           return sendJson(res, 401, { success: false, error: 'Please login to access watchlists' });
         }
         const watchlists = getUserWatchlists(authUser);
-        return sendJson(res, 200, { success: true, watchlists, maxWatchlists: MAX_WATCHLISTS, maxStocksPerWatchlist: MAX_STOCKS_PER_WATCHLIST });
+        const userMaxWls = getUserMaxWatchlists(authUser);
+        return sendJson(res, 200, { success: true, watchlists, maxWatchlists: userMaxWls, maxStocksPerWatchlist: MAX_STOCKS_PER_WATCHLIST });
       }
 
-      // W2. POST /api/watchlists - Create a new watchlist (Max 5)
+      // W2. POST /api/watchlists - Create a new watchlist (Dynamic user limit)
       if (pathname === '/api/watchlists' && method === 'POST') {
         const authUser = getAuthenticatedUser(req);
         if (!authUser) {
           return sendJson(res, 401, { success: false, error: 'Please login to create watchlists' });
         }
         const watchlists = getUserWatchlists(authUser);
-        if (watchlists.length >= MAX_WATCHLISTS) {
+        const userMaxWls = getUserMaxWatchlists(authUser);
+        if (watchlists.length >= userMaxWls) {
           return sendJson(res, 400, {
             success: false,
-            error: `Maximum limit of ${MAX_WATCHLISTS} watchlists reached.`
+            error: `Maximum limit of ${userMaxWls} watchlists reached for your account. Contact Admin to increase limit.`
           });
         }
         const body = await parseJsonBody(req);
@@ -4435,7 +4919,7 @@ const server = http.createServer(async (req, res) => {
         };
         watchlists.push(newWl);
         saveUserWatchlists(authUser, watchlists);
-        return sendJson(res, 201, { success: true, watchlist: newWl, watchlists });
+        return sendJson(res, 201, { success: true, watchlist: newWl, watchlists, maxWatchlists: userMaxWls });
       }
 
       // W3. PUT /api/watchlists/:id - Rename a watchlist
@@ -5036,6 +5520,30 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      // 9b. GET /api/stock-info/:ticker - Universal Fast Cached Company Metadata
+      const stockInfoMatch = pathname.match(/^\/api\/stock-info\/([a-zA-Z0-9_\-\.\^%]+)$/);
+      if (stockInfoMatch && method === 'GET') {
+        const rawTicker = decodeURIComponent(stockInfoMatch[1]);
+        const metadata = getCompanyMetadata(rawTicker);
+        if (!metadata) {
+          return sendJson(res, 404, { success: false, error: `Company metadata not found for ${rawTicker}` });
+        }
+        return sendJson(res, 200, { success: true, metadata });
+      }
+
+      // 9c. POST /api/admin/stock-info/:ticker - Admin Edit / Customise Company Metadata
+      const adminStockInfoMatch = pathname.match(/^\/api\/admin\/stock-info\/([a-zA-Z0-9_\-\.\^%]+)$/);
+      if (adminStockInfoMatch && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+        const rawTicker = decodeURIComponent(adminStockInfoMatch[1]);
+        const body = await parseJsonBody(req);
+        const updated = updateCompanyMetadata(rawTicker, body);
+        return sendJson(res, 200, { success: true, message: `Metadata updated for ${rawTicker}`, metadata: updated });
+      }
+
       // =============================================================
       // 10. MARKET ANALYTICS, BREADTH & SECTOR STRENGTH ENDPOINTS
       // =============================================================
@@ -5302,6 +5810,16 @@ const server = http.createServer(async (req, res) => {
   if (!resolvedPath.startsWith(path.resolve(PUBLIC_DIR))) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     return res.end('Forbidden');
+  }
+
+  // Restrict sensitive internal guides (Architecture & Cheatsheets) to Admin only
+  const targetBase = path.basename(resolvedPath).toLowerCase();
+  if (targetBase === 'architecture.html' || targetBase === 'cheatsheet.html') {
+    const authUser = getAuthenticatedUser(req);
+    if (!authUser || authUser.role !== 'admin') {
+      res.writeHead(302, { Location: '/' });
+      return res.end();
+    }
   }
 
   fs.stat(resolvedPath, (err, stats) => {

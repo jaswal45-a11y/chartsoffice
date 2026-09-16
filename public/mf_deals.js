@@ -532,6 +532,7 @@
           <td class="py-2 px-3 font-sans font-medium text-slate-200">${d.clientName || '--'}</td>
           <td class="py-2 px-3 font-sans font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center gap-1.5">
             <span>${d.companyName || '--'}</span>
+            ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(d.symbol || d.companyName, d.companyName) : ''}
             <span class="text-slate-500 opacity-0 group-hover:opacity-100 text-[10px]">↗</span>
           </td>
           <td class="py-2 px-3 text-center">${typeBadge}</td>

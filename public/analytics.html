@@ -1849,6 +1849,23 @@
           </div>
         </div>
 
+        <!-- Console Tabs Navigation -->
+        <div class="hidden sm:flex items-center gap-1.5 p-1 bg-dark-bg/80 border border-dark-border rounded-xl">
+          <button id="admin-tab-btn-users" onclick="switchAdminConsoleTab('users')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+            <span>User Accounts</span>
+          </button>
+          <button id="admin-tab-btn-universe" onclick="switchAdminConsoleTab('universe')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 hover:bg-dark-accent cursor-pointer">
+            <i data-lucide="database" class="w-3.5 h-3.5"></i>
+            <span>Stock Universe</span>
+            <span id="admin-tab-badge-universe-count" class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">...</span>
+          </button>
+          <button id="admin-tab-btn-docs" onclick="switchAdminConsoleTab('docs')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 hover:bg-dark-accent cursor-pointer">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>Architecture & Cheatsheets</span>
+          </button>
+        </div>
+
         <div class="flex items-center gap-2">
           <button onclick="loadAdminData()" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-colors cursor-pointer" title="Refresh Admin Data">
             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
@@ -1859,155 +1876,466 @@
         </div>
       </div>
 
+      <!-- Mobile Tab Bar -->
+      <div class="sm:hidden flex items-center justify-around border-b border-dark-border bg-dark-bg/90 p-1.5 text-xs">
+        <button onclick="switchAdminConsoleTab('users')" id="admin-mobile-tab-users" class="px-2.5 py-1 rounded-lg font-bold text-amber-300 bg-amber-500/20">Users</button>
+        <button onclick="switchAdminConsoleTab('universe')" id="admin-mobile-tab-universe" class="px-2.5 py-1 rounded-lg text-slate-400">Universe</button>
+        <button onclick="switchAdminConsoleTab('docs')" id="admin-mobile-tab-docs" class="px-2.5 py-1 rounded-lg text-slate-400">Docs</button>
+      </div>
+
       <!-- Console Body -->
       <div class="p-5 overflow-y-auto flex-1 flex flex-col gap-5 text-xs">
         
-        <!-- 4 KPI System Diagnostics Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- 5 KPI System Diagnostics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <!-- Card 1: User Capacity & Slots -->
-          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+          <div class="p-3 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-1.5">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-semibold">User Capacity</span>
-              <span id="admin-kpi-slots" class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">-- slots</span>
+              <span class="text-slate-400 font-semibold text-[11px]">User Capacity</span>
+              <span id="admin-kpi-slots" class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">-- slots</span>
             </div>
             <div class="flex items-baseline gap-1 font-mono">
-              <span id="admin-kpi-users-count" class="text-2xl font-bold text-white">0</span>
-              <span class="text-slate-500 font-medium">/ <span id="admin-kpi-max-users">10</span> Max</span>
+              <span id="admin-kpi-users-count" class="text-xl font-bold text-white">0</span>
+              <span class="text-slate-500 font-medium text-[11px]">/ <span id="admin-kpi-max-users">10</span> Max</span>
             </div>
             <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
               <div id="admin-capacity-bar" class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: 0%"></div>
             </div>
           </div>
 
-          <!-- Card 2: System Screeners -->
-          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+          <!-- Card 2: Stock Universe (Clickable) -->
+          <div onclick="switchAdminConsoleTab('universe')" class="p-3 rounded-xl bg-dark-bg/70 hover:bg-dark-accent/40 border border-dark-border hover:border-blue-500/40 flex flex-col justify-between gap-1.5 transition-all cursor-pointer group">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-semibold">System Screeners</span>
-              <i data-lucide="sliders" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span class="text-slate-400 group-hover:text-blue-300 font-semibold text-[11px] transition-colors">Stock Universe</span>
+              <i data-lucide="database" class="w-3.5 h-3.5 text-blue-400"></i>
             </div>
-            <div class="text-2xl font-mono font-bold text-blue-400" id="admin-kpi-screeners">--</div>
-            <span class="text-[10px] text-slate-500">Live Chartink scanner pipelines</span>
+            <div class="text-xl font-mono font-bold text-blue-400" id="admin-kpi-universe-total">--</div>
+            <span class="text-[10px] text-slate-500" id="admin-kpi-universe-sub">Click to explore database</span>
           </div>
 
-          <!-- Card 3: Watchlists & Stocks -->
-          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+          <!-- Card 3: System Screeners -->
+          <div class="p-3 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-1.5">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-semibold">Watchlists & Stocks</span>
+              <span class="text-slate-400 font-semibold text-[11px]">System Screeners</span>
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-emerald-400"></i>
+            </div>
+            <div class="text-xl font-mono font-bold text-emerald-400" id="admin-kpi-screeners">--</div>
+            <span class="text-[10px] text-slate-500">Live scanner pipelines</span>
+          </div>
+
+          <!-- Card 4: Watchlists & Stocks -->
+          <div class="p-3 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-semibold text-[11px]">Portfolios Tracked</span>
               <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-400"></i>
             </div>
-            <div class="text-2xl font-mono font-bold text-amber-400" id="admin-kpi-watchlists">--</div>
-            <span class="text-[10px] text-slate-500">Custom user portfolios tracked</span>
+            <div class="text-xl font-mono font-bold text-amber-400" id="admin-kpi-watchlists">--</div>
+            <span class="text-[10px] text-slate-500">Custom user portfolios</span>
           </div>
 
-          <!-- Card 4: Server Health & Sessions -->
-          <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2">
+          <!-- Card 5: Architecture & Docs (Clickable) -->
+          <div onclick="switchAdminConsoleTab('docs')" class="p-3 rounded-xl bg-dark-bg/70 hover:bg-dark-accent/40 border border-dark-border hover:border-cyan-500/40 flex flex-col justify-between gap-1.5 transition-all cursor-pointer group">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400 font-semibold">Server & Security</span>
-              <i data-lucide="server" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span class="text-slate-400 group-hover:text-cyan-300 font-semibold text-[11px] transition-colors">Documentation</span>
+              <i data-lucide="book-open" class="w-3.5 h-3.5 text-cyan-400"></i>
             </div>
-            <div class="text-sm font-mono font-bold text-emerald-400" id="admin-kpi-uptime">Online · Uptime: --</div>
-            <span class="text-[10px] text-slate-500" id="admin-kpi-sessions">Active sessions: --</span>
+            <div class="text-sm font-bold text-cyan-400 font-mono">Architecture & Rules</div>
+            <span class="text-[10px] text-slate-500">Dhan API & Cheatsheets</span>
           </div>
         </div>
 
-        <!-- Section 2: Capacity Limit Management & Add User Toolbar -->
-        <div class="p-4 rounded-xl bg-dark-bg/50 border border-dark-border flex flex-wrap items-center justify-between gap-4">
-          <!-- Adjust Max Users -->
-          <form id="form-admin-capacity" onsubmit="handleAdminUpdateMaxUsers(event)" class="flex items-center gap-2 flex-wrap">
-            <label class="font-semibold text-slate-300 flex items-center gap-1.5">
-              <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
-              <span>Max Allowed Users Limit:</span>
-            </label>
-            <input type="number" id="input-admin-max-users" min="1" max="500" required
-              class="w-24 px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-100 font-mono font-bold text-xs focus:outline-none focus:border-amber-500">
-            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1">
-              <i data-lucide="check" class="w-3.5 h-3.5"></i>
-              <span>Update Limit</span>
-            </button>
-          </form>
-
-          <!-- Toggle Add User Panel Button -->
-          <button type="button" onclick="toggleAdminAddUserPanel()" id="btn-toggle-add-user" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow transition-all cursor-pointer flex items-center gap-1.5">
-            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-            <span>Add New User Account</span>
-          </button>
-        </div>
-
-        <!-- Section 3: Add User Collapsible Panel -->
-        <div id="admin-add-user-panel" class="hidden p-4 rounded-xl bg-dark-bg border border-blue-500/30 animate-in fade-in duration-150">
-          <div class="flex items-center justify-between border-b border-dark-border/60 pb-2 mb-3">
-            <h4 class="font-bold text-white flex items-center gap-2">
-              <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
-              <span>Create New User Credentials</span>
-            </h4>
-            <button type="button" onclick="toggleAdminAddUserPanel()" class="text-slate-500 hover:text-white text-xs cursor-pointer">Close</button>
-          </div>
-          <form id="form-admin-add-user" onsubmit="handleAdminAddUser(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Username</label>
-              <input type="text" id="admin-new-username" placeholder="e.g. trader_john" required
-                class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Password</label>
-              <input type="password" id="admin-new-password" placeholder="Min 4 chars" required
-                class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Role</label>
-              <select id="admin-new-role" class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
-                <option value="user">Standard User (5 Watchlists)</option>
-                <option value="admin">Administrator (Full Access)</option>
-              </select>
-            </div>
-            <div>
-              <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1.5">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                <span>Create User</span>
+        <!-- ============================================================== -->
+        <!-- TAB 1: USER ACCOUNTS & CAPACITY                                -->
+        <!-- ============================================================== -->
+        <div id="admin-tab-content-users" class="flex flex-col gap-4">
+          <!-- Capacity Limit Management & Add User Toolbar -->
+          <div class="p-4 rounded-xl bg-dark-bg/50 border border-dark-border flex flex-wrap items-center justify-between gap-4">
+            <!-- Adjust Max Users -->
+            <form id="form-admin-capacity" onsubmit="handleAdminUpdateMaxUsers(event)" class="flex items-center gap-2 flex-wrap">
+              <label class="font-semibold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Max Allowed Users Limit:</span>
+              </label>
+              <input type="number" id="input-admin-max-users" min="1" max="500" required
+                class="w-24 px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-100 font-mono font-bold text-xs focus:outline-none focus:border-amber-500">
+              <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                <span>Update Limit</span>
               </button>
+            </form>
+
+            <!-- Toggle Add User Panel Button -->
+            <button type="button" onclick="toggleAdminAddUserPanel()" id="btn-toggle-add-user" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow transition-all cursor-pointer flex items-center gap-1.5">
+              <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+              <span>Add New User Account</span>
+            </button>
+          </div>
+
+          <!-- Add User Collapsible Panel -->
+          <div id="admin-add-user-panel" class="hidden p-4 rounded-xl bg-dark-bg border border-blue-500/30 animate-in fade-in duration-150">
+            <div class="flex items-center justify-between border-b border-dark-border/60 pb-2 mb-3">
+              <h4 class="font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
+                <span>Create New User Credentials</span>
+              </h4>
+              <button type="button" onclick="toggleAdminAddUserPanel()" class="text-slate-500 hover:text-white text-xs cursor-pointer">Close</button>
             </div>
-          </form>
-          <div id="admin-add-user-banner" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+            <form id="form-admin-add-user" onsubmit="handleAdminAddUser(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Username</label>
+                <input type="text" id="admin-new-username" placeholder="e.g. trader_john" required
+                  class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Password</label>
+                <input type="password" id="admin-new-password" placeholder="Min 4 chars" required
+                  class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Role</label>
+                <select id="admin-new-role" class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="user">Standard User (Default 5 Watchlists)</option>
+                  <option value="admin">Administrator (Full Access)</option>
+                </select>
+              </div>
+              <div>
+                <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                  <span>Create User</span>
+                </button>
+              </div>
+            </form>
+            <div id="admin-add-user-banner" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+          </div>
+
+          <!-- All Registered Users Table -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                <i data-lucide="users-round" class="w-4 h-4 text-emerald-400"></i>
+                <span>Registered Accounts (<span id="admin-users-table-count">0</span>)</span>
+              </h4>
+              <div class="flex items-center gap-2">
+                <input type="text" id="admin-user-search" oninput="filterAdminUserTable(this.value)" placeholder="Search username / role..."
+                  class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500 w-48">
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-dark-border overflow-x-auto bg-dark-bg/40">
+              <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+                <thead class="bg-dark-bg text-slate-400 font-semibold border-b border-dark-border uppercase text-[10px]">
+                  <tr>
+                    <th class="py-2.5 px-3">User</th>
+                    <th class="py-2.5 px-3">Role</th>
+                    <th class="py-2.5 px-3">Registered Date</th>
+                    <th class="py-2.5 px-2 text-center">Screeners</th>
+                    <th class="py-2.5 px-2 text-center">Watchlists</th>
+                    <th class="py-2.5 px-2 text-center">Stocks Tracked</th>
+                    <th class="py-2.5 px-3 text-right">Administrative Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody" class="divide-y divide-dark-border/40 font-mono">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <!-- Section 4: All Registered Users Table -->
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
-              <i data-lucide="users-round" class="w-4 h-4 text-emerald-400"></i>
-              <span>Registered Accounts (<span id="admin-users-table-count">0</span>)</span>
-            </h4>
-            <div class="flex items-center gap-2">
-              <input type="text" id="admin-user-search" oninput="filterAdminUserTable(this.value)" placeholder="Search username / role..."
-                class="px-3 py-1.5 bg-dark-bg border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500 w-48">
+        <!-- ============================================================== -->
+        <!-- TAB 2: STOCK UNIVERSE DATABASE & MANAGEMENT                   -->
+        <!-- ============================================================== -->
+        <div id="admin-tab-content-universe" class="hidden flex-col gap-4">
+          
+          <!-- Universe Filter & Action Toolbar -->
+          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-white text-sm flex items-center gap-1.5">
+                  <i data-lucide="database" class="w-4 h-4 text-blue-400"></i>
+                  <span>Universe Explorer</span>
+                </span>
+                <span id="admin-universe-total-badge" class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                  0 Stocks
+                </span>
+                <span id="admin-universe-fno-badge" class="px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  0 F&O Active
+                </span>
+                <span id="admin-universe-auto-badge" class="px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                  0 Auto-Ingested
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                <!-- Toggle Add Stock Button -->
+                <button onclick="toggleAdminAddStockPanel()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow transition-all flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                  <span>Add Stock to Universe</span>
+                </button>
+
+                <!-- Export CSV Button -->
+                <button onclick="handleExportUniverseCSV()" class="px-3 py-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-200 hover:text-white font-semibold text-xs shadow transition-all flex items-center gap-1.5 cursor-pointer" title="Download full universe with metadata as CSV">
+                  <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
+                  <span>Export CSV</span>
+                </button>
+
+                <!-- Refresh Button -->
+                <button onclick="loadAdminUniverse(true)" class="p-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer" title="Refresh Universe">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Add Stock Collapsible Panel -->
+            <div id="admin-add-stock-panel" class="hidden p-4 rounded-xl bg-dark-bg border border-emerald-500/30 animate-in fade-in duration-150">
+              <div class="flex items-center justify-between border-b border-dark-border/60 pb-2 mb-3">
+                <h4 class="font-bold text-emerald-300 flex items-center gap-2">
+                  <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
+                  <span>Add New Stock to System Universe</span>
+                </h4>
+                <button type="button" onclick="toggleAdminAddStockPanel()" class="text-slate-500 hover:text-white text-xs cursor-pointer">Close</button>
+              </div>
+
+              <form id="form-admin-add-stock" onsubmit="handleAdminAddStock(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Stock Symbol *</label>
+                  <input type="text" id="admin-new-stock-symbol" placeholder="e.g. BDL, TATAMOTORS" required
+                    class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 font-mono font-bold text-xs uppercase focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Company Name</label>
+                  <input type="text" id="admin-new-stock-name" placeholder="e.g. Bharat Dynamics Ltd"
+                    class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Exchange</label>
+                  <select id="admin-new-stock-exchange" class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer">
+                    <option value="NSE">NSE (National Stock Exchange)</option>
+                    <option value="BSE">BSE (Bombay Stock Exchange)</option>
+                    <option value="NSE_INDEX">NSE Index Derivative</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Sector</label>
+                  <input type="text" id="admin-new-stock-sector" placeholder="e.g. Defence, Industrials, IT"
+                    class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Industry</label>
+                  <input type="text" id="admin-new-stock-industry" placeholder="e.g. Aerospace & Defence"
+                    class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Market Cap (₹ Crores)</label>
+                  <input type="number" id="admin-new-stock-mcap" placeholder="e.g. 35000" min="1" step="any"
+                    class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-300 mb-1">Current LTP / Price (₹)</label>
+                  <input type="number" id="admin-new-stock-price" placeholder="e.g. 1450.50" min="0.05" step="any"
+                    class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex items-center justify-between gap-3 pt-4">
+                  <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="admin-new-stock-fno" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                    <span class="text-xs font-semibold text-slate-200">F&O Active</span>
+                  </label>
+                  <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Add to Universe</span>
+                  </button>
+                </div>
+              </form>
+              <div id="admin-add-stock-banner" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+            </div>
+
+            <!-- Live Filter Inputs Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 pt-1">
+              <!-- Search Input -->
+              <div>
+                <input type="text" id="admin-universe-search" oninput="handleAdminUniverseFilterChange()" placeholder="Search symbol, name, sector..."
+                  class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+              </div>
+
+              <!-- Sector Dropdown -->
+              <div>
+                <select id="admin-universe-sector-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="ALL">All Sectors (All)</option>
+                </select>
+              </div>
+
+              <!-- Market Cap Tier Filter -->
+              <div>
+                <select id="admin-universe-cap-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="ALL">All Market Caps</option>
+                  <option value="MEGA">Mega Cap (₹50k+ Cr)</option>
+                  <option value="LARGE">Large Cap (₹20k–50k Cr)</option>
+                  <option value="MID">Mid Cap (₹5k–20k Cr)</option>
+                  <option value="SMALL">Small Cap (₹1k–5k Cr)</option>
+                  <option value="MICRO">Micro Cap (<₹1k Cr)</option>
+                </select>
+              </div>
+
+              <!-- F&O Filter -->
+              <div>
+                <select id="admin-universe-fno-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="ALL">All Instruments</option>
+                  <option value="FNO_ONLY">F&O Derivatives Only</option>
+                  <option value="NON_FNO">Cash / Non-F&O Only</option>
+                </select>
+              </div>
+
+              <!-- Ingestion Source Filter -->
+              <div>
+                <select id="admin-universe-source-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="ALL">All Sources</option>
+                  <option value="AUTO">Auto-Ingested from Scanners</option>
+                  <option value="ADMIN">Admin Added</option>
+                  <option value="BASE">Base Universe</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div class="rounded-xl border border-dark-border overflow-x-auto bg-dark-bg/40">
-            <table class="w-full text-left text-xs border-collapse min-w-[700px]">
-              <thead class="bg-dark-bg text-slate-400 font-semibold border-b border-dark-border uppercase text-[10px]">
-                <tr>
-                  <th class="py-2.5 px-3">User</th>
-                  <th class="py-2.5 px-3">Role</th>
-                  <th class="py-2.5 px-3">Registered Date</th>
-                  <th class="py-2.5 px-2 text-center">Screeners</th>
-                  <th class="py-2.5 px-2 text-center">Watchlists</th>
-                  <th class="py-2.5 px-2 text-center">Stocks Tracked</th>
-                  <th class="py-2.5 px-3 text-right">Administrative Actions</th>
-                </tr>
-              </thead>
-              <tbody id="admin-users-tbody" class="divide-y divide-dark-border/40 font-mono">
-                <!-- Populated dynamically -->
-              </tbody>
-            </table>
+          <!-- Universe Table Container -->
+          <div class="flex flex-col gap-2">
+            <div class="rounded-xl border border-dark-border overflow-x-auto bg-dark-bg/40">
+              <table class="w-full text-left text-xs border-collapse min-w-[950px]">
+                <thead class="bg-dark-bg text-slate-400 font-semibold border-b border-dark-border uppercase text-[10px]">
+                  <tr>
+                    <th class="py-2.5 px-3 w-12 text-center">#</th>
+                    <th class="py-2.5 px-3">Symbol</th>
+                    <th class="py-2.5 px-3">Company Name</th>
+                    <th class="py-2.5 px-3">Sector & Industry</th>
+                    <th class="py-2.5 px-3">Market Cap</th>
+                    <th class="py-2.5 px-2 text-center">F&O</th>
+                    <th class="py-2.5 px-3 text-right">LTP / 1D %</th>
+                    <th class="py-2.5 px-3 text-center">52W Range</th>
+                    <th class="py-2.5 px-3">Tags & Metadata</th>
+                    <th class="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-universe-tbody" class="divide-y divide-dark-border/40 font-mono">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Universe Pagination Bar -->
+            <div class="flex items-center justify-between gap-3 p-2 text-slate-400 text-xs flex-wrap">
+              <div id="admin-universe-pagination-info">
+                Showing 0 to 0 of 0 stocks
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-500">Rows per page:</span>
+                <select id="admin-universe-page-size" onchange="handleAdminUniversePageSizeChange(this.value)" class="px-2 py-1 bg-dark-bg border border-dark-border rounded text-xs text-slate-200 cursor-pointer">
+                  <option value="25">25</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                  <option value="200">200</option>
+                </select>
+
+                <div class="flex items-center gap-1 ml-2">
+                  <button id="admin-universe-btn-prev" onclick="handleAdminUniversePageChange(-1)" class="px-2.5 py-1 rounded bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    Prev
+                  </button>
+                  <span id="admin-universe-page-display" class="px-2 font-mono font-bold text-slate-200">
+                    Page 1 of 1
+                  </span>
+                  <button id="admin-universe-btn-next" onclick="handleAdminUniversePageChange(1)" class="px-2.5 py-1 rounded bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer">
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
+
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 3: ARCHITECTURE & STRATEGY CHEATSHEETS (ADMIN ONLY)        -->
+        <!-- ============================================================== -->
+        <div id="admin-tab-content-docs" class="hidden flex-col gap-4">
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Documentation Card 1: System Architecture -->
+            <div class="p-5 rounded-2xl bg-gradient-to-br from-dark-bg/90 via-slate-900/70 to-teal-950/20 border border-teal-500/30 flex flex-col justify-between gap-4">
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <div class="w-9 h-9 rounded-xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300">
+                    <i data-lucide="cpu" class="w-5 h-5"></i>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-teal-500/15 text-teal-300 border border-teal-500/30">
+                    Confidential Architecture
+                  </span>
+                </div>
+                <h3 class="text-base font-bold text-white tracking-tight mt-1">Dhan Broker API & MongoDB Atlas Architecture</h3>
+                <p class="text-slate-300 text-xs leading-relaxed">
+                  Comprehensive 2-page system architecture guide detailing real-time DhanHQ market data pipelines, high-resolution candle aggregations, 15ms RAM caching fallbacks, and multi-region MongoDB Atlas cluster synchronizations.
+                </p>
+                <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border text-[11px] text-slate-400 font-mono space-y-1">
+                  <div>• Protocol: DhanHQ REST v2 & WebSocket Stream</div>
+                  <div>• Database: MongoDB Atlas (M0/M10 Cluster) + Local JSON Fallback</div>
+                  <div>• DNS Resolution: Triple-tier fallback (Google 8.8.8.8, Cloudflare 1.1.1.1)</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button onclick="handleAdminOpenArchitectureTab()" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                  <span>Open Architecture Guide (Full View)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Documentation Card 2: Strategy Cheatsheets -->
+            <div class="p-5 rounded-2xl bg-gradient-to-br from-dark-bg/90 via-slate-900/70 to-blue-950/20 border border-blue-500/30 flex flex-col justify-between gap-4">
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <div class="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-300">
+                    <i data-lucide="file-code-2" class="w-5 h-5"></i>
+                  </div>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                    Institutional Formulas
+                  </span>
+                </div>
+                <h3 class="text-base font-bold text-white tracking-tight mt-1">Screener Strategies & Mathematical Cheatsheet</h3>
+                <p class="text-slate-300 text-xs leading-relaxed">
+                  Full reference guide for all 13 built-in screener algorithms: Minervini Volatility Contraction Pattern (VCP), 10/20 EMA Darvas Pullbacks, Multi-Year Breakouts, 52W High Momentum, High Volume Breakouts, and RSI Mean Reversals.
+                </p>
+                <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border text-[11px] text-slate-400 font-mono space-y-1">
+                  <div>• Formulas: Exact mathematical criteria, lookbacks, and thresholds</div>
+                  <div>• Indicators: EMA 10/20/50/150/200, Darvas Top/Bottom, VWAP, Floor Pivots</div>
+                  <div>• Execution: Automated Chartink scanner execution & ranking engine</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 pt-2">
+                <button onclick="handleAdminOpenCheatsheetTab()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                  <span>Open Strategy Cheatsheet (Full View)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Access Document Viewer Drawer -->
+          <div id="admin-doc-viewer-container" class="hidden p-4 rounded-xl bg-dark-bg border border-dark-border flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-dark-border pb-2">
+              <h4 id="admin-doc-viewer-title" class="font-bold text-white text-sm">Document Viewer</h4>
+              <button onclick="closeAdminDocViewer()" class="text-slate-400 hover:text-white text-xs cursor-pointer">Close Viewer</button>
+            </div>
+            <iframe id="admin-doc-iframe" src="about:blank" class="w-full h-[600px] rounded-lg border border-dark-border bg-white"></iframe>
+          </div>
+
         </div>
 
       </div>
 
       <!-- Console Footer -->
       <div class="p-3.5 border-t border-dark-border bg-dark-bg/60 flex items-center justify-between text-xs text-slate-400">
-        <span>Logged in as <strong>admin (Superadmin)</strong> · All user accounts are isolated & secure</span>
+        <span>Logged in as <strong>admin (Superadmin)</strong> · All system universe, accounts & documentation are strictly protected</span>
         <button onclick="closeAdminConsole()" class="px-4 py-1.5 rounded-xl bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white font-semibold transition-colors cursor-pointer">
           Exit Console
         </button>
@@ -2019,6 +2347,8 @@
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+  <!-- Global Reusable Company Info Component -->
+  <script src="company-info.js?v=1.0.0"></script>
   <!-- Dedicated Analytics JS Script -->
   <script src="analytics.js?v=2.6.6"></script>
   <!-- Sticky Synchronized Notes Script -->

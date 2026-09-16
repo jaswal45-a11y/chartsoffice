@@ -437,5 +437,111 @@ html:not(.dark) .indicator-color-picker:hover {
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
 }
 
+/* =============================================================
+   Global Company Info Popover & Stock Info Button Styles
+   ============================================================= */
+.stock-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  transition: all 0.15s ease-in-out;
+}
+
+.stock-info-btn:hover {
+  transform: scale(1.15);
+}
+
+.stock-info-btn:active {
+  transform: scale(0.92);
+}
+
+#global-company-info-popover {
+  filter: drop-shadow(0 20px 25px -5px rgba(0, 0, 0, 0.5)) drop-shadow(0 8px 10px -6px rgba(0, 0, 0, 0.5));
+}
+
+html:not(.dark) #global-company-info-popover .bg-dark-card {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) #global-company-info-popover .bg-dark-bg {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) #global-company-info-popover .bg-slate-900\/60 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+html:not(.dark) #global-company-info-popover .text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) #global-company-info-popover .text-slate-100,
+html:not(.dark) #global-company-info-popover .text-slate-200 {
+  color: #334155 !important;
+}
+
+html:not(.dark) #global-company-info-popover .text-slate-300,
+html:not(.dark) #global-company-info-popover .text-slate-400 {
+  color: #64748b !important;
+}
+
+html:not(.dark) #global-company-info-popover .border-dark-border {
+  border-color: #e2e8f0 !important;
+}
+
+/* Draggable & Resizable Popover Enhancements */
+.company-info-drag-header {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.company-info-drag-header:active,
+#global-company-info-popover.dragging {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+#global-company-info-popover.dragging,
+#global-company-info-popover.resizing {
+  transition: none !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px 2px rgba(6, 182, 212, 0.25) !important;
+}
+
+.company-info-resize-handle {
+  cursor: nwse-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.company-info-scroll-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.company-info-scroll-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.company-info-scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 4px;
+}
+
+.company-info-scroll-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+html:not(.dark) .company-info-scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+
 
 

@@ -1,0 +1,614 @@
+[
+  {
+    "ticker": "FILATEX",
+    "exchange": "NSE",
+    "company_name": "Filatex India Limited",
+    "sector": "Textiles",
+    "industry": "Textile Manufacturing & Synthetic Yarns",
+    "description": "Manufactures polyester-based textile products, synthetic filament yarns, fully drawn yarns (FDY), and drawn textured yarns (DTY) for apparel and home textile markets.",
+    "business_type": "Manufacturing",
+    "products": [
+      "Polyester Filament Yarn",
+      "FDY & DTY Yarns",
+      "Polymer Chips",
+      "Monofilament Yarns"
+    ],
+    "themes": [
+      "Textiles",
+      "Polyester",
+      "Synthetic Yarns",
+      "Exports"
+    ],
+    "geographic_exposure": "Domestic (65%) + Global Exports (35%)",
+    "key_revenue_driver": "Specialty FDY & DTY Polyester Filament Yarns",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "RELIANCE",
+    "exchange": "NSE",
+    "company_name": "Reliance Industries Limited",
+    "sector": "Energy & Diversified Conglomerate",
+    "industry": "Oil Refining, Petrochemicals, Telecom & Retail",
+    "description": "Operates integrated hydrocarbon refining, petrochemical manufacturing, nationwide retail stores, and digital telecom and 5G broadband services across India.",
+    "business_type": "Conglomerate & Operations",
+    "products": [
+      "Refined Petroleum",
+      "Petrochemicals",
+      "Jio Telecom & Fiber",
+      "Reliance Retail"
+    ],
+    "themes": [
+      "Energy",
+      "Petrochemicals",
+      "Telecom",
+      "Retail",
+      "5G & Digital"
+    ],
+    "geographic_exposure": "Pan-India & International Energy Markets",
+    "key_revenue_driver": "Oil-to-Chemicals (O2C), Jio Digital Platforms & Retail",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "TCS",
+    "exchange": "NSE",
+    "company_name": "Tata Consultancy Services Limited",
+    "sector": "Information Technology",
+    "industry": "IT Services & Consulting",
+    "description": "Provides global IT consulting, enterprise cloud migration, digital transformation, artificial intelligence engineering, and business process outsourcing solutions.",
+    "business_type": "IT Services & Enterprise Consulting",
+    "products": [
+      "Cloud & Infrastructure",
+      "Cognitive Business Operations",
+      "AI & Analytics",
+      "BPS Solutions"
+    ],
+    "themes": [
+      "IT Services",
+      "Cloud Computing",
+      "Enterprise AI",
+      "Global Consulting"
+    ],
+    "geographic_exposure": "North America, Europe, UK, APAC & India",
+    "key_revenue_driver": "BFSI, Retail & Consumer Enterprise Software Contracts",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "HDFCBANK",
+    "exchange": "NSE",
+    "company_name": "HDFC Bank Limited",
+    "sector": "Financial Services",
+    "industry": "Private Banking & Financial Services",
+    "description": "Provides comprehensive commercial banking, retail lending, treasury operations, credit cards, digital banking, and mortgage financing across urban and rural India.",
+    "business_type": "Banking & Lending",
+    "products": [
+      "Retail & Corporate Accounts",
+      "Home & Auto Loans",
+      "Credit Cards",
+      "Treasury & Forex"
+    ],
+    "themes": [
+      "Banking",
+      "Retail Loans",
+      "Financial Services",
+      "Mortgages"
+    ],
+    "geographic_exposure": "Pan-India Network & Global NRI Branches",
+    "key_revenue_driver": "Net Interest Income from Retail & Corporate Credit",
+    "source": "RBI Regulatory Disclosures / Annual Reports",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "INFY",
+    "exchange": "NSE",
+    "company_name": "Infosys Limited",
+    "sector": "Information Technology",
+    "industry": "IT Consulting & Software Engineering",
+    "description": "Delivers next-generation digital services, enterprise cloud transformations, AI-powered automation platforms, and software development for multinational corporations.",
+    "business_type": "IT Services & Solutions",
+    "products": [
+      "Infosys Topaz (AI)",
+      "Infosys Cobalt (Cloud)",
+      "Finacle Core Banking",
+      "Digital Engineering"
+    ],
+    "themes": [
+      "IT Services",
+      "Enterprise Cloud",
+      "Generative AI",
+      "Fintech Software"
+    ],
+    "geographic_exposure": "Americas, Europe, Asia Pacific & India",
+    "key_revenue_driver": "Digital Transformation & Multi-Year IT Modernization Deals",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "TITAN",
+    "exchange": "NSE",
+    "company_name": "Titan Company Limited",
+    "sector": "Consumer Discretionary",
+    "industry": "Jewellery, Watches & Lifestyle Retailing",
+    "description": "Designs, manufactures, and retails fine jewellery, luxury and fashion wristwatches, eyewear, and premium fragrance lifestyle products under marquee retail brands.",
+    "business_type": "Consumer Lifestyle & Retail",
+    "products": [
+      "Tanishq & Mia Jewellery",
+      "Titan & Fastrack Watches",
+      "Titan Eye+",
+      "Skinn Fragrances"
+    ],
+    "themes": [
+      "Jewellery",
+      "Consumer Retail",
+      "Luxury Goods",
+      "Watches & Eyewear"
+    ],
+    "geographic_exposure": "Pan-India & International Flagship Stores",
+    "key_revenue_driver": "Tanishq Fine Gold & Studded Jewellery Sales",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "TATAMOTORS",
+    "exchange": "NSE",
+    "company_name": "Tata Motors Limited",
+    "sector": "Automobile",
+    "industry": "Automotive OEM & Electric Vehicles",
+    "description": "Designs, manufactures, and markets passenger vehicles, commercial trucks, electric vehicles (EVs), and luxury premium vehicles via Jaguar Land Rover globally.",
+    "business_type": "Automotive Manufacturing",
+    "products": [
+      "Passenger Cars & EVs",
+      "Commercial Trucks & Buses",
+      "Range Rover & Defender",
+      "EV Powertrains"
+    ],
+    "themes": [
+      "Automobile",
+      "Electric Vehicles",
+      "Commercial Vehicles",
+      "Luxury Auto"
+    ],
+    "geographic_exposure": "India, UK, North America, Europe & China",
+    "key_revenue_driver": "JLR Premium SUVs & Domestic Passenger/EV Auto Sales",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "ICICIBANK",
+    "exchange": "NSE",
+    "company_name": "ICICI Bank Limited",
+    "sector": "Financial Services",
+    "industry": "Private Banking & Financial Intermediation",
+    "description": "Offers diversified banking and financial products including personal retail loans, corporate project finance, credit cards, digital SME banking, and wealth management.",
+    "business_type": "Banking & Lending",
+    "products": [
+      "Retail Mortgages & Auto Loans",
+      "Corporate Credit",
+      "Credit Cards",
+      "iMobile Pay Digital"
+    ],
+    "themes": [
+      "Banking",
+      "Digital Finance",
+      "Retail Lending",
+      "Credit Cards"
+    ],
+    "geographic_exposure": "Pan-India & Overseas Financial Centers",
+    "key_revenue_driver": "Retail & Business Banking Loan Interest Spreads",
+    "source": "RBI Disclosures / Annual Reports",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "SBIN",
+    "exchange": "NSE",
+    "company_name": "State Bank of India",
+    "sector": "Financial Services",
+    "industry": "Public Sector Banking & National Credit",
+    "description": "India largest public sector commercial bank, providing retail banking, infrastructure project financing, agricultural credit, and government treasury services.",
+    "business_type": "Public Sector Banking",
+    "products": [
+      "Retail Deposits & Mortgages",
+      "Infrastructure Lending",
+      "YONO Digital Platform",
+      "Agri Credit"
+    ],
+    "themes": [
+      "PSU Bank",
+      "Financial Services",
+      "Infrastructure Finance",
+      "National Banking"
+    ],
+    "geographic_exposure": "Deep Pan-India Network (22,000+ branches) & Global Outposts",
+    "key_revenue_driver": "Core Net Interest Income on Advances & Treasury Spreads",
+    "source": "RBI Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "LT",
+    "exchange": "NSE",
+    "company_name": "Larsen & Toubro Limited",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Engineering, Procurement & Construction (EPC)",
+    "description": "Executes complex mega-scale engineering, infrastructure, defence equipment fabrication, energy transitions, and power transmission projects worldwide.",
+    "business_type": "Engineering, Procurement & Construction (EPC)",
+    "products": [
+      "Heavy Civil Infrastructure",
+      "Defence Systems & Vessels",
+      "Hydrocarbon Plants",
+      "Power Transmission"
+    ],
+    "themes": [
+      "Infrastructure",
+      "Engineering",
+      "Defence",
+      "EPC",
+      "Capital Goods"
+    ],
+    "geographic_exposure": "India, Middle East, Africa & Southeast Asia",
+    "key_revenue_driver": "Mega Infrastructure & Hydrocarbon Project Execution",
+    "source": "Company Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "BHARTIARTL",
+    "exchange": "NSE",
+    "company_name": "Bharti Airtel Limited",
+    "sector": "Telecommunication",
+    "industry": "Telecom Services & Digital Broadband",
+    "description": "Provides nationwide 5G/4G wireless mobile telephony, high-speed fiber-to-the-home broadband, DTH broadcasting, and enterprise cloud/data center connectivity.",
+    "business_type": "Telecommunications & Digital Services",
+    "products": [
+      "5G/4G Mobile Telephony",
+      "Airtel Xstream Fiber",
+      "Nxtra Data Centers",
+      "Enterprise Cloud"
+    ],
+    "themes": [
+      "Telecom",
+      "5G",
+      "Broadband",
+      "Data Centers",
+      "Digital Infrastructure"
+    ],
+    "geographic_exposure": "India, South Asia & 14 African Nations",
+    "key_revenue_driver": "ARPU Growth from Mobile Data & Airtel Business Enterprise",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "ITC",
+    "exchange": "NSE",
+    "company_name": "ITC Limited",
+    "sector": "Consumer Goods & Diversified",
+    "industry": "FMCG, Cigarettes, Hotels, Paperboards & Agri",
+    "description": "Operates leading consumer packaged food and personal care brands, premium hospitality chains, sustainable paperboard packaging, and farm-to-table agricultural exports.",
+    "business_type": "FMCG & Diversified Conglomerate",
+    "products": [
+      "Aashirvaad, Sunfeast & Bingo Foods",
+      "Classmate Stationery",
+      "ITC Hotels",
+      "Packaging & Agri"
+    ],
+    "themes": [
+      "FMCG",
+      "Consumer Goods",
+      "Hotels",
+      "Agri Commodities",
+      "Packaging"
+    ],
+    "geographic_exposure": "Pan-India Distribution & International Agri Trading",
+    "key_revenue_driver": "Cigarettes Cash Flows & Rapid FMCG Packaged Foods Expansion",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "DIXON",
+    "exchange": "NSE",
+    "company_name": "Dixon Technologies (India) Limited",
+    "sector": "Consumer Electronics",
+    "industry": "Electronic Manufacturing Services (EMS)",
+    "description": "Provides end-to-end electronic manufacturing services for leading consumer tech brands, producing mobile smartphones, LED televisions, home appliances, and wearables.",
+    "business_type": "Electronic Manufacturing Services (EMS)",
+    "products": [
+      "Smartphones & Feature Phones",
+      "LED TVs",
+      "Washing Machines & Appliances",
+      "Lighting & Wearables"
+    ],
+    "themes": [
+      "EMS",
+      "Electronics",
+      "Make in India",
+      "Manufacturing",
+      "Smartphones"
+    ],
+    "geographic_exposure": "India & Growing Export OEM Shipments",
+    "key_revenue_driver": "Contract Electronics Manufacturing for Tier-1 Global Smartphone Brands",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "BEL",
+    "exchange": "NSE",
+    "company_name": "Bharat Electronics Limited",
+    "sector": "Defence & Aerospace",
+    "industry": "Defence Electronics & Radars",
+    "description": "State-owned aerospace and defence electronics enterprise manufacturing advanced radar suites, missile electronic systems, naval sonars, and secure military communications.",
+    "business_type": "Defence Electronics & Aerospace",
+    "products": [
+      "Radars & Sonars",
+      "Avionics Suites",
+      "Electronic Warfare Systems",
+      "Missile Guidance Systems"
+    ],
+    "themes": [
+      "Defence",
+      "Aerospace",
+      "Electronics",
+      "Radar Systems",
+      "Make in India"
+    ],
+    "geographic_exposure": "Indian Armed Forces (Army, Navy, Air Force) & Friendly Exports",
+    "key_revenue_driver": "Ministry of Defence Capital Procurement Contracts",
+    "source": "Company Filings / Defence Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "HAL",
+    "exchange": "NSE",
+    "company_name": "Hindustan Aeronautics Limited",
+    "sector": "Defence & Aerospace",
+    "industry": "Military Aircraft & Helicopter OEM",
+    "description": "Designs, manufactures, and services fighter jet aircraft, multi-role combat helicopters, gas-turbine aero-engines, and avionics for national air defense.",
+    "business_type": "Aerospace & Defence Manufacturing",
+    "products": [
+      "Tejas Fighter Aircraft",
+      "Prachand & Dhruv Helicopters",
+      "Aero Engines",
+      "Avionics Upgrades"
+    ],
+    "themes": [
+      "Defence",
+      "Aerospace",
+      "Aviation",
+      "Helicopters",
+      "Make in India"
+    ],
+    "geographic_exposure": "Indian Armed Forces & International Defence Partners",
+    "key_revenue_driver": "Tejas Mk1A & Helicopter Production Orders",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "ZOMATO",
+    "exchange": "NSE",
+    "company_name": "Zomato Limited (Eternal)",
+    "sector": "Consumer Internet & Tech",
+    "industry": "Online Food Delivery & Quick Commerce",
+    "description": "Operates leading consumer internet platforms for on-demand restaurant food delivery (Zomato), 10-minute quick commerce grocery fulfillment (Blinkit), and B2B supplies (Hyperpure).",
+    "business_type": "Consumer Platform & Quick Commerce",
+    "products": [
+      "Zomato Food Delivery App",
+      "Blinkit Quick Commerce",
+      "Hyperpure B2B Supplies",
+      "District Live Events"
+    ],
+    "themes": [
+      "Quick Commerce",
+      "Food Delivery",
+      "Consumer Tech",
+      "Logistics & Supply Chain"
+    ],
+    "geographic_exposure": "Pan-India Tier-1, Tier-2 and Tier-3 Urban Metros",
+    "key_revenue_driver": "Blinkit Dark Store Order Volumes & Food Delivery Take-Rates",
+    "source": "Company Quarterly Disclosures / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "TRENT",
+    "exchange": "NSE",
+    "company_name": "Trent Limited",
+    "sector": "Consumer Discretionary",
+    "industry": "Fast Fashion & Value Lifestyle Retailing",
+    "description": "Operates high-growth fast fashion and lifestyle retail chains (Zudio, Westside), value grocery stores (Star Bazaar), and premium international format joint ventures.",
+    "business_type": "Fashion & Lifestyle Retailing",
+    "products": [
+      "Zudio Affordable Fashion",
+      "Westside Contemporary Apparel",
+      "Misbu Beauty",
+      "Star Bazaar Supermarkets"
+    ],
+    "themes": [
+      "Fast Fashion",
+      "Retail",
+      "Consumer Goods",
+      "Apparel & Lifestyle"
+    ],
+    "geographic_exposure": "Pan-India Store Footprint (1,000+ Locations)",
+    "key_revenue_driver": "Rapid Zudio Store Expansion & High Inventory Turnover",
+    "source": "Company Annual Filings / Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "KOTAKBANK",
+    "exchange": "NSE",
+    "company_name": "Kotak Mahindra Bank Limited",
+    "sector": "Banking",
+    "industry": "Private Sector Bank",
+    "description": "Kotak Mahindra Bank Limited operates in the Banking sector, providing private sector bank products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Financial Services & Banking",
+    "products": [
+      "Private Sector Bank",
+      "Banking Products"
+    ],
+    "themes": [
+      "Banking",
+      "Private Sector Bank",
+      "F&O",
+      "Large Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in Private Sector Bank",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "INDSWFTLAB",
+    "exchange": "NSE",
+    "company_name": "Ind-Swift Laboratories Limited",
+    "sector": "Pharmaceuticals",
+    "industry": "Pharmaceuticals & Formulations",
+    "description": "Ind-Swift Laboratories Limited operates in the Pharmaceuticals sector, providing pharmaceuticals & formulations products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Pharmaceuticals & Healthcare",
+    "products": [
+      "Pharmaceuticals & Formulations",
+      "Pharmaceuticals Products"
+    ],
+    "themes": [
+      "Pharmaceuticals",
+      "Pharmaceuticals & Formulations",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in Pharmaceuticals & Formulations",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "VSSL",
+    "exchange": "NSE",
+    "company_name": "Vardhman Special Steels Limited",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "Vardhman Special Steels Limited operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in Diversified",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "EMUDHRA",
+    "exchange": "NSE",
+    "company_name": "eMudhra Ltd",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "eMudhra Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in Diversified",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "PATANJALI",
+    "exchange": "NSE",
+    "company_name": "Patanjali Foods Limited",
+    "sector": "FMCG",
+    "industry": "Food, Household & Personal Care",
+    "description": "Patanjali Foods Limited operates in the FMCG sector, providing food, household & personal care products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Food, Household & Personal Care",
+      "FMCG Products"
+    ],
+    "themes": [
+      "FMCG",
+      "Food, Household & Personal Care",
+      "F&O",
+      "Large Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in Food, Household & Personal Care",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "1.0"
+  },
+  {
+    "ticker": "CSM",
+    "exchange": "NSE",
+    "company_name": "CSM Technologies Ltd",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "CSM Technologies Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in Diversified",
+    "source": "Company Filings / Public Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "1.0"
+  }
+]

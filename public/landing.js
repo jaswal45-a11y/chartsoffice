@@ -539,17 +539,6 @@ function showRegisterAlert(msg, type) {
 /* ==========================================================================
    6. MODAL UTILITIES
    ========================================================================== */
-function openResourcesModal() {
-  const m = document.getElementById('modal-resources');
-  if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-  initLucideIcons();
-}
-
-function closeResourcesModal() {
-  const m = document.getElementById('modal-resources');
-  if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
-}
-
 function openAboutModal() {
   const m = document.getElementById('modal-about');
   if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
@@ -626,7 +615,6 @@ function toggleTwilightMode() {
 function setupKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      closeResourcesModal();
       closeAboutModal();
       closeForgotPasswordModal();
       closeRegisterModal();
@@ -634,7 +622,7 @@ function setupKeyboardShortcuts() {
   });
 
   // Close modals on backdrop click
-  ['modal-resources', 'modal-about', 'modal-forgot-password', 'modal-register'].forEach(id => {
+  ['modal-about', 'modal-forgot-password', 'modal-register'].forEach(id => {
     const modal = document.getElementById(id);
     if (modal) {
       modal.addEventListener('click', (e) => {

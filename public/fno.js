@@ -1704,6 +1704,7 @@ function renderTable() {
               <button onclick="openStockChartModal('${s.symbol}', '${(s.name || '').replace(/'/g, "\\'")}', state.filteredStocks)" class="font-bold text-white hover:text-purple-400 font-mono tracking-tight transition-colors text-left cursor-pointer hover:underline">
                 ${s.symbol}
               </button>
+              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(s.symbol, s.name) : ''}
               <span class="px-1 text-[9px] font-semibold bg-slate-800 text-slate-400 rounded border border-slate-700 font-sans">${s.exchange || 'NSE'}</span>
             </div>
             <span class="text-[11px] text-slate-400 truncate max-w-[180px] font-sans" title="${s.name}">${s.name || s.symbol}</span>
@@ -4300,6 +4301,7 @@ function setupPredictiveSearch() {
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
             <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
+            ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
             <span class="text-[9px] px-1 py-0.2 rounded bg-purple-500/15 text-purple-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
             ${getFnoBadgeHtml(item.symbol)}
           </div>
@@ -4948,7 +4950,7 @@ async function loadStockChart(rawSymbol) {
     if (elOnchartSym) elOnchartSym.textContent = cleanSymbol;
     if (elStockLtp) elStockLtp.textContent = fmt.currency(data.ltp);
     if (elStockExchange) {
-      elStockExchange.innerHTML = `${data.exchange || 'NSE'}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+      elStockExchange.innerHTML = `${data.exchange || 'NSE'}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
     }
     
     if (elStockChange) {

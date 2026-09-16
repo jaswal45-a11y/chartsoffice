@@ -187,10 +187,6 @@
           Tools
           <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
         </a>
-        <button onclick="openResourcesModal()" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
-          Resources
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
-        </button>
         <button onclick="openAboutModal()" class="hover:text-teal-300 transition-colors py-1 relative group cursor-pointer">
           About
           <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-400 transition-all duration-300 group-hover:w-full"></span>
@@ -576,20 +572,20 @@
           </div>
         </a>
 
-        <!-- Card 4: Learning Hub -->
-        <a href="/cheatsheet.html" target="_blank" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+        <!-- Card 4: Sangam Philosophy -->
+        <button onclick="openAboutModal()" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer text-left">
           <div class="w-10 h-10 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 flex items-center justify-center transition-colors">
-            <i data-lucide="lightbulb" class="w-5 h-5"></i>
+            <i data-lucide="compass" class="w-5 h-5"></i>
           </div>
           <div>
             <h4 class="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
-              Learning Hub
+              Sangam Philosophy
             </h4>
             <p class="text-xs text-slate-400 mt-0.5">
-              Build a better you
+              Principles over emotion
             </p>
           </div>
-        </a>
+        </button>
 
         <!-- Card 5: Useful Tools -->
         <a href="/fno" class="glass-card-subtle rounded-2xl p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1 cursor-pointer">
@@ -649,45 +645,6 @@
 
     </div>
   </footer>
-
-  <!-- MODAL: Resources Hub -->
-  <div id="modal-resources" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-    <div class="w-full max-w-lg glass-card rounded-2xl p-6 flex flex-col gap-5 border border-teal-500/30">
-      <div class="flex items-center justify-between border-b border-slate-700/50 pb-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="book-open" class="w-5 h-5 text-teal-400"></i>
-          <h3 class="text-base font-bold text-white">Sangam Resources & Architecture</h3>
-        </div>
-        <button onclick="closeResourcesModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-        <a href="/cheatsheet.html" target="_blank" class="p-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 hover:border-teal-500/40 flex flex-col gap-1.5 transition-all cursor-pointer">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-white">Screener Cheatsheet</span>
-            <i data-lucide="external-link" class="w-3.5 h-3.5 text-teal-400"></i>
-          </div>
-          <p class="text-slate-400 text-[11px]">Trading rules, Darvas boxes, EMA strategies & cheat codes.</p>
-        </a>
-
-        <a href="/architecture.html" target="_blank" class="p-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 hover:border-teal-500/40 flex flex-col gap-1.5 transition-all cursor-pointer">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-white">System Architecture</span>
-            <i data-lucide="external-link" class="w-3.5 h-3.5 text-cyan-400"></i>
-          </div>
-          <p class="text-slate-400 text-[11px]">Technical design, data ingestion, and pipeline overview.</p>
-        </a>
-      </div>
-
-      <div class="text-right pt-1">
-        <button onclick="closeResourcesModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- MODAL: About Sangam Philosophy -->
   <div id="modal-about" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">

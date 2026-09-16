@@ -1951,6 +1951,7 @@ async function loadWatchlists() {
     const data = await res.json();
     if (data.success && Array.isArray(data.watchlists)) {
       state.watchlists = data.watchlists;
+      state.maxWatchlists = data.maxWatchlists || state.maxWatchlists || 5;
       if (!state.activeWatchlistId || !state.watchlists.some(w => w.id === state.activeWatchlistId)) {
         state.activeWatchlistId = state.watchlists[0]?.id || null;
       }
@@ -2092,6 +2093,7 @@ function renderWatchlistStocks() {
         <div class="flex flex-col">
           <div class="flex items-center gap-1.5">
             <span class="font-mono font-bold text-slate-100 text-xs">${stock.symbol}</span>
+            ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
             ${getFnoBadgeHtml(stock.symbol)}
           </div>
           <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${stock.name || stock.symbol}">${stock.name || stock.symbol}</span>
@@ -2269,13 +2271,14 @@ async function handleCreateNewWatchlist() {
     return;
   }
 
-  if (state.watchlists.length >= 5) {
-    showToast('Maximum limit of 5 watchlists reached!', 'error');
+  const maxWls = state.maxWatchlists || 5;
+  if (state.watchlists.length >= maxWls) {
+    showToast(`Maximum limit of ${maxWls} watchlists reached! Contact Admin to increase your limit.`, 'error');
     return;
   }
 
   const defaultName = `Watchlist ${state.watchlists.length + 1}`;
-  const name = prompt('Enter name for the new watchlist (Max 5 allowed):', defaultName);
+  const name = prompt(`Enter name for the new watchlist (Current capacity: ${state.watchlists.length}/${maxWls}):`, defaultName);
   if (!name || !name.trim()) return;
 
   try {
@@ -2291,11 +2294,12 @@ async function handleCreateNewWatchlist() {
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create watchlist');
 
     state.watchlists = data.watchlists;
+    state.maxWatchlists = data.maxWatchlists || state.maxWatchlists || 5;
     state.activeWatchlistId = data.watchlist.id;
     renderWatchlistSelector();
     renderWatchlistStocks();
     renderChartWatchlistDropdown();
-    showToast(`Created watchlist "${data.watchlist.name}"`, 'success');
+    showToast(`Created watchlist "${data.watchlist.name}" (${state.watchlists.length}/${state.maxWatchlists})`, 'success');
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -4227,6 +4231,7 @@ function setupPredictiveSearch() {
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
             <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
+            ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
             <span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
             ${getFnoBadgeHtml(item.symbol)}
           </div>
@@ -5025,7 +5030,7 @@ async function loadStockChart(rawSymbol) {
     }
     if (el.chartStockLtp) el.chartStockLtp.textContent = fmt.currency(data.ltp);
     if (el.chartStockExchange) {
-      el.chartStockExchange.innerHTML = `${data.exchange || 'NSE'}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+      el.chartStockExchange.innerHTML = `${data.exchange || 'NSE'}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
     }
     
     // Percent change pill
@@ -5533,6 +5538,7 @@ function renderPricescanTable() {
           <div class="flex flex-col">
             <div class="flex items-center gap-1.5">
               <span class="font-mono font-bold text-slate-100 group-hover:text-emerald-300 text-xs">${m.symbol}</span>
+              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(m.symbol, m.name) : ''}
               <span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange || 'NSE'}</span>
               ${getFnoBadgeHtml(m.symbol)}
             </div>
@@ -6067,6 +6073,7 @@ function renderStocksTable() {
           <div>
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${stock.symbol}</span>
+              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
               ${getFnoBadgeHtml(stock.symbol)}
               ${mcBadgeHtml}
               ${confluenceHtml}
@@ -6434,13 +6441,101 @@ function showToast(message, type = 'info') {
 // ==============================================================
 
 let adminUsersData = [];
+let adminCurrentTab = 'users'; // 'users' | 'universe' | 'docs'
+
+let adminUniverseState = {
+  stocks: [],
+  filtered: [],
+  totalCount: 0,
+  fnoCount: 0,
+  autoCount: 0,
+  adminCount: 0,
+  sectorsCount: 0,
+  sectors: {},
+  page: 1,
+  pageSize: 50,
+  search: '',
+  sector: 'ALL',
+  cap: 'ALL',
+  fno: 'ALL',
+  source: 'ALL',
+  isLoading: false,
+  isLoaded: false
+};
+
+function switchAdminConsoleTab(tab) {
+  adminCurrentTab = tab || 'users';
+
+  // Desktop buttons
+  const btnUsers = document.getElementById('admin-tab-btn-users');
+  const btnUniverse = document.getElementById('admin-tab-btn-universe');
+  const btnDocs = document.getElementById('admin-tab-btn-docs');
+
+  // Mobile buttons
+  const mBtnUsers = document.getElementById('admin-mobile-tab-users');
+  const mBtnUniverse = document.getElementById('admin-mobile-tab-universe');
+  const mBtnDocs = document.getElementById('admin-mobile-tab-docs');
+
+  // Content panels
+  const contentUsers = document.getElementById('admin-tab-content-users');
+  const contentUniverse = document.getElementById('admin-tab-content-universe');
+  const contentDocs = document.getElementById('admin-tab-content-docs');
+
+  const activeClass = 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm font-bold';
+  const inactiveClass = 'text-slate-400 hover:text-white font-semibold hover:bg-dark-accent';
+
+  if (btnUsers) btnUsers.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'users' ? activeClass : inactiveClass}`;
+  if (btnUniverse) btnUniverse.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'universe' ? activeClass : inactiveClass}`;
+  if (btnDocs) btnDocs.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'docs' ? activeClass : inactiveClass}`;
+
+  if (mBtnUsers) mBtnUsers.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'users' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
+  if (mBtnUniverse) mBtnUniverse.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'universe' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
+  if (mBtnDocs) mBtnDocs.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'docs' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
+
+  if (contentUsers) {
+    if (adminCurrentTab === 'users') {
+      contentUsers.classList.remove('hidden');
+      contentUsers.classList.add('flex');
+    } else {
+      contentUsers.classList.add('hidden');
+      contentUsers.classList.remove('flex');
+    }
+  }
+
+  if (contentUniverse) {
+    if (adminCurrentTab === 'universe') {
+      contentUniverse.classList.remove('hidden');
+      contentUniverse.classList.add('flex');
+      if (!adminUniverseState.isLoaded) {
+        loadAdminUniverse();
+      }
+    } else {
+      contentUniverse.classList.add('hidden');
+      contentUniverse.classList.remove('flex');
+    }
+  }
+
+  if (contentDocs) {
+    if (adminCurrentTab === 'docs') {
+      contentDocs.classList.remove('hidden');
+      contentDocs.classList.add('flex');
+    } else {
+      contentDocs.classList.add('hidden');
+      contentDocs.classList.remove('flex');
+    }
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
 
 function openAdminConsole() {
   const modal = document.getElementById('admin-console-modal');
   if (!modal) return;
   modal.classList.remove('hidden');
   modal.classList.add('flex');
+  switchAdminConsoleTab(adminCurrentTab || 'users');
   loadAdminData();
+  loadAdminUniverse();
 }
 
 function closeAdminConsole() {
@@ -6454,6 +6549,429 @@ function closeAdminConsole() {
 function toggleAdminAddUserPanel() {
   const panel = document.getElementById('admin-add-user-panel');
   if (panel) panel.classList.toggle('hidden');
+}
+
+function toggleAdminAddStockPanel() {
+  const panel = document.getElementById('admin-add-stock-panel');
+  if (panel) panel.classList.toggle('hidden');
+}
+
+async function loadAdminUniverse(forceRefresh = false) {
+  if (adminUniverseState.isLoading) return;
+  adminUniverseState.isLoading = true;
+
+  const tbody = document.getElementById('admin-universe-tbody');
+  if (tbody && (!adminUniverseState.stocks || adminUniverseState.stocks.length === 0 || forceRefresh)) {
+    tbody.innerHTML = `<tr><td colspan="10" class="py-12 text-center text-slate-400 font-sans">
+      <div class="flex flex-col items-center gap-2">
+        <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-blue-400"></i>
+        <span>Loading stock universe database (${forceRefresh ? 'Refreshing' : '1,300+ securities'})...</span>
+      </div>
+    </td></tr>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/admin/universe', {
+      headers: { ...getAuthHeaders() }
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to load stock universe');
+    }
+
+    adminUniverseState.stocks = data.stocks || [];
+    adminUniverseState.totalCount = data.totalCount || adminUniverseState.stocks.length;
+    adminUniverseState.fnoCount = data.fnoCount || 0;
+    adminUniverseState.autoCount = data.autoAddedCount || 0;
+    adminUniverseState.adminCount = data.adminAddedCount || 0;
+    adminUniverseState.sectorsCount = data.sectorsCount || 0;
+    adminUniverseState.sectors = data.sectors || {};
+    adminUniverseState.isLoaded = true;
+
+    // Update KPI & Badges
+    const kpiTotal = document.getElementById('admin-kpi-universe-total');
+    const kpiSub = document.getElementById('admin-kpi-universe-sub');
+    const tabBadge = document.getElementById('admin-tab-badge-universe-count');
+    const totalBadge = document.getElementById('admin-universe-total-badge');
+    const fnoBadge = document.getElementById('admin-universe-fno-badge');
+    const autoBadge = document.getElementById('admin-universe-auto-badge');
+
+    if (kpiTotal) kpiTotal.textContent = `${adminUniverseState.totalCount.toLocaleString()}`;
+    if (kpiSub) kpiSub.textContent = `${adminUniverseState.fnoCount} F&O · ${adminUniverseState.sectorsCount} Sectors`;
+    if (tabBadge) tabBadge.textContent = `${adminUniverseState.totalCount}`;
+    if (totalBadge) totalBadge.textContent = `${adminUniverseState.totalCount.toLocaleString()} Stocks`;
+    if (fnoBadge) fnoBadge.textContent = `${adminUniverseState.fnoCount} F&O Active`;
+    if (autoBadge) autoBadge.textContent = `${adminUniverseState.autoCount} Auto-Ingested`;
+
+    // Populate sector dropdown
+    populateAdminUniverseSectors();
+
+    // Apply filters and render
+    applyAdminUniverseFilters();
+  } catch (err) {
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-rose-400 font-sans">Error loading universe: ${err.message}</td></tr>`;
+    }
+    showToast(err.message, 'error');
+  } finally {
+    adminUniverseState.isLoading = false;
+  }
+}
+
+function populateAdminUniverseSectors() {
+  const select = document.getElementById('admin-universe-sector-filter');
+  if (!select) return;
+
+  const currentVal = select.value || 'ALL';
+  const sectorList = Object.keys(adminUniverseState.sectors || {}).sort((a, b) => a.localeCompare(b));
+
+  select.innerHTML = '<option value="ALL">All Sectors (All)</option>';
+  sectorList.forEach(sec => {
+    const count = adminUniverseState.sectors[sec] || 0;
+    const opt = document.createElement('option');
+    opt.value = sec;
+    opt.textContent = `${sec} (${count})`;
+    if (sec === currentVal) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function handleAdminUniverseFilterChange() {
+  const searchInput = document.getElementById('admin-universe-search');
+  const sectorSelect = document.getElementById('admin-universe-sector-filter');
+  const capSelect = document.getElementById('admin-universe-cap-filter');
+  const fnoSelect = document.getElementById('admin-universe-fno-filter');
+  const sourceSelect = document.getElementById('admin-universe-source-filter');
+
+  adminUniverseState.search = (searchInput?.value || '').trim().toLowerCase();
+  adminUniverseState.sector = sectorSelect?.value || 'ALL';
+  adminUniverseState.cap = capSelect?.value || 'ALL';
+  adminUniverseState.fno = fnoSelect?.value || 'ALL';
+  adminUniverseState.source = sourceSelect?.value || 'ALL';
+  adminUniverseState.page = 1;
+
+  applyAdminUniverseFilters();
+}
+
+function applyAdminUniverseFilters() {
+  const { stocks, search, sector, cap, fno, source } = adminUniverseState;
+
+  adminUniverseState.filtered = stocks.filter(stk => {
+    if (!stk) return false;
+
+    // Search filter
+    if (search) {
+      const sym = (stk.symbol || '').toLowerCase();
+      const name = (stk.name || '').toLowerCase();
+      const sec = (stk.sector || '').toLowerCase();
+      const ind = (stk.industry || '').toLowerCase();
+      if (!sym.includes(search) && !name.includes(search) && !sec.includes(search) && !ind.includes(search)) {
+        return false;
+      }
+    }
+
+    // Sector filter
+    if (sector !== 'ALL' && stk.sector !== sector) {
+      return false;
+    }
+
+    // Market Cap Category Filter
+    if (cap !== 'ALL') {
+      const mcap = stk.marketCap || 0;
+      if (cap === 'MEGA' && mcap < 50000) return false;
+      if (cap === 'LARGE' && (mcap < 20000 || mcap >= 50000)) return false;
+      if (cap === 'MID' && (mcap < 5000 || mcap >= 20000)) return false;
+      if (cap === 'SMALL' && (mcap < 1000 || mcap >= 5000)) return false;
+      if (cap === 'MICRO' && mcap >= 1000) return false;
+    }
+
+    // FNO Filter
+    if (fno === 'FNO_ONLY' && !stk.fno) return false;
+    if (fno === 'NON_FNO' && stk.fno) return false;
+
+    // Source Filter
+    if (source === 'AUTO' && !stk.autoAdded) return false;
+    if (source === 'ADMIN' && !stk.adminAdded) return false;
+    if (source === 'BASE' && (stk.autoAdded || stk.adminAdded)) return false;
+
+    return true;
+  });
+
+  renderAdminUniverseTable();
+}
+
+function renderAdminUniverseTable() {
+  const tbody = document.getElementById('admin-universe-tbody');
+  const paginationInfo = document.getElementById('admin-universe-pagination-info');
+  const pageDisplay = document.getElementById('admin-universe-page-display');
+  const btnPrev = document.getElementById('admin-universe-btn-prev');
+  const btnNext = document.getElementById('admin-universe-btn-next');
+
+  if (!tbody) return;
+
+  const totalFiltered = adminUniverseState.filtered.length;
+  const pageSize = adminUniverseState.pageSize || 50;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  adminUniverseState.page = Math.min(Math.max(1, adminUniverseState.page), totalPages);
+  const curPage = adminUniverseState.page;
+
+  const startIdx = (curPage - 1) * pageSize;
+  const endIdx = Math.min(startIdx + pageSize, totalFiltered);
+  const pageItems = adminUniverseState.filtered.slice(startIdx, endIdx);
+
+  // Update pagination controls
+  if (paginationInfo) {
+    paginationInfo.textContent = totalFiltered > 0
+      ? `Showing ${startIdx + 1} to ${endIdx} of ${totalFiltered.toLocaleString()} stocks`
+      : 'No matching stocks in universe';
+  }
+  if (pageDisplay) pageDisplay.textContent = `Page ${curPage} of ${totalPages}`;
+  if (btnPrev) btnPrev.disabled = curPage <= 1;
+  if (btnNext) btnNext.disabled = curPage >= totalPages;
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-500 font-sans">
+      No stocks matched the active universe filters. Try adjusting your search query or filters.
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = '';
+  pageItems.forEach((stk, index) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-dark-accent/40 transition-colors';
+
+    const rowNum = startIdx + index + 1;
+    const isFno = Boolean(stk.fno);
+    const mcapCr = stk.marketCap ? `₹${Number(stk.marketCap).toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr` : '₹5,000 Cr';
+    const ltpStr = typeof stk.price === 'number' && stk.price > 0 ? `₹${stk.price.toFixed(2)}` : '--';
+    const chgStr = typeof stk.changePercent === 'number'
+      ? `${stk.changePercent >= 0 ? '+' : ''}${stk.changePercent.toFixed(2)}%`
+      : '0.00%';
+    const chgColor = stk.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+    const h52 = stk.high52w ? Number(stk.high52w).toFixed(1) : '--';
+    const l52 = stk.low52w ? Number(stk.low52w).toFixed(1) : '--';
+
+    const tags = [];
+    if (isFno) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">F&O</span>');
+    if (stk.autoAdded) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">Auto-Ingested</span>');
+    if (stk.adminAdded) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">Admin Added</span>');
+    if (stk.rsi) tags.push(`<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-800 text-slate-300 border border-slate-700">RSI ${stk.rsi}</span>`);
+    if (stk.rvol && stk.rvol > 1) tags.push(`<span class="px-1.5 py-0.2 rounded text-[9px] bg-cyan-950 text-cyan-300 border border-cyan-800">RVOL ${stk.rvol}x</span>`);
+
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 text-center text-slate-500 font-mono text-[11px]">${rowNum}</td>
+      <td class="py-2.5 px-3">
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-white font-mono text-xs tracking-wide">${stk.symbol}</span>
+          ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
+          <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400">${stk.exchange || 'NSE'}</span>
+        </div>
+      </td>
+      <td class="py-2.5 px-3 text-slate-200 font-sans text-xs truncate max-w-[200px]" title="${stk.name}">${stk.name}</td>
+      <td class="py-2.5 px-3 whitespace-nowrap">
+        <div class="flex flex-col">
+          <span class="font-semibold text-teal-300 text-[11px]">${stk.sector || 'General'}</span>
+          <span class="text-[10px] text-slate-500 truncate max-w-[150px]">${stk.industry || 'Diversified'}</span>
+        </div>
+      </td>
+      <td class="py-2.5 px-3 whitespace-nowrap font-mono">
+        <div class="flex flex-col">
+          <span class="font-bold text-slate-200 text-xs">${mcapCr}</span>
+          <span class="text-[9px] text-slate-400">${stk.capCategory || 'Small Cap'}</span>
+        </div>
+      </td>
+      <td class="py-2.5 px-2 text-center whitespace-nowrap">
+        ${isFno ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">F&O</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">Cash</span>'}
+      </td>
+      <td class="py-2.5 px-3 text-right whitespace-nowrap font-mono">
+        <div class="flex flex-col items-end">
+          <span class="font-bold text-white text-xs">${ltpStr}</span>
+          <span class="text-[10px] font-bold ${chgColor}">${chgStr}</span>
+        </div>
+      </td>
+      <td class="py-2.5 px-3 text-center whitespace-nowrap font-mono text-[11px] text-slate-400">
+        ${h52} / ${l52}
+      </td>
+      <td class="py-2.5 px-3">
+        <div class="flex items-center gap-1 flex-wrap">
+          ${tags.join('')}
+        </div>
+      </td>
+      <td class="py-2.5 px-3 text-right whitespace-nowrap">
+        <button onclick="handleAdminDeleteStock('${stk.symbol}')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-200 border border-rose-500/20 transition-all cursor-pointer" title="Delete stock ${stk.symbol} from Universe">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function handleAdminUniversePageChange(delta) {
+  adminUniverseState.page += delta;
+  renderAdminUniverseTable();
+}
+
+function handleAdminUniversePageSizeChange(newSize) {
+  adminUniverseState.pageSize = parseInt(newSize, 10) || 50;
+  adminUniverseState.page = 1;
+  renderAdminUniverseTable();
+}
+
+async function handleAdminAddStock(e) {
+  e.preventDefault();
+  const symInput = document.getElementById('admin-new-stock-symbol');
+  const nameInput = document.getElementById('admin-new-stock-name');
+  const exSelect = document.getElementById('admin-new-stock-exchange');
+  const secInput = document.getElementById('admin-new-stock-sector');
+  const indInput = document.getElementById('admin-new-stock-industry');
+  const mcapInput = document.getElementById('admin-new-stock-mcap');
+  const priceInput = document.getElementById('admin-new-stock-price');
+  const fnoCheck = document.getElementById('admin-new-stock-fno');
+  const banner = document.getElementById('admin-add-stock-banner');
+
+  const symbol = (symInput?.value || '').trim().toUpperCase();
+  if (!symbol) return;
+
+  const payload = {
+    symbol,
+    name: (nameInput?.value || '').trim() || symbol,
+    exchange: exSelect?.value || 'NSE',
+    sector: (secInput?.value || '').trim() || 'General',
+    industry: (indInput?.value || '').trim() || 'Diversified',
+    marketCap: parseFloat(mcapInput?.value) || 5000,
+    price: parseFloat(priceInput?.value) || 100.0,
+    fno: Boolean(fnoCheck?.checked)
+  };
+
+  try {
+    const res = await fetch('/api/admin/universe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to add stock to universe');
+    }
+
+    if (banner) {
+      banner.className = 'mt-2 p-2 rounded-lg text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+      banner.textContent = `Stock "${symbol}" successfully added to universe database!`;
+    }
+    showToast(`Stock "${symbol}" added to universe!`, 'success');
+
+    // Reset inputs
+    if (symInput) symInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (secInput) secInput.value = '';
+    if (indInput) indInput.value = '';
+    if (mcapInput) mcapInput.value = '';
+    if (priceInput) priceInput.value = '';
+    if (fnoCheck) fnoCheck.checked = false;
+
+    // Reload universe
+    await loadAdminUniverse(true);
+  } catch (err) {
+    if (banner) {
+      banner.className = 'mt-2 p-2 rounded-lg text-xs bg-rose-500/15 text-rose-400 border border-rose-500/30';
+      banner.textContent = err.message;
+    }
+    showToast(err.message, 'error');
+  }
+}
+
+async function handleAdminDeleteStock(symbol) {
+  if (!symbol) return;
+  if (!confirm(`Are you sure you want to permanently remove stock "${symbol}" from the entire universe? This will remove it from all scanner engines, watchlists, and market insights.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/universe/${encodeURIComponent(symbol)}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeaders() }
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete stock from universe');
+    }
+
+    showToast(`Stock "${symbol}" removed from universe!`, 'info');
+    await loadAdminUniverse(true);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function handleExportUniverseCSV() {
+  const list = adminUniverseState.filtered && adminUniverseState.filtered.length > 0
+    ? adminUniverseState.filtered
+    : adminUniverseState.stocks;
+
+  if (!list || list.length === 0) {
+    showToast('No stocks available to export', 'warning');
+    return;
+  }
+
+  const headers = ['Symbol', 'Company Name', 'Exchange', 'Sector', 'Industry', 'Market Cap (Cr)', 'Cap Category', 'F&O Active', 'LTP', '1D Change %', '52W High', '52W Low', 'RSI', 'RVOL', 'Auto Ingested', 'Admin Added', 'Last Price Updated'];
+  
+  const rows = list.map(s => [
+    `"${s.symbol || ''}"`,
+    `"${(s.name || '').replace(/"/g, '""')}"`,
+    `"${s.exchange || 'NSE'}"`,
+    `"${(s.sector || '').replace(/"/g, '""')}"`,
+    `"${(s.industry || '').replace(/"/g, '""')}"`,
+    s.marketCap || 0,
+    `"${s.capCategory || ''}"`,
+    s.fno ? 'YES' : 'NO',
+    s.price || 0,
+    s.changePercent || 0,
+    s.high52w || '',
+    s.low52w || '',
+    s.rsi || '',
+    s.rvol || '',
+    s.autoAdded ? 'YES' : 'NO',
+    s.adminAdded ? 'YES' : 'NO',
+    `"${s.lastPriceUpdated || ''}"`
+  ]);
+
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Sangam_Stock_Universe_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${list.length} stocks to CSV!`, 'success');
+}
+
+function handleAdminOpenArchitectureTab() {
+  const token = state.authToken || localStorage.getItem('sangam_auth_token') || '';
+  const url = token ? `/architecture.html?token=${encodeURIComponent(token)}` : '/architecture.html';
+  window.open(url, '_blank');
+}
+
+function handleAdminOpenCheatsheetTab() {
+  const token = state.authToken || localStorage.getItem('sangam_auth_token') || '';
+  const url = token ? `/cheatsheet.html?token=${encodeURIComponent(token)}` : '/cheatsheet.html';
+  window.open(url, '_blank');
+}
+
+function closeAdminDocViewer() {
+  const container = document.getElementById('admin-doc-viewer-container');
+  const iframe = document.getElementById('admin-doc-iframe');
+  if (container) container.classList.add('hidden');
+  if (iframe) iframe.src = 'about:blank';
 }
 
 async function loadAdminData() {
@@ -6565,13 +7083,31 @@ function renderAdminUsersTable(usersList) {
       <td class="py-3 px-3 whitespace-nowrap">${roleBadge}</td>
       <td class="py-3 px-3 text-slate-400 whitespace-nowrap font-sans text-[11px]">${regDate}</td>
       <td class="py-3 px-2 text-center font-bold text-slate-200">${u.screenersCount || 0}</td>
-      <td class="py-3 px-2 text-center font-bold text-slate-200">${u.watchlistsCount || 0}</td>
+      <td class="py-3 px-2 text-center">
+        <div class="flex flex-col items-center gap-1">
+          <span class="font-bold text-slate-200">${u.watchlistsCount || 0} <span class="text-[10px] text-slate-400 font-normal">/ ${u.maxWatchlists || 5}</span></span>
+          <button onclick="handleAdminSetWatchlistLimit('${u.id}', '${u.username}', ${u.maxWatchlists || 5})" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-teal-500/15 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 transition-all cursor-pointer flex items-center gap-0.5" title="Increase/Change max watchlists limit for ${u.username}">
+            <i data-lucide="layers" class="w-2.5 h-2.5"></i>
+            <span>Limit (${u.maxWatchlists || 5})</span>
+          </button>
+        </div>
+      </td>
       <td class="py-3 px-2 text-center font-bold text-emerald-400">${u.totalStocksTracked || 0}</td>
       <td class="py-3 px-3 text-right whitespace-nowrap">
         ${isRootMaster ? `
-          <span class="text-[10px] text-amber-400/80 font-mono italic px-2 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20">Master Root Admin</span>
+          <div class="flex items-center justify-end gap-1.5">
+            <button onclick="handleAdminSetWatchlistLimit('${u.id}', '${u.username}', ${u.maxWatchlists || 5})" class="px-2.5 py-1 rounded-lg bg-teal-500/15 hover:bg-teal-500/30 border border-teal-500/30 text-teal-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1" title="Set Watchlist Capacity for Root Admin">
+              <i data-lucide="layers" class="w-3 h-3 text-teal-400"></i>
+              <span>Limit (${u.maxWatchlists || 5})</span>
+            </button>
+            <span class="text-[10px] text-amber-400/80 font-mono italic px-2 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20">Master Root Admin</span>
+          </div>
         ` : `
           <div class="flex items-center justify-end gap-1.5">
+            <button onclick="handleAdminSetWatchlistLimit('${u.id}', '${u.username}', ${u.maxWatchlists || 5})" class="px-2.5 py-1 rounded-lg bg-teal-500/15 hover:bg-teal-500/30 border border-teal-500/30 text-teal-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1" title="Increase/Change Watchlist Limit for ${u.username}">
+              <i data-lucide="layers" class="w-3 h-3 text-teal-400"></i>
+              <span>Watchlists (${u.maxWatchlists || 5})</span>
+            </button>
             <button onclick="handleAdminResetPassword('${u.id}', '${u.username}')" class="px-2.5 py-1 rounded-lg bg-dark-card hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1" title="Reset Password for ${u.username}">
               <i data-lucide="key" class="w-3 h-3 text-amber-400"></i>
               <span>Reset Pass</span>
@@ -6725,15 +7261,65 @@ async function handleAdminUpdateMaxUsers(e) {
   }
 }
 
+async function handleAdminSetWatchlistLimit(userId, username, currentLimit) {
+  const currentVal = parseInt(currentLimit, 10) || 5;
+  const promptText = `Increase / Set Maximum Watchlists for User: "${username}"\n\nCurrent limit: ${currentVal} watchlists\nEnter new limit (1 to 100):`;
+  const input = prompt(promptText, currentVal >= 5 ? currentVal + 5 : 10);
+  if (input === null) return;
+
+  const newLimit = parseInt(String(input).trim(), 10);
+  if (isNaN(newLimit) || newLimit < 1 || newLimit > 100) {
+    showToast('Please enter a valid number between 1 and 100', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/users/${userId}/watchlists-limit`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ maxWatchlists: newLimit })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update watchlist limit');
+    }
+
+    showToast(data.message || `Watchlist limit for "${username}" set to ${newLimit}!`, 'success');
+    await loadAdminData();
+    if (state.user && (state.user.userId === userId || state.user.username === username)) {
+      state.maxWatchlists = newLimit;
+      renderWatchlistSelector();
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 // Window Globals for HTML onclick listeners
+window.switchAdminConsoleTab = switchAdminConsoleTab;
 window.openAdminConsole = openAdminConsole;
 window.closeAdminConsole = closeAdminConsole;
 window.toggleAdminAddUserPanel = toggleAdminAddUserPanel;
+window.toggleAdminAddStockPanel = toggleAdminAddStockPanel;
 window.loadAdminData = loadAdminData;
+window.loadAdminUniverse = loadAdminUniverse;
+window.populateAdminUniverseSectors = populateAdminUniverseSectors;
+window.handleAdminUniverseFilterChange = handleAdminUniverseFilterChange;
+window.applyAdminUniverseFilters = applyAdminUniverseFilters;
+window.renderAdminUniverseTable = renderAdminUniverseTable;
+window.handleAdminUniversePageChange = handleAdminUniversePageChange;
+window.handleAdminUniversePageSizeChange = handleAdminUniversePageSizeChange;
+window.handleAdminAddStock = handleAdminAddStock;
+window.handleAdminDeleteStock = handleAdminDeleteStock;
+window.handleExportUniverseCSV = handleExportUniverseCSV;
+window.handleAdminOpenArchitectureTab = handleAdminOpenArchitectureTab;
+window.handleAdminOpenCheatsheetTab = handleAdminOpenCheatsheetTab;
+window.closeAdminDocViewer = closeAdminDocViewer;
 window.filterAdminUserTable = filterAdminUserTable;
 window.handleAdminAddUser = handleAdminAddUser;
 window.handleAdminDeleteUser = handleAdminDeleteUser;
 window.handleAdminResetPassword = handleAdminResetPassword;
+window.handleAdminSetWatchlistLimit = handleAdminSetWatchlistLimit;
 window.handleAdminUpdateMaxUsers = handleAdminUpdateMaxUsers;
 window.toggleAvwapAnchorMode = toggleAvwapAnchorMode;
 window.clearStockAvwaps = clearStockAvwaps;
