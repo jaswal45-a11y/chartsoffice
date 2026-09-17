@@ -2572,24 +2572,7 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
       value: Number(ma.toFixed(0))
     });
 
-    // Markers on Vol Intel Chart
-    if (isBullSnort) {
-      markers.push({
-        time: c.time,
-        position: 'aboveBar',
-        color: colors.viBs,
-        shape: 'arrowDown',
-        text: 'BS'
-      });
-    } else if (isPocketPivot) {
-      markers.push({
-        time: c.time,
-        position: 'aboveBar',
-        color: colors.viPp,
-        shape: 'circle',
-        text: 'PP'
-      });
-    }
+    // Markers on Vol Intel Chart (Omitted PP/BS text markers per user preference; color coding on bars is used)
 
     // Paint Bars formatting
     paintedCandles.push({
@@ -3049,6 +3032,71 @@ function updateDefaultVolumeBadges() {
   if (rsiSmaArr && rsiSmaArr.length > 0 && rsiSmaBadge) {
     const lastRsiSma = rsiSmaArr[rsiSmaArr.length - 1];
     rsiSmaBadge.textContent = lastRsiSma?.value ?? '--';
+  }
+}
+
+function updateEarningsVolumeMarkers() {
+  const data = state.currentStockData;
+  if (!data?.candles || !Array.isArray(data.candles) || data.candles.length === 0) return;
+
+  const earningsDates = data.earningsDates || [];
+  if (!Array.isArray(earningsDates) || earningsDates.length === 0) {
+    if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
+      state.charts.series.volume.setMarkers([]);
+    }
+    return;
+  }
+
+  const candleTimes = data.candles.map(c => {
+    if (typeof c.time === 'string') return c.time;
+    if (c.time?.year) return `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
+    return String(c.time);
+  });
+
+  const markers = [];
+  earningsDates.forEach(eDate => {
+    if (typeof eDate !== 'string' || eDate < '2026-01-01') return;
+
+    let matchedCandleTime = null;
+    const exactIdx = candleTimes.indexOf(eDate);
+    if (exactIdx !== -1) {
+      matchedCandleTime = data.candles[exactIdx].time;
+    } else {
+      const nextIdx = candleTimes.findIndex(t => t >= eDate);
+      if (nextIdx !== -1) {
+        matchedCandleTime = data.candles[nextIdx].time;
+      }
+    }
+
+    if (matchedCandleTime) {
+      markers.push({
+        time: matchedCandleTime,
+        position: 'aboveBar',
+        color: '#f59e0b',
+        size: 0,
+        text: 'e'
+      });
+    }
+  });
+
+  markers.sort((a, b) => {
+    const timeA = typeof a.time === 'string' ? a.time : (a.time?.year ? `${a.time.year}-${a.time.month}-${a.time.day}` : a.time);
+    const timeB = typeof b.time === 'string' ? b.time : (b.time?.year ? `${b.time.year}-${b.time.month}-${b.time.day}` : b.time);
+    return timeA > timeB ? 1 : (timeA < timeB ? -1 : 0);
+  });
+
+  const uniqueMarkers = [];
+  const seenTimes = new Set();
+  markers.forEach(m => {
+    const key = typeof m.time === 'string' ? m.time : JSON.stringify(m.time);
+    if (!seenTimes.has(key)) {
+      seenTimes.add(key);
+      uniqueMarkers.push(m);
+    }
+  });
+
+  if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
+    state.charts.series.volume.setMarkers(uniqueMarkers);
   }
 }
 
@@ -5003,6 +5051,7 @@ async function loadStockChart(rawSymbol) {
     if (state.charts.series.volAvg && data.volAvg9) {
       state.charts.series.volAvg.setData(data.volAvg9);
     }
+    updateEarningsVolumeMarkers();
 
     const rsiBadge = document.getElementById('rsi-live-badge');
     const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');

@@ -66,6 +66,8 @@ const state = {
   pricescanResults: [],
   pricescanSortField: 'spreadPercent',
   pricescanSortAscending: true,
+  pricescanFilterMc1000: false,
+  pricescanFilterMc2000: false,
   runningScreeners: new Set(),
   isRunAllInProgress: false,
   isAggregatedMode: false,
@@ -287,6 +289,8 @@ const el = {
   btnCopyPricescanStocks: document.getElementById('btn-copy-pricescan-stocks'),
   selectPricescanEma: document.getElementById('select-pricescan-ema'),
   selectPricescanScope: document.getElementById('select-pricescan-scope'),
+  chkPricescanMc1000: document.getElementById('chk-pricescan-mc1000'),
+  chkPricescanMc2000: document.getElementById('chk-pricescan-mc2000'),
   pricescanResultsCount: document.getElementById('pricescan-results-count'),
   pricescanResultsCountBadge: document.getElementById('pricescan-results-count-badge'),
   btnEma10: document.getElementById('btn-ema-10'),
@@ -295,6 +299,7 @@ const el = {
   pricescanTbody: document.getElementById('pricescan-tbody'),
   pricescanFooterInfo: document.getElementById('pricescan-footer-info'),
   pricescanDynamicEmaCol: document.getElementById('pricescan-dynamic-ema-col'),
+  btnOpenAddModalDeck: document.getElementById('btn-open-add-modal-deck'),
 
   // Chart Header Watchlist Elements
   chartWatchlistWrapper: document.getElementById('chart-watchlist-wrapper'),
@@ -1102,24 +1107,7 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
       value: Number(ma.toFixed(0))
     });
 
-    // Markers on Vol Intel Chart
-    if (isBullSnort) {
-      markers.push({
-        time: c.time,
-        position: 'aboveBar',
-        color: colors.viBs,
-        shape: 'arrowDown',
-        text: 'BS'
-      });
-    } else if (isPocketPivot) {
-      markers.push({
-        time: c.time,
-        position: 'aboveBar',
-        color: colors.viPp,
-        shape: 'circle',
-        text: 'PP'
-      });
-    }
+    // Markers on Vol Intel Chart (Omitted PP/BS text markers per user preference; color coding on bars is used)
 
     // Paint Bars formatting
     paintedCandles.push({
@@ -1667,6 +1655,12 @@ function updateAuthUI(user) {
       window.SangamMfDeals.refreshAuth();
     }
 
+    // Add Screener button visible
+    el.btnOpenAddModal?.classList.remove('hidden');
+    el.btnOpenAddModal?.classList.add('flex');
+    el.btnOpenAddModalDeck?.classList.remove('hidden');
+    el.btnOpenAddModalDeck?.classList.add('flex');
+
     // Admin Console button visible strictly to admin
     if (user.role === 'admin') {
       el.btnAdminConsole?.classList.remove('hidden');
@@ -1683,8 +1677,10 @@ function updateAuthUI(user) {
     el.btnOpenAuthModal?.classList.remove('hidden');
     el.userAuthBox?.classList.add('hidden');
     el.userAuthBox?.classList.remove('flex');
-    el.btnOpenAddModal?.classList.add('hidden');
-    el.btnOpenAddModal?.classList.remove('flex');
+    el.btnOpenAddModal?.classList.remove('hidden');
+    el.btnOpenAddModal?.classList.add('flex');
+    el.btnOpenAddModalDeck?.classList.remove('hidden');
+    el.btnOpenAddModalDeck?.classList.add('flex');
     el.btnOpenNotes?.classList.add('hidden');
     el.btnOpenNotes?.classList.remove('flex');
     if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
@@ -2880,6 +2876,28 @@ function setupEventListeners() {
     el.btnCopyPricescanStocks.addEventListener('click', handleCopyStocks);
   }
 
+  // DarvasScan Market Cap > 1000 Cr & > 2000 Cr Filter Checkboxes
+  if (el.chkPricescanMc1000) {
+    el.chkPricescanMc1000.addEventListener('change', e => {
+      state.pricescanFilterMc1000 = e.target.checked;
+      if (state.pricescanFilterMc1000 && state.pricescanFilterMc2000) {
+        if (el.chkPricescanMc2000) el.chkPricescanMc2000.checked = false;
+        state.pricescanFilterMc2000 = false;
+      }
+      renderPricescanTable();
+    });
+  }
+  if (el.chkPricescanMc2000) {
+    el.chkPricescanMc2000.addEventListener('change', e => {
+      state.pricescanFilterMc2000 = e.target.checked;
+      if (state.pricescanFilterMc2000 && state.pricescanFilterMc1000) {
+        if (el.chkPricescanMc1000) el.chkPricescanMc1000.checked = false;
+        state.pricescanFilterMc1000 = false;
+      }
+      renderPricescanTable();
+    });
+  }
+
   // Keyboard Enter Shortcut to run scan when DarvasScan view is open
   document.addEventListener('keydown', (e) => {
     if (state.activeSidebarTab === 'pricescan' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
@@ -2893,6 +2911,7 @@ function setupEventListeners() {
 
   // Modal Triggers
   el.btnOpenAddModal?.addEventListener('click', openAddModal);
+  el.btnOpenAddModalDeck?.addEventListener('click', openAddModal);
   el.btnCloseModal?.addEventListener('click', closeModal);
   el.btnCancelModal?.addEventListener('click', closeModal);
   el.screenerModal?.addEventListener('click', e => {
@@ -2953,6 +2972,71 @@ function updateDefaultVolumeBadges() {
   if (rsiSmaArr && rsiSmaArr.length > 0 && el.rsiSmaLiveBadge) {
     const lastRsiSma = rsiSmaArr[rsiSmaArr.length - 1];
     el.rsiSmaLiveBadge.textContent = lastRsiSma?.value ?? '--';
+  }
+}
+
+function updateEarningsVolumeMarkers() {
+  const data = state.currentStockData;
+  if (!data?.candles || !Array.isArray(data.candles) || data.candles.length === 0) return;
+
+  const earningsDates = data.earningsDates || [];
+  if (!Array.isArray(earningsDates) || earningsDates.length === 0) {
+    if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
+      state.charts.series.volume.setMarkers([]);
+    }
+    return;
+  }
+
+  const candleTimes = data.candles.map(c => {
+    if (typeof c.time === 'string') return c.time;
+    if (c.time?.year) return `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
+    return String(c.time);
+  });
+
+  const markers = [];
+  earningsDates.forEach(eDate => {
+    if (typeof eDate !== 'string' || eDate < '2026-01-01') return;
+
+    let matchedCandleTime = null;
+    const exactIdx = candleTimes.indexOf(eDate);
+    if (exactIdx !== -1) {
+      matchedCandleTime = data.candles[exactIdx].time;
+    } else {
+      const nextIdx = candleTimes.findIndex(t => t >= eDate);
+      if (nextIdx !== -1) {
+        matchedCandleTime = data.candles[nextIdx].time;
+      }
+    }
+
+    if (matchedCandleTime) {
+      markers.push({
+        time: matchedCandleTime,
+        position: 'aboveBar',
+        color: '#f59e0b',
+        size: 0,
+        text: 'e'
+      });
+    }
+  });
+
+  markers.sort((a, b) => {
+    const timeA = typeof a.time === 'string' ? a.time : (a.time?.year ? `${a.time.year}-${a.time.month}-${a.time.day}` : a.time);
+    const timeB = typeof b.time === 'string' ? b.time : (b.time?.year ? `${b.time.year}-${b.time.month}-${b.time.day}` : b.time);
+    return timeA > timeB ? 1 : (timeA < timeB ? -1 : 0);
+  });
+
+  const uniqueMarkers = [];
+  const seenTimes = new Set();
+  markers.forEach(m => {
+    const key = typeof m.time === 'string' ? m.time : JSON.stringify(m.time);
+    if (!seenTimes.has(key)) {
+      seenTimes.add(key);
+      uniqueMarkers.push(m);
+    }
+  });
+
+  if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
+    state.charts.series.volume.setMarkers(uniqueMarkers);
   }
 }
 
@@ -4756,7 +4840,11 @@ function handleCopyStocks() {
     const activeWl = getActiveWatchlist();
     list = activeWl ? activeWl.stocks || [] : [];
   } else if (state.activeSidebarTab === 'pricescan') {
-    list = state.pricescanResults || [];
+    list = (state.pricescanResults || []).filter(stock => {
+      if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
+      if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+      return true;
+    });
   } else {
     list = (state.currentStocks || []).filter(stock => {
       if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
@@ -4816,7 +4904,11 @@ function getActiveDisplayedStocksList() {
     const activeWl = getActiveWatchlist();
     list = activeWl ? activeWl.stocks || [] : [];
   } else if (state.activeSidebarTab === 'pricescan') {
-    list = [...(state.pricescanResults || [])];
+    list = [...(state.pricescanResults || [])].filter(stock => {
+      if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
+      if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+      return true;
+    });
     const sortField = state.pricescanSortField || 'spreadPercent';
     const isAsc = state.pricescanSortAscending;
     const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
@@ -5091,6 +5183,7 @@ async function loadStockChart(rawSymbol) {
     if (state.charts.series.volAvg && data.volAvg9) {
       state.charts.series.volAvg.setData(data.volAvg9);
     }
+    updateEarningsVolumeMarkers();
 
     // 3. POPULATE PANE 3: Dedicated RSI (14) + RSI SMA (14)
     if (state.charts.series.rsi && data.rsi14) {
@@ -5459,7 +5552,18 @@ function renderPricescanTable() {
   if (!tbody) return;
 
   const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
-  const matches = [...(state.pricescanResults || [])];
+  const matches = [...(state.pricescanResults || [])].filter(stock => {
+    if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) {
+      return false;
+    }
+    if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
+      return false;
+    }
+    return true;
+  });
+
+  if (el.pricescanResultsCount) el.pricescanResultsCount.textContent = matches.length;
+  if (el.pricescanResultsCountBadge) el.pricescanResultsCountBadge.textContent = matches.length;
 
   // Update dynamic table column header text
   if (el.pricescanDynamicEmaCol) {
@@ -5493,7 +5597,7 @@ function renderPricescanTable() {
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
             <p class="text-xs text-slate-300">No stocks matched the condition: <span class="font-mono text-amber-400">min(DarvasGreen, EMA${ema}) ≤ Close ≤ max(DarvasGreen, EMA${ema})</span></p>
-            <p class="text-[11px] text-slate-500">Try changing EMA to ${ema === 10 ? 'EMA 20' : 'EMA 10'} or scanning a broader scope.</p>
+            <p class="text-[11px] text-slate-500">Try adjusting Market Cap filters, changing EMA to ${ema === 10 ? 'EMA 20' : 'EMA 10'}, or scanning a broader scope.</p>
           </div>
         </td>
       </tr>
@@ -5532,6 +5636,21 @@ function renderPricescanTable() {
     const ltpPrice = (typeof m.close === 'number' && m.close > 0) ? m.close : (m.ltp || 0);
     const selectedEmaVal = ema === 20 ? (m.ema20 || m.selectedEmaValue) : (m.ema10 || m.selectedEmaValue);
 
+    let mcBadgeHtml = '';
+    if (m.mcOver2000Cr) {
+      mcBadgeHtml = `
+        <span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2000 Cr">
+          &gt;2k
+        </span>
+      `;
+    } else if (m.mcOver1000Cr) {
+      mcBadgeHtml = `
+        <span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">
+          &gt;1k
+        </span>
+      `;
+    }
+
     return `
       <tr class="pricescan-stock-row hover:bg-emerald-500/10 cursor-pointer transition-colors group select-none ${isSelected ? 'selected bg-emerald-600/20' : ''}" data-symbol="${m.symbol}">
         <td class="py-2.5 px-3">
@@ -5541,6 +5660,7 @@ function renderPricescanTable() {
               ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(m.symbol, m.name) : ''}
               <span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange || 'NSE'}</span>
               ${getFnoBadgeHtml(m.symbol)}
+              ${mcBadgeHtml}
             </div>
             <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
           </div>
@@ -5855,6 +5975,19 @@ function renderScreeners() {
 
     el.screenersContainer.appendChild(card);
   });
+
+  // Append "+ Add Screener" card at the end of the grid
+  const addCard = document.createElement('div');
+  addCard.className = 'screener-card p-3 rounded-xl border border-dashed border-slate-700 hover:border-blue-500 bg-dark-bg/30 hover:bg-dark-bg/60 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all min-h-[95px] text-slate-400 hover:text-blue-400 group';
+  addCard.title = 'Add New Custom or System Screener';
+  addCard.innerHTML = `
+    <div class="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+    </div>
+    <span class="text-xs font-semibold text-slate-300 group-hover:text-blue-400">Add Screener</span>
+  `;
+  addCard.addEventListener('click', openAddModal);
+  el.screenersContainer.appendChild(addCard);
 
   lucide.createIcons();
 }

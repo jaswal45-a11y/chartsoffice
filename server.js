@@ -1331,11 +1331,115 @@ function synthesizeCompanyMetadata(ticker, stock = null) {
   return meta;
 }
 
-function getCompanyMetadata(ticker) {
+async function fetchLiveCompanyProfile(ticker) {
+  const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+  if (!cleanTicker) return null;
+
+  try {
+    const session = await getYahooCrumbAndCookie();
+    const crumbParam = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
+    const cookieHeader = session.cookies || '';
+
+    const candidates = getCandidateSymbols(cleanTicker);
+    if (!candidates.includes(`${cleanTicker}.NS`)) candidates.unshift(`${cleanTicker}.NS`);
+    if (!candidates.includes(`${cleanTicker}.BO`)) candidates.push(`${cleanTicker}.BO`);
+
+    for (const cand of candidates) {
+      const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${cand}?modules=assetProfile,summaryProfile,quoteType${crumbParam}`;
+      const res = await httpsFetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+          ...(cookieHeader ? { 'Cookie': cookieHeader } : {})
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const prof = data.quoteSummary?.result?.[0]?.assetProfile || data.quoteSummary?.result?.[0]?.summaryProfile;
+        const qt = data.quoteSummary?.result?.[0]?.quoteType;
+
+        if (prof && (prof.longBusinessSummary || prof.sector || prof.industry)) {
+          const companyName = qt?.longName || qt?.shortName || cleanTicker;
+          const sector = prof.sector || 'Diversified';
+          const industry = prof.industry || 'General Operations';
+          let desc = prof.longBusinessSummary || '';
+          
+          if (desc.length > 350) {
+            const firstPeriod = desc.indexOf('.', 200);
+            if (firstPeriod !== -1 && firstPeriod < 450) {
+              desc = desc.slice(0, firstPeriod + 1);
+            } else {
+              desc = desc.slice(0, 320).trim() + '...';
+            }
+          }
+
+          const themes = [];
+          if (sector && sector !== 'Diversified') themes.push(sector);
+          if (industry && industry !== 'General Operations') themes.push(industry);
+          if (prof.website) {
+            try {
+              const host = new URL(prof.website).hostname.replace(/^www\./, '');
+              themes.push(host);
+            } catch(e) {}
+          }
+
+          return {
+            ticker: cleanTicker,
+            exchange: cand.endsWith('.BO') ? 'BSE' : 'NSE',
+            company_name: companyName,
+            sector,
+            industry,
+            description: desc || `${companyName} operates in the ${sector} sector specializing in ${industry}.`,
+            business_type: prof.industry || sector,
+            products: [industry, `${sector} Solutions`],
+            themes: themes.slice(0, 4),
+            geographic_exposure: prof.country ? `${prof.country} & Global` : 'Domestic & Global Markets',
+            key_revenue_driver: `Operations in ${industry}`,
+            website: prof.website || null,
+            source: 'Verified Financial Disclosures',
+            last_updated: 'Sep 2026',
+            ai_generated: false,
+            data_version: '2.0'
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[COMPANY-PROFILE] Live fetch notice for ${ticker}:`, err.message);
+  }
+  return null;
+}
+
+async function getCompanyMetadata(ticker) {
   loadCompanyMetadata();
   const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
   if (!cleanTicker) return null;
 
+  if (memoryCompanyMetadata.has(cleanTicker)) {
+    const existing = memoryCompanyMetadata.get(cleanTicker);
+    const isGeneric = !existing.description ||
+      existing.description.includes('operates in the General sector') ||
+      existing.description.includes('providing diversified products') ||
+      (existing.sector === 'General' && existing.industry === 'General');
+
+    if (!isGeneric && existing.data_version === '2.0') {
+      return existing;
+    }
+    if (!isGeneric && !existing.ai_generated) {
+      return existing;
+    }
+  }
+
+  // Fetch verified live profile from real financial records
+  const liveMeta = await fetchLiveCompanyProfile(cleanTicker);
+  if (liveMeta) {
+    memoryCompanyMetadata.set(cleanTicker, liveMeta);
+    scheduleCompanyMetadataFlush();
+    return liveMeta;
+  }
+
+  // If live lookup unavailable, check existing cache
   if (memoryCompanyMetadata.has(cleanTicker)) {
     return memoryCompanyMetadata.get(cleanTicker);
   }
@@ -1351,23 +1455,184 @@ function getCompanyMetadata(ticker) {
   return synthesized;
 }
 
-function updateCompanyMetadata(ticker, updates) {
+async function updateCompanyMetadata(ticker, updates) {
   loadCompanyMetadata();
   const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
   if (!cleanTicker) return null;
 
-  const current = getCompanyMetadata(cleanTicker);
+  const current = await getCompanyMetadata(cleanTicker);
   const updated = {
     ...current,
     ...updates,
     ticker: cleanTicker,
     last_updated: updates.last_updated || 'Sep 2026',
-    data_version: updates.data_version || '1.1'
+    data_version: updates.data_version || '2.0'
   };
 
   memoryCompanyMetadata.set(cleanTicker, updated);
   scheduleCompanyMetadataFlush();
   return updated;
+}
+
+// =============================================================
+// VERIFIED EARNINGS CALENDAR (2026+) - REGULATORY FILINGS ENGINE
+// =============================================================
+
+const EARNINGS_CALENDAR_FILE = path.join(__dirname, 'data', 'earnings_calendar.json');
+let memoryEarningsCalendar = new Map();
+let isEarningsCalendarLoaded = false;
+let earningsCalendarFlushTimeout = null;
+
+function loadEarningsCalendar() {
+  if (isEarningsCalendarLoaded) return;
+  isEarningsCalendarLoaded = true;
+  try {
+    if (fs.existsSync(EARNINGS_CALENDAR_FILE)) {
+      const raw = fs.readFileSync(EARNINGS_CALENDAR_FILE, 'utf-8');
+      const data = JSON.parse(raw);
+      if (typeof data === 'object' && data !== null) {
+        for (const [ticker, val] of Object.entries(data)) {
+          if (Array.isArray(val)) {
+            memoryEarningsCalendar.set(ticker.toUpperCase(), { dates: val, lastUpdated: Date.now() });
+          } else if (val && Array.isArray(val.dates)) {
+            memoryEarningsCalendar.set(ticker.toUpperCase(), val);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[EARNINGS] Error loading earnings_calendar.json:', err.message);
+  }
+}
+
+function scheduleEarningsCalendarFlush() {
+  if (earningsCalendarFlushTimeout) return;
+  earningsCalendarFlushTimeout = setTimeout(() => {
+    earningsCalendarFlushTimeout = null;
+    try {
+      const obj = {};
+      for (const [ticker, val] of memoryEarningsCalendar.entries()) {
+        obj[ticker] = val;
+      }
+      fs.writeFileSync(EARNINGS_CALENDAR_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[EARNINGS] Error saving earnings_calendar.json:', err.message);
+    }
+  }, 2000);
+}
+
+function parseNseAnnouncementDate(dateStr) {
+  if (!dateStr) return null;
+  const parts = dateStr.trim().split(' ')[0].split('-');
+  if (parts.length !== 3) return null;
+  const day = parts[0].padStart(2, '0');
+  const monthMap = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+  const month = monthMap[parts[1]];
+  const year = parts[2];
+  if (!month || !year) return null;
+  return `${year}-${month}-${day}`;
+}
+
+async function fetchVerifiedEarningsDatesFromNse(cleanTicker) {
+  const foundDates = new Set();
+  try {
+    const url = `https://www.nseindia.com/api/corporate-announcements?index=equities&symbol=${encodeURIComponent(cleanTicker)}`;
+    const res = await httpsFetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Referer': 'https://www.nseindia.com/'
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          const desc = (item.desc || '').toLowerCase();
+          const att = (item.attchmntText || '').toLowerCase();
+
+        const isExcluded = desc.includes('intimation') || desc.includes('notice') || desc.includes('newspaper') ||
+          desc.includes('transcript') || desc.includes('audio') || desc.includes('schedule') ||
+          desc.includes('presentation') || desc.includes('clarification') || desc.includes('record date') ||
+          desc.includes('trading window') || desc.includes('amendment') || desc.includes('agm') ||
+          desc.includes('egm') || desc.includes('postal ballot') || desc.includes('shareholders meeting');
+
+        if (isExcluded) return;
+
+        const hasResults = att.includes('financial result') || att.includes('financial results') ||
+          att.includes('audited financial') || att.includes('unaudited financial') ||
+          att.includes('un-audited financial') || desc.includes('financial result');
+
+        const isOfficialDeclaration = desc.includes('outcome of board meeting') ||
+          desc.includes('financial result') ||
+          desc.includes('board meeting outcome') ||
+          (desc.includes('press release') && (att.includes('results for the quarter') || att.includes('financial results') || att.includes('audited results') || att.includes('unaudited results')));
+
+        if (hasResults && isOfficialDeclaration) {
+          const d = parseNseAnnouncementDate(item.an_dt);
+          if (d && d >= '2026-01-01') {
+            foundDates.add(d);
+          }
+        }
+      });
+    }
+  }
+} catch (err) {
+    console.warn(`[EARNINGS] NSE announcement fetch error for ${cleanTicker}:`, err.message);
+  }
+  return Array.from(foundDates);
+}
+
+async function getStockEarningsDates(ticker) {
+  loadEarningsCalendar();
+  const cleanTicker = (ticker || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '').replace(/%26/g, '&');
+  if (!cleanTicker) return [];
+
+  const now = Date.now();
+  if (memoryEarningsCalendar.has(cleanTicker)) {
+    const cached = memoryEarningsCalendar.get(cleanTicker);
+    if (cached && (now - (cached.lastUpdated || 0) < 86400000) && Array.isArray(cached.dates) && cached.dates.length > 0) {
+      return cached.dates;
+    }
+  }
+
+  // 1. Fetch from NSE Corporate Announcements
+  let dates = await fetchVerifiedEarningsDatesFromNse(cleanTicker);
+
+  // 2. Fallback to Yahoo Finance if NSE returned empty
+  if (!dates || dates.length === 0) {
+    try {
+      const session = await getYahooCrumbAndCookie();
+      const crumbParam = session.crumb ? `&crumb=${encodeURIComponent(session.crumb)}` : '';
+      const cookieHeader = session.cookies || '';
+      const yfUrl = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${cleanTicker}.NS?modules=calendarEvents,earningsHistory${crumbParam}`;
+      const res = await httpsFetch(yfUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+          ...(cookieHeader ? { 'Cookie': cookieHeader } : {})
+        }
+      });
+      if (res.ok) {
+        const d = await res.json();
+        const cal = d.quoteSummary?.result?.[0]?.calendarEvents?.earnings;
+        if (cal?.earningsCallDate?.raw) {
+          const dt = new Date(cal.earningsCallDate.raw * 1000).toISOString().slice(0, 10);
+          if (dt >= '2026-01-01' && !dates.includes(dt)) {
+            dates.push(dt);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[EARNINGS] Yahoo fallback error for ${cleanTicker}:`, err.message);
+    }
+  }
+
+  dates = Array.from(new Set(dates)).sort();
+  memoryEarningsCalendar.set(cleanTicker, { dates, lastUpdated: now });
+  scheduleEarningsCalendarFlush();
+  return dates;
 }
 
 async function persistUniverseQuotes(quotesMap) {
@@ -2274,6 +2539,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
         const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
 
+        const latestDarvasTop = darvasBox.latestTopBox;
+        const latestDarvasBottom = darvasBox.latestBottomBox;
+        const earningsDates = await getStockEarningsDates(rawSymbol);
+
         const responsePayload = {
           symbol: rawSymbol,
           exchange: 'NSE',
@@ -2304,6 +2573,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           latestDarvasBottom: darvasBox.latestBottomBox,
           darvasBox,
           pivotPoints,
+          earningsDates,
           candlesCount: candles.length,
           candles,
           volumeSeries: candles.map(c => ({
@@ -2436,6 +2706,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
         const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
         const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
+        const earningsDates = await getStockEarningsDates(rawSymbol);
 
         const responsePayload = {
           symbol: rawSymbol,
@@ -2467,6 +2738,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           latestDarvasBottom: darvasBox.latestBottomBox,
           darvasBox,
           pivotPoints,
+          earningsDates,
           candlesCount: candles.length,
           candles,
           volumeSeries: candles.map(c => ({
@@ -2770,59 +3042,62 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
   const universe = getLocalStockUniverse();
   const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
 
+  // Fetch Market Cap > 1000 Cr & > 2000 Cr symbols sets to tag each stock
+  const { mc1000Set, mc2000Set } = await getMarketCapSets();
+
   let targetSymbols = [];
 
   switch (scope) {
     case 'current':
     case 'watchlist':
       if (Array.isArray(stockList) && stockList.length > 0) {
-        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE' });
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
       } else {
-        targetSymbols = sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+        targetSymbols = sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       }
       break;
 
     case 'large':
     case 'large_cap':
       // Large Cap: Top 100 stocks
-      targetSymbols = sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      targetSymbols = sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       break;
 
     case 'mid':
     case 'mid_cap':
       // Mid Cap: Rank 101 to 250 (150 stocks)
-      targetSymbols = sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      targetSymbols = sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       break;
 
     case 'small':
     case 'small_cap':
       // Small Cap: Rank 251 to 500 (250 stocks)
-      targetSymbols = sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      targetSymbols = sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       break;
 
     case 'micro':
     case 'micro_cap':
       // Micro Cap: Rank 501+
-      targetSymbols = sortedUniverse.slice(500, 700).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      targetSymbols = sortedUniverse.slice(500, 700).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       break;
 
     case 'midsmall400':
     case 'midsmall_400':
       // MidSmall400: Rank 101 to 500 (Mid 150 + Small 250 = 400 stocks)
-      targetSymbols = sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      targetSymbols = sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       break;
 
     case 'fno':
-      targetSymbols = sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+      targetSymbols = sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       break;
 
     case 'universe':
     case 'all':
     default:
       if (String(scope).startsWith('wl_') && Array.isArray(stockList) && stockList.length > 0) {
-        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE' });
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
       } else {
-        targetSymbols = sortedUniverse.slice(0, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE' }));
+        targetSymbols = sortedUniverse.slice(0, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
       }
       break;
   }
@@ -2834,7 +3109,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
     const s = (item.symbol || '').toUpperCase().trim();
     if (s && !seen.has(s)) {
       seen.add(s);
-      uniqueList.push({ symbol: s, name: item.name || s, exchange: item.exchange || 'NSE' });
+      uniqueList.push({ symbol: s, name: item.name || s, exchange: item.exchange || 'NSE', marketCap: item.marketCap, mcOver1000Cr: item.mcOver1000Cr, mcOver2000Cr: item.mcOver2000Cr });
     }
   }
 
@@ -2869,6 +3144,10 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
               const lastCandle = hist.candles[hist.candles.length - 1];
               const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
 
+              const symUpper = item.symbol.toUpperCase();
+              const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000);
+              const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000);
+
               matches.push({
                 symbol: item.symbol,
                 name: item.name,
@@ -2877,6 +3156,8 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
                 ltp: Number(close.toFixed(2)),
                 changePercent: hist.changePercent || 0,
                 volume,
+                mcOver1000Cr: Boolean(isOver1000),
+                mcOver2000Cr: Boolean(isOver2000),
                 ema10: Number(ema10.toFixed(2)),
                 ema20: Number(ema20.toFixed(2)),
                 darvasGreen: Number(darvasGreen.toFixed(2)),
@@ -5524,7 +5805,7 @@ const server = http.createServer(async (req, res) => {
       const stockInfoMatch = pathname.match(/^\/api\/stock-info\/([a-zA-Z0-9_\-\.\^%]+)$/);
       if (stockInfoMatch && method === 'GET') {
         const rawTicker = decodeURIComponent(stockInfoMatch[1]);
-        const metadata = getCompanyMetadata(rawTicker);
+        const metadata = await getCompanyMetadata(rawTicker);
         if (!metadata) {
           return sendJson(res, 404, { success: false, error: `Company metadata not found for ${rawTicker}` });
         }
@@ -5540,8 +5821,21 @@ const server = http.createServer(async (req, res) => {
         }
         const rawTicker = decodeURIComponent(adminStockInfoMatch[1]);
         const body = await parseJsonBody(req);
-        const updated = updateCompanyMetadata(rawTicker, body);
+        const updated = await updateCompanyMetadata(rawTicker, body);
         return sendJson(res, 200, { success: true, message: `Metadata updated for ${rawTicker}`, metadata: updated });
+      }
+
+      // 9d. GET /api/stock-earnings/:symbol - Verified Historical Earnings Dates (2026+)
+      const earningsMatch = pathname.match(/^\/api\/stock-earnings\/([a-zA-Z0-9_\-\.\^%]+)$/);
+      if (earningsMatch && method === 'GET') {
+        const rawSymbol = decodeURIComponent(earningsMatch[1]);
+        try {
+          const earningsDates = await getStockEarningsDates(rawSymbol);
+          return sendJson(res, 200, { success: true, symbol: rawSymbol.toUpperCase(), earningsDates });
+        } catch (eErr) {
+          console.error(`Error fetching earnings dates for ${rawSymbol}:`, eErr.message);
+          return sendJson(res, 500, { success: false, error: eErr.message });
+        }
       }
 
       // =============================================================

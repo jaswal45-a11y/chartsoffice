@@ -115,7 +115,7 @@
         </div>
 
         <!-- Add Screener Button (Visible to Logged-in User / Admin) -->
-        <button id="btn-open-add-modal" class="hidden items-center gap-2 px-3.5 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-900/30 active:scale-95 transition-all cursor-pointer">
+        <button id="btn-open-add-modal" onclick="openAddModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-900/30 active:scale-95 transition-all cursor-pointer">
           <i data-lucide="plus-circle" class="w-4 h-4"></i>
           <span>Add Screener</span>
         </button>
@@ -185,7 +185,7 @@
           </div>
 
           <!-- Category Filter Tabs -->
-          <div class="flex items-center gap-1 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
+          <div class="flex items-center gap-1.5 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
             <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">All</button>
             <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Intraday</button>
             <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Breakout</button>
@@ -193,6 +193,10 @@
             <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Momentum</button>
             <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Reversal</button>
             <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">My Custom</button>
+            <button id="btn-open-add-modal-deck" onclick="openAddModal()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 transition-all flex items-center gap-1 cursor-pointer ml-1" title="Add New Custom or System Screener">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Screener</span>
+            </button>
           </div>
         </div>
 
@@ -475,7 +479,7 @@
             </div>
 
             <!-- Middle: Compact Scope Dropdown with All 7 Options -->
-            <div class="flex items-center gap-1.5 flex-1 min-w-[150px] max-w-[240px]">
+            <div class="flex items-center gap-1.5 flex-1 min-w-[130px] max-w-[210px]">
               <select id="select-pricescan-scope" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
                 <option value="current">⚡ Current Screener</option>
                 <option value="fno">🎯 F&O Stocks (~200)</option>
@@ -486,6 +490,19 @@
                 <option value="midsmall400">🌐 MidSmall400 (400)</option>
                 <option value="universe">🌍 Full Universe (1.1k)</option>
               </select>
+            </div>
+
+            <!-- Market Cap 1k & 2k Toggles (Compact Space-saving UI) -->
+            <div class="flex items-center gap-1.5 px-2 py-1 bg-dark-bg border border-dark-border rounded-lg shrink-0">
+              <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-pricescan-mc1000" title="Market Cap > ₹1000 Cr">
+                <input type="checkbox" id="chk-pricescan-mc1000" class="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">1k</span>
+              </label>
+              <span class="text-slate-600 text-[10px] select-none">|</span>
+              <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-pricescan-mc2000" title="Market Cap > ₹2000 Cr">
+                <input type="checkbox" id="chk-pricescan-mc2000" class="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
+              </label>
             </div>
 
             <!-- Right: Compact Run Button, Copy Button & Match Count Badge -->
@@ -2064,7 +2081,7 @@
   <!-- Global Reusable Company Info Component -->
   <script src="company-info.js?v=1.0.0"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.1.2"></script>
+  <script src="app.js?v=3.1.4"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->

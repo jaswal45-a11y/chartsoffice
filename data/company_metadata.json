@@ -467,148 +467,321 @@
   },
   {
     "ticker": "KOTAKBANK",
-    "exchange": "NSE",
-    "company_name": "Kotak Mahindra Bank Limited",
-    "sector": "Banking",
-    "industry": "Private Sector Bank",
-    "description": "Kotak Mahindra Bank Limited operates in the Banking sector, providing private sector bank products, commercial services, and operational solutions for domestic and export markets.",
+    "ai_generated": true,
     "business_type": "Financial Services & Banking",
+    "company_name": "Kotak Mahindra Bank Limited",
+    "data_version": "1.0",
+    "description": "Kotak Mahindra Bank Limited operates in the Banking sector, providing private sector bank products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Private Sector Bank",
+    "key_revenue_driver": "Core operations in Private Sector Bank",
+    "last_updated": "Sep 2026",
     "products": [
       "Private Sector Bank",
       "Banking Products"
     ],
+    "sector": "Banking",
+    "source": "Company Filings / Public Disclosures",
     "themes": [
       "Banking",
       "Private Sector Bank",
       "F&O",
       "Large Cap"
-    ],
-    "geographic_exposure": "Domestic & Global Markets",
-    "key_revenue_driver": "Core operations in Private Sector Bank",
-    "source": "Company Filings / Public Disclosures",
-    "last_updated": "Sep 2026",
-    "ai_generated": true,
-    "data_version": "1.0"
+    ]
   },
   {
     "ticker": "INDSWFTLAB",
     "exchange": "NSE",
     "company_name": "Ind-Swift Laboratories Limited",
-    "sector": "Pharmaceuticals",
-    "industry": "Pharmaceuticals & Formulations",
-    "description": "Ind-Swift Laboratories Limited operates in the Pharmaceuticals sector, providing pharmaceuticals & formulations products, commercial services, and operational solutions for domestic and export markets.",
-    "business_type": "Pharmaceuticals & Healthcare",
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "description": "Ind-Swift Laboratories Limited, together with its subsidiaries, develops, manufactures, and sells active pharmaceutical ingredients (APIs), intermediates, and formulations in India and internationally.",
+    "business_type": "Drug Manufacturers - Specialty & Generic",
     "products": [
-      "Pharmaceuticals & Formulations",
-      "Pharmaceuticals Products"
+      "Drug Manufacturers - Specialty & Generic",
+      "Healthcare Solutions"
     ],
     "themes": [
-      "Pharmaceuticals",
-      "Pharmaceuticals & Formulations",
-      "Small Cap"
+      "Healthcare",
+      "Drug Manufacturers - Specialty & Generic",
+      "indswiftlabs.com"
     ],
-    "geographic_exposure": "Domestic & Global Markets",
-    "key_revenue_driver": "Core operations in Pharmaceuticals & Formulations",
-    "source": "Company Filings / Public Disclosures",
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Drug Manufacturers - Specialty & Generic",
+    "website": "https://www.indswiftlabs.com",
+    "source": "Verified Financial Disclosures",
     "last_updated": "Sep 2026",
-    "ai_generated": true,
-    "data_version": "1.0"
+    "ai_generated": false,
+    "data_version": "2.0"
   },
   {
     "ticker": "VSSL",
     "exchange": "NSE",
     "company_name": "Vardhman Special Steels Limited",
-    "sector": "General",
-    "industry": "Diversified",
-    "description": "Vardhman Special Steels Limited operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
-    "business_type": "Commercial Operations",
+    "sector": "Basic Materials",
+    "industry": "Steel",
+    "description": "Vardhman Special Steels Limited engages in the manufacture and sale of billets, steel bars, and bright bars of various categories of special and alloy steels in India and internationally. Its customers include passenger vehicles, two wheelers, commercial vehicles, tractors, off-highway vehicles,and railways, as well as engineering, bearing, and allied industries.",
+    "business_type": "Steel",
     "products": [
-      "Diversified",
-      "General Products"
+      "Steel",
+      "Basic Materials Solutions"
     ],
     "themes": [
-      "General",
-      "Diversified",
-      "Large Cap"
+      "Basic Materials",
+      "Steel",
+      "vardhmansteel.com"
     ],
-    "geographic_exposure": "Domestic & Global Markets",
-    "key_revenue_driver": "Core operations in Diversified",
-    "source": "Company Filings / Public Disclosures",
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Steel",
+    "website": "https://www.vardhmansteel.com",
+    "source": "Verified Financial Disclosures",
     "last_updated": "Sep 2026",
-    "ai_generated": true,
-    "data_version": "1.0"
+    "ai_generated": false,
+    "data_version": "2.0"
   },
   {
     "ticker": "EMUDHRA",
     "exchange": "NSE",
-    "company_name": "eMudhra Ltd",
-    "sector": "General",
-    "industry": "Diversified",
-    "description": "eMudhra Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
-    "business_type": "Commercial Operations",
+    "company_name": "eMudhra Limited",
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "description": "eMudhra Limited provides trust and enterprise solutions to individuals and organizations in India, North America, Europe, the Middle East, Africa, and the Asia Pacific. The company provides solutions such as emSigner paperless workflow, SecurePass identity and authentication management, Certinext certificate issuance and life cycle management; ID broker; data discovery and management platform; and emSign trust services.",
+    "business_type": "Software - Application",
     "products": [
-      "Diversified",
-      "General Products"
+      "Software - Application",
+      "Technology Solutions"
     ],
     "themes": [
-      "General",
-      "Diversified",
-      "Large Cap"
+      "Technology",
+      "Software - Application",
+      "emudhra.com"
     ],
-    "geographic_exposure": "Domestic & Global Markets",
-    "key_revenue_driver": "Core operations in Diversified",
-    "source": "Company Filings / Public Disclosures",
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Software - Application",
+    "website": "https://www.emudhra.com",
+    "source": "Verified Financial Disclosures",
     "last_updated": "Sep 2026",
-    "ai_generated": true,
-    "data_version": "1.0"
+    "ai_generated": false,
+    "data_version": "2.0"
   },
   {
     "ticker": "PATANJALI",
-    "exchange": "NSE",
-    "company_name": "Patanjali Foods Limited",
-    "sector": "FMCG",
-    "industry": "Food, Household & Personal Care",
-    "description": "Patanjali Foods Limited operates in the FMCG sector, providing food, household & personal care products, commercial services, and operational solutions for domestic and export markets.",
+    "ai_generated": true,
     "business_type": "Commercial Operations",
+    "company_name": "Patanjali Foods Limited",
+    "data_version": "1.0",
+    "description": "Patanjali Foods Limited operates in the FMCG sector, providing food, household & personal care products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Food, Household & Personal Care",
+    "key_revenue_driver": "Core operations in Food, Household & Personal Care",
+    "last_updated": "Sep 2026",
     "products": [
       "Food, Household & Personal Care",
       "FMCG Products"
     ],
+    "sector": "FMCG",
+    "source": "Company Filings / Public Disclosures",
     "themes": [
       "FMCG",
       "Food, Household & Personal Care",
       "F&O",
       "Large Cap"
-    ],
-    "geographic_exposure": "Domestic & Global Markets",
-    "key_revenue_driver": "Core operations in Food, Household & Personal Care",
-    "source": "Company Filings / Public Disclosures",
-    "last_updated": "Sep 2026",
-    "ai_generated": true,
-    "data_version": "1.0"
+    ]
   },
   {
     "ticker": "CSM",
-    "exchange": "NSE",
-    "company_name": "CSM Technologies Ltd",
-    "sector": "General",
-    "industry": "Diversified",
-    "description": "CSM Technologies Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "ai_generated": true,
     "business_type": "Commercial Operations",
+    "company_name": "CSM Technologies Ltd",
+    "data_version": "1.0",
+    "description": "CSM Technologies Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
     "products": [
       "Diversified",
       "General Products"
     ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
     "themes": [
       "General",
       "Diversified",
       "Mid Cap"
-    ],
-    "geographic_exposure": "Domestic & Global Markets",
-    "key_revenue_driver": "Core operations in Diversified",
-    "source": "Company Filings / Public Disclosures",
-    "last_updated": "Sep 2026",
+    ]
+  },
+  {
+    "ticker": "BANKNIFTY",
     "ai_generated": true,
-    "data_version": "1.0"
+    "business_type": "Commercial Operations",
+    "company_name": "BANKNIFTY Index Derivative",
+    "data_version": "1.0",
+    "description": "BANKNIFTY Index Derivative operates in the Index sector, providing index futures & options products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE_INDEX",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Index Futures & Options",
+    "key_revenue_driver": "Core operations in Index Futures & Options",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Index Futures & Options",
+      "Index Products"
+    ],
+    "sector": "Index",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "Index",
+      "Index Futures & Options",
+      "F&O",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "VENUSPIPES",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Venus Pipes & Tubes Ltd",
+    "data_version": "1.0",
+    "description": "Venus Pipes & Tubes Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "REDINGTON",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Redington (india) Limited",
+    "data_version": "1.0",
+    "description": "Redington (india) Limited operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "MOREPENLAB",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Morepen Laboratories Limited",
+    "data_version": "1.0",
+    "description": "Morepen Laboratories Limited operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "BALUFORGE",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Balu Forge Industries Ltd",
+    "data_version": "1.0",
+    "description": "Balu Forge Industries Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "SHREEPUSHK",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Shree Pushkar Chemicals & Fertilisers Limited",
+    "data_version": "1.0",
+    "description": "Shree Pushkar Chemicals & Fertilisers Limited operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "BOSCHLTD",
+    "ai_generated": true,
+    "business_type": "Industrial Manufacturing",
+    "company_name": "Bosch Limited",
+    "data_version": "1.0",
+    "description": "Bosch Limited operates in the Automobile sector, providing auto ancillaries & components products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Auto Ancillaries & Components",
+    "key_revenue_driver": "Core operations in Auto Ancillaries & Components",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Auto Ancillaries & Components",
+      "Automobile Products"
+    ],
+    "sector": "Automobile",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "Automobile",
+      "Auto Ancillaries & Components",
+      "F&O",
+      "Large Cap"
+    ]
   }
 ]
