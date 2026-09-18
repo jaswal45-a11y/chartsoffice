@@ -584,45 +584,33 @@
   }
 
   function updateAuthVisibility() {
-    var isAuth = isUserAuthenticated();
     document.querySelectorAll('#btn-open-mf-deals, .btn-mf-deals-launcher').forEach(function (btn) {
-      if (isAuth) {
-        btn.classList.remove('hidden');
-        btn.classList.add('flex');
-      } else {
-        btn.classList.add('hidden');
-        btn.classList.remove('flex');
-      }
+      btn.classList.remove('hidden');
+      btn.classList.add('flex');
     });
-
-    if (!isAuth && widgetEl) {
-      closeWidget();
-    }
   }
 
   // 8. Fetch Deals from API & Check Unread
   async function fetchDeals(forceRefresh) {
-    var token = getAuthToken();
-    if (!token) {
-      updateAuthVisibility();
-      return;
+    isLoading = true;
+    var refreshBtn = document.getElementById('btn-mf-refresh');
+    var refreshIcon = document.getElementById('mf-refresh-icon');
+    if (refreshIcon) {
+      refreshIcon.style.display = 'inline-block';
+      refreshIcon.style.transition = 'transform 0.5s ease';
+      refreshIcon.style.transform = 'rotate(360deg)';
     }
 
-    isLoading = true;
-    var refreshIcon = document.getElementById('mf-refresh-icon');
-    if (refreshIcon) refreshIcon.textContent = '⏳';
-
     try {
-      var res = await fetch('/api/mf-deals' + (forceRefresh ? '?refresh=true' : ''), {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      });
-
-      if (res.status === 401) {
-        updateAuthVisibility();
-        return;
+      var headers = {};
+      var token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
       }
+
+      var res = await fetch('/api/mf-deals' + (forceRefresh ? '?refresh=true' : ''), {
+        headers: headers
+      });
 
       var data = await res.json();
 
@@ -634,7 +622,7 @@
         var lastUpdatedEl = document.getElementById('mf-deals-last-updated');
         if (lastUpdatedEl && data.lastUpdated) {
           var d = new Date(data.lastUpdated);
-          lastUpdatedEl.textContent = 'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          lastUpdatedEl.textContent = 'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
         checkUnreadStatus();
@@ -644,7 +632,11 @@
       console.warn('[MF Deals] Fetch error:', err.message);
     } finally {
       isLoading = false;
-      if (refreshIcon) refreshIcon.textContent = '🔄';
+      if (refreshIcon) {
+        setTimeout(function () {
+          refreshIcon.style.transform = 'rotate(0deg)';
+        }, 500);
+      }
     }
   }
 
@@ -682,26 +674,15 @@
 
   // 10. Open / Close / Toggle / Maximize Modal
   function openWidget() {
-    if (!isUserAuthenticated()) {
-      if (typeof window.openAuthModal === 'function') {
-        window.openAuthModal('login');
-      } else if (typeof openAuthModal === 'function') {
-        openAuthModal('login');
-      }
-      return;
-    }
-
     createWidget();
     settings.isOpen = true;
     saveSettings();
     applyGeometry();
     markAsViewed();
 
-    if (deals.length === 0) {
-      fetchDeals(false);
-    } else {
-      renderTable();
-    }
+    // Always render immediate state and fetch latest fresh data in background
+    renderTable();
+    fetchDeals(false);
   }
 
   function closeWidget() {
@@ -925,33 +906,25 @@
       };
     });
 
-    // Initial silent check for new unviewed deals if authenticated
-    if (isUserAuthenticated()) {
-      fetchDeals(false);
-    }
+    // Initial check for new unviewed deals
+    fetchDeals(false);
 
-    // Periodic Background Polling every 2.5 minutes
+    // Periodic Background Polling every 60 seconds (1 minute)
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(function () {
-      if (isUserAuthenticated()) {
-        fetchDeals(false);
-      }
-    }, 150000);
+      fetchDeals(false);
+    }, 60000);
 
     // Check on window focus
     window.addEventListener('focus', function () {
-      if (isUserAuthenticated()) {
-        fetchDeals(false);
-      }
+      fetchDeals(false);
     });
 
     // React to login / logout across tabs
     window.addEventListener('storage', function (e) {
       if (e.key === 'authToken' || e.key === 'adminToken') {
         updateAuthVisibility();
-        if (isUserAuthenticated()) {
-          fetchDeals(false);
-        }
+        fetchDeals(false);
       }
     });
   }

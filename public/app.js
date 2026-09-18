@@ -288,6 +288,7 @@ const el = {
   btnRunPricescan: document.getElementById('btn-run-pricescan'),
   btnCopyPricescanStocks: document.getElementById('btn-copy-pricescan-stocks'),
   selectPricescanEma: document.getElementById('select-pricescan-ema'),
+  selectPricescanTimeframe: document.getElementById('select-pricescan-timeframe'),
   selectPricescanScope: document.getElementById('select-pricescan-scope'),
   chkPricescanMc1000: document.getElementById('chk-pricescan-mc1000'),
   chkPricescanMc2000: document.getElementById('chk-pricescan-mc2000'),
@@ -299,6 +300,7 @@ const el = {
   pricescanTbody: document.getElementById('pricescan-tbody'),
   pricescanFooterInfo: document.getElementById('pricescan-footer-info'),
   pricescanDynamicEmaCol: document.getElementById('pricescan-dynamic-ema-col'),
+  pricescanDynamicDarvasCol: document.getElementById('pricescan-dynamic-darvas-col'),
   btnOpenAddModalDeck: document.getElementById('btn-open-add-modal-deck'),
 
   // Chart Header Watchlist Elements
@@ -1686,11 +1688,8 @@ function updateAuthUI(user) {
     if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
       window.SangamNotes.close();
     }
-    el.btnOpenMfDeals?.classList.add('hidden');
-    el.btnOpenMfDeals?.classList.remove('flex');
-    if (window.closeMfDeals) {
-      window.closeMfDeals();
-    }
+    el.btnOpenMfDeals?.classList.remove('hidden');
+    el.btnOpenMfDeals?.classList.add('flex');
     el.btnAdminConsole?.classList.add('hidden');
     el.btnAdminConsole?.classList.remove('flex');
   }
@@ -2834,6 +2833,8 @@ function setupEventListeners() {
   const setPricescanEma = (val) => {
     const vStr = String(val);
     if (el.selectPricescanEma) el.selectPricescanEma.value = vStr;
+    const tf = el.selectPricescanTimeframe?.value || '1d';
+    const tfCode = tf === '1wk' ? 'W' : 'D';
     const btn10 = document.getElementById('btn-ema-10');
     const btn20 = document.getElementById('btn-ema-20');
     if (vStr === '10') {
@@ -2842,7 +2843,7 @@ function setupEventListeners() {
       btn20?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
       btn20?.classList.add('text-slate-400');
       if (el.pricescanDynamicEmaCol) {
-        el.pricescanDynamicEmaCol.textContent = 'EMA 10 (₹)';
+        el.pricescanDynamicEmaCol.textContent = `EMA 10 (${tfCode}) (₹)`;
       }
     } else {
       btn20?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
@@ -2850,11 +2851,14 @@ function setupEventListeners() {
       btn10?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
       btn10?.classList.add('text-slate-400');
       if (el.pricescanDynamicEmaCol) {
-        el.pricescanDynamicEmaCol.textContent = 'EMA 20 (₹)';
+        el.pricescanDynamicEmaCol.textContent = `EMA 20 (${tfCode}) (₹)`;
       }
     }
+    if (el.pricescanDynamicDarvasCol) {
+      el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
+    }
     if (el.pricescanFooterInfo) {
-      el.pricescanFooterInfo.textContent = `min(DarvasGreen, EMA${vStr}) ≤ Close ≤ max(DarvasGreen, EMA${vStr})`;
+      el.pricescanFooterInfo.textContent = `min(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode}))`;
     }
     if (state.pricescanResults && state.pricescanResults.length > 0) {
       renderPricescanTable();
@@ -2866,6 +2870,23 @@ function setupEventListeners() {
 
   if (el.selectPricescanEma) {
     el.selectPricescanEma.addEventListener('change', () => setPricescanEma(el.selectPricescanEma.value));
+  }
+
+  if (el.selectPricescanTimeframe) {
+    el.selectPricescanTimeframe.addEventListener('change', () => {
+      const tf = el.selectPricescanTimeframe.value;
+      const tfCode = tf === '1wk' ? 'W' : 'D';
+      const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+      if (el.pricescanDynamicDarvasCol) {
+        el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
+      }
+      if (el.pricescanDynamicEmaCol) {
+        el.pricescanDynamicEmaCol.textContent = `EMA ${ema} (${tfCode}) (₹)`;
+      }
+      if (el.pricescanFooterInfo) {
+        el.pricescanFooterInfo.textContent = `min(DarvasGreen(${tfCode}), EMA${ema}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${ema}(${tfCode}))`;
+      }
+    });
   }
 
   if (el.btnRunPricescan) {
@@ -5406,6 +5427,9 @@ function populatePricescanScopeOptions() {
 
 async function runPricePositionScan() {
   const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+  const interval = el.selectPricescanTimeframe?.value || '1d';
+  const tfCode = interval === '1wk' ? 'W' : 'D';
+  const tfLabel = interval === '1wk' ? 'Weekly' : 'Daily';
   const scope = el.selectPricescanScope?.value || 'current';
   const btn = el.btnRunPricescan;
   const tbody = el.pricescanTbody;
@@ -5415,11 +5439,14 @@ async function runPricePositionScan() {
 
   // Update dynamic table column header
   if (el.pricescanDynamicEmaCol) {
-    el.pricescanDynamicEmaCol.textContent = ema === 20 ? 'EMA 20 (₹)' : 'EMA 10 (₹)';
+    el.pricescanDynamicEmaCol.textContent = `EMA ${ema} (${tfCode}) (₹)`;
+  }
+  if (el.pricescanDynamicDarvasCol) {
+    el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
   }
 
   if (footerInfo) {
-    footerInfo.textContent = `Condition: min(DarvasGreen, EMA${ema}) ≤ Close ≤ max(DarvasGreen, EMA${ema})`;
+    footerInfo.textContent = `Condition: min(DarvasGreen(${tfCode}), EMA${ema}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${ema}(${tfCode}))`;
   }
 
   // Determine stock list & scanning label based on scope
@@ -5469,8 +5496,8 @@ async function runPricePositionScan() {
         <td colspan="7" class="p-8 text-center text-slate-400">
           <div class="flex flex-col items-center justify-center gap-3">
             <i data-lucide="loader-2" class="w-8 h-8 text-emerald-400 animate-spin"></i>
-            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel}...</p>
-            <p class="text-[11px] text-slate-500">Checking Darvas Green Line & EMA ${ema} boundary condition</p>
+            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel} (${tfLabel})...</p>
+            <p class="text-[11px] text-slate-500">Checking Darvas Green Line (${tfLabel}) & EMA ${ema} (${tfLabel}) boundary condition</p>
           </div>
         </td>
       </tr>
@@ -5487,6 +5514,7 @@ async function runPricePositionScan() {
       },
       body: JSON.stringify({
         targetEma: ema,
+        interval,
         scope,
         stockList
       })
@@ -5516,7 +5544,7 @@ async function runPricePositionScan() {
     }
 
     renderPricescanTable();
-    showToast(`DarvasScan complete: Found ${matches.length} matching stocks.`, 'success');
+    showToast(`DarvasScan complete: Found ${matches.length} matching stocks (${tfLabel}).`, 'success');
   } catch (err) {
     console.error('Scan error:', err);
     state.pricescanResults = [];
@@ -5552,6 +5580,9 @@ function renderPricescanTable() {
   if (!tbody) return;
 
   const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+  const interval = el.selectPricescanTimeframe?.value || '1d';
+  const tfCode = interval === '1wk' ? 'W' : 'D';
+
   const matches = [...(state.pricescanResults || [])].filter(stock => {
     if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) {
       return false;
@@ -5567,7 +5598,10 @@ function renderPricescanTable() {
 
   // Update dynamic table column header text
   if (el.pricescanDynamicEmaCol) {
-    el.pricescanDynamicEmaCol.textContent = ema === 20 ? 'EMA 20 (₹)' : 'EMA 10 (₹)';
+    el.pricescanDynamicEmaCol.textContent = `EMA ${ema} (${tfCode}) (₹)`;
+  }
+  if (el.pricescanDynamicDarvasCol) {
+    el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
   }
 
   // Update active column header highlight and icon
@@ -5596,7 +5630,7 @@ function renderPricescanTable() {
         <td colspan="7" class="p-8 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
-            <p class="text-xs text-slate-300">No stocks matched the condition: <span class="font-mono text-amber-400">min(DarvasGreen, EMA${ema}) ≤ Close ≤ max(DarvasGreen, EMA${ema})</span></p>
+            <p class="text-xs text-slate-300">No stocks matched the condition: <span class="font-mono text-amber-400">min(DarvasGreen(${tfCode}), EMA${ema}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${ema}(${tfCode}))</span></p>
             <p class="text-[11px] text-slate-500">Try adjusting Market Cap filters, changing EMA to ${ema === 10 ? 'EMA 20' : 'EMA 10'}, or scanning a broader scope.</p>
           </div>
         </td>
@@ -5683,7 +5717,7 @@ function renderPricescanTable() {
           ${fmt.currency(m.darvasGreen)}
         </td>
         <td class="py-2.5 px-2 text-center font-mono text-[11px]">
-          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold" title="Channel width between Darvas Green and EMA${ema}: ${m.spreadPercent}%">
+          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold" title="Channel width between Darvas Green and EMA${ema} (${tfCode}): ${m.spreadPercent}%">
             ${m.spreadPercent}%
           </span>
         </td>
@@ -5700,6 +5734,19 @@ function renderPricescanTable() {
       if (sym) {
         tbody.querySelectorAll('.pricescan-stock-row').forEach(r => r.classList.remove('selected', 'bg-emerald-600/20'));
         row.classList.add('selected', 'bg-emerald-600/20');
+
+        // Sync chart timeframe with scanner timeframe
+        const scanTf = el.selectPricescanTimeframe?.value || '1d';
+        state.selectedInterval = scanTf;
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+          if (btn.dataset.interval === scanTf) {
+            btn.classList.add('active', 'bg-blue-600', 'text-white', 'font-semibold', 'shadow');
+            btn.classList.remove('hover:text-white');
+          } else {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'font-semibold', 'shadow');
+          }
+        });
+
         selectStock({ symbol: sym, name: sym });
         // Ensure Darvas and selected EMA toggles are enabled
         if (state.toggles) {

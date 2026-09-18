@@ -752,10 +752,10 @@ function updateAuthUI(user) {
     if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
       window.SangamNotes.close();
     }
-    btnMfDeals?.classList.add('hidden');
-    btnMfDeals?.classList.remove('flex');
-    if (window.closeMfDeals) {
-      window.closeMfDeals();
+    btnMfDeals?.classList.remove('hidden');
+    btnMfDeals?.classList.add('flex');
+    if (window.SangamMfDeals?.refreshAuth) {
+      window.SangamMfDeals.refreshAuth();
     }
     userBox?.classList.add('hidden');
     userBox?.classList.remove('flex');

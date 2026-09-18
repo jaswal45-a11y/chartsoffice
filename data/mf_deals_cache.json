@@ -1,9 +1,29 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-09-17T18:31:27.419Z",
-  "latestDealId": "3e5cb1a4e15a",
+  "lastUpdated": "2026-09-18T13:03:31.138Z",
+  "latestDealId": "20bbb4927847",
   "deals": [
+    {
+      "id": "20bbb4927847",
+      "exchange": "NSE",
+      "date": "17-Sep-26",
+      "clientName": "HELIOS MUTUAL FUND",
+      "companyName": "Rentomojo",
+      "dealType": "BUY",
+      "volume": "870770",
+      "dealPrice": "510.42"
+    },
+    {
+      "id": "fe1bc0d32534",
+      "exchange": "NSE",
+      "date": "16-Sep-26",
+      "clientName": "GROWW MUTUAL FUND",
+      "companyName": "Kanohar Electricals",
+      "dealType": "BUY",
+      "volume": "475636",
+      "dealPrice": "740.38"
+    },
     {
       "id": "3e5cb1a4e15a",
       "exchange": "NSE",
@@ -183,26 +203,6 @@
       "dealType": "BUY",
       "volume": "128000",
       "dealPrice": "153.05"
-    },
-    {
-      "id": "75c6fb0d8cdb",
-      "exchange": "NSE",
-      "date": "01-Sep-26",
-      "clientName": "360 ONE ASSET MANAGEMENT LIMITED",
-      "companyName": "EPL",
-      "dealType": "BUY",
-      "volume": "1847147",
-      "dealPrice": "240.1"
-    },
-    {
-      "id": "382d1a00f901",
-      "exchange": "NSE",
-      "date": "01-Sep-26",
-      "clientName": "360 ONE MUTUAL FUND",
-      "companyName": "EPL",
-      "dealType": "BUY",
-      "volume": "1874218",
-      "dealPrice": "240.1"
     }
   ]
 }

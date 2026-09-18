@@ -492,78 +492,78 @@
   },
   {
     "ticker": "INDSWFTLAB",
-    "exchange": "NSE",
-    "company_name": "Ind-Swift Laboratories Limited",
-    "sector": "Healthcare",
-    "industry": "Drug Manufacturers - Specialty & Generic",
-    "description": "Ind-Swift Laboratories Limited, together with its subsidiaries, develops, manufactures, and sells active pharmaceutical ingredients (APIs), intermediates, and formulations in India and internationally.",
+    "ai_generated": false,
     "business_type": "Drug Manufacturers - Specialty & Generic",
+    "company_name": "Ind-Swift Laboratories Limited",
+    "data_version": "2.0",
+    "description": "Ind-Swift Laboratories Limited, together with its subsidiaries, develops, manufactures, and sells active pharmaceutical ingredients (APIs), intermediates, and formulations in India and internationally.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "key_revenue_driver": "Operations in Drug Manufacturers - Specialty & Generic",
+    "last_updated": "Sep 2026",
     "products": [
       "Drug Manufacturers - Specialty & Generic",
       "Healthcare Solutions"
     ],
+    "sector": "Healthcare",
+    "source": "Verified Financial Disclosures",
     "themes": [
       "Healthcare",
       "Drug Manufacturers - Specialty & Generic",
       "indswiftlabs.com"
     ],
-    "geographic_exposure": "India & Global",
-    "key_revenue_driver": "Operations in Drug Manufacturers - Specialty & Generic",
-    "website": "https://www.indswiftlabs.com",
-    "source": "Verified Financial Disclosures",
-    "last_updated": "Sep 2026",
-    "ai_generated": false,
-    "data_version": "2.0"
+    "website": "https://www.indswiftlabs.com"
   },
   {
     "ticker": "VSSL",
-    "exchange": "NSE",
-    "company_name": "Vardhman Special Steels Limited",
-    "sector": "Basic Materials",
-    "industry": "Steel",
-    "description": "Vardhman Special Steels Limited engages in the manufacture and sale of billets, steel bars, and bright bars of various categories of special and alloy steels in India and internationally. Its customers include passenger vehicles, two wheelers, commercial vehicles, tractors, off-highway vehicles,and railways, as well as engineering, bearing, and allied industries.",
+    "ai_generated": false,
     "business_type": "Steel",
+    "company_name": "Vardhman Special Steels Limited",
+    "data_version": "2.0",
+    "description": "Vardhman Special Steels Limited engages in the manufacture and sale of billets, steel bars, and bright bars of various categories of special and alloy steels in India and internationally. Its customers include passenger vehicles, two wheelers, commercial vehicles, tractors, off-highway vehicles,and railways, as well as engineering, bearing, and allied industries.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Steel",
+    "key_revenue_driver": "Operations in Steel",
+    "last_updated": "Sep 2026",
     "products": [
       "Steel",
       "Basic Materials Solutions"
     ],
+    "sector": "Basic Materials",
+    "source": "Verified Financial Disclosures",
     "themes": [
       "Basic Materials",
       "Steel",
       "vardhmansteel.com"
     ],
-    "geographic_exposure": "India & Global",
-    "key_revenue_driver": "Operations in Steel",
-    "website": "https://www.vardhmansteel.com",
-    "source": "Verified Financial Disclosures",
-    "last_updated": "Sep 2026",
-    "ai_generated": false,
-    "data_version": "2.0"
+    "website": "https://www.vardhmansteel.com"
   },
   {
     "ticker": "EMUDHRA",
-    "exchange": "NSE",
-    "company_name": "eMudhra Limited",
-    "sector": "Technology",
-    "industry": "Software - Application",
-    "description": "eMudhra Limited provides trust and enterprise solutions to individuals and organizations in India, North America, Europe, the Middle East, Africa, and the Asia Pacific. The company provides solutions such as emSigner paperless workflow, SecurePass identity and authentication management, Certinext certificate issuance and life cycle management; ID broker; data discovery and management platform; and emSign trust services.",
+    "ai_generated": false,
     "business_type": "Software - Application",
+    "company_name": "eMudhra Limited",
+    "data_version": "2.0",
+    "description": "eMudhra Limited provides trust and enterprise solutions to individuals and organizations in India, North America, Europe, the Middle East, Africa, and the Asia Pacific. The company provides solutions such as emSigner paperless workflow, SecurePass identity and authentication management, Certinext certificate issuance and life cycle management; ID broker; data discovery and management platform; and emSign trust services.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Software - Application",
+    "key_revenue_driver": "Operations in Software - Application",
+    "last_updated": "Sep 2026",
     "products": [
       "Software - Application",
       "Technology Solutions"
     ],
+    "sector": "Technology",
+    "source": "Verified Financial Disclosures",
     "themes": [
       "Technology",
       "Software - Application",
       "emudhra.com"
     ],
-    "geographic_exposure": "India & Global",
-    "key_revenue_driver": "Operations in Software - Application",
-    "website": "https://www.emudhra.com",
-    "source": "Verified Financial Disclosures",
-    "last_updated": "Sep 2026",
-    "ai_generated": false,
-    "data_version": "2.0"
+    "website": "https://www.emudhra.com"
   },
   {
     "ticker": "PATANJALI",
@@ -783,5 +783,176 @@
       "F&O",
       "Large Cap"
     ]
+  },
+  {
+    "ticker": "GRAUWEIL",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Grauer & Weil (India) Ltd",
+    "data_version": "1.0",
+    "description": "Grauer & Weil (India) Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "YATHARTH",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Yatharth Hospital & Trauma Care Services Ltd",
+    "data_version": "1.0",
+    "description": "Yatharth Hospital & Trauma Care Services Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "GPTINFRA",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Gpt Infraprojects Limited",
+    "data_version": "1.0",
+    "description": "Gpt Infraprojects Limited operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "SAMBHV",
+    "ai_generated": true,
+    "business_type": "Commercial Operations",
+    "company_name": "Sambhv Steel Tubes Ltd",
+    "data_version": "1.0",
+    "description": "Sambhv Steel Tubes Ltd operates in the General sector, providing diversified products, commercial services, and operational solutions for domestic and export markets.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & Global Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operations in Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Products"
+    ],
+    "sector": "General",
+    "source": "Company Filings / Public Disclosures",
+    "themes": [
+      "General",
+      "Diversified",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "RENTOMOJO",
+    "ai_generated": false,
+    "business_type": "Rental & Leasing Services",
+    "company_name": "RENTOMOJO",
+    "data_version": "2.0",
+    "description": "Rentomojo Limited provides online rental service for furniture and appliances. The company provides rental services for various products, including delivery, installation, and pick-up. The company was founded in 2012 and is based in Bengaluru, India.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Rental & Leasing Services",
+    "key_revenue_driver": "Operations in Rental & Leasing Services",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Rental & Leasing Services",
+      "Industrials Solutions"
+    ],
+    "sector": "Industrials",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Industrials",
+      "Rental & Leasing Services",
+      "rentomojo.com"
+    ],
+    "website": "https://www.rentomojo.com"
+  },
+  {
+    "ticker": "GAIL",
+    "ai_generated": false,
+    "business_type": "Utilities - Regulated Gas",
+    "company_name": "GAIL (India) Limited",
+    "data_version": "2.0",
+    "description": "GAIL (India) Limited operates as a natural gas processing and distribution company in India and internationally. It operates through Transmission Services, Natural Gas Marketing, Petrochemicals, LPG and Other Liquid Hydrocarbons, and Other segments.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Utilities - Regulated Gas",
+    "key_revenue_driver": "Operations in Utilities - Regulated Gas",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Utilities - Regulated Gas",
+      "Utilities Solutions"
+    ],
+    "sector": "Utilities",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Utilities",
+      "Utilities - Regulated Gas",
+      "gailonline.com"
+    ],
+    "website": "https://www.gailonline.com"
+  },
+  {
+    "ticker": "EMIL",
+    "exchange": "NSE",
+    "company_name": "Electronics Mart India Limited",
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "description": "Electronics Mart India Limited engages in the sale of consumer electronics and durable products in India. The company offers large appliances, which include televisions, washing machines, air conditioners, and refrigerators; mobiles, such as smartphones, fitness trackers, and tablets; and small appliances, IT & others,...",
+    "business_type": "Specialty Retail",
+    "products": [
+      "Specialty Retail",
+      "Consumer Cyclical Solutions"
+    ],
+    "themes": [
+      "Consumer Cyclical",
+      "Specialty Retail",
+      "electronicsmartindia.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Specialty Retail",
+    "website": "https://www.electronicsmartindia.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
   }
 ]

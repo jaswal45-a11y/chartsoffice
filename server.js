@@ -2783,7 +2783,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   throw new Error(`Historical data not available for ${rawSymbol}`);
 }
 
-// In-memory & disk cache for MF Bulk / Block Deals (3 min TTL)
+// In-memory & disk cache for MF Bulk / Block Deals (1 min TTL)
 const MF_DEALS_CACHE_FILE = path.join(__dirname, 'data', 'mf_deals_cache.json');
 let mfDealsCache = { timestamp: 0, data: null };
 
@@ -2810,7 +2810,7 @@ function savePersistedMfDeals(data) {
 
 async function fetchMutualFundBulkDeals(forceRefresh = false) {
   const now = Date.now();
-  if (!forceRefresh && mfDealsCache.data && (now - mfDealsCache.timestamp < 180000)) {
+  if (!forceRefresh && mfDealsCache.data && (now - mfDealsCache.timestamp < 60000)) {
     return mfDealsCache.data;
   }
 
@@ -2912,6 +2912,16 @@ async function fetchMutualFundBulkDeals(forceRefresh = false) {
     latestDealId: '',
     deals: []
   };
+}
+
+let mfDealsPollerStarted = false;
+function startMutualFundDealsPoller() {
+  if (mfDealsPollerStarted) return;
+  mfDealsPollerStarted = true;
+  fetchMutualFundBulkDeals(true).catch(e => console.warn('[MF Deals] Initial fetch notice:', e.message));
+  setInterval(() => {
+    fetchMutualFundBulkDeals(true).catch(e => console.warn('[MF Deals] Background polling notice:', e.message));
+  }, 120000); // Poll every 2 minutes
 }
 
 // Predictive Stock Search Cache (5 mins TTL)
@@ -3037,8 +3047,10 @@ async function searchPredictiveStocks(query) {
 // Price Position Scanner Engine (Darvas Green Line ↔ EMA 10 / 20)
 // Condition: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
 // -------------------------------------------------------------
-async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) {
+async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], interval = '1d') {
   const emaPeriod = Number(targetEma) === 20 ? 20 : 10;
+  const scanInterval = (interval === '1wk' || interval === 'W' || interval === 'weekly') ? '1wk' : '1d';
+  const scanRange = scanInterval === '1wk' ? '1y' : '6mo';
   const universe = getLocalStockUniverse();
   const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
 
@@ -3122,8 +3134,8 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
       const idx = cursor++;
       const item = uniqueList[idx];
       try {
-        const hist = await fetchStockHistory(item.symbol, '6mo', '1d');
-        if (hist && hist.candles && hist.candles.length >= 10) {
+        const hist = await fetchStockHistory(item.symbol, scanRange, scanInterval);
+        if (hist && hist.candles && hist.candles.length >= 5) {
           const close = Number(hist.ltp || (hist.candles.length > 0 ? hist.candles[hist.candles.length - 1].close : null));
           const ema10 = Number(hist.latestEMA10);
           const ema20 = Number(hist.latestEMA20);
@@ -3156,6 +3168,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
                 ltp: Number(close.toFixed(2)),
                 changePercent: hist.changePercent || 0,
                 volume,
+                timeframe: scanInterval,
                 mcOver1000Cr: Boolean(isOver1000),
                 mcOver2000Cr: Boolean(isOver2000),
                 ema10: Number(ema10.toFixed(2)),
@@ -3190,6 +3203,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = []) 
     totalScanned: uniqueList.length,
     matchesCount: matches.length,
     targetEma: emaPeriod,
+    interval: scanInterval,
     scope,
     results: matches
   };
@@ -5721,7 +5735,8 @@ const server = http.createServer(async (req, res) => {
 
         try {
           const body = await parseJsonBody(req);
-          let { targetEma = 10, scope = 'current', stockList = [] } = body;
+          let { targetEma = 10, scope = 'current', stockList = [], interval = '1d', timeframe = '1d' } = body;
+          const selectedInterval = interval || timeframe || '1d';
           if (String(scope).startsWith('wl_') && (!Array.isArray(stockList) || stockList.length === 0)) {
             const userWls = getUserWatchlists(authUser);
             const targetWl = userWls.find(w => w.id === scope);
@@ -5729,7 +5744,7 @@ const server = http.createServer(async (req, res) => {
               stockList = targetWl.stocks.map(s => s.symbol);
             }
           }
-          const scanResults = await scanDarvasEma(targetEma, scope, stockList);
+          const scanResults = await scanDarvasEma(targetEma, scope, stockList, selectedInterval);
           return sendJson(res, 200, scanResults);
         } catch (scanErr) {
           console.error('Error during Darvas-EMA price scan:', scanErr.message);
@@ -5753,12 +5768,8 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 8c. GET /api/mf-deals - Live Mutual Fund Bulk & Block Deals Report (Registered Users Only)
+      // 8c. GET /api/mf-deals - Live Mutual Fund Bulk & Block Deals Report
       if (pathname === '/api/mf-deals' && method === 'GET') {
-        const authUser = getAuthenticatedUser(req);
-        if (!authUser) {
-          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in to view MF Deals.' });
-        }
         try {
           const forceRefresh = parsedUrl.query.refresh === 'true' || parsedUrl.query.refresh === '1';
           const data = await fetchMutualFundBulkDeals(forceRefresh);
@@ -6173,6 +6184,7 @@ async function startServer() {
   });
   await initDatabase();
   console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
+  startMutualFundDealsPoller();
 }
 
 startServer();
