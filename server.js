@@ -3629,7 +3629,7 @@ function saveUserDrawings(user, drawings) {
 // Fast Quotes Cache for Watchlists & Explore (30s TTL)
 const quotesCache = new Map();
 
-async function fetchBatchQuotes(symbols) {
+async function fetchBatchQuotes(symbols, forceRefresh = false) {
   if (!Array.isArray(symbols) || symbols.length === 0) return [];
   const results = [];
   const uncached = [];
@@ -3644,7 +3644,7 @@ async function fetchBatchQuotes(symbols) {
 
   for (const sym of symbols) {
     const sUpper = sym.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
-    if (quotesCache.has(sUpper) && (now - quotesCache.get(sUpper).timestamp < 30000)) {
+    if (!forceRefresh && quotesCache.has(sUpper) && (now - quotesCache.get(sUpper).timestamp < 30000)) {
       results.push(quotesCache.get(sUpper).data);
     } else {
       uncached.push(sUpper);
@@ -3799,6 +3799,35 @@ async function fetchBatchQuotes(symbols) {
         } catch (e) {}
       });
       await Promise.all(fallbackPromises);
+    }
+
+    // Second fallback: Universe quotes store for any remaining missing symbols
+    const finalFetchedSet = new Set(results.map(r => r.symbol));
+    const universe = getLocalStockUniverse();
+    if (Array.isArray(universe)) {
+      for (const s of symbols) {
+        const sUpper = s.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+        if (!finalFetchedSet.has(sUpper)) {
+          const uItem = universe.find(u => (u.symbol || '').toUpperCase() === sUpper || (u.nsecode || '').toUpperCase() === sUpper);
+          if (uItem && typeof uItem.close === 'number' && uItem.close > 0) {
+            const ltp = Number(uItem.close.toFixed(2));
+            const changePercent = typeof uItem.changePercent === 'number' ? Number(uItem.changePercent.toFixed(2)) : 0;
+            const prevClose = uItem.prevClose || Number((ltp / (1 + (changePercent / 100))).toFixed(2));
+            const fallbackQuote = {
+              symbol: sUpper,
+              ltp,
+              changePercent,
+              prevClose,
+              dayHigh: uItem.high || ltp,
+              dayLow: uItem.low || ltp,
+              volume: uItem.volume || 0,
+              exchange: 'NSE'
+            };
+            results.push(fallbackQuote);
+            finalFetchedSet.add(sUpper);
+          }
+        }
+      }
     }
   }
 
@@ -5389,9 +5418,12 @@ const server = http.createServer(async (req, res) => {
         const wl = watchlists.find(w => w.id === wlId);
         if (!wl) return sendJson(res, 404, { success: false, error: 'Watchlist not found' });
 
+        const parsedUrl = new URL(req.url, 'http://localhost');
+        const forceRefresh = parsedUrl.searchParams.get('fresh') === '1' || parsedUrl.searchParams.get('force') === '1';
+
         const symbols = (wl.stocks || []).map(s => s.symbol);
-        const quotes = await fetchBatchQuotes(symbols);
-        return sendJson(res, 200, { success: true, quotes });
+        const quotes = await fetchBatchQuotes(symbols, forceRefresh);
+        return sendJson(res, 200, { success: true, quotes, watchlist: wl });
       }
 
       // ==========================================

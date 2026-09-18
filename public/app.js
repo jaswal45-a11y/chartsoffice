@@ -2379,12 +2379,52 @@ async function handleDeleteWatchlist() {
   }
 }
 
-async function refreshWatchlistQuotes() {
-  const activeWl = getActiveWatchlist();
-  if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) return;
+async function refreshWatchlistQuotes(isManual = false) {
+  if (!state.token) {
+    if (isManual) {
+      showToast('Please login to refresh watchlists', 'info');
+      openAuthModal('login');
+    }
+    return;
+  }
+
+  const refreshBtn = el.btnRefreshWlQuotes || document.getElementById('btn-refresh-wl-quotes');
+  const icon = refreshBtn?.querySelector('i, svg');
+  if (isManual && icon) {
+    icon.classList.add('animate-spin');
+  }
+  if (refreshBtn && isManual) {
+    refreshBtn.disabled = true;
+    refreshBtn.classList.add('opacity-50');
+  }
 
   try {
-    const res = await fetch(`/api/watchlists/${activeWl.id}/quotes`, {
+    // 1. Reload latest watchlists from server to sync newly added/removed stocks
+    const wlRes = await fetch('/api/watchlists', {
+      headers: getAuthHeaders()
+    });
+    const wlData = await wlRes.json();
+    if (wlData.success && Array.isArray(wlData.watchlists)) {
+      state.watchlists = wlData.watchlists;
+      state.maxWatchlists = wlData.maxWatchlists || state.maxWatchlists || 5;
+      if (!state.activeWatchlistId || !state.watchlists.some(w => w.id === state.activeWatchlistId)) {
+        state.activeWatchlistId = state.watchlists[0]?.id || null;
+      }
+      renderWatchlistSelector();
+      renderChartWatchlistDropdown();
+    }
+
+    const activeWl = getActiveWatchlist();
+    if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
+      renderWatchlistStocks();
+      if (isManual) {
+        showToast('Watchlist is empty. Add stocks to view live data.', 'info');
+      }
+      return;
+    }
+
+    // 2. Fetch fresh live quotes for all stocks in the active watchlist
+    const res = await fetch(`/api/watchlists/${activeWl.id}/quotes?fresh=1`, {
       headers: getAuthHeaders()
     });
     const data = await res.json();
@@ -2395,9 +2435,24 @@ async function refreshWatchlistQuotes() {
         }
       });
       renderWatchlistStocks();
+      if (isManual) {
+        showToast(`Refreshed live quotes for ${data.quotes.length} stock(s)`, 'success');
+      }
+    } else {
+      renderWatchlistStocks();
     }
   } catch (err) {
     console.error('Quotes refresh error:', err);
+    if (isManual) {
+      showToast('Failed to refresh quotes: ' + (err.message || 'Network error'), 'error');
+    }
+  } finally {
+    if (icon) icon.classList.remove('animate-spin');
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.classList.remove('opacity-50');
+    }
+    if (window.lucide) lucide.createIcons();
   }
 }
 
@@ -2567,7 +2622,7 @@ function setupEventListeners() {
   el.renameWatchlistModal?.addEventListener('click', e => {
     if (e.target === el.renameWatchlistModal) closeRenameModal();
   });
-  el.btnRefreshWlQuotes?.addEventListener('click', refreshWatchlistQuotes);
+  el.btnRefreshWlQuotes?.addEventListener('click', () => refreshWatchlistQuotes(true));
 
   // Quick Add Stock to Watchlist
   el.btnWlQuickAdd?.addEventListener('click', () => {

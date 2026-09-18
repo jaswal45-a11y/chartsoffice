@@ -932,27 +932,51 @@
   },
   {
     "ticker": "EMIL",
-    "exchange": "NSE",
-    "company_name": "Electronics Mart India Limited",
-    "sector": "Consumer Cyclical",
-    "industry": "Specialty Retail",
-    "description": "Electronics Mart India Limited engages in the sale of consumer electronics and durable products in India. The company offers large appliances, which include televisions, washing machines, air conditioners, and refrigerators; mobiles, such as smartphones, fitness trackers, and tablets; and small appliances, IT & others,...",
+    "ai_generated": false,
     "business_type": "Specialty Retail",
+    "company_name": "Electronics Mart India Limited",
+    "data_version": "2.0",
+    "description": "Electronics Mart India Limited engages in the sale of consumer electronics and durable products in India. The company offers large appliances, which include televisions, washing machines, air conditioners, and refrigerators; mobiles, such as smartphones, fitness trackers, and tablets; and small appliances, IT & others,...",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Specialty Retail",
+    "key_revenue_driver": "Operations in Specialty Retail",
+    "last_updated": "Sep 2026",
     "products": [
       "Specialty Retail",
       "Consumer Cyclical Solutions"
     ],
+    "sector": "Consumer Cyclical",
+    "source": "Verified Financial Disclosures",
     "themes": [
       "Consumer Cyclical",
       "Specialty Retail",
       "electronicsmartindia.com"
     ],
-    "geographic_exposure": "India & Global",
-    "key_revenue_driver": "Operations in Specialty Retail",
-    "website": "https://www.electronicsmartindia.com",
-    "source": "Verified Financial Disclosures",
+    "website": "https://www.electronicsmartindia.com"
+  },
+  {
+    "ticker": "ENTERO HEALTHCARE",
+    "exchange": "NSE",
+    "company_name": "ENTERO HEALTHCARE",
+    "sector": "Diversified",
+    "industry": "General",
+    "description": "ENTERO HEALTHCARE operates in the Diversified sector, providing general products, commercial services, and operational solutions for domestic and export markets.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "General",
+      "Diversified Products"
+    ],
+    "themes": [
+      "Diversified",
+      "General",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Core operations in General",
+    "source": "Company Filings / Public Disclosures",
     "last_updated": "Sep 2026",
-    "ai_generated": false,
-    "data_version": "2.0"
+    "ai_generated": true,
+    "data_version": "1.0"
   }
 ]

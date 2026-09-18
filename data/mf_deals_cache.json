@@ -1,9 +1,19 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-09-18T13:47:29.891Z",
-  "latestDealId": "20bbb4927847",
+  "lastUpdated": "2026-09-18T17:23:18.468Z",
+  "latestDealId": "29015fd2cf5b",
   "deals": [
+    {
+      "id": "29015fd2cf5b",
+      "exchange": "NSE",
+      "date": "18-Sep-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Entero Healthcare",
+      "dealType": "BUY",
+      "volume": "1390000",
+      "dealPrice": "1695"
+    },
     {
       "id": "20bbb4927847",
       "exchange": "NSE",
@@ -193,16 +203,6 @@
       "dealType": "SELL",
       "volume": "482650",
       "dealPrice": "241"
-    },
-    {
-      "id": "ddda63a5f47f",
-      "exchange": "BSE",
-      "date": "03-Sep-26",
-      "clientName": "SB OPPORTUNITIES FUND II",
-      "companyName": "Kwick Forensic Solut",
-      "dealType": "BUY",
-      "volume": "128000",
-      "dealPrice": "153.05"
     }
   ]
 }
