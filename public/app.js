@@ -3073,7 +3073,73 @@ function initNativeCharts() {
   const gridColor = themeCfg.grid;
   const borderColor = themeCfg.border;
 
+  const formatIstTime = (businessDayOrTimestamp) => {
+    if (typeof businessDayOrTimestamp === 'number') {
+      const d = new Date(businessDayOrTimestamp * 1000);
+      const dateStr = d.toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const timeStr = d.toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      return `${dateStr} ${timeStr}`;
+    }
+    return String(businessDayOrTimestamp);
+  };
+
+  const istTickMarkFormatter = (time, tickMarkType, locale) => {
+    if (typeof time === 'number') {
+      const d = new Date(time * 1000);
+      if (tickMarkType === 3 || tickMarkType === 4) {
+        return d.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      }
+      if (tickMarkType === 2) {
+        return d.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short'
+        });
+      }
+      if (tickMarkType === 1) {
+        return d.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          month: 'short',
+          year: '2-digit'
+        });
+      }
+      if (tickMarkType === 0) {
+        return d.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric'
+        });
+      }
+      return d.toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+    return null;
+  };
+
   const baseChartOptions = {
+    localization: {
+      locale: 'en-IN',
+      dateFormat: 'yyyy-MM-dd',
+      timeFormatter: formatIstTime
+    },
     layout: {
       background: { color: bgColor },
       textColor: textColor,
@@ -3118,6 +3184,7 @@ function initNativeCharts() {
       visible: true,
       timeVisible: false,
       secondsVisible: false,
+      tickMarkFormatter: istTickMarkFormatter,
       fixLeftEdge: false,
       fixRightEdge: false,
       rightOffset: 6,
@@ -3258,6 +3325,7 @@ function initNativeCharts() {
       visible: true,
       timeVisible: false,
       secondsVisible: false,
+      tickMarkFormatter: istTickMarkFormatter,
       fixLeftEdge: false,
       fixRightEdge: false,
       rightOffset: 6,
@@ -3345,6 +3413,7 @@ function initNativeCharts() {
         visible: true,
         timeVisible: false,
         secondsVisible: false,
+        tickMarkFormatter: istTickMarkFormatter,
         fixLeftEdge: false,
         fixRightEdge: false,
         rightOffset: 6,
@@ -3599,13 +3668,13 @@ function updateTimeScalesVisibility() {
 
   if (state.charts?.rsi) {
     state.charts.rsi.applyOptions({
-      timeScale: { visible: (isRsiVisible && !isViVisible), timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
+      timeScale: { visible: isRsiVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
   }
 
   if (state.charts?.main) {
     state.charts.main.applyOptions({
-      timeScale: { visible: (!isRsiVisible && !isViVisible), timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
+      timeScale: { visible: true, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
   }
 }
@@ -5066,7 +5135,9 @@ function updateDefaultLegend() {
     let formattedTime = last.time;
     if (typeof last.time === 'number') {
       const d = new Date(last.time * 1000);
-      formattedTime = `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      const dateStr = d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short' });
+      const timeStr = d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false });
+      formattedTime = `${dateStr} ${timeStr}`;
     }
 
     el.chartOhlcvLegend.innerHTML = `
