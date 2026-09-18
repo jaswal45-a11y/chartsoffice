@@ -278,6 +278,7 @@ const el = {
   btnCopyWlStocks: document.getElementById('btn-copy-wl-stocks'),
   btnExportWlCsv: document.getElementById('btn-export-wl-csv'),
   wlQuickAddInput: document.getElementById('wl-quick-add-input'),
+  wlAutocompleteDropdown: document.getElementById('wl-autocomplete-dropdown'),
   btnWlQuickAdd: document.getElementById('btn-wl-quick-add'),
   wlCapacityLabel: document.getElementById('wl-capacity-label'),
   wlSlotsLeft: document.getElementById('wl-slots-left'),
@@ -2791,8 +2792,9 @@ function setupEventListeners() {
     el.btnNavNextStock.addEventListener('click', () => navigateStock(1));
   }
 
-  // Initialize Predictive Autocomplete Search on Manual Stock Input
+  // Initialize Predictive Autocomplete Search on Manual Stock Input & Watchlist Add Input
   setupPredictiveSearch();
+  setupWatchlistPredictiveSearch();
 
   // Checkbox Indicator Toggles
   const setupToggle = (checkbox, key, onToggle) => {
@@ -4609,6 +4611,209 @@ function setupPredictiveSearch() {
   // Dismiss dropdown on outside click
   document.addEventListener('click', (e) => {
     if (!document.getElementById('manual-search-wrapper')?.contains(e.target)) {
+      closeDropdown();
+    }
+  });
+}
+
+// Predictive Autocomplete Search for Watchlist Quick-Add Input Field
+function setupWatchlistPredictiveSearch() {
+  const input = el.wlQuickAddInput;
+  const dropdown = el.wlAutocompleteDropdown || document.getElementById('wl-autocomplete-dropdown');
+  const btnAdd = el.btnWlQuickAdd;
+  if (!input || !dropdown) return;
+
+  let activeIndex = -1;
+  let currentSuggestions = [];
+  let debounceTimer = null;
+
+  const closeDropdown = () => {
+    dropdown.classList.add('hidden');
+    dropdown.innerHTML = '';
+    activeIndex = -1;
+    currentSuggestions = [];
+  };
+
+  const renderDropdown = (items) => {
+    currentSuggestions = items;
+    activeIndex = -1;
+    if (!items || items.length === 0) {
+      closeDropdown();
+      return;
+    }
+
+    const activeWl = getActiveWatchlist();
+    const existingSymbols = new Set((activeWl?.stocks || []).map(s => (s.symbol || '').toUpperCase()));
+
+    dropdown.innerHTML = items.map((item, idx) => {
+      const isAlreadyAdded = existingSymbols.has((item.symbol || '').toUpperCase());
+      return `
+        <div class="wl-suggestion-item px-3 py-2 cursor-pointer hover:bg-amber-500/15 transition-colors flex items-center justify-between gap-2 text-left select-none group" data-index="${idx}">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
+              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
+              <span class="text-[9px] px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
+              ${typeof getFnoBadgeHtml === 'function' ? getFnoBadgeHtml(item.symbol) : ''}
+            </div>
+            <div class="text-[10px] text-slate-400 truncate mt-0.5">${item.name || item.symbol}</div>
+          </div>
+          <div class="shrink-0 flex items-center">
+            ${isAlreadyAdded
+              ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> In List</span>`
+              : `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 group-hover:bg-amber-500 group-hover:text-black font-semibold flex items-center gap-0.5 transition-colors"><i data-lucide="plus" class="w-3 h-3"></i> Add</span>`
+            }
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+    dropdown.classList.remove('hidden');
+
+    dropdown.querySelectorAll('.wl-suggestion-item').forEach(itemEl => {
+      itemEl.addEventListener('mousedown', async (e) => {
+        if (e.target.closest('.btn-stock-info')) return;
+        e.preventDefault();
+        const idx = parseInt(itemEl.dataset.index, 10);
+        const chosen = currentSuggestions[idx];
+        if (chosen) {
+          input.value = '';
+          closeDropdown();
+          await addStockToActiveWatchlist(chosen.symbol, chosen.name);
+        }
+      });
+    });
+  };
+
+  const highlightActive = () => {
+    const itemEls = dropdown.querySelectorAll('.wl-suggestion-item');
+    itemEls.forEach((itemEl, idx) => {
+      if (idx === activeIndex) {
+        itemEl.classList.add('bg-amber-500/25', 'border-l-2', 'border-amber-500');
+        itemEl.scrollIntoView({ block: 'nearest' });
+      } else {
+        itemEl.classList.remove('bg-amber-500/25', 'border-l-2', 'border-amber-500');
+      }
+    });
+  };
+
+  const fetchSuggestions = async (query) => {
+    const q = (query || '').trim().toUpperCase();
+    if (!q) {
+      closeDropdown();
+      return;
+    }
+
+    // If query has commas or whitespace-separated list (pasting multiple stocks), don't show autocomplete
+    if (q.includes(',') || q.includes('\n') || q.includes(';')) {
+      closeDropdown();
+      return;
+    }
+
+    // 1. Instant local matching from loaded stocks in memory
+    const localMatches = [];
+    const seen = new Set();
+
+    if (Array.isArray(state.currentStocks)) {
+      for (const s of state.currentStocks) {
+        const sym = (s.symbol || '').toUpperCase();
+        const nm = (s.name || '').toUpperCase();
+        if ((sym.includes(q) || nm.includes(q)) && !seen.has(sym)) {
+          localMatches.push({ symbol: s.symbol, name: s.name, exchange: 'NSE' });
+          seen.add(sym);
+          if (localMatches.length >= 6) break;
+        }
+      }
+    }
+
+    if (localMatches.length > 0) {
+      renderDropdown(localMatches);
+    }
+
+    // 2. Fetch comprehensive backend autocomplete API results
+    try {
+      const res = await fetch(`/api/stocks/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.results) && data.results.length > 0) {
+        const combined = [...data.results];
+        localMatches.forEach(lm => {
+          if (!combined.some(c => (c.symbol || '').toUpperCase() === lm.symbol.toUpperCase())) {
+            combined.push(lm);
+          }
+        });
+        renderDropdown(combined.slice(0, 8));
+      } else if (localMatches.length === 0) {
+        closeDropdown();
+      }
+    } catch (err) {
+      console.warn('Watchlist autocomplete fetch error:', err);
+    }
+  };
+
+  // Predictive input event with debounce
+  input.addEventListener('input', (e) => {
+    const val = e.target.value;
+    clearTimeout(debounceTimer);
+    if (!val.trim()) {
+      closeDropdown();
+      return;
+    }
+    debounceTimer = setTimeout(() => {
+      fetchSuggestions(val);
+    }, 120);
+  });
+
+  // Focus event: show suggestions if input already has text
+  input.addEventListener('focus', () => {
+    if (input.value.trim().length >= 1) {
+      fetchSuggestions(input.value);
+    }
+  });
+
+  // Keyboard navigation
+  input.addEventListener('keydown', async (e) => {
+    if (dropdown.classList.contains('hidden') || currentSuggestions.length === 0) {
+      if (e.key === 'Enter') {
+        const raw = input.value.trim();
+        if (raw) {
+          closeDropdown();
+          addStockToActiveWatchlist(raw);
+        }
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = (activeIndex + 1) % currentSuggestions.length;
+      highlightActive();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = (activeIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+      highlightActive();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0 && activeIndex < currentSuggestions.length) {
+        const chosen = currentSuggestions[activeIndex];
+        input.value = '';
+        closeDropdown();
+        await addStockToActiveWatchlist(chosen.symbol, chosen.name);
+      } else {
+        const raw = input.value.trim();
+        if (raw) {
+          closeDropdown();
+          addStockToActiveWatchlist(raw);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      closeDropdown();
+    }
+  });
+
+  // Dismiss dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
       closeDropdown();
     }
   });

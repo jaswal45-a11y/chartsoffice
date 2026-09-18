@@ -852,15 +852,15 @@
   },
   "MONQ50": {
     "dates": [],
-    "lastUpdated": 1789720832950
+    "lastUpdated": 1789752436856
   },
   "TIMEX": {
     "dates": [],
-    "lastUpdated": 1789721855834
+    "lastUpdated": 1789752436754
   },
   "GRAUWEIL": {
     "dates": [],
-    "lastUpdated": 1789721857607
+    "lastUpdated": 1789752437436
   },
   "ICICIAMC": {
     "dates": [
@@ -1030,5 +1030,37 @@
   "RENTOMOJO": {
     "dates": [],
     "lastUpdated": 1789752182032
+  },
+  "SJS": {
+    "dates": [
+      "2026-01-28",
+      "2026-05-05",
+      "2026-08-06"
+    ],
+    "lastUpdated": 1789752436729
+  },
+  "VENUSPIPES": {
+    "dates": [
+      "2026-02-05",
+      "2026-05-26",
+      "2026-08-10"
+    ],
+    "lastUpdated": 1789752436892
+  },
+  "SPLPETRO": {
+    "dates": [
+      "2026-01-20",
+      "2026-04-24",
+      "2026-07-27"
+    ],
+    "lastUpdated": 1789752436908
+  },
+  "CEWATER": {
+    "dates": [
+      "2026-02-12",
+      "2026-05-22",
+      "2026-08-11"
+    ],
+    "lastUpdated": 1789752437273
   }
 }
