@@ -145,14 +145,15 @@ const state = {
   chartTheme: localStorage.getItem('chart_theme') || 'dark',
   activeInterval: '1d',
   activeRange: '1y',
+  volOverlayMode: 'volintel', // 'off' | 'simple' | 'volintel' (Price Pane Overlay)
   toggles: {
     ema10: true,
     ema20: true,
     ema50: true,
     ema150: true,
     ema200: true,
-    vol: true,
-    volAvg: true,
+    vol: false,
+    volAvg: false,
     vwap: true,
     darvas: false,
     rsi: true,
@@ -2201,7 +2202,7 @@ function applyLineWidths(widths) {
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
     closeLine: 'setting-width-close-line',
-    volIntelMa: 'setting-width-vi-volma'
+    volIntelMa: 'setting-width-vol-avg'
   };
 
   Object.entries(widthSelectMap).forEach(([key, elementId]) => {
@@ -2233,7 +2234,6 @@ function applyLineWidths(widths) {
     if (s.volAvg) s.volAvg.applyOptions({ lineWidth: Number(w.volAvg || 1.5) });
     if (s.rsi) s.rsi.applyOptions({ lineWidth: Number(w.rsi || 2) });
     if (s.rsiSma) s.rsiSma.applyOptions({ lineWidth: Number(w.rsiSma || 1.5) });
-    if (s.volIntelMa) s.volIntelMa.applyOptions({ lineWidth: Number(w.volIntelMa || 1.5) });
   }
 
   const crosshairOpts = {
@@ -2252,7 +2252,6 @@ function applyLineWidths(widths) {
   };
   if (state.charts?.main) state.charts.main.applyOptions(crosshairOpts);
   if (state.charts?.rsi) state.charts.rsi.applyOptions(crosshairOpts);
-  if (state.charts?.volIntel) state.charts.volIntel.applyOptions(crosshairOpts);
 
   if (state.activeDrawingSeries?.avwaps && state.activeDrawingSeries.avwaps.length > 0) {
     state.activeDrawingSeries.avwaps.forEach(av => {
@@ -2285,7 +2284,7 @@ function updateLineStyle(indicatorKey) {
     viDv: ['setting-color-vi-dv', null],
     viSup: ['setting-color-vi-sup', null],
     viSdn: ['setting-color-vi-sdn', null],
-    volIntelMa: ['setting-color-vi-volma', null]
+    volIntelMa: ['setting-color-vol-avg', 'color-vol-avg']
   };
 
   const widthMap = {
@@ -2304,7 +2303,7 @@ function updateLineStyle(indicatorKey) {
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
     closeLine: 'setting-width-close-line',
-    volIntelMa: 'setting-width-vi-volma'
+    volIntelMa: 'setting-width-vol-avg'
   };
 
   if (colorMap[indicatorKey]) {
@@ -2351,10 +2350,9 @@ function updateLineStyle(indicatorKey) {
     if (indicatorKey === 'vwap' && s.vwap) s.vwap.applyOptions(opts);
     if (indicatorKey === 'darvasTop' && s.darvasTop) s.darvasTop.applyOptions(opts);
     if (indicatorKey === 'darvasBottom' && s.darvasBottom) s.darvasBottom.applyOptions(opts);
-    if (indicatorKey === 'volAvg' && s.volAvg) s.volAvg.applyOptions(opts);
+    if ((indicatorKey === 'volAvg' || indicatorKey === 'volIntelMa') && s.volAvg) s.volAvg.applyOptions(opts);
     if (indicatorKey === 'rsi' && s.rsi) s.rsi.applyOptions(opts);
     if (indicatorKey === 'rsiSma' && s.rsiSma) s.rsiSma.applyOptions(opts);
-    if (indicatorKey === 'volIntelMa' && s.volIntelMa) s.volIntelMa.applyOptions(opts);
     if (indicatorKey === 'closeLine' && s.candles) {
       s.candles.applyOptions({
         priceLineVisible: true,
@@ -2387,7 +2385,6 @@ function updateLineStyle(indicatorKey) {
     };
     if (state.charts?.main) state.charts.main.applyOptions(crosshairOpts);
     if (state.charts?.rsi) state.charts.rsi.applyOptions(crosshairOpts);
-    if (state.charts?.volIntel) state.charts.volIntel.applyOptions(crosshairOpts);
   }
 
   if (indicatorKey === 'avwap') {
@@ -2640,18 +2637,67 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
 function renderVolumeIntelligence() {
   if (!state.currentStockData?.candles) return;
   const candles = state.currentStockData.candles;
+  const mode = state.volOverlayMode || 'volintel';
+
+  if (mode === 'off') {
+    if (state.charts?.series?.volume) {
+      state.charts.series.volume.applyOptions({ visible: false });
+    }
+    if (state.charts?.series?.volAvg) {
+      state.charts.series.volAvg.applyOptions({ visible: false });
+    }
+    if (state.charts?.series?.candles) {
+      state.charts.series.candles.setData(candles);
+    }
+    updateDefaultVolumeBadges();
+    updateEarningsVolumeMarkers();
+    return;
+  }
+
+  if (mode === 'simple') {
+    if (state.charts?.series?.volume) {
+      state.charts.series.volume.applyOptions({
+        visible: true,
+        color: '#26a69a'
+      });
+      if (state.currentStockData.volumeSeries) {
+        state.charts.series.volume.setData(state.currentStockData.volumeSeries);
+      }
+    }
+    if (state.charts?.series?.volAvg) {
+      state.charts.series.volAvg.applyOptions({
+        visible: Boolean(state.toggles.volAvg !== false),
+        color: state.colors.volAvg || '#fbbf24',
+        lineWidth: Number(state.lineWidths?.volAvg || 1.5)
+      });
+      if (state.currentStockData.volAvg9) {
+        state.charts.series.volAvg.setData(state.currentStockData.volAvg9);
+      }
+    }
+    if (state.charts?.series?.candles) {
+      state.charts.series.candles.setData(candles);
+    }
+    updateDefaultVolumeBadges();
+    updateEarningsVolumeMarkers();
+    return;
+  }
+
+  // mode === 'volintel' (Default primary volume indicator overlay)
   const viData = calculateVolumeIntelligence(candles, state.volIntelSettings, state.colors);
   state.currentStockData.volIntel = viData;
 
-  if (state.charts?.series?.volIntelHist && viData.histogram) {
-    state.charts.series.volIntelHist.setData(viData.histogram);
-    if (typeof state.charts.series.volIntelHist.setMarkers === 'function') {
-      state.charts.series.volIntelHist.setMarkers(viData.markers || []);
-    }
+  if (state.charts?.series?.volume && viData.histogram) {
+    state.charts.series.volume.applyOptions({ visible: true });
+    state.charts.series.volume.setData(viData.histogram);
   }
 
-  if (state.charts?.series?.volIntelMa && viData.volMaSeries) {
-    state.charts.series.volIntelMa.setData(viData.volMaSeries);
+  if (state.charts?.series?.volAvg && viData.volMaSeries) {
+    state.charts.series.volAvg.applyOptions({
+      visible: true,
+      color: state.colors.volIntelMa || state.colors.volAvg || '#fbbf24',
+      lineWidth: Number(state.lineWidths?.volAvg || 1.5)
+    });
+    state.charts.series.volAvg.setData(viData.volMaSeries);
   }
 
   // Paint Bars on Main Candlesticks when toggled on
@@ -2664,7 +2710,28 @@ function renderVolumeIntelligence() {
   }
 
   updateDefaultVolumeBadges();
+  updateEarningsVolumeMarkers();
 }
+
+function setVolumeOverlayMode(mode) {
+  if (!['off', 'simple', 'volintel'].includes(mode)) mode = 'volintel';
+  state.volOverlayMode = mode;
+  state.toggles.volIntel = (mode === 'volintel');
+  state.toggles.volume = (mode === 'simple');
+  state.toggles.vol = (mode === 'simple');
+
+  const radios = document.querySelectorAll('input[name="setting-vol-mode"], input[name="vol-overlay-mode"]');
+  radios.forEach(r => {
+    r.checked = (r.value === mode);
+  });
+
+  const sel = document.getElementById('select-vol-mode');
+  if (sel) sel.value = mode;
+
+  renderVolumeIntelligence();
+  saveIndicatorPreferences();
+}
+window.setVolumeOverlayMode = setVolumeOverlayMode;
 
 function updateVolIntelSetting(key, val) {
   if (!state.volIntelSettings) {
@@ -2679,9 +2746,39 @@ function updateVolIntelSetting(key, val) {
 }
 window.updateVolIntelSetting = updateVolIntelSetting;
 
+function updateSimpleVolSetting(type, checked) {
+  if (type === 'vol' || type === 'volume') {
+    state.toggles.vol = Boolean(checked);
+    state.toggles.volume = Boolean(checked);
+    if (state.charts?.series?.volume) {
+      state.charts.series.volume.applyOptions({ visible: Boolean(checked) });
+    }
+  } else if (type === 'volAvg') {
+    state.toggles.volAvg = Boolean(checked);
+    if (state.charts?.series?.volAvg) {
+      state.charts.series.volAvg.applyOptions({ visible: Boolean(checked) });
+    }
+  }
+  saveIndicatorPreferences();
+}
+window.updateSimpleVolSetting = updateSimpleVolSetting;
+
 function openLineSettingsModal() {
   const modal = document.getElementById('line-settings-modal');
   if (!modal) return;
+
+  // Sync Volume Display Mode Radios
+  const volMode = state.volOverlayMode || (state.toggles.volIntel ? 'volintel' : (state.toggles.volume || state.toggles.vol ? 'simple' : 'off'));
+  const volRadios = document.querySelectorAll('input[name="setting-vol-mode"], input[name="vol-overlay-mode"]');
+  volRadios.forEach(r => {
+    r.checked = (r.value === volMode);
+  });
+
+  // Sync Simple Volume Overlay & 9-SMA Toggles
+  const toggleVol = document.getElementById('setting-toggle-vol');
+  if (toggleVol) toggleVol.checked = Boolean(state.toggles.vol || state.toggles.volume);
+  const toggleVolAvg = document.getElementById('setting-toggle-vol-avg');
+  if (toggleVolAvg) toggleVolAvg.checked = Boolean(state.toggles.volAvg);
 
   const colorMap = {
     ema10: 'setting-color-ema10',
@@ -2704,7 +2801,7 @@ function openLineSettingsModal() {
     viDv: 'setting-color-vi-dv',
     viSup: 'setting-color-vi-sup',
     viSdn: 'setting-color-vi-sdn',
-    volIntelMa: 'setting-color-vi-volma'
+    volIntelMa: 'setting-color-vol-avg'
   };
   Object.entries(colorMap).forEach(([key, id]) => {
     const colInput = document.getElementById(id);
@@ -2727,7 +2824,7 @@ function openLineSettingsModal() {
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
     closeLine: 'setting-width-close-line',
-    volIntelMa: 'setting-width-vi-volma'
+    volIntelMa: 'setting-width-vol-avg'
   };
   Object.entries(widthSelectMap).forEach(([key, id]) => {
     const sel = document.getElementById(id);
@@ -2836,6 +2933,7 @@ function resetLineStylesToDefaults() {
     dryThresh: 0.20,
     paintBars: false
   };
+  state.volOverlayMode = 'volintel';
   state.customThemeColors = {
     bg: '#0b0f19',
     text: '#94a3b8',
@@ -2850,6 +2948,7 @@ function resetLineStylesToDefaults() {
     toggles: state.toggles,
     colors: state.colors,
     lineWidths: state.lineWidths,
+    volOverlayMode: 'volintel',
     volIntelSettings: state.volIntelSettings,
     chartTheme: state.chartTheme,
     customThemeColors: state.customThemeColors,
@@ -2865,6 +2964,7 @@ function saveIndicatorPreferences() {
   const prefs = {
     toggles: { ...state.toggles },
     colors: { ...state.colors },
+    volOverlayMode: state.volOverlayMode || (state.toggles.volIntel ? 'volintel' : (state.toggles.volume || state.toggles.vol ? 'simple' : 'off')),
     volIntelSettings: state.volIntelSettings ? { ...state.volIntelSettings } : undefined,
     pivotType: state.pivotType || document.getElementById('select-pivot-type')?.value || 'Traditional (Auto)',
     chartTheme: state.chartTheme || 'dark',
@@ -2895,6 +2995,17 @@ function saveIndicatorPreferences() {
 function applyLoadedIndicatorPreferences(prefs) {
   if (!prefs) return;
 
+  if (prefs.volOverlayMode) {
+    state.volOverlayMode = prefs.volOverlayMode;
+    state.toggles.volIntel = (prefs.volOverlayMode === 'volintel');
+    state.toggles.volume = (prefs.volOverlayMode === 'simple');
+    state.toggles.vol = (prefs.volOverlayMode === 'simple');
+  } else if (prefs.toggles) {
+    if (prefs.toggles.volIntel) state.volOverlayMode = 'volintel';
+    else if (prefs.toggles.volume || prefs.toggles.vol) state.volOverlayMode = 'simple';
+    else state.volOverlayMode = 'off';
+  }
+
   if (prefs.volIntelSettings) {
     state.volIntelSettings = { ...state.volIntelSettings, ...prefs.volIntelSettings };
   }
@@ -2923,6 +3034,17 @@ function applyLoadedIndicatorPreferences(prefs) {
       }
     });
 
+    const toggleVol = document.getElementById('setting-toggle-vol');
+    if (toggleVol) toggleVol.checked = Boolean(state.toggles.vol || state.toggles.volume);
+    const toggleVolAvg = document.getElementById('setting-toggle-vol-avg');
+    if (toggleVolAvg) toggleVolAvg.checked = Boolean(state.toggles.volAvg);
+
+    // Sync modal volume display radios
+    const volRadios = document.querySelectorAll('input[name="setting-vol-mode"], input[name="vol-overlay-mode"]');
+    volRadios.forEach(r => {
+      r.checked = (r.value === state.volOverlayMode);
+    });
+
     if (state.charts?.series) {
       const s = state.charts.series;
       if (s.ema10) s.ema10.applyOptions({ visible: Boolean(state.toggles.ema10) });
@@ -2931,8 +3053,6 @@ function applyLoadedIndicatorPreferences(prefs) {
       if (s.ema150) s.ema150.applyOptions({ visible: Boolean(state.toggles.ema150) });
       if (s.ema200) s.ema200.applyOptions({ visible: Boolean(state.toggles.ema200) });
       if (s.vwap) s.vwap.applyOptions({ visible: Boolean(state.toggles.vwap) });
-      if (s.volume) s.volume.applyOptions({ visible: Boolean(state.toggles.vol) });
-      if (s.volAvg) s.volAvg.applyOptions({ visible: Boolean(state.toggles.volAvg) });
       if (s.darvasTop) s.darvasTop.applyOptions({ visible: Boolean(state.toggles.darvas) });
       if (s.darvasBottom) s.darvasBottom.applyOptions({ visible: Boolean(state.toggles.darvas) });
     }
@@ -2943,13 +3063,6 @@ function applyLoadedIndicatorPreferences(prefs) {
     if (rsiCont) rsiCont.style.display = state.toggles.rsi ? '' : 'none';
     if (rsiResizer) rsiResizer.style.display = state.toggles.rsi ? '' : 'none';
     if (rsiBottomResizer) rsiBottomResizer.style.display = state.toggles.rsi ? '' : 'none';
-
-    const viCont = document.getElementById('tv_vol_intel_container');
-    const viResizer = document.getElementById('resizer-rsi-volintel');
-    const viBottomResizer = document.getElementById('resizer-volintel-bottom');
-    if (viCont) viCont.style.display = state.toggles.volIntel ? '' : 'none';
-    if (viResizer) viResizer.style.display = state.toggles.volIntel ? '' : 'none';
-    if (viBottomResizer) viBottomResizer.style.display = state.toggles.volIntel ? '' : 'none';
 
     updateTimeScalesVisibility();
     handleResize();
@@ -3000,14 +3113,62 @@ function updateDefaultVolumeBadges() {
   const rsiBadge = document.getElementById('rsi-live-badge');
   const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');
 
-  if (volArr && volArr.length > 0 && volBadge) {
-    const lastVol = volArr[volArr.length - 1];
-    volBadge.textContent = fmt.volume(lastVol?.value || 0);
+  const mode = state.volOverlayMode || 'volintel';
+  const viData = state.currentStockData?.volIntel;
+  const badgeDivider = document.getElementById('badge-vi-divider');
+  const ppWrap = document.getElementById('badge-vi-pp-wrap');
+  const bsWrap = document.getElementById('badge-vi-bs-wrap');
+  const udWrap = document.getElementById('badge-vi-ud-wrap');
+  const rvolWrap = document.getElementById('badge-vi-rvol-wrap');
+  const maLabel = document.getElementById('badge-vol-ma-label');
+  const viPpBadge = document.getElementById('vi-pp-badge');
+  const viBsBadge = document.getElementById('vi-bs-badge');
+  const viUdBadge = document.getElementById('vi-ud-badge');
+  const viRvolBadge = document.getElementById('vi-rvol-badge');
+  const viSignalsBadge = document.getElementById('vi-signals-badge');
+
+  if (mode === 'volintel' && viData?.stats) {
+    if (maLabel) maLabel.textContent = `${state.volIntelSettings?.volMaPeriod || 50}-SMA:`;
+    if (volBadge && volArr && volArr.length > 0) {
+      volBadge.textContent = fmt.volume(volArr[volArr.length - 1]?.value || 0);
+    }
+    if (volAvgBadge && viData.volMaSeries && viData.volMaSeries.length > 0) {
+      volAvgBadge.textContent = fmt.volume(viData.volMaSeries[viData.volMaSeries.length - 1]?.value || 0);
+    }
+    if (viPpBadge) viPpBadge.textContent = viData.stats.ppCount || 0;
+    if (viBsBadge) viBsBadge.textContent = viData.stats.bsCount || 0;
+    if (viUdBadge) viUdBadge.textContent = `${viData.stats.latestUD || '--'} (${viData.stats.udStatus || ''})`;
+    if (viRvolBadge) viRvolBadge.textContent = `${viData.stats.latestRVol || 1.0}x`;
+
+    if (badgeDivider) badgeDivider.classList.remove('hidden');
+    if (ppWrap) ppWrap.classList.remove('hidden');
+    if (bsWrap) bsWrap.classList.remove('hidden');
+    if (udWrap) udWrap.classList.remove('hidden');
+    if (rvolWrap) rvolWrap.classList.remove('hidden');
+    if (viSignalsBadge) {
+      if (viData.stats.signals && viData.stats.signals.length > 0) {
+        viSignalsBadge.textContent = viData.stats.signals.join(' · ');
+        viSignalsBadge.classList.remove('hidden');
+      } else {
+        viSignalsBadge.classList.add('hidden');
+      }
+    }
+  } else {
+    if (maLabel) maLabel.textContent = 'Avg:';
+    if (volArr && volArr.length > 0 && volBadge) {
+      volBadge.textContent = fmt.volume(volArr[volArr.length - 1]?.value || 0);
+    }
+    if (volAvgArr && volAvgArr.length > 0 && volAvgBadge) {
+      volAvgBadge.textContent = fmt.volume(volAvgArr[volAvgArr.length - 1]?.value || 0);
+    }
+    if (badgeDivider) badgeDivider.classList.add('hidden');
+    if (ppWrap) ppWrap.classList.add('hidden');
+    if (bsWrap) bsWrap.classList.add('hidden');
+    if (udWrap) udWrap.classList.add('hidden');
+    if (rvolWrap) rvolWrap.classList.add('hidden');
+    if (viSignalsBadge) viSignalsBadge.classList.add('hidden');
   }
-  if (volAvgArr && volAvgArr.length > 0 && volAvgBadge) {
-    const lastVolAvg = volAvgArr[volAvgArr.length - 1];
-    volAvgBadge.textContent = fmt.volume(lastVolAvg?.value || 0);
-  }
+
   const candles = state.currentStockData?.candles;
   if (candles && candles.length > 0 && candleChgBadge) {
     const lastIdx = candles.length - 1;
@@ -3038,6 +3199,11 @@ function updateDefaultVolumeBadges() {
 function updateEarningsVolumeMarkers() {
   const data = state.currentStockData;
   if (!data?.candles || !Array.isArray(data.candles) || data.candles.length === 0) return;
+
+  // Ensure price candles stay clean with no circle/e markers below price
+  if (state.charts?.series?.candles && typeof state.charts.series.candles.setMarkers === 'function') {
+    state.charts.series.candles.setMarkers([]);
+  }
 
   const earningsDates = data.earningsDates || [];
   if (!Array.isArray(earningsDates) || earningsDates.length === 0) {
@@ -3108,7 +3274,6 @@ function initNativeCharts() {
 
   const elTvMainChart = document.getElementById('tv_main_chart');
   const elTvRsiChart = document.getElementById('tv_rsi_chart');
-  const elTvVolIntelChart = document.getElementById('tv_vol_intel_chart');
   if (!elTvMainChart || !elTvRsiChart) return;
 
   const themeCfg = getThemeConfig(state.chartTheme || 'dark');
@@ -3251,7 +3416,8 @@ function initNativeCharts() {
   const volumeSeries = mainChart.addHistogramSeries({
     color: '#26a69a',
     priceFormat: { type: 'volume' },
-    priceScaleId: ''
+    priceScaleId: '',
+    visible: Boolean(state.toggles.vol)
   });
   volumeSeries.priceScale().applyOptions({
     scaleMargins: { top: 0.75, bottom: 0 }
@@ -3265,7 +3431,8 @@ function initNativeCharts() {
     title: '',
     priceLineVisible: false,
     lastValueVisible: false,
-    crosshairMarkerVisible: false
+    crosshairMarkerVisible: false,
+    visible: Boolean(state.toggles.volAvg)
   });
 
   const ema10Series = mainChart.addLineSeries({
@@ -3395,56 +3562,8 @@ function initNativeCharts() {
   rsiSeries.createPriceLine({ price: 50, color: 'rgba(148, 163, 184, 0.4)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '50' });
   rsiSeries.createPriceLine({ price: 30, color: 'rgba(16, 185, 129, 0.75)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '30' });
 
-  // PANE 3: Dedicated Volume Intelligence Sub-Pane
-  let volIntelChart = null;
-  let volIntelHist = null;
-  let volIntelMa = null;
-  if (elTvVolIntelChart) {
-    elTvVolIntelChart.innerHTML = '';
-    const viRect = elTvVolIntelChart.getBoundingClientRect();
-    volIntelChart = LightweightCharts.createChart(elTvVolIntelChart, {
-      ...baseChartOptions,
-      width: viRect.width || 600,
-      height: viRect.height || 120,
-      rightPriceScale: {
-        borderColor: borderColor,
-        autoScale: true,
-        minimumWidth: 75,
-        scaleMargins: { top: 0.1, bottom: 0 }
-      },
-      timeScale: {
-        borderColor: borderColor,
-        tickMarkFormatter: istTickMarkFormatter,
-        visible: true,
-        timeVisible: false,
-        secondsVisible: false,
-        fixLeftEdge: false,
-        fixRightEdge: false,
-        rightOffset: 6,
-        barSpacing: 8,
-        minBarSpacing: 1
-      }
-    });
-
-    volIntelHist = volIntelChart.addHistogramSeries({
-      color: '#34d399',
-      priceFormat: { type: 'volume' },
-      priceLineVisible: false,
-      lastValueVisible: false
-    });
-
-    volIntelMa = volIntelChart.addLineSeries({
-      color: state.colors.volIntelMa || '#fbbf24',
-      lineWidth: Number(state.lineWidths?.volIntelMa || 1.5),
-      priceFormat: { type: 'volume' },
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: false
-    });
-  }
-
   // Synchronize TimeScales
-  const allCharts = [mainChart, rsiChart, volIntelChart].filter(Boolean);
+  const allCharts = [mainChart, rsiChart].filter(Boolean);
   let isSyncing = false;
   allCharts.forEach(source => {
     source.timeScale().subscribeVisibleLogicalRangeChange(range => {
@@ -3523,7 +3642,7 @@ function initNativeCharts() {
         if (viSmaEl) viSmaEl.textContent = fmt.volume(viBar.ma);
         if (viSigEl) {
           if (viBar.signals && viBar.signals.length > 0) {
-            viSigEl.textContent = viBar.signals.join(' | ');
+            viSigEl.textContent = viBar.signals.join(' · ');
             viSigEl.classList.remove('hidden');
           } else {
             viSigEl.classList.add('hidden');
@@ -3536,7 +3655,7 @@ function initNativeCharts() {
     }
   }
 
-  // Synchronize Crosshairs across Main Chart, RSI Chart, and Vol Intel Chart
+  // Synchronize Crosshairs across Main Chart and RSI Chart
   let isCrosshairSyncing = false;
 
   mainChart.subscribeCrosshairMove(param => {
@@ -3546,17 +3665,11 @@ function initNativeCharts() {
     try {
       if (!param.time || !param.point) {
         if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
-        if (volIntelChart && typeof volIntelChart.clearCrosshairPosition === 'function') volIntelChart.clearCrosshairPosition();
       } else {
         if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
           const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
           const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
           rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
-        }
-        if (volIntelChart && volIntelHist && typeof volIntelChart.setCrosshairPosition === 'function') {
-          const viBar = state.currentStockData?.volIntel?.barSignals?.find(b => b.time === param.time);
-          const viVal = viBar ? viBar.vol : 0;
-          volIntelChart.setCrosshairPosition(viVal, param.time, volIntelHist);
         }
       }
     } catch (e) {}
@@ -3571,43 +3684,11 @@ function initNativeCharts() {
       try {
         if (!param.time || !param.point) {
           if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
-          if (volIntelChart && typeof volIntelChart.clearCrosshairPosition === 'function') volIntelChart.clearCrosshairPosition();
         } else {
           if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
             const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
             const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
             if (price) mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
-          }
-          if (volIntelChart && volIntelHist && typeof volIntelChart.setCrosshairPosition === 'function') {
-            const viBar = state.currentStockData?.volIntel?.barSignals?.find(b => b.time === param.time);
-            const viVal = viBar ? viBar.vol : 0;
-            volIntelChart.setCrosshairPosition(viVal, param.time, volIntelHist);
-          }
-        }
-      } catch (e) {}
-      isCrosshairSyncing = false;
-    });
-  }
-
-  if (volIntelChart && volIntelHist) {
-    volIntelChart.subscribeCrosshairMove(param => {
-      handleCrosshairUpdate(param);
-      if (isCrosshairSyncing) return;
-      isCrosshairSyncing = true;
-      try {
-        if (!param.time || !param.point) {
-          if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
-          if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
-        } else {
-          if (mainChart && candlestickSeries && typeof mainChart.setCrosshairPosition === 'function') {
-            const candle = state.currentStockData?.candles?.find(c => c.time === param.time);
-            const price = candle ? (candle.close ?? candle.value) : (state.lastCrosshairPrice || 0);
-            if (price) mainChart.setCrosshairPosition(price, param.time, candlestickSeries);
-          }
-          if (rsiChart && rsiSeries && typeof rsiChart.setCrosshairPosition === 'function') {
-            const rsiItem = state.currentStockData?.rsi14?.find(r => r.time === param.time);
-            const rsiVal = (rsiItem && typeof rsiItem.value === 'number') ? rsiItem.value : 50;
-            rsiChart.setCrosshairPosition(rsiVal, param.time, rsiSeries);
           }
         }
       } catch (e) {}
@@ -3623,7 +3704,6 @@ function initNativeCharts() {
       try {
         if (mainChart && typeof mainChart.clearCrosshairPosition === 'function') mainChart.clearCrosshairPosition();
         if (rsiChart && typeof rsiChart.clearCrosshairPosition === 'function') rsiChart.clearCrosshairPosition();
-        if (volIntelChart && typeof volIntelChart.clearCrosshairPosition === 'function') volIntelChart.clearCrosshairPosition();
         updateDefaultVolumeBadges();
       } catch (e) {}
     });
@@ -3633,7 +3713,7 @@ function initNativeCharts() {
 
   state.charts.main = mainChart;
   state.charts.rsi = rsiChart;
-  state.charts.volIntel = volIntelChart;
+  state.charts.volIntel = null;
   state.charts.series = {
     candles: candlestickSeries,
     ema10: ema10Series,
@@ -3647,9 +3727,7 @@ function initNativeCharts() {
     volume: volumeSeries,
     volAvg: volAvgSeries,
     rsi: rsiSeries,
-    rsiSma: rsiSmaSeries,
-    volIntelHist: volIntelHist,
-    volIntelMa: volIntelMa
+    rsiSma: rsiSmaSeries
   };
 
   updateTimeScalesVisibility();
@@ -3658,24 +3736,16 @@ function initNativeCharts() {
 
 function updateTimeScalesVisibility() {
   const tvRsiCont = document.getElementById('tv_rsi_container');
-  const tvViCont = document.getElementById('tv_vol_intel_container');
   const isRsiVisible = tvRsiCont && tvRsiCont.style.display !== 'none';
-  const isViVisible = tvViCont && tvViCont.style.display !== 'none';
   const isIntraday = state.currentStockData?.isIntraday || false;
 
-  if (state.charts.volIntel) {
-    state.charts.volIntel.applyOptions({
-      timeScale: { visible: isViVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
-    });
-  }
-
-  if (state.charts.rsi) {
+  if (state.charts?.rsi) {
     state.charts.rsi.applyOptions({
       timeScale: { visible: isRsiVisible, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
   }
 
-  if (state.charts.main) {
+  if (state.charts?.main) {
     state.charts.main.applyOptions({
       timeScale: { visible: true, timeVisible: isIntraday, secondsVisible: false, fixLeftEdge: false, fixRightEdge: false }
     });
@@ -3687,14 +3757,11 @@ function syncChartPriceScales() {
   try {
     const mainScale = state.charts.main.priceScale('right');
     const rsiScale = state.charts.rsi?.priceScale('right');
-    const viScale = state.charts.volIntel?.priceScale('right');
     const mainW = (mainScale && typeof mainScale.width === 'function') ? mainScale.width() : 0;
     const rsiW = (rsiScale && typeof rsiScale.width === 'function') ? rsiScale.width() : 0;
-    const viW = (viScale && typeof viScale.width === 'function') ? viScale.width() : 0;
-    const targetW = Math.max(mainW, rsiW, viW, 75);
+    const targetW = Math.max(mainW, rsiW, 75);
     if (mainScale) mainScale.applyOptions({ minimumWidth: targetW });
     if (rsiScale) rsiScale.applyOptions({ minimumWidth: targetW });
-    if (viScale) viScale.applyOptions({ minimumWidth: targetW });
   } catch (e) {}
 }
 
@@ -3705,8 +3772,6 @@ function handleResize() {
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
   const rsiChartEl = document.getElementById('tv_rsi_chart');
-  const viContainer = document.getElementById('tv_vol_intel_container');
-  const viChartEl = document.getElementById('tv_vol_intel_chart');
   const tvMainChart = document.getElementById('tv_main_chart');
   
   const containerWidth = chartMainContainer ? chartMainContainer.clientWidth : (pricePane ? pricePane.clientWidth : 600);
@@ -3722,12 +3787,6 @@ function handleResize() {
     const rRect = rsiChartEl.getBoundingClientRect();
     const h = Math.round(Math.max(30, rRect.height));
     state.charts.rsi.applyOptions({ width: commonWidth, height: h });
-  }
-
-  if (state.charts.volIntel && viContainer && viChartEl && viContainer.style.display !== 'none') {
-    const vRect = viChartEl.getBoundingClientRect();
-    const h = Math.round(Math.max(30, vRect.height));
-    state.charts.volIntel.applyOptions({ width: commonWidth, height: h });
   }
 
   syncChartPriceScales();
@@ -3768,25 +3827,17 @@ function applyActiveRangeZoom() {
   if (state.charts.rsi) {
     state.charts.rsi.timeScale().setVisibleLogicalRange({ from: fromIndex, to: toIndex });
   }
-
-  if (state.charts.volIntel) {
-    state.charts.volIntel.timeScale().setVisibleLogicalRange({ from: fromIndex, to: toIndex });
-  }
 }
 
 function setupPaneResizers() {
   const resizerPriceRsi = document.getElementById('resizer-price-rsi');
   const resizerRsiBottom = document.getElementById('resizer-rsi-bottom');
-  const resizerRsiVolIntel = document.getElementById('resizer-rsi-volintel');
-  const resizerVolIntelBottom = document.getElementById('resizer-volintel-bottom');
   const resizerChartBottom = document.getElementById('resizer-chart-bottom');
   const chartMainContainer = document.getElementById('chart-main-container');
   const pricePane = document.getElementById('tv_price_pane');
   const rsiContainer = document.getElementById('tv_rsi_container');
-  const volIntelContainer = document.getElementById('tv_vol_intel_container');
   const tvMainChart = document.getElementById('tv_main_chart');
   const tvRsiChart = document.getElementById('tv_rsi_chart');
-  const tvVolIntelChart = document.getElementById('tv_vol_intel_chart');
 
   if (!chartMainContainer || !pricePane) return;
 
@@ -3795,14 +3846,6 @@ function setupPaneResizers() {
     const parsedRsiH = parseInt(savedRsiH, 10);
     if (parsedRsiH >= 35 && parsedRsiH <= 400) {
       rsiContainer.style.height = `${parsedRsiH}px`;
-    }
-  }
-
-  const savedVolIntelH = localStorage.getItem('sangam_volintel_height');
-  if (savedVolIntelH && volIntelContainer) {
-    const parsedVolIntelH = parseInt(savedVolIntelH, 10);
-    if (parsedVolIntelH >= 35 && parsedVolIntelH <= 400) {
-      volIntelContainer.style.height = `${parsedVolIntelH}px`;
     }
   }
 
@@ -3834,7 +3877,6 @@ function setupPaneResizers() {
       document.body.style.userSelect = 'none';
       if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
 
       window.addEventListener('mousemove', onRsiMove, { passive: false });
       window.addEventListener('mouseup', onRsiEnd);
@@ -3869,7 +3911,6 @@ function setupPaneResizers() {
       document.body.style.userSelect = '';
       if (tvMainChart) tvMainChart.style.pointerEvents = '';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
 
       window.removeEventListener('mousemove', onRsiMove);
       window.removeEventListener('mouseup', onRsiEnd);
@@ -3906,7 +3947,6 @@ function setupPaneResizers() {
       document.body.style.userSelect = 'none';
       if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
 
       window.addEventListener('mousemove', onRsiBottomMove, { passive: false });
       window.addEventListener('mouseup', onRsiBottomEnd);
@@ -3936,7 +3976,6 @@ function setupPaneResizers() {
       document.body.style.userSelect = '';
       if (tvMainChart) tvMainChart.style.pointerEvents = '';
       if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
 
       window.removeEventListener('mousemove', onRsiBottomMove);
       window.removeEventListener('mouseup', onRsiBottomEnd);
@@ -3955,149 +3994,7 @@ function setupPaneResizers() {
     });
   }
 
-  // 3. Resizer: RSI & Vol Intel Divider
-  if (resizerRsiVolIntel && volIntelContainer) {
-    let isDraggingRsiVi = false;
-    let startY = 0;
-    let startViH = 0;
-    let startRsiH = 0;
-    let combinedH = 0;
-
-    const onRsiViStart = (e) => {
-      e.preventDefault();
-      isDraggingRsiVi = true;
-      startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startRsiH = rsiContainer ? rsiContainer.getBoundingClientRect().height : 105;
-      startViH = volIntelContainer.getBoundingClientRect().height;
-      combinedH = startRsiH + startViH;
-
-      document.body.style.cursor = 'row-resize';
-      document.body.style.userSelect = 'none';
-      if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
-      if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
-
-      window.addEventListener('mousemove', onRsiViMove, { passive: false });
-      window.addEventListener('mouseup', onRsiViEnd);
-      window.addEventListener('touchmove', onRsiViMove, { passive: false });
-      window.addEventListener('touchend', onRsiViEnd);
-    };
-
-    const onRsiViMove = (e) => {
-      if (!isDraggingRsiVi) return;
-      if (e.cancelable) e.preventDefault();
-
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const deltaY = clientY - startY;
-
-      if (rsiContainer && rsiContainer.style.display !== 'none') {
-        const maxVi = Math.max(35, combinedH - 40);
-        const newViH = Math.round(Math.max(35, Math.min(maxVi, startViH - deltaY)));
-        const newRsiH = Math.round(combinedH - newViH);
-        volIntelContainer.style.height = `${newViH}px`;
-        rsiContainer.style.height = `${newRsiH}px`;
-        localStorage.setItem('sangam_volintel_height', newViH);
-        localStorage.setItem('sangam_rsi_height', newRsiH);
-      } else {
-        const newViH = Math.round(Math.max(35, Math.min(400, startViH - deltaY)));
-        volIntelContainer.style.height = `${newViH}px`;
-        localStorage.setItem('sangam_volintel_height', newViH);
-      }
-      handleResize();
-    };
-
-    const onRsiViEnd = () => {
-      if (!isDraggingRsiVi) return;
-      isDraggingRsiVi = false;
-
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      if (tvMainChart) tvMainChart.style.pointerEvents = '';
-      if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
-
-      window.removeEventListener('mousemove', onRsiViMove);
-      window.removeEventListener('mouseup', onRsiViEnd);
-      window.removeEventListener('touchmove', onRsiViMove);
-      window.removeEventListener('touchend', onRsiViEnd);
-      handleResize();
-    };
-
-    resizerRsiVolIntel.addEventListener('mousedown', onRsiViStart);
-    resizerRsiVolIntel.addEventListener('touchstart', onRsiViStart, { passive: false });
-    resizerRsiVolIntel.addEventListener('dblclick', () => {
-      const defaultVi = 120;
-      volIntelContainer.style.height = `${defaultVi}px`;
-      localStorage.setItem('sangam_volintel_height', defaultVi);
-      handleResize();
-    });
-  }
-
-  // 4. Resizer: Vol Intel Bottom Drag Handle
-  if (resizerVolIntelBottom && volIntelContainer) {
-    let isDraggingViBottom = false;
-    let startY = 0;
-    let startViH = 0;
-
-    const onViBottomStart = (e) => {
-      e.preventDefault();
-      isDraggingViBottom = true;
-      startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startViH = volIntelContainer.getBoundingClientRect().height;
-
-      document.body.style.cursor = 'row-resize';
-      document.body.style.userSelect = 'none';
-      if (tvMainChart) tvMainChart.style.pointerEvents = 'none';
-      if (tvRsiChart) tvRsiChart.style.pointerEvents = 'none';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = 'none';
-
-      window.addEventListener('mousemove', onViBottomMove, { passive: false });
-      window.addEventListener('mouseup', onViBottomEnd);
-      window.addEventListener('touchmove', onViBottomMove, { passive: false });
-      window.addEventListener('touchend', onViBottomEnd);
-    };
-
-    const onViBottomMove = (e) => {
-      if (!isDraggingViBottom) return;
-      if (e.cancelable) e.preventDefault();
-
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const deltaY = clientY - startY;
-
-      const newViH = Math.round(Math.max(35, Math.min(400, startViH + deltaY)));
-      volIntelContainer.style.height = `${newViH}px`;
-
-      localStorage.setItem('sangam_volintel_height', newViH);
-      handleResize();
-    };
-
-    const onViBottomEnd = () => {
-      if (!isDraggingViBottom) return;
-      isDraggingViBottom = false;
-
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      if (tvMainChart) tvMainChart.style.pointerEvents = '';
-      if (tvRsiChart) tvRsiChart.style.pointerEvents = '';
-      if (tvVolIntelChart) tvVolIntelChart.style.pointerEvents = '';
-
-      window.removeEventListener('mousemove', onViBottomMove);
-      window.removeEventListener('mouseup', onViBottomEnd);
-      window.removeEventListener('touchmove', onViBottomMove);
-      window.removeEventListener('touchend', onViBottomEnd);
-      handleResize();
-    };
-
-    resizerVolIntelBottom.addEventListener('mousedown', onViBottomStart);
-    resizerVolIntelBottom.addEventListener('touchstart', onViBottomStart, { passive: false });
-    resizerVolIntelBottom.addEventListener('dblclick', () => {
-      const defaultVi = 120;
-      volIntelContainer.style.height = `${defaultVi}px`;
-      localStorage.setItem('sangam_volintel_height', defaultVi);
-      handleResize();
-    });
-  }
-
+  // 3. Resizer: Overall Chart Card Bottom Handle
   if (resizerChartBottom) {
     let isDraggingChart = false;
     let startY = 0;
@@ -4248,15 +4145,10 @@ function restoreChartModalSize() {
   if (savedW && savedH) {
     const w = parseInt(savedW, 10);
     const h = parseInt(savedH, 10);
-    if (w >= 460 && h >= 400 && w <= window.innerWidth && h <= window.innerHeight) {
+    if (w >= 380 && h >= 320 && w <= window.innerWidth && h <= window.innerHeight) {
       chartPane.style.width = `${w}px`;
       chartPane.style.height = `${h}px`;
       chartPane.dataset.sizePreset = 'custom';
-      
-      ['compact', 'standard', 'large'].forEach(key => {
-        const btn = document.getElementById(`btn-chart-preset-${key}`);
-        if (btn) btn.className = 'px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400';
-      });
       return;
     }
   }
@@ -4323,12 +4215,12 @@ function initChartModalResizer() {
     const deltaY = clientY - startY;
 
     if (dragMode === 'corner' || dragMode === 'right') {
-      const newW = Math.round(Math.max(460, Math.min(window.innerWidth * 0.98, startW + deltaX * 2)));
+      const newW = Math.round(Math.max(380, Math.min(window.innerWidth * 0.98, startW + deltaX * 2)));
       chartPane.style.width = `${newW}px`;
     }
 
     if (dragMode === 'corner') {
-      const newH = Math.round(Math.max(420, Math.min(window.innerHeight * 0.96, startH + deltaY * 2)));
+      const newH = Math.round(Math.max(320, Math.min(window.innerHeight * 0.96, startH + deltaY * 2)));
       chartPane.style.height = `${newH}px`;
     }
 
@@ -4365,11 +4257,6 @@ function initChartModalResizer() {
     localStorage.setItem('sangam_chart_modal_w', finalW);
     localStorage.setItem('sangam_chart_modal_h', finalH);
     localStorage.setItem('sangam_chart_modal_preset', 'custom');
-
-    ['compact', 'standard', 'large'].forEach(key => {
-      const btn = document.getElementById(`btn-chart-preset-${key}`);
-      if (btn) btn.className = 'px-2 py-1 rounded-lg hover:text-white transition-colors cursor-pointer text-slate-400';
-    });
 
     handleResize();
   };
@@ -5256,10 +5143,25 @@ function openStockChartModal(symbol, name, stockList) {
     document.body.style.overflow = 'hidden';
   }
 
+  // Load fresh indicator preferences & styles from user settings / main chart
+  loadSavedIndicatorPreferences();
+
   if (!state.charts.main) {
     initNativeCharts();
     initIndicatorToggles();
     initChartControls();
+  }
+
+  // Ensure current series visibility and styles match user preferences
+  if (state.charts?.series) {
+    applyLoadedIndicatorPreferences({
+      toggles: state.toggles,
+      colors: state.colors,
+      lineWidths: state.lineWidths,
+      volIntelSettings: state.volIntelSettings,
+      chartTheme: state.chartTheme,
+      pivotType: state.pivotType
+    });
   }
 
   restoreChartModalSize();
@@ -5381,7 +5283,9 @@ function initIndicatorToggles() {
     { id: 'chk-ema200', key: 'ema200', series: 'ema200' },
     { id: 'chk-vwap', key: 'vwap', series: 'vwap' },
     { id: 'chk-darvas', key: 'darvas', series: ['darvasTop', 'darvasBottom'] },
-    { id: 'chk-vol', key: 'vol', series: 'volume' },
+    { id: 'chk-vol', key: 'vol', custom: (checked) => {
+      setVolumeOverlayMode(checked ? 'simple' : 'off');
+    }},
     { id: 'chk-vol-avg', key: 'volAvg', series: 'volAvg' },
     { id: 'chk-rsi', key: 'rsi', custom: (checked) => {
       const rsiCont = document.getElementById('tv_rsi_container');
@@ -5394,14 +5298,7 @@ function initIndicatorToggles() {
       handleResize();
     }},
     { id: 'chk-vol-intel', key: 'volIntel', custom: (checked) => {
-      const viCont = document.getElementById('tv_vol_intel_container');
-      const viResizer = document.getElementById('resizer-rsi-volintel');
-      const viBottomResizer = document.getElementById('resizer-volintel-bottom');
-      if (viCont) viCont.style.display = checked ? '' : 'none';
-      if (viResizer) viResizer.style.display = checked ? '' : 'none';
-      if (viBottomResizer) viBottomResizer.style.display = checked ? '' : 'none';
-      updateTimeScalesVisibility();
-      handleResize();
+      setVolumeOverlayMode(checked ? 'volintel' : 'off');
     }},
     { id: 'chk-pivots', key: 'pivots', custom: () => {
       updatePivotLines();
