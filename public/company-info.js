@@ -392,7 +392,6 @@
               '<div class="h-3.5 bg-slate-700/60 rounded w-28 mb-1 animate-pulse"></div>' +
               '<div class="flex items-center gap-1">' +
                 '<span class="font-mono font-bold text-cyan-300 text-[11px]">' + ticker + '</span>' +
-                '<span class="px-1 py-0.2 rounded text-[8px] font-mono bg-dark-bg border border-dark-border text-slate-400">NSE</span>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -472,7 +471,7 @@
               '<div class="font-bold text-white text-xs leading-tight truncate max-w-[200px]" title="' + (company_name || ticker) + '">' + (company_name || ticker) + '</div>' +
               '<div class="flex items-center gap-1 mt-0.5">' +
                 '<span class="font-mono font-bold text-cyan-300 text-[11px] tracking-wide">' + ticker + '</span>' +
-                '<span class="px-1 py-0.2 rounded text-[8px] font-mono font-semibold bg-dark-bg border border-dark-border text-slate-400">' + exchange + '</span>' +
+                (exchange && exchange !== 'NSE' ? '<span class="px-1 py-0.2 rounded text-[8px] font-mono font-semibold bg-dark-bg border border-dark-border text-slate-400">' + exchange + '</span>' : '') +
               '</div>' +
             '</div>' +
           '</div>' +

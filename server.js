@@ -3198,11 +3198,357 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
   // Sort by tightest spread percentage first
   matches.sort((a, b) => a.spreadPercent - b.spreadPercent);
 
-  return {
+    return {
     success: true,
     totalScanned: uniqueList.length,
     matchesCount: matches.length,
     targetEma: emaPeriod,
+    interval: scanInterval,
+    scope,
+    results: matches
+  };
+}
+
+// =============================================================
+// MINERVINI VOLATILITY CONTRACTION PATTERN (VCP) SCANNER ENGINE
+// =============================================================
+
+function detectVcpPattern(candles, timeframe = '1d') {
+  if (!Array.isArray(candles) || candles.length < 35) return null;
+
+  const n = candles.length;
+  const currentCandle = candles[n - 1];
+  const ltp = currentCandle.close;
+
+  // 1. STAGE 2 TREND TEMPLATE VALIDATION
+  const closePrices = candles.map(c => c.close);
+  const ema50Arr = calculateEMA(closePrices, 50);
+  const ema150Arr = calculateEMA(closePrices, 150);
+  const ema200Arr = calculateEMA(closePrices, 200);
+
+  const ema50 = ema50Arr[ema50Arr.length - 1] || ltp;
+  const ema150 = ema150Arr[ema150Arr.length - 1] || ltp;
+  const ema200 = ema200Arr[ema200Arr.length - 1] || ltp;
+
+  // Lookback for 52W High / Low
+  const lookback52w = Math.min(250, n);
+  const slice52w = candles.slice(n - lookback52w);
+  const high52w = Math.max(...slice52w.map(c => c.high));
+  const low52w = Math.min(...slice52w.map(c => c.low));
+
+  // Must be in sound structural context:
+  // - LTP > EMA50 or within 3% of EMA50
+  // - EMA50 >= EMA200 * 0.96 or EMA150 >= EMA200 * 0.96
+  // - Within 30% of 52W High
+  // - At least 20% above 52W Low
+  const isUptrend = (ltp >= ema50 * 0.97 || ltp >= ema150 * 0.97) && (ema50 >= ema200 * 0.96 || ema150 >= ema200 * 0.96);
+  const isNearHigh = ltp >= 0.70 * high52w;
+  const isAboveLow = ltp >= 1.20 * low52w;
+
+  if (!isUptrend || !isNearHigh || !isAboveLow) {
+    return null;
+  }
+
+  // 2. DETECT BASE START & SWING CONTRACTIONS
+  const lookbackPattern = Math.min(100, n);
+  const patternCandles = candles.slice(n - lookbackPattern);
+
+  // Find the base start peak (highest high between 8 to 90 bars ago)
+  let baseHigh = -Infinity;
+  let baseHighIdx = 0;
+  for (let i = 0; i < patternCandles.length - 6; i++) {
+    if (patternCandles[i].high > baseHigh) {
+      baseHigh = patternCandles[i].high;
+      baseHighIdx = i;
+    }
+  }
+
+  const baseCandles = patternCandles.slice(baseHighIdx);
+  if (baseCandles.length < 8) return null;
+
+  // Extract contraction swings from baseHigh to present
+  const waves = [];
+  let currentPeak = baseCandles[0].high;
+  let currentPeakIdx = 0;
+  let currentTrough = baseCandles[0].low;
+  let currentTroughIdx = 0;
+  let inDownLeg = true;
+
+  for (let i = 1; i < baseCandles.length; i++) {
+    const c = baseCandles[i];
+    if (inDownLeg) {
+      if (c.low < currentTrough) {
+        currentTrough = c.low;
+        currentTroughIdx = i;
+      } else if (c.high > currentTrough * 1.025 && i - currentTroughIdx >= 2) {
+        // Turned up
+        inDownLeg = false;
+        currentPeak = c.high;
+        currentPeakIdx = i;
+      }
+    } else {
+      if (c.high > currentPeak) {
+        currentPeak = c.high;
+        currentPeakIdx = i;
+      } else if (c.low < currentPeak * 0.975 && i - currentPeakIdx >= 2) {
+        // Turned down, record wave
+        const depth = ((currentPeak - currentTrough) / currentPeak) * 100;
+        waves.push({
+          peak: currentPeak,
+          trough: currentTrough,
+          depth: Number(depth.toFixed(1)),
+          duration: currentPeakIdx - currentTroughIdx
+        });
+        inDownLeg = true;
+        currentTrough = c.low;
+        currentTroughIdx = i;
+      }
+    }
+  }
+
+  // Add final wave
+  const finalDepth = ((currentPeak - currentTrough) / currentPeak) * 100;
+  if (currentPeak > 0 && currentTrough > 0 && finalDepth > 0) {
+    waves.push({
+      peak: currentPeak,
+      trough: currentTrough,
+      depth: Number(finalDepth.toFixed(1)),
+      duration: Math.max(1, baseCandles.length - currentTroughIdx)
+    });
+  }
+
+  const significantWaves = waves.filter(w => w.depth >= 1.2);
+  if (significantWaves.length < 2) {
+    // If not enough discrete zig-zag legs, check 2-stage windowed contraction
+    const midIdx = Math.floor(baseCandles.length / 2);
+    const firstHalfLow = Math.min(...baseCandles.slice(0, midIdx).map(c => c.low));
+    const secondHalfHigh = Math.max(...baseCandles.slice(midIdx).map(c => c.high));
+    const secondHalfLow = Math.min(...baseCandles.slice(midIdx).map(c => c.low));
+
+    const d1 = ((baseHigh - firstHalfLow) / baseHigh) * 100;
+    const d2 = ((secondHalfHigh - secondHalfLow) / secondHalfHigh) * 100;
+
+    if (d1 >= 5.0 && d2 < d1 && secondHalfLow >= firstHalfLow * 0.98) {
+      significantWaves.push({ peak: baseHigh, trough: firstHalfLow, depth: Number(d1.toFixed(1)) });
+      significantWaves.push({ peak: secondHalfHigh, trough: secondHalfLow, depth: Number(d2.toFixed(1)) });
+    } else {
+      return null;
+    }
+  }
+
+  // Diminishing depths condition (each contraction roughly narrower than predecessor)
+  let isDiminishing = true;
+  for (let i = 1; i < significantWaves.length; i++) {
+    if (significantWaves[i].depth > significantWaves[i - 1].depth * 0.95) {
+      isDiminishing = false;
+      break;
+    }
+  }
+
+  // Higher lows condition (support rising / supply being absorbed)
+  let isHigherLows = true;
+  for (let i = 1; i < significantWaves.length; i++) {
+    if (significantWaves[i].trough < significantWaves[i - 1].trough * 0.97) {
+      isHigherLows = false;
+      break;
+    }
+  }
+
+  if (!isDiminishing || !isHigherLows) {
+    return null;
+  }
+
+  // 3. TIGHTNESS / VOLATILITY SQUEEZE (Last 5 bars)
+  const last5 = candles.slice(-5);
+  const maxHigh5 = Math.max(...last5.map(c => c.high));
+  const minLow5 = Math.min(...last5.map(c => c.low));
+  const tightnessPercent = Number((((maxHigh5 - minLow5) / ltp) * 100).toFixed(2));
+
+  // 4. VOLUME DRY-UP RATIO
+  const volValues = candles.map(c => c.volume);
+  const sma50VolArr = calculateSMA(volValues, 50);
+  const sma50Vol = sma50VolArr[sma50VolArr.length - 1] || 1;
+  const avg5Vol = volValues.slice(-5).reduce((a, b) => a + b, 0) / 5;
+  const dryVolRatio = Number((avg5Vol / sma50Vol).toFixed(2));
+
+  // 5. PIVOT RESISTANCE & DISTANCE
+  const pivotPrice = Number(significantWaves[0].peak.toFixed(2));
+  const distanceToPivot = Number((((pivotPrice - ltp) / pivotPrice) * 100).toFixed(2));
+
+  // 6. STAGE CLASSIFICATION
+  const countNum = Math.min(4, Math.max(2, significantWaves.length));
+  const contractionsCount = `${countNum}T`;
+  const depthsFormatted = significantWaves.map(w => `${w.depth}%`).join(' → ');
+  const lastDepth = significantWaves[significantWaves.length - 1].depth;
+
+  let status = 'In Formation';
+  let stageCode = 'forming';
+
+  const isTodayBreakout = ltp >= pivotPrice * 0.995 && currentCandle.volume >= sma50Vol * 1.25 && currentCandle.close > currentCandle.open;
+  const isTightSqueeze = tightnessPercent <= 4.5 && (dryVolRatio <= 0.80 || lastDepth <= 5.5) && distanceToPivot <= 3.8 && distanceToPivot >= -1.0;
+
+  if (isTodayBreakout) {
+    status = 'Breakout Today';
+    stageCode = 'breakout';
+  } else if (isTightSqueeze) {
+    status = `Ready Squeeze (${contractionsCount})`;
+    stageCode = 'squeeze';
+  } else {
+    status = `Forming (${contractionsCount})`;
+    stageCode = 'forming';
+  }
+
+  return {
+    contractionsCount,
+    wavesCount: countNum,
+    depths: depthsFormatted,
+    lastContractionDepth: lastDepth,
+    tightnessPercent,
+    dryVolRatio,
+    pivotPrice,
+    distanceToPivot,
+    status,
+    stageCode,
+    baseLength: baseCandles.length,
+    high52w: Number(high52w.toFixed(2)),
+    pctFrom52wHigh: Number((((ltp - high52w) / high52w) * 100).toFixed(2))
+  };
+}
+
+async function scanVcpPatterns(stageFilter = 'all', scope = 'current', stockList = [], interval = '1d') {
+  const scanInterval = (interval === '1wk' || interval === 'W' || interval === 'weekly') ? '1wk' : '1d';
+  const scanRange = scanInterval === '1wk' ? '2y' : '1y';
+  const universe = getLocalStockUniverse();
+  const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+
+  // Fetch Market Cap > 1000 Cr & > 2000 Cr sets
+  const { mc1000Set, mc2000Set } = await getMarketCapSets();
+
+  let targetSymbols = [];
+
+  switch (scope) {
+    case 'current':
+    case 'watchlist':
+      if (Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
+      } else {
+        targetSymbols = sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      }
+      break;
+
+    case 'large':
+    case 'large_cap':
+      targetSymbols = sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'mid':
+    case 'mid_cap':
+      targetSymbols = sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'small':
+    case 'small_cap':
+      targetSymbols = sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'micro':
+    case 'micro_cap':
+      targetSymbols = sortedUniverse.slice(500, 700).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'midsmall400':
+    case 'midsmall_400':
+      targetSymbols = sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'fno':
+      targetSymbols = sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'universe':
+    case 'all':
+    default:
+      if (String(scope).startsWith('wl_') && Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
+      } else {
+        targetSymbols = sortedUniverse.slice(0, 300).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      }
+      break;
+  }
+
+  // Deduplicate
+  const uniqueList = [];
+  const seen = new Set();
+  for (const item of targetSymbols) {
+    const s = (item.symbol || '').toUpperCase().trim();
+    if (s && !seen.has(s)) {
+      seen.add(s);
+      uniqueList.push({ symbol: s, name: item.name || s, exchange: item.exchange || 'NSE', marketCap: item.marketCap, mcOver1000Cr: item.mcOver1000Cr, mcOver2000Cr: item.mcOver2000Cr });
+    }
+  }
+
+  const matches = [];
+  const concurrency = 15;
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < uniqueList.length) {
+      const idx = cursor++;
+      const item = uniqueList[idx];
+      try {
+        const hist = await fetchStockHistory(item.symbol, scanRange, scanInterval);
+        if (hist && hist.candles && hist.candles.length >= 35) {
+          const vcp = detectVcpPattern(hist.candles, scanInterval);
+          if (vcp) {
+            const passStage = stageFilter === 'all' || 
+              (stageFilter === 'squeeze' && vcp.stageCode === 'squeeze') || 
+              (stageFilter === 'forming' && vcp.stageCode === 'forming') || 
+              (stageFilter === 'breakout' && vcp.stageCode === 'breakout');
+
+            if (passStage) {
+              const close = Number(hist.ltp || hist.candles[hist.candles.length - 1].close);
+              const lastCandle = hist.candles[hist.candles.length - 1];
+              const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
+
+              const symUpper = item.symbol.toUpperCase();
+              const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000);
+              const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000);
+
+              matches.push({
+                symbol: item.symbol,
+                name: item.name,
+                exchange: item.exchange || 'NSE',
+                close: Number(close.toFixed(2)),
+                ltp: Number(close.toFixed(2)),
+                changePercent: hist.changePercent || 0,
+                volume,
+                timeframe: scanInterval,
+                mcOver1000Cr: Boolean(isOver1000),
+                mcOver2000Cr: Boolean(isOver2000),
+                ...vcp
+              });
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  const workers = [];
+  for (let i = 0; i < Math.min(concurrency, uniqueList.length); i++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+
+  // Sort by tightness % (tightest squeeze first)
+  matches.sort((a, b) => a.tightnessPercent - b.tightnessPercent);
+
+  return {
+    success: true,
+    totalScanned: uniqueList.length,
+    matchesCount: matches.length,
+    count: matches.length,
+    stage: stageFilter,
     interval: scanInterval,
     scope,
     results: matches
@@ -5780,6 +6126,32 @@ const server = http.createServer(async (req, res) => {
           return sendJson(res, 200, scanResults);
         } catch (scanErr) {
           console.error('Error during Darvas-EMA price scan:', scanErr.message);
+          return sendJson(res, 500, { success: false, error: scanErr.message });
+        }
+      }
+
+      // 8a2. POST /api/scan/vcp - Minervini Volatility Contraction Pattern (VCP) Scanner (Registered Users Only)
+      if (pathname === '/api/scan/vcp' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in or register to access the VCP Scanner.' });
+        }
+
+        try {
+          const body = await parseJsonBody(req);
+          let { stage = 'all', scope = 'current', stockList = [], interval = '1d', timeframe = '1d' } = body;
+          const selectedInterval = interval || timeframe || '1d';
+          if (String(scope).startsWith('wl_') && (!Array.isArray(stockList) || stockList.length === 0)) {
+            const userWls = getUserWatchlists(authUser);
+            const targetWl = userWls.find(w => w.id === scope);
+            if (targetWl && Array.isArray(targetWl.stocks)) {
+              stockList = targetWl.stocks.map(s => s.symbol);
+            }
+          }
+          const scanResults = await scanVcpPatterns(stage, scope, stockList, selectedInterval);
+          return sendJson(res, 200, scanResults);
+        } catch (scanErr) {
+          console.error('Error during VCP pattern scan:', scanErr.message);
           return sendJson(res, 500, { success: false, error: scanErr.message });
         }
       }

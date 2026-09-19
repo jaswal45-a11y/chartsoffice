@@ -922,6 +922,11 @@
             "symbol": "SIGACHI",
             "name": "SIGACHI",
             "addedAt": "2026-09-13T08:14:04.503Z"
+          },
+          {
+            "symbol": "KANOHAR",
+            "name": "KANOHAR",
+            "addedAt": "2026-09-19T01:25:29.298Z"
           }
         ]
       },
@@ -1174,8 +1179,8 @@
         ]
       }
     ],
-    "notes": "whenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\nhttps://www.tradingview.com/script/JkB0iCFp-Simple-Volume-with-Pocket-Pivots/\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000",
-    "notesUpdatedAt": "2026-09-18T13:03:38.000Z",
+    "notes": "whenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000",
+    "notesUpdatedAt": "2026-09-19T17:27:51.208Z",
     "customScreeners": [
       {
         "id": "scr_usr_mtqwvqzy_rx4",
@@ -2925,8 +2930,8 @@
         "isGlobal": false,
         "isCustom": true,
         "createdBy": "boby",
-        "lastRun": "2026-09-18T08:57:21.827Z",
-        "stockCount": 27,
+        "lastRun": "2026-09-19T18:25:08.136Z",
+        "stockCount": 28,
         "lastResults": [
           {
             "sr": 1,
@@ -2937,7 +2942,7 @@
             "close": 3206.7,
             "price": 3206.7,
             "changePercent": 3.51,
-            "volume": 1631932,
+            "volume": 1632087,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -2950,7 +2955,7 @@
             "close": 2537.7,
             "price": 2537.7,
             "changePercent": 13.8,
-            "volume": 4310945,
+            "volume": 4310981,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -2963,7 +2968,7 @@
             "close": 1761.4,
             "price": 1761.4,
             "changePercent": 4.02,
-            "volume": 374176,
+            "volume": 374184,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -2976,7 +2981,7 @@
             "close": 1512.1,
             "price": 1512.1,
             "changePercent": 8.05,
-            "volume": 2468044,
+            "volume": 2468226,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -2989,7 +2994,7 @@
             "close": 1139.5,
             "price": 1139.5,
             "changePercent": 6.26,
-            "volume": 6483236,
+            "volume": 6484052,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -3002,7 +3007,7 @@
             "close": 1049.7,
             "price": 1049.7,
             "changePercent": 7.02,
-            "volume": 3978913,
+            "volume": 3979254,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -3015,7 +3020,7 @@
             "close": 714.2,
             "price": 714.2,
             "changePercent": 16.87,
-            "volume": 6648992,
+            "volume": 6651306,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -3028,7 +3033,7 @@
             "close": 707.2,
             "price": 707.2,
             "changePercent": 4.01,
-            "volume": 25689171,
+            "volume": 25690503,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -3041,7 +3046,7 @@
             "close": 660.7,
             "price": 660.7,
             "changePercent": 12.56,
-            "volume": 39303406,
+            "volume": 39305845,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -3054,7 +3059,7 @@
             "close": 558.55,
             "price": 558.55,
             "changePercent": 4.1,
-            "volume": 2062268,
+            "volume": 2062341,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
@@ -3067,12 +3072,25 @@
             "close": 525.5,
             "price": 525.5,
             "changePercent": 11.29,
-            "volume": 9737761,
+            "volume": 9738086,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
             "sr": 12,
+            "symbol": "JUBLFOOD",
+            "name": "Jubilant Foodworks Limited",
+            "bsecode": "533155",
+            "nsecode": "JUBLFOOD",
+            "close": 500,
+            "price": 500,
+            "changePercent": 4.12,
+            "volume": 2900829,
+            "mcOver1000Cr": true,
+            "mcOver2000Cr": true
+          },
+          {
+            "sr": 13,
             "symbol": "POONAWALLA",
             "name": "Poonawalla Fincorp Ltd",
             "bsecode": "524000",
@@ -3080,12 +3098,12 @@
             "close": 479.4,
             "price": 479.4,
             "changePercent": 10.77,
-            "volume": 7162864,
+            "volume": 7163603,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 13,
+            "sr": 14,
             "symbol": "TALBROAUTO",
             "name": "Talbros Automotive Components Limited",
             "bsecode": "505160",
@@ -3093,12 +3111,12 @@
             "close": 476.7,
             "price": 476.7,
             "changePercent": 9.54,
-            "volume": 1960284,
+            "volume": 1960823,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 14,
+            "sr": 15,
             "symbol": "ACMESOLAR",
             "name": "ACME Solar Holdings Ltd",
             "bsecode": "544283",
@@ -3106,12 +3124,12 @@
             "close": 435.25,
             "price": 435.25,
             "changePercent": 5.82,
-            "volume": 12036744,
+            "volume": 12038412,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 15,
+            "sr": 16,
             "symbol": "JSWINFRA",
             "name": "JSW Infrastructure Ltd",
             "bsecode": "543994",
@@ -3119,12 +3137,12 @@
             "close": 348.25,
             "price": 348.25,
             "changePercent": 6.61,
-            "volume": 25406312,
+            "volume": 25470641,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 16,
+            "sr": 17,
             "symbol": "IGIL",
             "name": "International Gemmological Institute (India) Ltd",
             "bsecode": "544311",
@@ -3132,12 +3150,12 @@
             "close": 330.95,
             "price": 330.95,
             "changePercent": 5.1,
-            "volume": 2431956,
+            "volume": 2435441,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 17,
+            "sr": 18,
             "symbol": "EIHOTEL",
             "name": "Eih Limited",
             "bsecode": "500840",
@@ -3145,12 +3163,12 @@
             "close": 317.9,
             "price": 317.9,
             "changePercent": 6,
-            "volume": 1308011,
+            "volume": 1308371,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 18,
+            "sr": 19,
             "symbol": "INDIAGLYCO",
             "name": "India Glycols Limited",
             "bsecode": "500201",
@@ -3158,12 +3176,12 @@
             "close": 263.7,
             "price": 263.7,
             "changePercent": 6.03,
-            "volume": 1676801,
+            "volume": 1678037,
             "mcOver1000Cr": true,
             "mcOver2000Cr": false
           },
           {
-            "sr": 19,
+            "sr": 20,
             "symbol": "BELRISE",
             "name": "Belrise Industries Ltd",
             "bsecode": null,
@@ -3171,12 +3189,12 @@
             "close": 240.18,
             "price": 240.18,
             "changePercent": 4.71,
-            "volume": 10823722,
+            "volume": 10829670,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 20,
+            "sr": 21,
             "symbol": "CMRGREEN",
             "name": "CMR Green Technologies Ltd",
             "bsecode": "544777",
@@ -3184,12 +3202,12 @@
             "close": 231.87,
             "price": 231.87,
             "changePercent": 8.73,
-            "volume": 1840296,
+            "volume": 1840718,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 21,
+            "sr": 22,
             "symbol": "MEESHO",
             "name": "Meesho Ltd",
             "bsecode": "544632",
@@ -3197,12 +3215,12 @@
             "close": 214.44,
             "price": 214.44,
             "changePercent": 3.44,
-            "volume": 83376490,
+            "volume": 83376786,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 22,
+            "sr": 23,
             "symbol": "EMIL",
             "name": "Electronics Mart India Ltd",
             "bsecode": "543626",
@@ -3210,12 +3228,12 @@
             "close": 196.28,
             "price": 196.28,
             "changePercent": 6.06,
-            "volume": 15749751,
+            "volume": 15751870,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 23,
+            "sr": 24,
             "symbol": "SAMBHV",
             "name": "Sambhv Steel Tubes Ltd",
             "bsecode": "544430",
@@ -3223,12 +3241,12 @@
             "close": 147.57,
             "price": 147.57,
             "changePercent": 14.32,
-            "volume": 28282909,
+            "volume": 28285913,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 24,
+            "sr": 25,
             "symbol": "GPTINFRA",
             "name": "Gpt Infraprojects Limited",
             "bsecode": "533761",
@@ -3236,12 +3254,12 @@
             "close": 118.96,
             "price": 118.96,
             "changePercent": 4.76,
-            "volume": 3007760,
+            "volume": 3008060,
             "mcOver1000Cr": true,
             "mcOver2000Cr": false
           },
           {
-            "sr": 25,
+            "sr": 26,
             "symbol": "CSM",
             "name": "CSM Technologies Ltd",
             "bsecode": "544806",
@@ -3249,12 +3267,12 @@
             "close": 109.85,
             "price": 109.85,
             "changePercent": 7.02,
-            "volume": 9116753,
+            "volume": 9116969,
             "mcOver1000Cr": false,
             "mcOver2000Cr": false
           },
           {
-            "sr": 26,
+            "sr": 27,
             "symbol": "GRAUWEIL",
             "name": "Grauer & Weil (India) Ltd",
             "bsecode": "505710",
@@ -3262,12 +3280,12 @@
             "close": 86.62,
             "price": 86.62,
             "changePercent": 9.52,
-            "volume": 14617597,
+            "volume": 14617872,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
-            "sr": 27,
+            "sr": 28,
             "symbol": "CENTRALBK",
             "name": "Central Bank Of India Ltd",
             "bsecode": "532885",
@@ -3275,7 +3293,7 @@
             "close": 31.73,
             "price": 31.73,
             "changePercent": 4.38,
-            "volume": 56224527,
+            "volume": 56472458,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           }
@@ -5627,21 +5645,20 @@
       }
     ],
     "indicatorPreferences": {
-      "volOverlayMode": "volintel",
       "toggles": {
         "ema10": true,
-        "ema20": false,
+        "ema20": true,
         "ema50": true,
         "ema150": true,
         "ema200": false,
-        "volume": false,
+        "vol": true,
         "volAvg": false,
         "vwap": false,
-        "pivots": false,
         "darvas": true,
         "rsi": true,
         "volIntel": true,
-        "vol": true
+        "pivots": false,
+        "volume": false
       },
       "colors": {
         "ema10": "#0284c7",
@@ -5649,16 +5666,15 @@
         "ema50": "#f59e0b",
         "ema150": "#9333ea",
         "ema200": "#e11d48",
-        "volAvg": "#fbbf24",
         "vwap": "#eab308",
         "darvasTop": "#10b981",
         "darvasBottom": "#ef4444",
+        "volAvg": "#fbbf24",
         "rsi": "#60a5fa",
         "rsiSma": "#fbbf24",
         "avwap": "#a855f7",
         "crosshair": "#3b82f6",
         "closeLine": "#10b981",
-        "volIntelMa": "#fbbf24",
         "viBs": "#a855f7",
         "viPp": "#0ea5e9",
         "viPv": "#06b6d4",
@@ -5666,7 +5682,20 @@
         "viSup": "#10b981",
         "viSdn": "#ef4444",
         "viNup": "#15803d",
-        "viNdn": "#991b1b"
+        "viNdn": "#991b1b",
+        "volIntelMa": "#fbbf24"
+      },
+      "volOverlayMode": "volintel",
+      "volIntelSettings": {
+        "volMaPeriod": 50,
+        "ppLookback": 10,
+        "bsMult": 3,
+        "dryThresh": 0.2,
+        "paintBars": false,
+        "shapePp": "none",
+        "shapeBs": "arrowUp",
+        "shapePv": "square",
+        "showMa50": true
       },
       "pivotType": "Traditional (Auto)",
       "chartTheme": "dark",
@@ -5695,17 +5724,6 @@
         "crosshair": 1,
         "closeLine": 1,
         "volIntelMa": 1.5
-      },
-      "volIntelSettings": {
-        "volMaPeriod": 50,
-        "ppLookback": 10,
-        "bsMult": 3,
-        "dryThresh": 0.2,
-        "paintBars": false,
-        "shapePp": "none",
-        "shapeBs": "arrowUp",
-        "shapePv": "square",
-        "showMa50": true
       }
     },
     "drawings": {

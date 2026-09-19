@@ -3980,7 +3980,7 @@ function setupPredictiveSearch() {
           <div class="flex items-center gap-2">
             <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
             ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
-            <span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
+            ${item.exchange && item.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange}</span>` : ''}
             ${getFnoBadgeHtml(item.symbol)}
           </div>
           <div class="text-[11px] text-slate-400 truncate mt-0.5">${item.name || item.symbol}</div>
@@ -4632,7 +4632,8 @@ async function loadStockChart(rawSymbol) {
     if (elOnchartSym) elOnchartSym.textContent = cleanSymbol;
     if (elStockLtp) elStockLtp.textContent = fmt.currency(data.ltp);
     if (elStockExchange) {
-      elStockExchange.innerHTML = `${data.exchange || 'NSE'}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+      const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
+      elStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
     }
     
     if (elStockChange) {
@@ -5609,7 +5610,7 @@ function renderAdminUniverseTable() {
         <div class="flex items-center gap-2">
           <span class="font-bold text-white font-mono text-xs tracking-wide">${stk.symbol}</span>
           ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
-          <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400">${stk.exchange || 'NSE'}</span>
+          ${stk.exchange && stk.exchange !== 'NSE' ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400">${stk.exchange}</span>` : ''}
         </div>
       </td>
       <td class="py-2.5 px-3 text-slate-200 font-sans text-xs truncate max-w-[200px]" title="${stk.name}">${stk.name}</td>

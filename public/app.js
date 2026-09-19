@@ -68,6 +68,12 @@ const state = {
   pricescanSortAscending: true,
   pricescanFilterMc1000: false,
   pricescanFilterMc2000: false,
+  // VCP Scanner State
+  vcpscanResults: [],
+  vcpscanSortField: 'tightnessPercent',
+  vcpscanSortAscending: true,
+  vcpscanFilterMc1000: false,
+  vcpscanFilterMc2000: false,
   runningScreeners: new Set(),
   isRunAllInProgress: false,
   isAggregatedMode: false,
@@ -219,7 +225,6 @@ const el = {
   statTotalScreeners: document.getElementById('stat-total-screeners'),
   statTotalStocks: document.getElementById('stat-total-stocks'),
   btnRunAll: document.getElementById('btn-run-all'),
-  btnOpenAddModal: document.getElementById('btn-open-add-modal'),
   btnCopyStocks: document.getElementById('btn-copy-stocks'),
   btnExportCsv: document.getElementById('btn-export-csv'),
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
@@ -269,9 +274,11 @@ const el = {
   tabBtnScreeners: document.getElementById('tab-btn-screeners'),
   tabBtnWatchlists: document.getElementById('tab-btn-watchlists'),
   tabBtnPricescan: document.getElementById('tab-btn-pricescan'),
+  tabBtnVcpscan: document.getElementById('tab-btn-vcpscan'),
   sidebarScreenersView: document.getElementById('sidebar-screeners-view'),
   sidebarWatchlistsView: document.getElementById('sidebar-watchlists-view'),
   sidebarPricescanView: document.getElementById('sidebar-pricescan-view'),
+  sidebarVcpscanView: document.getElementById('sidebar-vcpscan-view'),
   selectActiveWatchlist: document.getElementById('select-active-watchlist'),
   btnRenameWatchlist: document.getElementById('btn-rename-watchlist'),
   btnAddNewWatchlist: document.getElementById('btn-add-new-watchlist'),
@@ -304,6 +311,18 @@ const el = {
   pricescanDynamicEmaCol: document.getElementById('pricescan-dynamic-ema-col'),
   pricescanDynamicDarvasCol: document.getElementById('pricescan-dynamic-darvas-col'),
   btnOpenAddModalDeck: document.getElementById('btn-open-add-modal-deck'),
+
+  // VCP Scanner Elements
+  btnRunVcpscan: document.getElementById('btn-run-vcpscan'),
+  btnCopyVcpscanStocks: document.getElementById('btn-copy-vcpscan-stocks'),
+  selectVcpscanTimeframe: document.getElementById('select-vcpscan-timeframe'),
+  selectVcpscanStage: document.getElementById('select-vcpscan-stage'),
+  selectVcpscanScope: document.getElementById('select-vcpscan-scope'),
+  chkVcpscanMc1000: document.getElementById('chk-vcpscan-mc1000'),
+  chkVcpscanMc2000: document.getElementById('chk-vcpscan-mc2000'),
+  vcpscanResultsCountBadge: document.getElementById('vcpscan-results-count-badge'),
+  vcpscanTbody: document.getElementById('vcpscan-tbody'),
+  vcpscanFooterInfo: document.getElementById('vcpscan-footer-info'),
 
   // Chart Header Watchlist Elements
   chartWatchlistWrapper: document.getElementById('chart-watchlist-wrapper'),
@@ -1749,9 +1768,7 @@ function updateAuthUI(user) {
       window.SangamMfDeals.refreshAuth();
     }
 
-    // Add Screener button visible
-    el.btnOpenAddModal?.classList.remove('hidden');
-    el.btnOpenAddModal?.classList.add('flex');
+    // Add Screener button in Command Deck category bar
     el.btnOpenAddModalDeck?.classList.remove('hidden');
     el.btnOpenAddModalDeck?.classList.add('flex');
 
@@ -1771,8 +1788,6 @@ function updateAuthUI(user) {
     el.btnOpenAuthModal?.classList.remove('hidden');
     el.userAuthBox?.classList.add('hidden');
     el.userAuthBox?.classList.remove('flex');
-    el.btnOpenAddModal?.classList.remove('hidden');
-    el.btnOpenAddModal?.classList.add('flex');
     el.btnOpenAddModalDeck?.classList.remove('hidden');
     el.btnOpenAddModalDeck?.classList.add('flex');
     el.btnOpenNotes?.classList.add('hidden');
@@ -1977,14 +1992,14 @@ function switchSidebarTab(tab) {
   state.activeSidebarTab = tab;
 
   // Reset tab button states
-  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan].forEach(btn => {
+  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan, el.tabBtnVcpscan].forEach(btn => {
     if (!btn) return;
-    btn.classList.remove('bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'text-white', 'text-black', 'shadow-sm');
+    btn.classList.remove('bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'bg-purple-600', 'text-white', 'text-black', 'shadow-sm');
     btn.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
   });
 
   // Reset views
-  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView].forEach(v => {
+  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView, el.sidebarVcpscanView].forEach(v => {
     if (!v) return;
     v.classList.add('hidden');
     v.classList.remove('flex');
@@ -2021,6 +2036,19 @@ function switchSidebarTab(tab) {
     el.sidebarPricescanView?.classList.add('flex');
 
     populatePricescanScopeOptions();
+  } else if (tab === 'vcpscan') {
+    if (!state.user) {
+      showToast('Please log in or register to access the VCP Scanner.', 'info');
+      openAuthModal('login');
+      return;
+    }
+
+    el.tabBtnVcpscan?.classList.add('bg-purple-600', 'text-white', 'shadow-sm');
+    el.tabBtnVcpscan?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+    el.sidebarVcpscanView?.classList.remove('hidden');
+    el.sidebarVcpscanView?.classList.add('flex');
+
+    populateVcpscanScopeOptions();
   }
 }
 
@@ -2079,8 +2107,9 @@ function renderWatchlistSelector() {
     }
   }
 
-  // Synchronize DarvasScan scope dropdown with active watchlists
+  // Synchronize DarvasScan & VCP scan scope dropdowns with active watchlists
   populatePricescanScopeOptions();
+  populateVcpscanScopeOptions();
 }
 
 function renderWatchlistStocks() {
@@ -2810,6 +2839,20 @@ function setupEventListeners() {
     });
   });
 
+  // Table Column Sorting (VCP Scan Table)
+  document.querySelectorAll('th[data-vsort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.vsort;
+      if (state.vcpscanSortField === field) {
+        state.vcpscanSortAscending = !state.vcpscanSortAscending;
+      } else {
+        state.vcpscanSortField = field;
+        state.vcpscanSortAscending = (field === 'tightnessPercent' || field === 'dryVolRatio' || field === 'symbol');
+      }
+      renderVcpscanTable();
+    });
+  });
+
   // Table Column Sorting (Watchlists Table)
   document.querySelectorAll('th[data-wlsort]').forEach(th => {
     th.addEventListener('click', () => {
@@ -3062,14 +3105,58 @@ function setupEventListeners() {
     if (state.activeSidebarTab === 'pricescan' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
       e.preventDefault();
       runPricePositionScan();
+    } else if (state.activeSidebarTab === 'vcpscan' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
+      e.preventDefault();
+      runVcpScan();
     }
   });
+
+  // VCP Scanner Event Listeners
+  if (el.btnRunVcpscan) {
+    el.btnRunVcpscan.addEventListener('click', runVcpScan);
+  }
+  if (el.btnCopyVcpscanStocks) {
+    el.btnCopyVcpscanStocks.addEventListener('click', handleCopyVcpscanStocks);
+  }
+  if (el.chkVcpscanMc1000) {
+    el.chkVcpscanMc1000.addEventListener('change', e => {
+      state.vcpscanFilterMc1000 = e.target.checked;
+      if (state.vcpscanFilterMc1000 && state.vcpscanFilterMc2000) {
+        if (el.chkVcpscanMc2000) el.chkVcpscanMc2000.checked = false;
+        state.vcpscanFilterMc2000 = false;
+      }
+      renderVcpscanTable();
+    });
+  }
+  if (el.chkVcpscanMc2000) {
+    el.chkVcpscanMc2000.addEventListener('change', e => {
+      state.vcpscanFilterMc2000 = e.target.checked;
+      if (state.vcpscanFilterMc2000 && state.vcpscanFilterMc1000) {
+        if (el.chkVcpscanMc1000) el.chkVcpscanMc1000.checked = false;
+        state.vcpscanFilterMc1000 = false;
+      }
+      renderVcpscanTable();
+    });
+  }
+  if (el.selectVcpscanStage) {
+    el.selectVcpscanStage.addEventListener('change', () => {
+      if (state.vcpscanResults && state.vcpscanResults.length > 0) {
+        runVcpScan();
+      }
+    });
+  }
+  if (el.selectVcpscanTimeframe) {
+    el.selectVcpscanTimeframe.addEventListener('change', () => {
+      if (state.vcpscanResults && state.vcpscanResults.length > 0) {
+        runVcpScan();
+      }
+    });
+  }
 
   // Export CSV
   el.btnExportCsv?.addEventListener('click', exportToCsv);
 
   // Modal Triggers
-  el.btnOpenAddModal?.addEventListener('click', openAddModal);
   el.btnOpenAddModalDeck?.addEventListener('click', openAddModal);
   el.btnCloseModal?.addEventListener('click', closeModal);
   el.btnCancelModal?.addEventListener('click', closeModal);
@@ -4312,7 +4399,7 @@ function setupPredictiveSearch() {
           <div class="flex items-center gap-2">
             <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
             ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
-            <span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
+            ${item.exchange && item.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange}</span>` : ''}
             ${getFnoBadgeHtml(item.symbol)}
           </div>
           <div class="text-[11px] text-slate-400 truncate mt-0.5">${item.name || item.symbol}</div>
@@ -4502,7 +4589,7 @@ function setupWatchlistPredictiveSearch() {
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${item.symbol}</span>
               ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
-              <span class="text-[9px] px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 font-mono font-semibold">${item.exchange || 'NSE'}</span>
+              ${item.exchange && item.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 font-mono font-semibold">${item.exchange}</span>` : ''}
               ${typeof getFnoBadgeHtml === 'function' ? getFnoBadgeHtml(item.symbol) : ''}
             </div>
             <div class="text-[10px] text-slate-400 truncate mt-0.5">${item.name || item.symbol}</div>
@@ -5323,7 +5410,8 @@ async function loadStockChart(rawSymbol) {
     }
     if (el.chartStockLtp) el.chartStockLtp.textContent = fmt.currency(data.ltp);
     if (el.chartStockExchange) {
-      el.chartStockExchange.innerHTML = `${data.exchange || 'NSE'}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+      const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
+      el.chartStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
     }
     
     // Percent change pill
@@ -5872,7 +5960,7 @@ function renderPricescanTable() {
             <div class="flex items-center gap-1.5">
               <span class="font-mono font-bold text-slate-100 group-hover:text-emerald-300 text-xs">${m.symbol}</span>
               ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(m.symbol, m.name) : ''}
-              <span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange || 'NSE'}</span>
+              ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
               ${getFnoBadgeHtml(m.symbol)}
               ${mcBadgeHtml}
             </div>
@@ -5946,6 +6034,348 @@ function renderPricescanTable() {
         }
       }
     });
+  });
+}
+
+// -------------------------------------------------------------
+// VCP Scanner Controller (Minervini Volatility Contraction Pattern)
+// -------------------------------------------------------------
+
+function populateVcpscanScopeOptions() {
+  if (!el.selectVcpscanScope) return;
+  const currentVal = el.selectVcpscanScope.value || 'current';
+
+  let html = `<optgroup label="Active Workspace">`;
+  const screenerStockCount = (state.currentStocks || []).length;
+  html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
+
+  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
+    state.watchlists.forEach(w => {
+      html += `<option value="${w.id}">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</option>`;
+    });
+  }
+
+  html += `
+    </optgroup>
+    <optgroup label="Market Indices & Universes">
+      <option value="fno">🎯 F&O Stocks (~200)</option>
+      <option value="large">🏢 Large Cap (Top 100)</option>
+      <option value="mid">📈 Mid Cap (150)</option>
+      <option value="small">🚀 Small Cap (250)</option>
+      <option value="micro">🔬 Micro Cap</option>
+      <option value="midsmall400">🌐 MidSmall400 (400)</option>
+      <option value="universe">🌍 Full Universe (1.1k)</option>
+    </optgroup>
+  `;
+
+  el.selectVcpscanScope.innerHTML = html;
+
+  const exists = Array.from(el.selectVcpscanScope.options).some(o => o.value === currentVal);
+  if (exists) {
+    el.selectVcpscanScope.value = currentVal;
+  }
+}
+
+async function runVcpScan() {
+  const stage = el.selectVcpscanStage?.value || 'all';
+  const interval = el.selectVcpscanTimeframe?.value || '1d';
+  const tfLabel = interval === '1wk' ? 'Weekly' : 'Daily';
+  const scope = el.selectVcpscanScope?.value || 'current';
+  const btn = el.btnRunVcpscan;
+  const tbody = el.vcpscanTbody;
+  const countBadge = el.vcpscanResultsCountBadge;
+
+  let stockList = [];
+  let scanScopeLabel = '';
+
+  if (scope === 'current') {
+    stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+    scanScopeLabel = `${stockList.length} Screener Stocks`;
+    if (stockList.length === 0) {
+      showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
+      return;
+    }
+  } else if (scope.startsWith('wl_') || scope === 'watchlist') {
+    const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
+    if (targetWl) {
+      stockList = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
+      scanScopeLabel = `Watchlist "${targetWl.name}" (${stockList.length} stocks)`;
+    } else {
+      scanScopeLabel = 'Watchlist Stocks';
+    }
+    if (stockList.length === 0) {
+      showToast('Selected watchlist is empty. Add stocks to this watchlist first.', 'warning');
+      return;
+    }
+  } else if (scope === 'universe') {
+    scanScopeLabel = 'Universe Stocks';
+  } else {
+    scanScopeLabel = `${scope.toUpperCase()} Stocks`;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Scanning...</span>`;
+    lucide.createIcons();
+  }
+
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-8 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-3">
+            <i data-lucide="loader-2" class="w-8 h-8 text-purple-400 animate-spin"></i>
+            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel} for VCP Patterns (${tfLabel})...</p>
+            <p class="text-[11px] text-slate-500">Checking Stage 2 trend, progressive contractions (T1→T2→T3), tightness & volume dry-up</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/scan/vcp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        stage,
+        interval,
+        scope,
+        stockList
+      })
+    });
+
+    if (res.status === 401) {
+      state.vcpscanResults = [];
+      showToast('Please log in or register to run VCP Scanner.', 'warning');
+      openAuthModal('login');
+      return;
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'VCP Scan failed');
+    }
+
+    const matches = data.results || [];
+    state.vcpscanResults = matches;
+
+    if (countBadge) countBadge.textContent = matches.length;
+
+    renderVcpscanTable();
+    showToast(`VCP Scan complete: Found ${matches.length} matching stocks (${tfLabel}).`, 'success');
+  } catch (err) {
+    console.error('VCP scan error:', err);
+    state.vcpscanResults = [];
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="p-6 text-center text-rose-400">
+            <p class="text-xs font-semibold">Error running VCP scan: ${err.message}</p>
+          </td>
+        </tr>
+      `;
+    }
+    showToast(`VCP Scan error: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-70', 'cursor-not-allowed');
+      btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>RUN</span>`;
+      lucide.createIcons();
+    }
+  }
+}
+
+function renderVcpscanTable() {
+  const tbody = el.vcpscanTbody;
+  if (!tbody) return;
+
+  const matches = [...(state.vcpscanResults || [])].filter(stock => {
+    if (state.vcpscanFilterMc2000 && stock.mcOver2000Cr !== true) {
+      return false;
+    }
+    if (state.vcpscanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
+      return false;
+    }
+    return true;
+  });
+
+  if (el.vcpscanResultsCountBadge) el.vcpscanResultsCountBadge.textContent = matches.length;
+
+  const sortField = state.vcpscanSortField || 'tightnessPercent';
+  const isAsc = state.vcpscanSortAscending;
+
+  document.querySelectorAll('th[data-vsort]').forEach(th => {
+    const isThisCol = th.dataset.vsort === sortField;
+    const icon = th.querySelector('svg, i');
+    if (isThisCol) {
+      th.classList.add('text-slate-100');
+      if (icon) {
+        icon.setAttribute('data-lucide', isAsc ? 'arrow-up' : 'arrow-down');
+      }
+    } else {
+      th.classList.remove('text-slate-100');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'arrow-up-down');
+      }
+    }
+  });
+
+  if (matches.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-8 text-center text-slate-500">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
+            <p class="text-xs text-slate-300">No stocks matched the VCP criteria.</p>
+            <p class="text-[11px] text-slate-500">Try adjusting Market Cap filters, selecting "All Stages", or scanning a broader scope (e.g. MidCap or Universe).</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  // Sort matches
+  matches.sort((a, b) => {
+    let valA = a[sortField];
+    let valB = b[sortField];
+    if (sortField === 'close' || sortField === 'ltp') {
+      valA = (typeof a.close === 'number' && a.close > 0) ? a.close : (a.ltp || 0);
+      valB = (typeof b.close === 'number' && b.close > 0) ? b.close : (b.ltp || 0);
+    }
+    if (typeof valA === 'string') {
+      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    valA = (valA !== undefined && valA !== null && !isNaN(valA)) ? Number(valA) : 0;
+    valB = (valB !== undefined && valB !== null && !isNaN(valB)) ? Number(valB) : 0;
+    return isAsc ? valA - valB : valB - valA;
+  });
+
+  tbody.innerHTML = matches.map(m => {
+    const isSelected = state.selectedStock && state.selectedStock.symbol === m.symbol;
+    const rawChg = typeof m.changePercent === 'number' ? m.changePercent : parseFloat(m.changePercent);
+    const chgVal = isNaN(rawChg) ? 0 : Number(rawChg.toFixed(2));
+    const isBull = chgVal >= 0;
+    const changeBadge = isBull 
+      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+    const ltpPrice = (typeof m.close === 'number' && m.close > 0) ? m.close : (m.ltp || 0);
+
+    let stageBadge = '';
+    if (m.stageCode === 'breakout') {
+      stageBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold">🚀 BREAKOUT</span>`;
+    } else if (m.stageCode === 'squeeze') {
+      stageBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold">🎯 SQUEEZE</span>`;
+    } else {
+      stageBadge = `<span class="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[9px] font-bold">📈 FORMING</span>`;
+    }
+
+    let mcBadgeHtml = '';
+    if (m.mcOver2000Cr) {
+      mcBadgeHtml = `<span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2000 Cr">&gt;2k</span>`;
+    } else if (m.mcOver1000Cr) {
+      mcBadgeHtml = `<span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">&gt;1k</span>`;
+    }
+
+    const tightClass = m.tightnessPercent <= 3.5 ? 'text-emerald-400 font-bold' : (m.tightnessPercent <= 4.5 ? 'text-amber-300' : 'text-slate-300');
+    const dryVolClass = m.dryVolRatio <= 0.60 ? 'text-emerald-400 font-bold' : (m.dryVolRatio <= 0.80 ? 'text-amber-300' : 'text-slate-300');
+
+    return `
+      <tr class="vcpscan-stock-row hover:bg-purple-500/10 cursor-pointer transition-colors group select-none ${isSelected ? 'selected bg-purple-600/20' : ''}" data-symbol="${m.symbol}">
+        <td class="py-2.5 px-3">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-slate-100 group-hover:text-purple-300 text-xs">${m.symbol}</span>
+              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(m.symbol, m.name) : ''}
+              ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
+              ${getFnoBadgeHtml(m.symbol)}
+              ${mcBadgeHtml}
+            </div>
+            <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
+          </div>
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-100 text-xs">
+          ${fmt.currency(ltpPrice)}
+        </td>
+        <td class="py-2.5 px-2 text-right">
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${changeBadge}">
+            ${fmt.percent(chgVal)}
+          </span>
+        </td>
+        <td class="py-2.5 px-2 text-center">
+          <div class="flex flex-col items-center gap-0.5">
+            <span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-mono font-bold text-[10px]">${m.contractionsCount}</span>
+            ${stageBadge}
+          </div>
+        </td>
+        <td class="py-2.5 px-2 text-center font-mono text-[10px] text-slate-300">
+          <span class="px-1.5 py-0.5 rounded bg-dark-bg border border-dark-border" title="Contraction Waves">${m.depths}</span>
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-xs ${tightClass}">
+          ${m.tightnessPercent}%
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-xs ${dryVolClass}">
+          ${m.dryVolRatio}x
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-xs font-bold text-purple-300">
+          ${fmt.currency(m.pivotPrice)}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+
+  tbody.querySelectorAll('.vcpscan-stock-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const sym = row.dataset.symbol;
+      if (sym) {
+        tbody.querySelectorAll('.vcpscan-stock-row').forEach(r => r.classList.remove('selected', 'bg-purple-600/20'));
+        row.classList.add('selected', 'bg-purple-600/20');
+
+        const scanTf = el.selectVcpscanTimeframe?.value || '1d';
+        state.selectedInterval = scanTf;
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+          if (btn.dataset.interval === scanTf) {
+            btn.classList.add('active', 'bg-blue-600', 'text-white', 'font-semibold', 'shadow');
+            btn.classList.remove('hover:text-white');
+          } else {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'font-semibold', 'shadow');
+          }
+        });
+
+        selectStock({ symbol: sym, name: sym });
+      }
+    });
+  });
+}
+
+function handleCopyVcpscanStocks() {
+  const matches = (state.vcpscanResults || []).filter(stock => {
+    if (state.vcpscanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
+    if (state.vcpscanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+    return true;
+  });
+
+  if (matches.length === 0) {
+    showToast('No VCP stocks to copy.', 'info');
+    return;
+  }
+
+  const symbols = matches.map(s => s.symbol).join(', ');
+  navigator.clipboard.writeText(symbols).then(() => {
+    showToast(`Copied ${matches.length} VCP stock symbols to clipboard.`, 'success');
+  }).catch(() => {
+    showToast('Failed to copy to clipboard.', 'error');
   });
 }
 
@@ -6202,20 +6632,6 @@ function renderScreeners() {
 
     el.screenersContainer.appendChild(card);
   });
-
-  // Append "+ Add Screener" card at the end of the grid
-  const addCard = document.createElement('div');
-  addCard.className = 'screener-card p-3 rounded-xl border border-dashed border-slate-700 hover:border-blue-500 bg-dark-bg/30 hover:bg-dark-bg/60 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all min-h-[95px] text-slate-400 hover:text-blue-400 group';
-  addCard.title = 'Add New Custom or System Screener';
-  addCard.innerHTML = `
-    <div class="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
-      <i data-lucide="plus" class="w-4 h-4"></i>
-    </div>
-    <span class="text-xs font-semibold text-slate-300 group-hover:text-blue-400">Add Screener</span>
-  `;
-  addCard.addEventListener('click', openAddModal);
-  el.screenersContainer.appendChild(addCard);
-
   lucide.createIcons();
 }
 
@@ -6463,6 +6879,7 @@ function renderStocksTable() {
   });
 
   populatePricescanScopeOptions();
+  populateVcpscanScopeOptions();
   lucide.createIcons();
 }
 
@@ -7127,7 +7544,7 @@ function renderAdminUniverseTable() {
         <div class="flex items-center gap-1.5">
           <span class="font-bold text-white font-mono text-xs tracking-wide">${stk.symbol}</span>
           ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
-          <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400">${stk.exchange || 'NSE'}</span>
+          ${stk.exchange && stk.exchange !== 'NSE' ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400">${stk.exchange}</span>` : ''}
         </div>
       </td>
       <td class="py-2.5 px-3 text-slate-200 font-sans text-xs truncate max-w-[200px]" title="${stk.name}">${stk.name}</td>
