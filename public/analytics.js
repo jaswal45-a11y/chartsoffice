@@ -326,6 +326,9 @@ async function checkAuthStatus() {
       };
       state.isAdmin = (data.role === 'admin');
       updateAuthUI(state.user);
+      if (data.indicatorPreferences) {
+        applyLoadedIndicatorPreferences(data.indicatorPreferences);
+      }
       await loadWatchlists();
     } else {
       state.user = null;
@@ -498,6 +501,9 @@ async function handleLogin(e) {
 
     closeAuthModal();
     updateAuthUI(state.user);
+    if (data.indicatorPreferences) {
+      applyLoadedIndicatorPreferences(data.indicatorPreferences);
+    }
     showToast(`Welcome back, ${state.user.username}!`, 'success');
   } catch (err) {
     if (banner) {
@@ -1894,7 +1900,8 @@ function applyLineWidths(widths) {
     avwap: 'setting-width-avwap',
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
-    closeLine: 'setting-width-close-line'
+    closeLine: 'setting-width-close-line',
+    volIntelMa: 'setting-width-vol-avg'
   };
 
   Object.entries(widthSelectMap).forEach(([key, elementId]) => {
@@ -1926,6 +1933,7 @@ function applyLineWidths(widths) {
     if (s.volAvg) s.volAvg.applyOptions({ lineWidth: Number(w.volAvg || 1.5) });
     if (s.rsi) s.rsi.applyOptions({ lineWidth: Number(w.rsi || 2) });
     if (s.rsiSma) s.rsiSma.applyOptions({ lineWidth: Number(w.rsiSma || 1.5) });
+    if (s.volIntelMa) s.volIntelMa.applyOptions({ lineWidth: Number(w.volIntelMa || w.volAvg || 1.5) });
   }
 
   const crosshairOpts = {
@@ -2649,20 +2657,23 @@ function resetLineStylesToDefaults() {
 let savePrefsTimeout = null;
 function saveIndicatorPreferences() {
   const prefs = {
+    volOverlayMode: state.volOverlayMode || (state.toggles.volIntel ? 'volintel' : (state.toggles.volume ? 'simple' : 'off')),
     toggles: { ...state.toggles },
     colors: { ...state.colors },
-    volOverlayMode: state.volOverlayMode || (state.toggles.volIntel ? 'volintel' : (state.toggles.volume ? 'simple' : 'off')),
-    volIntelSettings: state.volIntelSettings ? { ...state.volIntelSettings } : undefined,
     pivotType: state.pivotType || document.getElementById('select-pivot-type')?.value || 'Traditional (Auto)',
     chartTheme: state.chartTheme || 'dark',
     customThemeColors: { ...state.customThemeColors },
-    lineWidths: { ...state.lineWidths }
+    lineWidths: { ...state.lineWidths },
+    volIntelSettings: state.volIntelSettings ? { ...state.volIntelSettings } : undefined
   };
 
-  localStorage.setItem('user_indicator_prefs', JSON.stringify(prefs));
-  localStorage.setItem('chart_theme', state.chartTheme || 'dark');
+  try {
+    localStorage.setItem('user_indicator_prefs', JSON.stringify(prefs));
+    localStorage.setItem('chart_theme', state.chartTheme || 'dark');
+  } catch (e) {}
 
-  if (state.user || state.isAdmin) {
+  const hasAuth = state.user || state.isAdmin || state.token || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+  if (hasAuth) {
     if (savePrefsTimeout) clearTimeout(savePrefsTimeout);
     savePrefsTimeout = setTimeout(async () => {
       try {
@@ -2674,8 +2685,10 @@ function saveIndicatorPreferences() {
           },
           body: JSON.stringify(prefs)
         });
-      } catch (e) {}
-    }, 500);
+      } catch (e) {
+        console.warn('Failed to save indicator preferences to server:', e);
+      }
+    }, 400);
   }
 }
 
@@ -2695,78 +2708,148 @@ function applyLoadedIndicatorPreferences(prefs) {
   if (prefs.volIntelSettings) {
     state.volIntelSettings = { ...state.volIntelSettings, ...prefs.volIntelSettings };
   }
-
   if (prefs.toggles) {
     state.toggles = { ...state.toggles, ...prefs.toggles };
-    const checkboxMap = {
-      ema10: 'chk-ema10',
-      ema20: 'chk-ema20',
-      ema50: 'chk-ema50',
-      ema150: 'chk-ema150',
-      ema200: 'chk-ema200',
-      vwap: 'chk-vwap',
-      vol: 'chk-vol',
-      volAvg: 'chk-vol-avg',
-      darvas: 'chk-darvas',
-      rsi: 'chk-rsi',
-      volIntel: 'chk-vol-intel',
-      pivots: 'chk-pivots'
-    };
-
-    Object.entries(checkboxMap).forEach(([key, elementId]) => {
-      const elCheck = document.getElementById(elementId);
-      if (elCheck && state.toggles[key] !== undefined) {
-        elCheck.checked = Boolean(state.toggles[key]);
-      }
-    });
-
-    if (state.charts?.series) {
-      const s = state.charts.series;
-      if (s.ema10) s.ema10.applyOptions({ visible: Boolean(state.toggles.ema10) });
-      if (s.ema20) s.ema20.applyOptions({ visible: Boolean(state.toggles.ema20) });
-      if (s.ema50) s.ema50.applyOptions({ visible: Boolean(state.toggles.ema50) });
-      if (s.ema150) s.ema150.applyOptions({ visible: Boolean(state.toggles.ema150) });
-      if (s.ema200) s.ema200.applyOptions({ visible: Boolean(state.toggles.ema200) });
-      if (s.vwap) s.vwap.applyOptions({ visible: Boolean(state.toggles.vwap) });
-      if (s.darvasTop) s.darvasTop.applyOptions({ visible: Boolean(state.toggles.darvas) });
-      if (s.darvasBottom) s.darvasBottom.applyOptions({ visible: Boolean(state.toggles.darvas) });
-    }
-
-    const rsiCont = document.getElementById('tv_rsi_container');
-    const rsiResizer = document.getElementById('resizer-price-rsi');
-    const rsiBottomResizer = document.getElementById('resizer-rsi-bottom');
-    if (rsiCont) rsiCont.style.display = state.toggles.rsi ? '' : 'none';
-    if (rsiResizer) rsiResizer.style.display = state.toggles.rsi ? '' : 'none';
-    if (rsiBottomResizer) rsiBottomResizer.style.display = state.toggles.rsi ? '' : 'none';
-
-    updateTimeScalesVisibility();
-    handleResize();
-    updatePivotLines();
   }
-
   if (prefs.colors) {
     state.colors = { ...state.colors, ...prefs.colors };
-    Object.keys(state.colors).forEach(k => updateLineStyle(k));
   }
-
   if (prefs.lineWidths) {
-    applyLineWidths(prefs.lineWidths);
+    state.lineWidths = { ...state.lineWidths, ...prefs.lineWidths };
   }
-
   if (prefs.customThemeColors) {
     state.customThemeColors = { ...state.customThemeColors, ...prefs.customThemeColors };
   }
-
   if (prefs.chartTheme) {
-    applyChartTheme(prefs.chartTheme);
+    state.chartTheme = prefs.chartTheme;
   }
-
   if (prefs.pivotType) {
     state.pivotType = prefs.pivotType;
-    const selectPivot = document.getElementById('select-pivot-type');
-    if (selectPivot) selectPivot.value = prefs.pivotType;
-    updatePivotLines();
   }
+
+  try {
+    localStorage.setItem('user_indicator_prefs', JSON.stringify({
+      volOverlayMode: state.volOverlayMode,
+      toggles: state.toggles,
+      colors: state.colors,
+      lineWidths: state.lineWidths,
+      pivotType: state.pivotType,
+      chartTheme: state.chartTheme,
+      customThemeColors: state.customThemeColors,
+      volIntelSettings: state.volIntelSettings
+    }));
+  } catch (e) {}
+
+  applyChartTheme(state.chartTheme);
+  applyLineWidths(state.lineWidths);
+
+  // Sync Checkboxes
+  const checkboxMap = {
+    ema10: 'chk-ema10',
+    ema20: 'chk-ema20',
+    ema50: 'chk-ema50',
+    ema150: 'chk-ema150',
+    ema200: 'chk-ema200',
+    vwap: 'chk-vwap',
+    vol: 'chk-vol',
+    volAvg: 'chk-vol-avg',
+    darvas: 'chk-darvas',
+    rsi: 'chk-rsi',
+    volIntel: 'chk-vol-intel',
+    pivots: 'chk-pivots'
+  };
+  Object.entries(checkboxMap).forEach(([key, elementId]) => {
+    const elCheck = document.getElementById(elementId);
+    if (elCheck && state.toggles[key] !== undefined) {
+      elCheck.checked = Boolean(state.toggles[key]);
+    }
+  });
+
+  const toggleVol = document.getElementById('setting-toggle-vol');
+  if (toggleVol) toggleVol.checked = Boolean(state.toggles.vol || state.toggles.volume);
+  const toggleVolAvg = document.getElementById('setting-toggle-vol-avg');
+  if (toggleVolAvg) toggleVolAvg.checked = Boolean(state.toggles.volAvg);
+
+  const volRadios = document.querySelectorAll('input[name="setting-vol-mode"], input[name="vol-overlay-mode"]');
+  volRadios.forEach(r => {
+    r.checked = (r.value === state.volOverlayMode);
+  });
+
+  // Sync Color Inputs
+  const colorMap = {
+    ema10: ['setting-color-ema10', 'color-ema10'],
+    ema20: ['setting-color-ema20', 'color-ema20'],
+    ema50: ['setting-color-ema50', 'color-ema50'],
+    ema150: ['setting-color-ema150', 'color-ema150'],
+    ema200: ['setting-color-ema200', 'color-ema200'],
+    vwap: ['setting-color-vwap', 'color-vwap'],
+    darvasTop: ['setting-color-darvas-top', 'color-darvas-top'],
+    darvasBottom: ['setting-color-darvas-bottom', 'color-darvas-bottom'],
+    volAvg: ['setting-color-vol-avg', 'color-vol-avg'],
+    rsi: ['setting-color-rsi', 'color-rsi'],
+    rsiSma: ['setting-color-rsi-sma', 'color-rsi-sma'],
+    avwap: ['setting-color-avwap', 'color-avwap'],
+    crosshair: ['setting-color-crosshair', null],
+    closeLine: ['setting-color-close-line', null],
+    viBs: ['setting-color-vi-bs', null],
+    viPp: ['setting-color-vi-pp', null],
+    viPv: ['setting-color-vi-pv', null],
+    viDv: ['setting-color-vi-dv', null],
+    viSup: ['setting-color-vi-sup', null],
+    viSdn: ['setting-color-vi-sdn', null],
+    volIntelMa: ['setting-color-vi-volma', null]
+  };
+  Object.entries(colorMap).forEach(([k, ids]) => {
+    const col = state.colors[k];
+    if (col) {
+      ids.forEach(id => {
+        if (!id) return;
+        const input = document.getElementById(id);
+        if (input) input.value = col;
+      });
+    }
+  });
+
+  // Apply Series Colors, Visibility & Line Widths
+  if (state.charts?.series) {
+    const s = state.charts.series;
+    if (s.candles) {
+      s.candles.applyOptions({
+        priceLineVisible: true,
+        priceLineColor: state.colors.closeLine || '#10b981',
+        priceLineWidth: Number(state.lineWidths.closeLine || 1),
+        priceLineStyle: 2,
+        lastValueVisible: true
+      });
+    }
+    if (s.ema10) s.ema10.applyOptions({ visible: Boolean(state.toggles.ema10), color: state.colors.ema10, lineWidth: Number(state.lineWidths.ema10 || 1.5) });
+    if (s.ema20) s.ema20.applyOptions({ visible: Boolean(state.toggles.ema20), color: state.colors.ema20, lineWidth: Number(state.lineWidths.ema20 || 1.5) });
+    if (s.ema50) s.ema50.applyOptions({ visible: Boolean(state.toggles.ema50), color: state.colors.ema50, lineWidth: Number(state.lineWidths.ema50 || 1.5) });
+    if (s.ema150) s.ema150.applyOptions({ visible: Boolean(state.toggles.ema150), color: state.colors.ema150, lineWidth: Number(state.lineWidths.ema150 || 2) });
+    if (s.ema200) s.ema200.applyOptions({ visible: Boolean(state.toggles.ema200), color: state.colors.ema200, lineWidth: Number(state.lineWidths.ema200 || 2) });
+    if (s.vwap) s.vwap.applyOptions({ visible: Boolean(state.toggles.vwap), color: state.colors.vwap, lineWidth: Number(state.lineWidths.vwap || 1.8) });
+    if (s.darvasTop) s.darvasTop.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasTop, lineWidth: Number(state.lineWidths.darvasTop || 2.5) });
+    if (s.darvasBottom) s.darvasBottom.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasBottom, lineWidth: Number(state.lineWidths.darvasBottom || 2.5) });
+    if (s.volAvg) s.volAvg.applyOptions({ visible: Boolean(state.toggles.volAvg), color: state.colors.volAvg, lineWidth: Number(state.lineWidths.volAvg || 1.5) });
+    if (s.rsi) s.rsi.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsi, lineWidth: Number(state.lineWidths.rsi || 2) });
+    if (s.rsiSma) s.rsiSma.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsiSma, lineWidth: Number(state.lineWidths.rsiSma || 1.5) });
+  }
+
+  const rsiCont = document.getElementById('tv_rsi_container');
+  const rsiResizer = document.getElementById('resizer-price-rsi');
+  const rsiBottomResizer = document.getElementById('resizer-rsi-bottom');
+  if (rsiCont) rsiCont.style.display = state.toggles.rsi ? '' : 'none';
+  if (rsiResizer) rsiResizer.style.display = state.toggles.rsi ? '' : 'none';
+  if (rsiBottomResizer) rsiBottomResizer.style.display = state.toggles.rsi ? '' : 'none';
+
+  const selectPivot = document.getElementById('select-pivot-type');
+  if (selectPivot && state.pivotType) selectPivot.value = state.pivotType;
+
+  renderPersistedDrawings();
+  renderVolumeIntelligence();
+  updateTimeScalesVisibility();
+  handleResize();
+  updatePivotLines();
 }
 
 function loadSavedIndicatorPreferences() {

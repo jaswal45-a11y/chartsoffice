@@ -736,7 +736,8 @@ function applyLineWidths(widths) {
     avwap: 'setting-width-avwap',
     pivots: 'setting-width-pivots',
     crosshair: 'setting-width-crosshair',
-    closeLine: 'setting-width-close-line'
+    closeLine: 'setting-width-close-line',
+    volIntelMa: 'setting-width-vol-avg'
   };
 
   Object.entries(widthSelectMap).forEach(([key, elementId]) => {
@@ -769,6 +770,7 @@ function applyLineWidths(widths) {
     if (s.volAvg) s.volAvg.applyOptions({ lineWidth: Number(w.volAvg || 1.5) });
     if (s.rsi) s.rsi.applyOptions({ lineWidth: Number(w.rsi || 2) });
     if (s.rsiSma) s.rsiSma.applyOptions({ lineWidth: Number(w.rsiSma || 1.5) });
+    if (s.volIntelMa) s.volIntelMa.applyOptions({ lineWidth: Number(w.volIntelMa || w.volAvg || 1.5) });
   }
 
   // Apply crosshair options
@@ -1518,10 +1520,13 @@ function saveIndicatorPreferences() {
     volIntelSettings: { ...state.volIntelSettings }
   };
 
-  localStorage.setItem('user_indicator_prefs', JSON.stringify(prefs));
-  localStorage.setItem('chart_theme', state.chartTheme || 'dark');
+  try {
+    localStorage.setItem('user_indicator_prefs', JSON.stringify(prefs));
+    localStorage.setItem('chart_theme', state.chartTheme || 'dark');
+  } catch (e) {}
 
-  if (state.user || state.isAdmin) {
+  const hasAuth = state.user || state.isAdmin || state.token || localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+  if (hasAuth) {
     if (savePrefsTimeout) clearTimeout(savePrefsTimeout);
     savePrefsTimeout = setTimeout(async () => {
       try {
@@ -1536,7 +1541,7 @@ function saveIndicatorPreferences() {
       } catch (e) {
         console.warn('Failed to save indicator preferences to server:', e);
       }
-    }, 500);
+    }, 400);
   }
 }
 
@@ -1546,7 +1551,7 @@ function applyLoadedIndicatorPreferences(prefs) {
     state.volOverlayMode = prefs.volOverlayMode;
   } else if (prefs.toggles) {
     if (prefs.toggles.volIntel) state.volOverlayMode = 'volintel';
-    else if (prefs.toggles.volume) state.volOverlayMode = 'simple';
+    else if (prefs.toggles.volume || prefs.toggles.vol) state.volOverlayMode = 'simple';
     else state.volOverlayMode = 'volintel';
   } else {
     state.volOverlayMode = 'volintel';
@@ -1558,6 +1563,9 @@ function applyLoadedIndicatorPreferences(prefs) {
   if (prefs.colors) {
     state.colors = { ...state.colors, ...prefs.colors };
   }
+  if (prefs.lineWidths) {
+    state.lineWidths = { ...state.lineWidths, ...prefs.lineWidths };
+  }
   if (prefs.pivotType) {
     state.pivotType = prefs.pivotType;
     if (el.selectPivotType) el.selectPivotType.value = prefs.pivotType;
@@ -1568,12 +1576,22 @@ function applyLoadedIndicatorPreferences(prefs) {
   if (prefs.customThemeColors) {
     state.customThemeColors = { ...state.customThemeColors, ...prefs.customThemeColors };
   }
-  if (prefs.lineWidths) {
-    state.lineWidths = { ...state.lineWidths, ...prefs.lineWidths };
-  }
   if (prefs.volIntelSettings) {
     state.volIntelSettings = { ...state.volIntelSettings, ...prefs.volIntelSettings };
   }
+
+  try {
+    localStorage.setItem('user_indicator_prefs', JSON.stringify({
+      volOverlayMode: state.volOverlayMode,
+      toggles: state.toggles,
+      colors: state.colors,
+      lineWidths: state.lineWidths,
+      pivotType: state.pivotType,
+      chartTheme: state.chartTheme,
+      customThemeColors: state.customThemeColors,
+      volIntelSettings: state.volIntelSettings
+    }));
+  } catch (e) {}
 
   // Apply theme & line widths
   applyChartTheme(state.chartTheme);
@@ -1592,6 +1610,33 @@ function applyLoadedIndicatorPreferences(prefs) {
   if (el.colorRsi && state.colors.rsi) el.colorRsi.value = state.colors.rsi;
   if (el.colorRsiSma && state.colors.rsiSma) el.colorRsiSma.value = state.colors.rsiSma;
   if (el.colorAvwap && state.colors.avwap) el.colorAvwap.value = state.colors.avwap;
+
+  const colorSettingIds = {
+    ema10: 'setting-color-ema10',
+    ema20: 'setting-color-ema20',
+    ema50: 'setting-color-ema50',
+    ema150: 'setting-color-ema150',
+    ema200: 'setting-color-ema200',
+    vwap: 'setting-color-vwap',
+    darvasTop: 'setting-color-darvas-top',
+    darvasBottom: 'setting-color-darvas-bottom',
+    volAvg: 'setting-color-vol-avg',
+    rsi: 'setting-color-rsi',
+    rsiSma: 'setting-color-rsi-sma',
+    avwap: 'setting-color-avwap',
+    crosshair: 'setting-color-crosshair',
+    closeLine: 'setting-color-close-line',
+    viBs: 'setting-color-vi-bs',
+    viPp: 'setting-color-vi-pp',
+    viPv: 'setting-color-vi-pv',
+    viDv: 'setting-color-vi-dv',
+    viSup: 'setting-color-vi-sup',
+    viSdn: 'setting-color-vi-sdn'
+  };
+  Object.entries(colorSettingIds).forEach(([k, cid]) => {
+    const inp = document.getElementById(cid);
+    if (inp && state.colors[k]) inp.value = state.colors[k];
+  });
 
   // Update Checkbox & Radio DOM states
   if (el.chkEma10) el.chkEma10.checked = Boolean(state.toggles.ema10);
@@ -1612,7 +1657,7 @@ function applyLoadedIndicatorPreferences(prefs) {
   const sel = document.getElementById('select-vol-mode');
   if (sel) sel.value = volMode;
 
-  // Apply Series Colors & Visibility
+  // Apply Series Colors, Visibility & Line Widths
   if (state.charts?.series) {
     if (state.charts.series.candles) {
       state.charts.series.candles.applyOptions({
@@ -1623,16 +1668,17 @@ function applyLoadedIndicatorPreferences(prefs) {
         lastValueVisible: true
       });
     }
-    state.charts.series.ema10?.applyOptions({ visible: Boolean(state.toggles.ema10), color: state.colors.ema10 });
-    state.charts.series.ema20?.applyOptions({ visible: Boolean(state.toggles.ema20), color: state.colors.ema20 });
-    state.charts.series.ema50?.applyOptions({ visible: Boolean(state.toggles.ema50), color: state.colors.ema50 });
-    state.charts.series.ema150?.applyOptions({ visible: Boolean(state.toggles.ema150), color: state.colors.ema150 });
-    state.charts.series.ema200?.applyOptions({ visible: Boolean(state.toggles.ema200), color: state.colors.ema200 });
-    state.charts.series.vwap?.applyOptions({ visible: Boolean(state.toggles.vwap), color: state.colors.vwap });
-    state.charts.series.darvasTop?.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasTop });
-    state.charts.series.darvasBottom?.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasBottom });
-    state.charts.series.rsi?.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsi });
-    state.charts.series.rsiSma?.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsiSma });
+    state.charts.series.ema10?.applyOptions({ visible: Boolean(state.toggles.ema10), color: state.colors.ema10, lineWidth: Number(state.lineWidths.ema10 || 1.5) });
+    state.charts.series.ema20?.applyOptions({ visible: Boolean(state.toggles.ema20), color: state.colors.ema20, lineWidth: Number(state.lineWidths.ema20 || 1.5) });
+    state.charts.series.ema50?.applyOptions({ visible: Boolean(state.toggles.ema50), color: state.colors.ema50, lineWidth: Number(state.lineWidths.ema50 || 1.5) });
+    state.charts.series.ema150?.applyOptions({ visible: Boolean(state.toggles.ema150), color: state.colors.ema150, lineWidth: Number(state.lineWidths.ema150 || 2) });
+    state.charts.series.ema200?.applyOptions({ visible: Boolean(state.toggles.ema200), color: state.colors.ema200, lineWidth: Number(state.lineWidths.ema200 || 2) });
+    state.charts.series.vwap?.applyOptions({ visible: Boolean(state.toggles.vwap), color: state.colors.vwap, lineWidth: Number(state.lineWidths.vwap || 1.8) });
+    state.charts.series.darvasTop?.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasTop, lineWidth: Number(state.lineWidths.darvasTop || 2.5) });
+    state.charts.series.darvasBottom?.applyOptions({ visible: Boolean(state.toggles.darvas), color: state.colors.darvasBottom, lineWidth: Number(state.lineWidths.darvasBottom || 2.5) });
+    state.charts.series.volAvg?.applyOptions({ visible: Boolean(state.toggles.volAvg), color: state.colors.volAvg, lineWidth: Number(state.lineWidths.volAvg || 1.5) });
+    state.charts.series.rsi?.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsi, lineWidth: Number(state.lineWidths.rsi || 2) });
+    state.charts.series.rsiSma?.applyOptions({ visible: Boolean(state.toggles.rsi), color: state.colors.rsiSma, lineWidth: Number(state.lineWidths.rsiSma || 1.5) });
   }
 
   renderPersistedDrawings();

