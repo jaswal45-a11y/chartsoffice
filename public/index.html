@@ -246,6 +246,10 @@
             <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
             <span>Dscan</span>
           </button>
+          <button id="tab-btn-ssrvol" onclick="switchSidebarTab('ssrvol')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Strong Start RVOL Dashboard">
+            <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+            <span>SS_RVOL</span>
+          </button>
           <button id="tab-btn-vcpscan" onclick="switchSidebarTab('vcpscan')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Minervini Volatility Contraction Pattern (VCP) Scanner">
             <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-400 shrink-0"></i>
             <span>VCPscan</span>
@@ -567,6 +571,120 @@
           <!-- Scanner Footer -->
           <div class="p-2.5 border-t border-dark-border bg-dark-card/50 text-[10px] text-slate-500 flex items-center justify-between font-mono">
             <span id="pricescan-footer-info">min(DarvasGreen, EMA10) ≤ Close ≤ max(DarvasGreen, EMA10)</span>
+            <span class="text-slate-400">Click row to load chart</span>
+          </div>
+        </div>
+
+        <!-- 3b. SS_RVOL SCANNER VIEW (Strong Start RVOL Dashboard) (Registered Users Only) -->
+        <div id="sidebar-ssrvol-view" class="hidden flex-col flex-1">
+          <!-- Ultra-Compact Minimalist Toolbar (< 45px Height) -->
+          <div class="px-3 py-2 border-b border-dark-border bg-dark-card/80 flex items-center justify-between gap-2 flex-wrap text-xs">
+            
+            <!-- Left: Lookback Input + Format Toggle + SS Filter Pill -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <!-- Lookback Stepper / Input -->
+              <div class="flex items-center gap-1 bg-dark-bg px-2 py-0.5 border border-dark-border rounded-lg shadow-sm" title="Avg Volume Lookback Days (1-100)">
+                <span class="text-[10px] font-bold text-amber-400">Lkp:</span>
+                <input type="number" id="input-ssrvol-lookback" min="1" max="100" value="20" class="w-9 text-[11px] font-bold font-mono bg-transparent text-amber-300 text-center focus:outline-none focus:text-white border-0 p-0" title="Custom Volume Lookback Days (1 to 100)">
+                <span class="text-[10px] font-mono text-slate-500">D</span>
+              </div>
+
+              <!-- Format Toggle: Ratio (1.45x) vs Percent (145%) -->
+              <button type="button" id="btn-ssrvol-format-toggle" class="px-2 py-1 rounded-md text-[11px] font-bold font-mono bg-dark-bg text-slate-300 hover:text-white border border-dark-border cursor-pointer transition-all shadow-sm" title="Toggle RVOL Display (Ratio vs Percent)">
+                <span id="ssrvol-format-label">%</span>
+              </button>
+
+              <!-- Strong Start Only Filter Pill -->
+              <label class="flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[11px] font-bold cursor-pointer select-none transition-all shadow-sm" title="Filter to show ONLY Strong Start (★ SS) Stocks">
+                <input type="checkbox" id="chk-ssrvol-ss-only" class="rounded border-amber-600 text-amber-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                <span>★ SS</span>
+              </label>
+            </div>
+
+            <!-- Middle: Scope Dropdown -->
+            <div class="flex items-center gap-1.5 flex-1 min-w-[130px] max-w-[190px]">
+              <select id="select-ssrvol-scope" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                <option value="current">⚡ Current Screener</option>
+                <option value="fno">🎯 F&O Stocks (~200)</option>
+                <option value="large">🏢 Large Cap (Top 100)</option>
+                <option value="mid">📈 Mid Cap (150)</option>
+                <option value="small">🚀 Small Cap (250)</option>
+                <option value="micro">🔬 Micro Cap</option>
+                <option value="midsmall400">🌐 MidSmall400 (400)</option>
+                <option value="universe">🌍 Full Universe (1.1k)</option>
+              </select>
+            </div>
+
+            <!-- Market Cap 1k & 2k Toggles -->
+            <div class="flex items-center gap-1.5 px-2 py-1 bg-dark-bg border border-dark-border rounded-lg shrink-0">
+              <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-ssrvol-mc1000" title="Market Cap > ₹1000 Cr">
+                <input type="checkbox" id="chk-ssrvol-mc1000" class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">1k</span>
+              </label>
+              <span class="text-slate-600 text-[10px] select-none">|</span>
+              <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-ssrvol-mc2000" title="Market Cap > ₹2000 Cr">
+                <input type="checkbox" id="chk-ssrvol-mc2000" class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
+              </label>
+            </div>
+
+            <!-- Right: Run Button, Copy Button & Count Badge -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button id="btn-run-ssrvol" class="px-3 py-1 text-xs font-bold bg-amber-500 hover:bg-amber-400 active:scale-95 text-black rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer font-sans">
+                <i data-lucide="play" class="w-3 h-3 fill-current"></i>
+                <span>RUN</span>
+              </button>
+              <button id="btn-copy-ssrvol-stocks" title="Copy Stock Symbols (Ready for TradingView / Dhan / Chartink)" class="p-1.5 rounded-lg bg-dark-bg border border-dark-border text-slate-400 hover:text-amber-400 hover:bg-dark-accent transition-colors cursor-pointer flex items-center justify-center">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+              <span id="ssrvol-results-count-badge" class="px-1.5 py-0.5 rounded-md bg-dark-bg text-amber-400 font-mono text-[10px] font-bold border border-dark-border" title="Matching Stocks Count">
+                0
+              </span>
+            </div>
+
+          </div>
+
+          <!-- SS_RVOL Results Table Container -->
+          <div class="flex-1 overflow-y-auto max-h-[590px] divide-y divide-dark-border/50" id="ssrvol-table-container">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-dark-bg/80 sticky top-0 z-10 text-slate-400 font-semibold uppercase tracking-wider text-[10px] border-b border-dark-border">
+                <tr>
+                  <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="symbol" title="Sort by Stock Symbol">
+                    <div class="flex items-center gap-1">Stock <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="close" title="Sort by Last Traded Price">
+                    <div class="flex items-center justify-end gap-1">LTP (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="changePercent" title="Sort by 1-Day % Change">
+                    <div class="flex items-center justify-end gap-1">1D % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-amber-300 text-amber-400 font-bold ssrvol-sort-th select-none" data-ssort="rvol" title="Sort by Relative Volume">
+                    <div class="flex items-center justify-end gap-1">RVOL <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="avgVolume" title="Sort by Average Volume">
+                    <div class="flex items-center justify-end gap-1"><span id="ssrvol-dynamic-avgvol-col">Avg Vol (20D)</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  </th>
+                  <th class="py-2.5 px-2 text-center cursor-pointer hover:text-amber-300 text-amber-400 font-bold ssrvol-sort-th select-none" data-ssort="isStrongStart" title="Sort by Strong Start Status">
+                    <div class="flex items-center justify-center gap-1">SS (★) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="ssrvol-tbody" class="divide-y divide-dark-border/30">
+                <tr>
+                  <td colspan="6" class="p-12 text-center text-slate-500">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                      <i data-lucide="flame" class="w-8 h-8 text-slate-600"></i>
+                      <p class="text-xs text-slate-400">Select Scope and click <span class="text-amber-400 font-semibold">RUN</span> to scan Strong Start RVOL.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Scanner Footer -->
+          <div class="p-2.5 border-t border-dark-border bg-dark-card/50 text-[10px] text-slate-500 flex items-center justify-between font-mono">
+            <span id="ssrvol-footer-info">Open > PrevClose &amp; DayLow ≥ PrevClose × 0.995 • Top 50% RVOL Highlight</span>
             <span class="text-slate-400">Click row to load chart</span>
           </div>
         </div>

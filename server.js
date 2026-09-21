@@ -3706,6 +3706,183 @@ async function scanVcpPatterns(stageFilter = 'all', scope = 'current', stockList
   };
 }
 
+// =============================================================
+// STRONG START RVOL DASHBOARD (SS_RVOL) SCANNER ENGINE
+// =============================================================
+
+async function scanSsRvol(scope = 'current', stockList = [], lookback = 20, interval = '1d', ssOnly = false) {
+  const scanInterval = (interval === '1wk' || interval === 'W' || interval === 'weekly') ? '1wk' : '1d';
+  const lookbackNum = Math.max(1, Math.min(100, parseInt(lookback, 10) || 20));
+  const scanRange = lookbackNum > 40 ? '1y' : (lookbackNum > 15 ? '6mo' : '3mo');
+  const universe = getLocalStockUniverse();
+  const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+
+  // Fetch Market Cap > 1000 Cr & > 2000 Cr sets
+  const { mc1000Set, mc2000Set } = await getMarketCapSets();
+
+  let targetSymbols = [];
+
+  switch (scope) {
+    case 'current':
+    case 'watchlist':
+      if (Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
+      } else {
+        targetSymbols = sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      }
+      break;
+
+    case 'large':
+    case 'large_cap':
+      targetSymbols = sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'mid':
+    case 'mid_cap':
+      targetSymbols = sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'small':
+    case 'small_cap':
+      targetSymbols = sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'micro':
+    case 'micro_cap':
+      targetSymbols = sortedUniverse.slice(500, 700).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'midsmall400':
+    case 'midsmall_400':
+      targetSymbols = sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'fno':
+      targetSymbols = sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      break;
+
+    case 'universe':
+    case 'all':
+    default:
+      if (String(scope).startsWith('wl_') && Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
+      } else {
+        targetSymbols = sortedUniverse.slice(0, 300).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+      }
+      break;
+  }
+
+  // Deduplicate
+  const uniqueList = [];
+  const seen = new Set();
+  for (const item of targetSymbols) {
+    const s = (item.symbol || '').toUpperCase().trim();
+    if (s && !seen.has(s)) {
+      seen.add(s);
+      uniqueList.push({ symbol: s, name: item.name || s, exchange: item.exchange || 'NSE', marketCap: item.marketCap, mcOver1000Cr: item.mcOver1000Cr, mcOver2000Cr: item.mcOver2000Cr });
+    }
+  }
+
+  const matches = [];
+  const concurrency = 15;
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < uniqueList.length) {
+      const idx = cursor++;
+      const item = uniqueList[idx];
+      try {
+        const hist = await fetchStockHistory(item.symbol, scanRange, scanInterval);
+        if (hist && hist.candles && hist.candles.length >= 2) {
+          const candles = hist.candles;
+          const n = candles.length;
+          const currentCandle = candles[n - 1];
+          const prevCandle = candles[n - 2];
+
+          const close = Number(hist.ltp || currentCandle.close || 0);
+          const open = Number(currentCandle.open || 0);
+          const high = Number(currentCandle.high || 0);
+          const low = Number(currentCandle.low || 0);
+          const volume = Number(hist.volume || currentCandle.volume || 0);
+
+          const prevClose = Number(prevCandle.close || 0);
+          const changePercent = prevClose > 0 ? Number((((close - prevClose) / prevClose) * 100).toFixed(2)) : (hist.changePercent || 0);
+
+          // Strong Start Rule: open > prevClose && low >= prevClose * 0.995
+          const isStrongStart = Boolean(open > prevClose && low >= (prevClose * 0.995));
+
+          if (ssOnly && !isStrongStart) {
+            continue;
+          }
+
+          // Calculate average volume over lookbackNum prior days
+          const lookbackStart = Math.max(0, n - 1 - lookbackNum);
+          const priorBars = candles.slice(lookbackStart, n - 1);
+          const volSum = priorBars.reduce((sum, c) => sum + (Number(c.volume) || 0), 0);
+          const avgVolume = priorBars.length > 0 ? Math.round(volSum / priorBars.length) : (volume || 1);
+
+          // Relative Volume (RVOL)
+          const rvol = avgVolume > 0 ? Number((volume / avgVolume).toFixed(2)) : 1.0;
+          const rvolPercent = Number((rvol * 100).toFixed(0));
+
+          const symUpper = item.symbol.toUpperCase();
+          const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000);
+          const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000);
+
+          matches.push({
+            symbol: item.symbol,
+            name: item.name,
+            exchange: item.exchange || 'NSE',
+            close: Number(close.toFixed(2)),
+            ltp: Number(close.toFixed(2)),
+            open: Number(open.toFixed(2)),
+            high: Number(high.toFixed(2)),
+            low: Number(low.toFixed(2)),
+            prevClose: Number(prevClose.toFixed(2)),
+            changePercent,
+            volume,
+            avgVolume,
+            rvol,
+            rvolRatio: rvol,
+            rvolPercent,
+            isStrongStart,
+            ssFlag: isStrongStart,
+            timeframe: scanInterval,
+            lookback: lookbackNum,
+            mcOver1000Cr: Boolean(isOver1000),
+            mcOver2000Cr: Boolean(isOver2000)
+          });
+        }
+      } catch (e) {}
+    }
+  }
+
+  const workers = [];
+  for (let i = 0; i < Math.min(concurrency, uniqueList.length); i++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+
+  // Default sorting: Strong Starts first, then highest RVOL descending
+  matches.sort((a, b) => {
+    if (a.isStrongStart !== b.isStrongStart) {
+      return a.isStrongStart ? -1 : 1;
+    }
+    return b.rvol - a.rvol;
+  });
+
+  return {
+    success: true,
+    totalScanned: uniqueList.length,
+    matchesCount: matches.length,
+    count: matches.length,
+    lookback: lookbackNum,
+    interval: scanInterval,
+    scope,
+    results: matches
+  };
+}
+
 // Parse request JSON body helper
 function parseJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -6392,6 +6569,32 @@ const server = http.createServer(async (req, res) => {
           return sendJson(res, 200, scanResults);
         } catch (scanErr) {
           console.error('Error during VCP pattern scan:', scanErr.message);
+          return sendJson(res, 500, { success: false, error: scanErr.message });
+        }
+      }
+
+      // 8a3. POST /api/scan/ss-rvol - Strong Start RVOL Dashboard Scanner (Registered Users Only)
+      if (pathname === '/api/scan/ss-rvol' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in or register to access the Strong Start RVOL Dashboard.' });
+        }
+
+        try {
+          const body = await parseJsonBody(req);
+          let { scope = 'current', stockList = [], lookback = 20, interval = '1d', timeframe = '1d', ssOnly = false } = body;
+          const selectedInterval = interval || timeframe || '1d';
+          if (String(scope).startsWith('wl_') && (!Array.isArray(stockList) || stockList.length === 0)) {
+            const userWls = getUserWatchlists(authUser);
+            const targetWl = userWls.find(w => w.id === scope);
+            if (targetWl && Array.isArray(targetWl.stocks)) {
+              stockList = targetWl.stocks.map(s => s.symbol);
+            }
+          }
+          const scanResults = await scanSsRvol(scope, stockList, lookback, selectedInterval, Boolean(ssOnly));
+          return sendJson(res, 200, scanResults);
+        } catch (scanErr) {
+          console.error('Error during Strong Start RVOL scan:', scanErr.message);
           return sendJson(res, 500, { success: false, error: scanErr.message });
         }
       }

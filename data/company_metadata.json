@@ -35822,5 +35822,180 @@
     "last_updated": "Sep 2026",
     "ai_generated": false,
     "data_version": "2.0"
+  },
+  {
+    "ticker": "SYNGENE",
+    "exchange": "NSE",
+    "company_name": "Syngene International Limited",
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "description": "Syngene International Limited, a contract research and manufacturing company, provides drug discovery and development services in India, the United States of America, Europe, and internationally. The company provides discovery chemistry services, such as synthetic and medicinal chemistry, library and peptide synthesis,...",
+    "business_type": "Diagnostics & Research",
+    "products": [
+      "Diagnostics & Research",
+      "Healthcare Solutions"
+    ],
+    "themes": [
+      "Healthcare",
+      "Diagnostics & Research",
+      "syngeneintl.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Diagnostics & Research",
+    "website": "https://www.syngeneintl.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "WPIL",
+    "exchange": "NSE",
+    "company_name": "WPIL Limited",
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "description": "WPIL Limited, together with its subsidiaries, designs, develops, manufactures, erects, commissions, and services pumps and pumping systems in India and internationally. It offers mixed and axial flow, as well as turbine; split case, multistage, end suction, and non clog; deepwell, drainage, sewage, and dewatering; conc...",
+    "business_type": "Specialty Industrial Machinery",
+    "products": [
+      "Specialty Industrial Machinery",
+      "Industrials Solutions"
+    ],
+    "themes": [
+      "Industrials",
+      "Specialty Industrial Machinery",
+      "wpil.co.in"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Specialty Industrial Machinery",
+    "website": "https://www.wpil.co.in",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "MEDIASSIST",
+    "exchange": "NSE",
+    "company_name": "Medi Assist Healthcare Services Limited",
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "description": "Medi Assist Healthcare Services Limited, together with its subsidiaries, provides third-party administration services for health insurance claims in India and internationally. The company offers MAtrix, a claims administration platform; MAven, a fraud, waste, and abuse prevention platform; MAven IDP, an intelligent doc...",
+    "business_type": "Healthcare Plans",
+    "products": [
+      "Healthcare Plans",
+      "Healthcare Solutions"
+    ],
+    "themes": [
+      "Healthcare",
+      "Healthcare Plans",
+      "mediassist.in"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Healthcare Plans",
+    "website": "https://www.mediassist.in",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "ISGEC",
+    "exchange": "NSE",
+    "company_name": "Isgec Heavy Engineering Limited",
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "description": "Isgec Heavy Engineering Limited provides engineering solutions worldwide. It operates in two segments, Manufacturing of Machinery & Equipment; and Industrial Projects. The company provides process plant equipment, including reactors, high pressure vessels, shell and tube heat exchangers, columns and towers, and high pr...",
+    "business_type": "Specialty Industrial Machinery",
+    "products": [
+      "Specialty Industrial Machinery",
+      "Industrials Solutions"
+    ],
+    "themes": [
+      "Industrials",
+      "Specialty Industrial Machinery",
+      "isgec.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Specialty Industrial Machinery",
+    "website": "https://www.isgec.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "GRINDWELL",
+    "exchange": "NSE",
+    "company_name": "Grindwell Norton Limited",
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "description": "Grindwell Norton Limited provides abrasives, life sciences, performance plastics, and ceramics solutions in India and internationally. The company operates through the Abrasives, Ceramics & Plastics, Digital Services, and Others segments.",
+    "business_type": "Building Products & Equipment",
+    "products": [
+      "Building Products & Equipment",
+      "Industrials Solutions"
+    ],
+    "themes": [
+      "Industrials",
+      "Building Products & Equipment",
+      "grindwellnorton.co.in"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Building Products & Equipment",
+    "website": "https://www.grindwellnorton.co.in",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "REPCOHOME",
+    "exchange": "NSE",
+    "company_name": "Repco Home Finance Limited",
+    "sector": "Financial Services",
+    "industry": "Mortgage Finance",
+    "description": "Repco Home Finance Limited operates as a non-banking financial and housing finance company in India. It offers housing finance to purchase, construction, repairs, and renovations. The company was incorporated in 2000 and is headquartered in Chennai, India.",
+    "business_type": "Mortgage Finance",
+    "products": [
+      "Mortgage Finance",
+      "Financial Services Solutions"
+    ],
+    "themes": [
+      "Financial Services",
+      "Mortgage Finance",
+      "repcohome.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Mortgage Finance",
+    "website": "https://www.repcohome.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "ASHIANA",
+    "exchange": "NSE",
+    "company_name": "Ashiana Housing Limited",
+    "sector": "Real Estate",
+    "industry": "Real Estate - Development",
+    "description": "Ashiana Housing Limited, through its subsidiaries, engages in the real estate development business in India. The company develops senior living, kid centric, premium, and elite homes. It also engages in the identification and acquisition of land; planning, designing, construction, and marketing of its projects; and provision of facilities management services, including identification of third-party lessees/buyers.",
+    "business_type": "Real Estate - Development",
+    "products": [
+      "Real Estate - Development",
+      "Real Estate Solutions"
+    ],
+    "themes": [
+      "Real Estate",
+      "Real Estate - Development",
+      "ashianahousing.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Real Estate - Development",
+    "website": "https://www.ashianahousing.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
   }
 ]

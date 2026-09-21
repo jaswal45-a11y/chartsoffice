@@ -68,6 +68,15 @@ const state = {
   pricescanSortAscending: true,
   pricescanFilterMc1000: false,
   pricescanFilterMc2000: false,
+  // SS_RVOL Scanner State
+  ssrvolResults: [],
+  ssrvolSortField: 'rvol',
+  ssrvolSortAscending: false,
+  ssrvolFormat: 'percent', // 'percent' (145%) or 'ratio' (1.45x)
+  ssrvolFilterMc1000: false,
+  ssrvolFilterMc2000: false,
+  ssrvolFilterSsOnly: false,
+  ssrvolLookback: 20,
   // VCP Scanner State
   vcpscanResults: [],
   vcpscanSortField: 'tightnessPercent',
@@ -274,10 +283,12 @@ const el = {
   tabBtnScreeners: document.getElementById('tab-btn-screeners'),
   tabBtnWatchlists: document.getElementById('tab-btn-watchlists'),
   tabBtnPricescan: document.getElementById('tab-btn-pricescan'),
+  tabBtnSsrvol: document.getElementById('tab-btn-ssrvol'),
   tabBtnVcpscan: document.getElementById('tab-btn-vcpscan'),
   sidebarScreenersView: document.getElementById('sidebar-screeners-view'),
   sidebarWatchlistsView: document.getElementById('sidebar-watchlists-view'),
   sidebarPricescanView: document.getElementById('sidebar-pricescan-view'),
+  sidebarSsrvolView: document.getElementById('sidebar-ssrvol-view'),
   sidebarVcpscanView: document.getElementById('sidebar-vcpscan-view'),
   selectActiveWatchlist: document.getElementById('select-active-watchlist'),
   btnRenameWatchlist: document.getElementById('btn-rename-watchlist'),
@@ -311,6 +322,21 @@ const el = {
   pricescanDynamicEmaCol: document.getElementById('pricescan-dynamic-ema-col'),
   pricescanDynamicDarvasCol: document.getElementById('pricescan-dynamic-darvas-col'),
   btnOpenAddModalDeck: document.getElementById('btn-open-add-modal-deck'),
+
+  // SS_RVOL Scanner Elements
+  btnRunSsrvol: document.getElementById('btn-run-ssrvol'),
+  btnCopySsrvolStocks: document.getElementById('btn-copy-ssrvol-stocks'),
+  inputSsrvolLookback: document.getElementById('input-ssrvol-lookback'),
+  btnSsrvolFormatToggle: document.getElementById('btn-ssrvol-format-toggle'),
+  ssrvolFormatLabel: document.getElementById('ssrvol-format-label'),
+  chkSsrvolSsOnly: document.getElementById('chk-ssrvol-ss-only'),
+  selectSsrvolScope: document.getElementById('select-ssrvol-scope'),
+  chkSsrvolMc1000: document.getElementById('chk-ssrvol-mc1000'),
+  chkSsrvolMc2000: document.getElementById('chk-ssrvol-mc2000'),
+  ssrvolResultsCountBadge: document.getElementById('ssrvol-results-count-badge'),
+  ssrvolTbody: document.getElementById('ssrvol-tbody'),
+  ssrvolDynamicAvgvolCol: document.getElementById('ssrvol-dynamic-avgvol-col'),
+  ssrvolFooterInfo: document.getElementById('ssrvol-footer-info'),
 
   // VCP Scanner Elements
   btnRunVcpscan: document.getElementById('btn-run-vcpscan'),
@@ -2038,14 +2064,14 @@ function switchSidebarTab(tab) {
   state.activeSidebarTab = tab;
 
   // Reset tab button states
-  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan, el.tabBtnVcpscan].forEach(btn => {
+  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan, el.tabBtnSsrvol, el.tabBtnVcpscan].forEach(btn => {
     if (!btn) return;
     btn.classList.remove('bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'bg-purple-600', 'text-white', 'text-black', 'shadow-sm');
     btn.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
   });
 
   // Reset views
-  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView, el.sidebarVcpscanView].forEach(v => {
+  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView, el.sidebarSsrvolView, el.sidebarVcpscanView].forEach(v => {
     if (!v) return;
     v.classList.add('hidden');
     v.classList.remove('flex');
@@ -2082,6 +2108,19 @@ function switchSidebarTab(tab) {
     el.sidebarPricescanView?.classList.add('flex');
 
     populatePricescanScopeOptions();
+  } else if (tab === 'ssrvol') {
+    if (!state.user) {
+      showToast('Please log in or register to access Strong Start RVOL Dashboard.', 'info');
+      openAuthModal('login');
+      return;
+    }
+
+    el.tabBtnSsrvol?.classList.add('bg-amber-500', 'text-black', 'shadow-sm');
+    el.tabBtnSsrvol?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+    el.sidebarSsrvolView?.classList.remove('hidden');
+    el.sidebarSsrvolView?.classList.add('flex');
+
+    populateSsrvolScopeOptions();
   } else if (tab === 'vcpscan') {
     if (!state.user) {
       showToast('Please log in or register to access the VCP Scanner.', 'info');
@@ -2153,8 +2192,9 @@ function renderWatchlistSelector() {
     }
   }
 
-  // Synchronize DarvasScan & VCP scan scope dropdowns with active watchlists
+  // Synchronize DarvasScan, SS_RVOL & VCP scan scope dropdowns with active watchlists
   populatePricescanScopeOptions();
+  populateSsrvolScopeOptions();
   populateVcpscanScopeOptions();
 }
 
@@ -2899,6 +2939,20 @@ function setupEventListeners() {
     });
   });
 
+  // Table Column Sorting (SS_RVOL Table)
+  document.querySelectorAll('th[data-ssort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.ssort;
+      if (state.ssrvolSortField === field) {
+        state.ssrvolSortAscending = !state.ssrvolSortAscending;
+      } else {
+        state.ssrvolSortField = field;
+        state.ssrvolSortAscending = (field === 'symbol');
+      }
+      renderSsrvolTable();
+    });
+  });
+
   // Table Column Sorting (Watchlists Table)
   document.querySelectorAll('th[data-wlsort]').forEach(th => {
     th.addEventListener('click', () => {
@@ -3146,16 +3200,77 @@ function setupEventListeners() {
     });
   }
 
-  // Keyboard Enter Shortcut to run scan when DarvasScan view is open
+  // Keyboard Enter Shortcut to run scan when Scanner view is open
   document.addEventListener('keydown', (e) => {
     if (state.activeSidebarTab === 'pricescan' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
       e.preventDefault();
       runPricePositionScan();
+    } else if (state.activeSidebarTab === 'ssrvol' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
+      e.preventDefault();
+      runSsRvolScan();
     } else if (state.activeSidebarTab === 'vcpscan' && e.key === 'Enter' && !e.target.matches('input, textarea, select')) {
       e.preventDefault();
       runVcpScan();
     }
   });
+
+  // SS_RVOL Scanner Event Listeners
+  if (el.btnRunSsrvol) {
+    el.btnRunSsrvol.addEventListener('click', runSsRvolScan);
+  }
+  if (el.btnCopySsrvolStocks) {
+    el.btnCopySsrvolStocks.addEventListener('click', handleCopySsrvolStocks);
+  }
+  if (el.btnSsrvolFormatToggle) {
+    el.btnSsrvolFormatToggle.addEventListener('click', () => {
+      state.ssrvolFormat = state.ssrvolFormat === 'percent' ? 'ratio' : 'percent';
+      if (el.ssrvolFormatLabel) {
+        el.ssrvolFormatLabel.textContent = state.ssrvolFormat === 'percent' ? '%' : 'x';
+      }
+      renderSsrvolTable();
+    });
+  }
+  if (el.chkSsrvolSsOnly) {
+    el.chkSsrvolSsOnly.addEventListener('change', e => {
+      state.ssrvolFilterSsOnly = e.target.checked;
+      renderSsrvolTable();
+    });
+  }
+  if (el.chkSsrvolMc1000) {
+    el.chkSsrvolMc1000.addEventListener('change', e => {
+      state.ssrvolFilterMc1000 = e.target.checked;
+      if (state.ssrvolFilterMc1000 && state.ssrvolFilterMc2000) {
+        if (el.chkSsrvolMc2000) el.chkSsrvolMc2000.checked = false;
+        state.ssrvolFilterMc2000 = false;
+      }
+      renderSsrvolTable();
+    });
+  }
+  if (el.chkSsrvolMc2000) {
+    el.chkSsrvolMc2000.addEventListener('change', e => {
+      state.ssrvolFilterMc2000 = e.target.checked;
+      if (state.ssrvolFilterMc2000 && state.ssrvolFilterMc1000) {
+        if (el.chkSsrvolMc1000) el.chkSsrvolMc1000.checked = false;
+        state.ssrvolFilterMc1000 = false;
+      }
+      renderSsrvolTable();
+    });
+  }
+  if (el.inputSsrvolLookback) {
+    el.inputSsrvolLookback.addEventListener('change', e => {
+      let val = parseInt(e.target.value, 10);
+      if (isNaN(val) || val < 1) val = 20;
+      if (val > 100) val = 100;
+      e.target.value = val;
+      state.ssrvolLookback = val;
+      if (el.ssrvolDynamicAvgvolCol) {
+        el.ssrvolDynamicAvgvolCol.textContent = `Avg Vol (${val}D)`;
+      }
+      if (state.ssrvolResults && state.ssrvolResults.length > 0) {
+        runSsRvolScan();
+      }
+    });
+  }
 
   // VCP Scanner Event Listeners
   if (el.btnRunVcpscan) {
@@ -6080,6 +6195,363 @@ function renderPricescanTable() {
         }
       }
     });
+  });
+}
+
+// -------------------------------------------------------------
+// Strong Start RVOL Dashboard Controller (SS_RVOL) (Registered Users Only)
+// -------------------------------------------------------------
+
+function populateSsrvolScopeOptions() {
+  if (!el.selectSsrvolScope) return;
+  const currentVal = el.selectSsrvolScope.value || 'current';
+
+  let html = `<optgroup label="Active Workspace">`;
+  const screenerStockCount = (state.currentStocks || []).length;
+  html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
+
+  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
+    state.watchlists.forEach(w => {
+      html += `<option value="${w.id}">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</option>`;
+    });
+  }
+
+  html += `
+    </optgroup>
+    <optgroup label="Market Indices & Universes">
+      <option value="fno">🎯 F&O Stocks (~200)</option>
+      <option value="large">🏢 Large Cap (Top 100)</option>
+      <option value="mid">📈 Mid Cap (150)</option>
+      <option value="small">🚀 Small Cap (250)</option>
+      <option value="micro">🔬 Micro Cap</option>
+      <option value="midsmall400">🌐 MidSmall400 (400)</option>
+      <option value="universe">🌍 Full Universe (1.1k)</option>
+    </optgroup>
+  `;
+
+  el.selectSsrvolScope.innerHTML = html;
+
+  const exists = Array.from(el.selectSsrvolScope.options).some(o => o.value === currentVal);
+  if (exists) {
+    el.selectSsrvolScope.value = currentVal;
+  }
+}
+
+async function runSsRvolScan() {
+  const lookback = parseInt(el.inputSsrvolLookback?.value || state.ssrvolLookback || '20', 10);
+  const scope = el.selectSsrvolScope?.value || 'current';
+  const ssOnly = Boolean(el.chkSsrvolSsOnly?.checked || state.ssrvolFilterSsOnly);
+  const btn = el.btnRunSsrvol;
+  const tbody = el.ssrvolTbody;
+  const countBadge = el.ssrvolResultsCountBadge;
+
+  // Update dynamic column header
+  if (el.ssrvolDynamicAvgvolCol) {
+    el.ssrvolDynamicAvgvolCol.textContent = `Avg Vol (${lookback}D)`;
+  }
+
+  let stockList = [];
+  let scanScopeLabel = '';
+
+  if (scope === 'current') {
+    stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+    scanScopeLabel = `${stockList.length} Screener Stocks`;
+    if (stockList.length === 0) {
+      showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
+      return;
+    }
+  } else if (scope.startsWith('wl_') || scope === 'watchlist') {
+    const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
+    if (targetWl) {
+      stockList = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
+      scanScopeLabel = `Watchlist "${targetWl.name}" (${stockList.length} stocks)`;
+    } else {
+      scanScopeLabel = 'Watchlist Stocks';
+    }
+    if (stockList.length === 0) {
+      showToast('Selected watchlist is empty. Add stocks to this watchlist first.', 'warning');
+      return;
+    }
+  } else if (scope === 'universe') {
+    scanScopeLabel = 'Universe Stocks';
+  } else {
+    scanScopeLabel = `${scope.toUpperCase()} Stocks`;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Scanning...</span>`;
+    lucide.createIcons();
+  }
+
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="p-8 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-3">
+            <i data-lucide="loader-2" class="w-8 h-8 text-amber-400 animate-spin"></i>
+            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel} for Strong Start & RVOL...</p>
+            <p class="text-[11px] text-slate-500">Checking Open > PrevClose, DayLow ≥ PrevClose × 0.995, and ${lookback}D Volume SMA</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/scan/ss-rvol', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        lookback,
+        scope,
+        stockList,
+        ssOnly
+      })
+    });
+
+    if (res.status === 401) {
+      state.ssrvolResults = [];
+      showToast('Please log in or register to run Strong Start RVOL Dashboard.', 'warning');
+      openAuthModal('login');
+      return;
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Scan failed');
+    }
+
+    const matches = data.results || [];
+    state.ssrvolResults = matches;
+
+    if (countBadge) countBadge.textContent = matches.length;
+
+    renderSsrvolTable();
+    showToast(`SS_RVOL scan complete: Found ${matches.length} stocks (${lookback}D Lookback).`, 'success');
+  } catch (err) {
+    console.error('SS_RVOL scan error:', err);
+    state.ssrvolResults = [];
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="p-6 text-center text-rose-400">
+            <p class="text-xs font-semibold">Error running SS_RVOL scan: ${err.message}</p>
+          </td>
+        </tr>
+      `;
+    }
+    showToast(`SS_RVOL scan error: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-70', 'cursor-not-allowed');
+      btn.innerHTML = `<i data-lucide="play" class="w-3 h-3 fill-current"></i><span>RUN</span>`;
+      lucide.createIcons();
+    }
+  }
+}
+
+function renderSsrvolTable() {
+  const tbody = el.ssrvolTbody;
+  if (!tbody) return;
+
+  const lookback = parseInt(el.inputSsrvolLookback?.value || state.ssrvolLookback || '20', 10);
+  if (el.ssrvolDynamicAvgvolCol) {
+    el.ssrvolDynamicAvgvolCol.textContent = `Avg Vol (${lookback}D)`;
+  }
+
+  const matches = [...(state.ssrvolResults || [])].filter(stock => {
+    if (state.ssrvolFilterSsOnly && !stock.isStrongStart) {
+      return false;
+    }
+    if (state.ssrvolFilterMc2000 && stock.mcOver2000Cr !== true) {
+      return false;
+    }
+    if (state.ssrvolFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
+      return false;
+    }
+    return true;
+  });
+
+  if (el.ssrvolResultsCountBadge) el.ssrvolResultsCountBadge.textContent = matches.length;
+
+  const sortField = state.ssrvolSortField || 'rvol';
+  const isAsc = state.ssrvolSortAscending;
+
+  document.querySelectorAll('th[data-ssort]').forEach(th => {
+    const isThisCol = th.dataset.ssort === sortField;
+    const icon = th.querySelector('svg, i');
+    if (isThisCol) {
+      th.classList.add('text-slate-100');
+      if (icon) {
+        icon.setAttribute('data-lucide', isAsc ? 'arrow-up' : 'arrow-down');
+      }
+    } else {
+      th.classList.remove('text-slate-100');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'arrow-up-down');
+      }
+    }
+  });
+
+  if (matches.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="p-8 text-center text-slate-500">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
+            <p class="text-xs text-slate-300">No stocks matched the SS_RVOL criteria.</p>
+            <p class="text-[11px] text-slate-500">Try adjusting Market Cap / SS filters or scanning a broader scope (e.g. F&O or Universe).</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    lucide.createIcons();
+    return;
+  }
+
+  // Sort matches
+  matches.sort((a, b) => {
+    let valA = a[sortField];
+    let valB = b[sortField];
+    if (sortField === 'close' || sortField === 'ltp') {
+      valA = (typeof a.close === 'number' && a.close > 0) ? a.close : (a.ltp || 0);
+      valB = (typeof b.close === 'number' && b.close > 0) ? b.close : (b.ltp || 0);
+    }
+    if (sortField === 'isStrongStart') {
+      valA = a.isStrongStart ? 1 : 0;
+      valB = b.isStrongStart ? 1 : 0;
+    }
+    if (typeof valA === 'string') {
+      return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return isAsc ? (valA - valB) : (valB - valA);
+  });
+
+  // Calculate 50% Top RVOL cutoff for PineScript gating highlight
+  const rvolSorted = [...matches].map(m => m.rvol).sort((a, b) => b - a);
+  const gateIdx = Math.floor(rvolSorted.length * 0.5);
+  const rvolGateThreshold = rvolSorted[gateIdx] !== undefined ? rvolSorted[gateIdx] : 1.0;
+
+  const showAsPercent = state.ssrvolFormat === 'percent';
+
+  tbody.innerHTML = matches.map((m, idx) => {
+    const ltpPrice = (typeof m.close === 'number' && m.close > 0) ? m.close : (m.ltp || 0);
+    const chgVal = typeof m.changePercent === 'number' ? m.changePercent : 0;
+
+    let changeBadge = 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+    if (chgVal >= 1.5) {
+      changeBadge = 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+    } else if (chgVal > 0) {
+      changeBadge = 'bg-emerald-500/10 text-emerald-300/90 border border-emerald-500/20';
+    } else if (chgVal <= -1.5) {
+      changeBadge = 'bg-rose-500/15 text-rose-400 border border-rose-500/30';
+    } else if (chgVal < 0) {
+      changeBadge = 'bg-rose-500/10 text-rose-300/90 border border-rose-500/20';
+    }
+
+    let mcBadgeHtml = '';
+    if (m.mcOver2000Cr === true) {
+      mcBadgeHtml = `<span class="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30" title="Market Cap > ₹2000 Cr">2k</span>`;
+    } else if (m.mcOver1000Cr === true) {
+      mcBadgeHtml = `<span class="px-1 py-0.2 rounded text-[9px] font-mono font-medium bg-slate-700/50 text-slate-300 border border-slate-600/40" title="Market Cap > ₹1000 Cr">1k</span>`;
+    }
+
+    // Strong Start Badge
+    const ssBadge = m.isStrongStart
+      ? `<span class="px-2 py-0.5 rounded-md font-bold font-mono text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center justify-center gap-1">
+          <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
+          <span>SS</span>
+        </span>`
+      : `<span class="text-slate-600 font-mono text-xs">—</span>`;
+
+    // RVOL display value & badge
+    const rvolFormatted = showAsPercent ? `${m.rvolPercent}%` : `${m.rvolRatio.toFixed(2)}x`;
+    const isHighRvol = m.rvol >= 1.20;
+    const rvolBadge = isHighRvol
+      ? `<span class="px-1.5 py-0.5 rounded font-mono font-bold text-xs bg-amber-500/15 text-amber-300 border border-amber-500/30" title="RVOL ≥ 1.20x (${m.rvolPercent}%)">${rvolFormatted}</span>`
+      : `<span class="font-mono text-xs text-slate-300">${rvolFormatted}</span>`;
+
+    // Row illumination for top 50% RVOL
+    const isTopRvolGated = m.rvol >= rvolGateThreshold && m.rvol >= 1.0;
+    const rowTint = isTopRvolGated ? 'bg-amber-500/[0.03]' : '';
+
+    return `
+      <tr class="ssrvol-stock-row hover:bg-dark-accent/70 transition-colors cursor-pointer group ${rowTint}" data-symbol="${m.symbol}">
+        <td class="py-2.5 px-3">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-slate-100 group-hover:text-amber-300 text-xs">${m.symbol}</span>
+              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(m.symbol, m.name) : ''}
+              ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
+              ${getFnoBadgeHtml(m.symbol)}
+              ${mcBadgeHtml}
+            </div>
+            <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
+          </div>
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-100 text-xs">
+          ${fmt.currency(ltpPrice)}
+        </td>
+        <td class="py-2.5 px-2 text-right">
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${changeBadge}">
+            ${fmt.percent(chgVal)}
+          </span>
+        </td>
+        <td class="py-2.5 px-2 text-right">
+          ${rvolBadge}
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">
+          ${fmt.volume(m.avgVolume)}
+        </td>
+        <td class="py-2.5 px-2 text-center">
+          <div class="flex items-center justify-center">
+            ${ssBadge}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+
+  tbody.querySelectorAll('.ssrvol-stock-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const sym = row.dataset.symbol;
+      if (sym) {
+        tbody.querySelectorAll('.ssrvol-stock-row').forEach(r => r.classList.remove('selected', 'bg-amber-500/20'));
+        row.classList.add('selected', 'bg-amber-500/20');
+        selectStock({ symbol: sym, name: sym });
+      }
+    });
+  });
+}
+
+function handleCopySsrvolStocks() {
+  const matches = (state.ssrvolResults || []).filter(stock => {
+    if (state.ssrvolFilterSsOnly && !stock.isStrongStart) return false;
+    if (state.ssrvolFilterMc2000 && stock.mcOver2000Cr !== true) return false;
+    if (state.ssrvolFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+    return true;
+  });
+
+  if (matches.length === 0) {
+    showToast('No SS_RVOL stocks to copy.', 'info');
+    return;
+  }
+
+  const symbols = matches.map(s => s.symbol).join(', ');
+  navigator.clipboard.writeText(symbols).then(() => {
+    showToast(`Copied ${matches.length} SS_RVOL stock symbols to clipboard.`, 'success');
+  }).catch(() => {
+    showToast('Failed to copy to clipboard.', 'error');
   });
 }
 

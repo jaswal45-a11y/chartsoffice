@@ -771,6 +771,161 @@
             "symbol": "FOSECOIND",
             "name": "Foseco India Limited",
             "addedAt": "2026-09-16T11:50:37.494Z"
+          },
+          {
+            "symbol": "KPL",
+            "name": "Kwality Pharmaceuticals Ltd",
+            "addedAt": "2026-09-21T18:39:51.588Z"
+          },
+          {
+            "symbol": "BASF",
+            "name": "Basf India Limited",
+            "addedAt": "2026-09-21T18:39:51.588Z"
+          },
+          {
+            "symbol": "MANKIND",
+            "name": "Mankind Pharma Limited",
+            "addedAt": "2026-09-21T18:39:51.588Z"
+          },
+          {
+            "symbol": "GRINDWELL",
+            "name": "Grindwell Norton Limited",
+            "addedAt": "2026-09-21T18:39:51.588Z"
+          },
+          {
+            "symbol": "CONCORDBIO",
+            "name": "Concord Biotech Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "ZOTA",
+            "name": "Zota Health Care Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "LUXIND",
+            "name": "Lux Industries Limited",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "CARBORUNIV",
+            "name": "Carborundum Universal Limited",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "JYOTICNC",
+            "name": "Jyoti CNC Automation Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "ORCHPHARMA",
+            "name": "Orchid Pharma Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "ISGEC",
+            "name": "ISGEC Heavy Engineering  Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "AARTIPHARM",
+            "name": "Aarti Pharmalabs Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "AKUMS",
+            "name": "Akums Drugs & Pharmaceuticals Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "AGI",
+            "name": "AGI Greenpac Ltd",
+            "addedAt": "2026-09-21T18:39:51.589Z"
+          },
+          {
+            "symbol": "JASH",
+            "name": "Jash Engineering Ltd",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "CAPILLARY",
+            "name": "Capillary Technologies India Ltd",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "HARSHA",
+            "name": "Harsha Engineers International Ltd",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "COHANCE",
+            "name": "Cohance Lifesciences Ltd",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "WPIL",
+            "name": "WPIL Ltd",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "ASHIANA",
+            "name": "Ashiana Housing Limited",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "CIEINDIA",
+            "name": "CIE Automotive India Ltd",
+            "addedAt": "2026-09-21T18:39:51.590Z"
+          },
+          {
+            "symbol": "SYNGENE",
+            "name": "Syngene International Limited",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "REPCOHOME",
+            "name": "Repco Home Finance Limited",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "EMMVEE",
+            "name": "Emmvee Photovoltaic Power Ltd",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "MEDIASSIST",
+            "name": "Medi Assist Healthcare Services Ltd",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "KPIGREEN",
+            "name": "KPI Green Energy Limited",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "REFEX",
+            "name": "Refex Industries Limited",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "SHADOWFAX",
+            "name": "Shadowfax Technologies Ltd",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "JAYKAY",
+            "name": "Jaykay Enterprises Ltd",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "SAMBHV",
+            "name": "Sambhv Steel Tubes Ltd",
+            "addedAt": "2026-09-21T18:39:51.591Z"
+          },
+          {
+            "symbol": "PRAKASH",
+            "name": "Prakash Industries Limited",
+            "addedAt": "2026-09-21T18:39:51.591Z"
           }
         ]
       },
@@ -1149,6 +1304,11 @@
             "symbol": "NOVARTIND",
             "name": "Novartis India Ltd",
             "addedAt": "2026-09-16T19:11:13.779Z"
+          },
+          {
+            "symbol": "AKUMS",
+            "name": "Akums Drugs & Pharmaceuticals Ltd",
+            "addedAt": "2026-09-21T19:03:05.018Z"
           }
         ]
       },
