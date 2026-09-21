@@ -1,9 +1,29 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-09-20T18:49:34.938Z",
-  "latestDealId": "29015fd2cf5b",
+  "lastUpdated": "2026-09-21T18:05:02.896Z",
+  "latestDealId": "cc9ba00895ed",
   "deals": [
+    {
+      "id": "cc9ba00895ed",
+      "exchange": "NSE",
+      "date": "21-Sep-26",
+      "clientName": "360 ONE PIPE FUND",
+      "companyName": "Anupam Rasayan India",
+      "dealType": "BUY",
+      "volume": "900000",
+      "dealPrice": "1165"
+    },
+    {
+      "id": "174d182e427a",
+      "exchange": "BSE",
+      "date": "21-Sep-26",
+      "clientName": "SB OPPORTUNITIES FUND II",
+      "companyName": "Century Business",
+      "dealType": "BUY",
+      "volume": "113600",
+      "dealPrice": "74.6"
+    },
     {
       "id": "29015fd2cf5b",
       "exchange": "NSE",
@@ -183,26 +203,6 @@
       "dealType": "BUY",
       "volume": "1039000",
       "dealPrice": "2826.6"
-    },
-    {
-      "id": "55df17e59586",
-      "exchange": "BSE",
-      "date": "04-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
-      "companyName": "Gland Pharma",
-      "dealType": "BUY",
-      "volume": "2793000",
-      "dealPrice": "2826.6"
-    },
-    {
-      "id": "67c134725bfd",
-      "exchange": "NSE",
-      "date": "03-Sep-26",
-      "clientName": "TAURUS MUTUAL FUND FLEXICAP SHARE MULTI CAP",
-      "companyName": "Advit Jewels",
-      "dealType": "SELL",
-      "volume": "482650",
-      "dealPrice": "241"
     }
   ]
 }
