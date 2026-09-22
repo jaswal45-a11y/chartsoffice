@@ -2457,6 +2457,66 @@ async function fetchChartDataMultiSource(candidate, range, interval) {
   return null;
 }
 
+function getISTDateString(timestampSec) {
+  if (!timestampSec) return '';
+  const d = new Date(timestampSec * 1000);
+  return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+}
+
+// In-memory cache for synthesized hourly-to-daily bars (30 seconds TTL)
+const synthHourlyCache = new Map();
+
+async function fetchSynthesizedHourlyDailyMap(candidate) {
+  const now = Date.now();
+  const cached = synthHourlyCache.get(candidate);
+  if (cached && (now - cached.timestamp < 30000)) {
+    return cached.data;
+  }
+
+  try {
+    const hourlyData = await fetchChartDataMultiSource(candidate, '5d', '60m');
+    if (!hourlyData || !hourlyData.timestamp || hourlyData.timestamp.length === 0) return {};
+    const ts = hourlyData.timestamp;
+    const quotes = hourlyData.indicators?.quote?.[0];
+    if (!quotes) return {};
+
+    const dayMap = {};
+    for (let i = 0; i < ts.length; i++) {
+      const o = quotes.open[i];
+      const h = quotes.high[i];
+      const l = quotes.low[i];
+      const c = quotes.close[i];
+      const v = quotes.volume[i] || 0;
+      if (c === null || o === null || h === null || l === null) continue;
+
+      const dateStr = getISTDateString(ts[i]);
+      if (!dayMap[dateStr]) {
+        dayMap[dateStr] = {
+          time: dateStr,
+          open: Number(o.toFixed(2)),
+          high: Number(h.toFixed(2)),
+          low: Number(l.toFixed(2)),
+          close: Number(c.toFixed(2)),
+          volume: v,
+          count: 1
+        };
+      } else {
+        const d = dayMap[dateStr];
+        d.high = Math.max(d.high, Number(h.toFixed(2)));
+        d.low = Math.min(d.low, Number(l.toFixed(2)));
+        d.close = Number(c.toFixed(2));
+        d.volume += v;
+        d.count++;
+      }
+    }
+
+    synthHourlyCache.set(candidate, { timestamp: now, data: dayMap });
+    return dayMap;
+  } catch (e) {
+    return {};
+  }
+}
+
 const GLOBAL_INDEX_SYMBOL_MAP = {
   'NIFTY': '^NSEI',
   'NIFTY 50': '^NSEI',
@@ -2556,13 +2616,29 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
       const q = r.indicators?.quote?.[0];
       if (!q) continue;
 
+      let hourlyPivotMap = null;
+      if (refInterval === '1d') {
+        for (let i = 0; i < r.timestamp.length; i++) {
+          if (q.close[i] === null || q.high[i] === null || q.low[i] === null) {
+            hourlyPivotMap = await fetchSynthesizedHourlyDailyMap(candidate);
+            break;
+          }
+        }
+      }
+
       const validCandles = [];
       for (let i = 0; i < r.timestamp.length; i++) {
         let c = q.close[i];
         let h = q.high[i];
         let l = q.low[i];
+        const dateStr = getISTDateString(r.timestamp[i]);
+
         if (c === null || h === null || l === null) {
-          if (i === r.timestamp.length - 1 && meta.regularMarketPrice) {
+          if (hourlyPivotMap && hourlyPivotMap[dateStr]) {
+            h = hourlyPivotMap[dateStr].high;
+            l = hourlyPivotMap[dateStr].low;
+            c = hourlyPivotMap[dateStr].close;
+          } else if (i === r.timestamp.length - 1 && meta.regularMarketPrice) {
             c = meta.regularMarketPrice;
             h = meta.regularMarketDayHigh || c;
             l = meta.regularMarketDayLow || c;
@@ -2780,6 +2856,21 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       if (!quotes) continue;
       const closes = quotes.close;
 
+      // If daily interval ('1d'), check if any recent candles (last 10 days) have nulls
+      let hourlyMap = null;
+      if (interval === '1d') {
+        let hasRecentNull = false;
+        for (let i = Math.max(0, timestamps.length - 10); i < timestamps.length; i++) {
+          if (closes[i] === null || quotes.open[i] === null || quotes.high[i] === null || quotes.low[i] === null) {
+            hasRecentNull = true;
+            break;
+          }
+        }
+        if (hasRecentNull) {
+          hourlyMap = await fetchSynthesizedHourlyDailyMap(candidate);
+        }
+      }
+
       const candles = [];
       for (let i = 0; i < timestamps.length; i++) {
         let c = closes[i];
@@ -2787,9 +2878,17 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         let h = quotes.high[i];
         let l = quotes.low[i];
         let v = quotes.volume[i] || 0;
+        const candleDateStr = getISTDateString(timestamps[i]);
 
         if (c === null || o === null || h === null || l === null) {
-          if (i === timestamps.length - 1 && meta.regularMarketPrice) {
+          if (hourlyMap && hourlyMap[candleDateStr]) {
+            const synth = hourlyMap[candleDateStr];
+            o = synth.open;
+            h = synth.high;
+            l = synth.low;
+            c = synth.close;
+            v = synth.volume;
+          } else if (i === timestamps.length - 1 && meta.regularMarketPrice) {
             c = c !== null ? c : meta.regularMarketPrice;
             h = h !== null ? h : (meta.regularMarketDayHigh || c);
             l = l !== null ? l : (meta.regularMarketDayLow || c);
@@ -2801,7 +2900,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           }
         }
 
-        const candleTime = isIntraday ? timestamps[i] : new Date(timestamps[i] * 1000).toISOString().split('T')[0];
+        const candleTime = isIntraday ? timestamps[i] : candleDateStr;
 
         candles.push({
           time: candleTime,
@@ -2811,6 +2910,24 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           close: Number(c.toFixed(2)),
           volume: v
         });
+      }
+
+      // Check for any missing trading day in the last 5 days from hourlyMap that wasn't in timestamps at all
+      if (interval === '1d' && hourlyMap) {
+        const existingDates = new Set(candles.map(c => c.time));
+        const missingDates = Object.keys(hourlyMap).filter(d => !existingDates.has(d)).sort();
+        for (const mDate of missingDates) {
+          const synth = hourlyMap[mDate];
+          candles.push({
+            time: mDate,
+            open: synth.open,
+            high: synth.high,
+            low: synth.low,
+            close: synth.close,
+            volume: synth.volume
+          });
+        }
+        candles.sort((a, b) => String(a.time).localeCompare(String(b.time)));
       }
 
       // Merge latest live quote from meta if available

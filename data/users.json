@@ -1355,6 +1355,21 @@
             "symbol": "MANALIPETC",
             "name": "Manali Petrochemicals Limited",
             "addedAt": "2026-09-20T11:48:00.668Z"
+          },
+          {
+            "symbol": "VARROC",
+            "name": "Varroc Engineering Ltd",
+            "addedAt": "2026-09-22T05:29:09.098Z"
+          },
+          {
+            "symbol": "MMP",
+            "name": "MMP Industries Ltd",
+            "addedAt": "2026-09-22T05:33:52.569Z"
+          },
+          {
+            "symbol": "OPTIEMUS",
+            "name": "Optiemus Infracom Ltd",
+            "addedAt": "2026-09-22T05:34:44.607Z"
           }
         ]
       },
@@ -1366,6 +1381,21 @@
             "symbol": "INDOBORAX",
             "name": "Indo Borax & Chemicals Ltd",
             "addedAt": "2026-09-21T11:15:24.139Z"
+          },
+          {
+            "symbol": "ELLEN",
+            "name": "ELLEN",
+            "addedAt": "2026-09-22T06:57:43.625Z"
+          },
+          {
+            "symbol": "SSWL",
+            "name": "Steel Strips Wheels Limited",
+            "addedAt": "2026-09-22T06:57:53.471Z"
+          },
+          {
+            "symbol": "JINDWORLD",
+            "name": "Jindal Worldwide Limited",
+            "addedAt": "2026-09-22T06:58:02.087Z"
           }
         ]
       },
@@ -1375,8 +1405,8 @@
         "stocks": []
       }
     ],
-    "notes": "check alert feature when some price corss such and then that stock gets added into alertrigg watchlist\nconnect mcp--claude testing varsity vali video\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern",
-    "notesUpdatedAt": "2026-09-21T11:17:58.766Z",
+    "notes": "no data for 21 sep why\ncheck alert feature when some price corss such and then that stock gets added into alertrigg watchlist\nconnect mcp--claude testing varsity vali video\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern",
+    "notesUpdatedAt": "2026-09-22T05:25:30.544Z",
     "customScreeners": [
       {
         "id": "scr_usr_mtqwvqzy_rx4",
