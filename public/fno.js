@@ -682,8 +682,17 @@ function updateCustomUniverseHeaderBadge() {
 // -------------------------------------------------------------
 // Auth Verification & UI Handling
 // -------------------------------------------------------------
+function getAuthHeaders() {
+  const headers = {};
+  const token = state.token || localStorage.getItem('authToken') || localStorage.getItem('adminToken') || localStorage.getItem('sangam_auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 async function checkAuthStatus() {
-  const token = localStorage.getItem('authToken') || localStorage.getItem('adminToken');
+  const token = state.token || localStorage.getItem('authToken') || localStorage.getItem('adminToken') || localStorage.getItem('sangam_auth_token');
   if (!token) {
     updateAuthUI(null);
     return;

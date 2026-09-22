@@ -297,8 +297,9 @@ const fmt = {
 
 function getAuthHeaders() {
   const headers = {};
-  if (state.token) {
-    headers['Authorization'] = `Bearer ${state.token}`;
+  const token = state.token || localStorage.getItem('authToken') || localStorage.getItem('adminToken') || localStorage.getItem('sangam_auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
 }
@@ -540,12 +541,15 @@ async function handleRegister(e) {
 
     state.token = data.token;
     localStorage.setItem('authToken', data.token);
-    state.user = data.user;
+    state.user = data.user || { userId: data.userId || data.username, username: data.username, role: 'user' };
     state.isAdmin = false;
 
+    if (data.indicatorPreferences) {
+      applyLoadedIndicatorPreferences(data.indicatorPreferences);
+    }
     closeAuthModal();
     updateAuthUI(state.user);
-    showToast(`Account created for ${data.user.username}!`, 'success');
+    showToast(`Account created for ${data.username || (data.user && data.user.username)}!`, 'success');
   } catch (err) {
     if (errBanner) {
       errBanner.textContent = err.message;

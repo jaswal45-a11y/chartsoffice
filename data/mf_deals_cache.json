@@ -1,18 +1,48 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-09-22T08:29:02.622Z",
-  "latestDealId": "cc9ba00895ed",
+  "lastUpdated": "2026-09-22T18:22:19.193Z",
+  "latestDealId": "524d8a740abb",
   "deals": [
     {
-      "id": "cc9ba00895ed",
+      "id": "524d8a740abb",
       "exchange": "NSE",
-      "date": "21-Sep-26",
-      "clientName": "360 ONE PIPE FUND",
-      "companyName": "Anupam Rasayan India",
+      "date": "22-Sep-26",
+      "clientName": "BANDHAN MUTUAL FUND",
+      "companyName": "RHI Magnesita India",
       "dealType": "BUY",
-      "volume": "900000",
-      "dealPrice": "1165"
+      "volume": "2777777",
+      "dealPrice": "360"
+    },
+    {
+      "id": "82bd31647842",
+      "exchange": "NSE",
+      "date": "22-Sep-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "RHI Magnesita India",
+      "dealType": "BUY",
+      "volume": "2496780",
+      "dealPrice": "360"
+    },
+    {
+      "id": "5da4aa8d62c2",
+      "exchange": "NSE",
+      "date": "22-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "RHI Magnesita India",
+      "dealType": "BUY",
+      "volume": "16666667",
+      "dealPrice": "360"
+    },
+    {
+      "id": "6fc7491ea0c2",
+      "exchange": "NSE",
+      "date": "22-Sep-26",
+      "clientName": "HSBC MUTUAL FUND",
+      "companyName": "Capital Infra Trust",
+      "dealType": "BUY",
+      "volume": "4500000",
+      "dealPrice": "77"
     },
     {
       "id": "174d182e427a",
@@ -23,6 +53,16 @@
       "dealType": "BUY",
       "volume": "113600",
       "dealPrice": "74.6"
+    },
+    {
+      "id": "cc9ba00895ed",
+      "exchange": "NSE",
+      "date": "21-Sep-26",
+      "clientName": "360 ONE PIPE FUND",
+      "companyName": "Anupam Rasayan India",
+      "dealType": "BUY",
+      "volume": "900000",
+      "dealPrice": "1165"
     },
     {
       "id": "29015fd2cf5b",
@@ -163,46 +203,6 @@
       "dealType": "BUY",
       "volume": "860000",
       "dealPrice": "2050"
-    },
-    {
-      "id": "f670e54a7bbd",
-      "exchange": "BSE",
-      "date": "07-Sep-26",
-      "clientName": "SB OPPORTUNITIES FUND II",
-      "companyName": "Phychem Technologies",
-      "dealType": "BUY",
-      "volume": "86000",
-      "dealPrice": "56"
-    },
-    {
-      "id": "76caf0d1a406",
-      "exchange": "NSE",
-      "date": "07-Sep-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "HEG Advanced Materi.",
-      "dealType": "BUY",
-      "volume": "993201",
-      "dealPrice": "266.21"
-    },
-    {
-      "id": "933a07289e53",
-      "exchange": "BSE",
-      "date": "04-Sep-26",
-      "clientName": "AXIS MUTUAL FUND",
-      "companyName": "Gland Pharma",
-      "dealType": "BUY",
-      "volume": "1357000",
-      "dealPrice": "2826.6"
-    },
-    {
-      "id": "ea6aa58a7512",
-      "exchange": "BSE",
-      "date": "04-Sep-26",
-      "clientName": "ICICI PRUDENTIAL MUTUAL FUND",
-      "companyName": "Gland Pharma",
-      "dealType": "BUY",
-      "volume": "1039000",
-      "dealPrice": "2826.6"
     }
   ]
 }

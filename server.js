@@ -752,11 +752,47 @@ async function syncMongoInitialData() {
       }
     } else {
       const dbUsers = await usersCol.find({}).toArray();
+      const localUsers = loadFileUsers();
+      const localUserMap = new Map();
+      localUsers.forEach(lu => {
+        if (lu.username) localUserMap.set(lu.username.toLowerCase(), lu);
+        if (lu.id) localUserMap.set(lu.id, lu);
+      });
+
       memoryUsers = dbUsers.map(u => {
         const { _id, ...rest } = u;
-        return { ...rest, id: rest.id || String(_id) };
+        const cleanId = rest.id || String(_id);
+        const localMatch = (rest.username && localUserMap.get(rest.username.toLowerCase())) || (cleanId && localUserMap.get(cleanId));
+
+        let mergedPrefs = rest.indicatorPreferences || (localMatch ? localMatch.indicatorPreferences : null);
+        if (rest.indicatorPreferences && localMatch && localMatch.indicatorPreferences) {
+          mergedPrefs = {
+            ...localMatch.indicatorPreferences,
+            ...rest.indicatorPreferences,
+            colors: { ...(localMatch.indicatorPreferences.colors || {}), ...(rest.indicatorPreferences.colors || {}) },
+            lineWidths: { ...(localMatch.indicatorPreferences.lineWidths || {}), ...(rest.indicatorPreferences.lineWidths || {}) },
+            toggles: { ...(localMatch.indicatorPreferences.toggles || {}), ...(rest.indicatorPreferences.toggles || {}) },
+            customThemeColors: { ...(localMatch.indicatorPreferences.customThemeColors || {}), ...(rest.indicatorPreferences.customThemeColors || {}) },
+            volIntelSettings: { ...(localMatch.indicatorPreferences.volIntelSettings || {}), ...(rest.indicatorPreferences.volIntelSettings || {}) }
+          };
+        }
+
+        return {
+          ...rest,
+          id: cleanId,
+          indicatorPreferences: mergedPrefs || undefined
+        };
       });
-      console.log(`[MongoDB] 📥 Loaded ${memoryUsers.length} users from MongoDB Atlas.`);
+
+      // Preserve local users that may not have synced to Mongo yet
+      localUsers.forEach(lu => {
+        if (!memoryUsers.some(mu => (mu.username && lu.username && mu.username.toLowerCase() === lu.username.toLowerCase()) || (mu.id && lu.id && mu.id === lu.id))) {
+          memoryUsers.push(lu);
+        }
+      });
+
+      console.log(`[MongoDB] 📥 Loaded ${memoryUsers.length} users with synchronized indicator preferences from MongoDB Atlas.`);
+      saveUsers(memoryUsers);
     }
 
     // 3. Config Collection
@@ -4419,21 +4455,45 @@ function saveUserIndicatorPreferences(user, preferences) {
     volIntelSettings: { ...(existing.volIntelSettings || {}), ...(preferences.volIntelSettings || {}) }
   };
 
+  const targetUsername = typeof user === 'string' ? user : (user.username || '');
+  const targetId = typeof user === 'string' ? user : (user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || (u ? u.id : ('usr_' + Date.now().toString(36)))));
+
   if (u) {
     u.indicatorPreferences = merged;
-    saveUsers(users);
-    return true;
   } else {
-    const targetId = user.role === 'admin' ? 'usr_admin' : (user.userId || user.id || ('usr_' + Date.now().toString(36)));
-    users.push({
+    u = {
       id: targetId,
-      username: user.username,
-      role: user.role || 'user',
+      username: targetUsername,
+      role: (user.role || 'user'),
       indicatorPreferences: merged
-    });
-    saveUsers(users);
-    return true;
+    };
+    users.push(u);
   }
+
+  saveUsers(users);
+
+  // Direct targeted MongoDB write for immediate synchronization
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('users');
+        const filterOr = [];
+        if (u.id) filterOr.push({ id: u.id });
+        if (u.username) filterOr.push({ username: u.username });
+        if (filterOr.length > 0) {
+          await col.updateOne(
+            { $or: filterOr },
+            { $set: { indicatorPreferences: merged } },
+            { upsert: true }
+          );
+        }
+      } catch (err) {
+        console.error('[MongoDB] Error directly saving user indicatorPreferences:', err.message);
+      }
+    })();
+  }
+
+  return true;
 }
 
 function getUserNotes(user) {
@@ -5496,6 +5556,7 @@ const server = http.createServer(async (req, res) => {
         const defaultScreeners = readScreeners();
         const defaultWatchlists = createDefaultWatchlists();
 
+        const defaultPrefs = getUserIndicatorPreferences(null);
         const newUser = {
           id: 'usr_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6),
           username,
@@ -5504,7 +5565,8 @@ const server = http.createServer(async (req, res) => {
           role: 'user',
           createdAt: new Date().toISOString(),
           screeners: defaultScreeners,
-          watchlists: defaultWatchlists
+          watchlists: defaultWatchlists,
+          indicatorPreferences: defaultPrefs
         };
 
         const token = generateSessionToken(newUser.id, 'user');
@@ -5524,9 +5586,11 @@ const server = http.createServer(async (req, res) => {
           success: true,
           message: 'Account registered successfully',
           token,
+          userId: newUser.id,
           username: newUser.username,
           role: 'user',
-          slotsAvailable: Math.max(0, maxUsers - users.length)
+          slotsAvailable: Math.max(0, maxUsers - users.length),
+          indicatorPreferences: defaultPrefs
         });
       }
 
@@ -5549,6 +5613,8 @@ const server = http.createServer(async (req, res) => {
             role: 'admin',
             createdAt: Date.now()
           });
+          const indPrefs = getUserIndicatorPreferences(authObj);
+          const anaPrefs = getUserAnalyticsPreferences(authObj);
           return sendJson(res, 200, {
             success: true,
             token: ADMIN_TOKEN,
@@ -5559,10 +5625,13 @@ const server = http.createServer(async (req, res) => {
               id: 'usr_admin',
               userId: 'usr_admin',
               username: 'admin',
-              role: 'admin'
+              role: 'admin',
+              indicatorPreferences: indPrefs,
+              analyticsPreferences: anaPrefs
             },
-            indicatorPreferences: getUserIndicatorPreferences(authObj),
-            analyticsPreferences: getUserAnalyticsPreferences(authObj),
+            indicatorPreferences: indPrefs,
+            preferences: indPrefs,
+            analyticsPreferences: anaPrefs,
             notes: getUserNotes(authObj),
             drawings: getUserDrawings(authObj)
           });
@@ -5589,6 +5658,8 @@ const server = http.createServer(async (req, res) => {
         });
 
         const authObj = { userId: user.id, username: user.username, role: userRole };
+        const indPrefs = getUserIndicatorPreferences(authObj);
+        const anaPrefs = getUserAnalyticsPreferences(authObj);
         return sendJson(res, 200, {
           success: true,
           token,
@@ -5599,10 +5670,13 @@ const server = http.createServer(async (req, res) => {
             id: user.id,
             userId: user.id,
             username: user.username,
-            role: userRole
+            role: userRole,
+            indicatorPreferences: indPrefs,
+            analyticsPreferences: anaPrefs
           },
-          indicatorPreferences: getUserIndicatorPreferences(authObj),
-          analyticsPreferences: getUserAnalyticsPreferences(authObj),
+          indicatorPreferences: indPrefs,
+          preferences: indPrefs,
+          analyticsPreferences: anaPrefs,
           notes: getUserNotes(authObj),
           drawings: getUserDrawings(authObj)
         });
@@ -6029,21 +6103,22 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { success: true, message: 'Logged out successfully' });
       }
 
-      // 0f. GET & POST /api/user/indicators - User Technical Indicator Preferences
+      // 0f. GET, POST, PUT /api/user/indicators - User Technical Indicator Preferences
       if (pathname === '/api/user/indicators' && method === 'GET') {
         const authUser = getAuthenticatedUser(req);
         const prefs = getUserIndicatorPreferences(authUser);
-        return sendJson(res, 200, { success: true, preferences: prefs });
+        return sendJson(res, 200, { success: true, preferences: prefs, indicatorPreferences: prefs });
       }
 
-      if (pathname === '/api/user/indicators' && method === 'POST') {
+      if (pathname === '/api/user/indicators' && (method === 'POST' || method === 'PUT')) {
         const authUser = getAuthenticatedUser(req);
         if (!authUser) {
           return sendJson(res, 401, { success: false, error: 'Login required to save indicator preferences' });
         }
         const payload = await parseJsonBody(req);
         saveUserIndicatorPreferences(authUser, payload);
-        return sendJson(res, 200, { success: true, message: 'Indicator preferences saved successfully', preferences: payload });
+        const updatedPrefs = getUserIndicatorPreferences(authUser);
+        return sendJson(res, 200, { success: true, message: 'Indicator preferences saved successfully', preferences: updatedPrefs, indicatorPreferences: updatedPrefs });
       }
 
       // 0g. GET, POST, PUT /api/user/notes - User Synchronized Sticky Notes (Registered Users Only)

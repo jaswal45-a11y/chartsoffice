@@ -1731,8 +1731,9 @@ function applyLoadedIndicatorPreferences(prefs) {
 
 function getAuthHeaders() {
   const headers = {};
-  if (state.token) {
-    headers['Authorization'] = `Bearer ${state.token}`;
+  const token = state.token || localStorage.getItem('authToken') || localStorage.getItem('adminToken') || localStorage.getItem('sangam_auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
 }
@@ -2016,10 +2017,13 @@ async function handleRegisterSubmit(e) {
 
     state.token = data.token;
     localStorage.setItem('authToken', data.token);
-    state.user = { userId: data.username, username: data.username, role: 'user' };
+    state.user = { userId: data.userId || data.username, username: data.username, role: 'user' };
     state.isAdmin = false;
 
     updateAuthUI(state.user);
+    if (data.indicatorPreferences) {
+      applyLoadedIndicatorPreferences(data.indicatorPreferences);
+    }
     closeAuthModal();
     showToast(`Account registered successfully! Welcome ${data.username}.`, 'success');
     await loadScreeners();
