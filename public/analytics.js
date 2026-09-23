@@ -41,6 +41,57 @@ function getFnoBadgeHtml(stockOrSymbol, extraClass = '') {
   return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono ${extraClass}" title="F&O Contract Available">F&O</span>`;
 }
 
+let circuitBandsMap = {};
+let circuitStats = null;
+let selectedCircuitFile = null;
+
+function getCircuitBandInfo(stockOrSymbol) {
+  if (!stockOrSymbol) return null;
+  let band = null;
+  let symbol = '';
+  if (typeof stockOrSymbol === 'object') {
+    if (stockOrSymbol.circuitBand !== undefined && stockOrSymbol.circuitBand !== null) {
+      band = Number(stockOrSymbol.circuitBand);
+    }
+    symbol = stockOrSymbol.symbol || '';
+  } else if (typeof stockOrSymbol === 'string') {
+    symbol = stockOrSymbol;
+  }
+  const cleanSym = (symbol || '').toUpperCase().trim().replace(/(\.NS|\.BO|-EQ)$/i, '').replace(/[^A-Z0-9&\-_]/g, '');
+  if ((band === null || isNaN(band)) && circuitBandsMap && circuitBandsMap[cleanSym]) {
+    band = Number(circuitBandsMap[cleanSym].band);
+  }
+  return isNaN(band) ? null : band;
+}
+
+function getCircuitBadgeHtml(stockOrSymbol, extraClass = '') {
+  const band = getCircuitBandInfo(stockOrSymbol);
+  if (band === 2) {
+    return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono tracking-tight ${extraClass}" title="NSE Price Band: 2% Circuit Limit">2%</span>`;
+  } else if (band === 5) {
+    return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono tracking-tight ${extraClass}" title="NSE Price Band: 5% Circuit Limit">5%</span>`;
+  }
+  return '';
+}
+
+function updateOnChartCircuitBadge(stockOrData) {
+  const badge = document.getElementById('onchart-circuit-badge');
+  if (!badge) return;
+  const band = getCircuitBandInfo(stockOrData);
+  if (band === 2) {
+    badge.className = 'flex pointer-events-auto items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide shadow-2xl backdrop-blur-md w-fit transition-all bg-rose-500/20 text-rose-300 border border-rose-500/40';
+    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span><span>2% CKT</span>`;
+    badge.title = 'NSE Price Band: 2% Circuit Limit';
+  } else if (band === 5) {
+    badge.className = 'flex pointer-events-auto items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide shadow-2xl backdrop-blur-md w-fit transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40';
+    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span>5% CKT</span>`;
+    badge.title = 'NSE Price Band: 5% Circuit Limit';
+  } else {
+    badge.className = 'hidden pointer-events-auto items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide shadow-2xl backdrop-blur-md w-fit transition-all';
+    badge.innerHTML = '';
+  }
+}
+
 // -------------------------------------------------------------
 // Dynamic Multi-Period EMA Crossover & Lookback Days Calculator
 // -------------------------------------------------------------
@@ -1234,6 +1285,7 @@ function renderSectoralStockTable() {
           <span onclick="openStockChartModal('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}', state.activeSectorModalData ? state.activeSectorModalData.stocks : [])" class="px-2 py-0.5 rounded bg-dark-bg border border-dark-border text-blue-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all cursor-pointer">${stk.symbol}</span>
           ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
           ${getFnoBadgeHtml(stk.symbol)}
+          ${getCircuitBadgeHtml(stk)}
         </div>
       </td>
       <td class="py-2.5 px-3 text-slate-300 font-sans font-medium text-xs">${stk.name || stk.symbol}</td>
@@ -1641,6 +1693,7 @@ function openSectorDrilldownModal(sectorId) {
             <span onclick="openStockChartModal('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}', (state.subSectors.find(s => s.id === state.activeSubSectorId)?.stocks) || [])" class="cursor-pointer text-blue-400 hover:text-emerald-400 font-mono tracking-tight transition-colors">${stk.symbol}</span>
             ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
             ${getFnoBadgeHtml(stk.symbol)}
+            ${getCircuitBadgeHtml(stk)}
           </div>
         </td>
         <td class="py-3 px-3 font-sans text-slate-300 whitespace-nowrap">${stk.name || stk.symbol}</td>
@@ -4069,6 +4122,7 @@ function setupPredictiveSearch() {
             ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(item.symbol, item.name) : ''}
             ${item.exchange && item.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-blue-500/15 text-blue-400 font-mono font-semibold">${item.exchange}</span>` : ''}
             ${getFnoBadgeHtml(item.symbol)}
+            ${getCircuitBadgeHtml(item.symbol)}
           </div>
           <div class="text-[11px] text-slate-400 truncate mt-0.5">${item.name || item.symbol}</div>
         </div>
@@ -4745,6 +4799,7 @@ async function loadStockChart(rawSymbol) {
       elAth.textContent = data.allTimeHigh ? `₹${data.allTimeHigh.toLocaleString('en-IN')}${distAth}` : '--';
     }
     if (elStockName) elStockName.textContent = data.name || cleanSymbol;
+    updateOnChartCircuitBadge(data);
 
     updateTimeScalesVisibility();
 
@@ -4884,6 +4939,7 @@ function selectStock(stock) {
   }
   const nameEl = document.getElementById('chart-stock-name');
   if (nameEl) nameEl.textContent = stock.name || stock.symbol;
+  updateOnChartCircuitBadge(stock);
   loadStockChart(stock.symbol);
   renderChartWatchlistDropdown(stock.symbol);
 }
@@ -6782,6 +6838,7 @@ function renderExploreTable() {
               <span class="font-bold text-white group-hover:text-emerald-400 transition-colors cursor-pointer" onclick="openStockChartModal('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}', state.exploreFilteredStocks)">${stk.symbol}</span>
               ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
               ${getFnoBadgeHtml(stk.symbol)}
+              ${getCircuitBadgeHtml(stk)}
             </div>
             <span class="text-[10px] text-slate-400 font-sans line-clamp-1 max-w-[150px]">${stk.name || stk.symbol}</span>
           </div>
@@ -6962,6 +7019,189 @@ window.handleAdminResetPassword = handleAdminResetPassword;
 window.handleAdminSetWatchlistLimit = handleAdminSetWatchlistLimit;
 window.handleAdminUpdateMaxUsers = handleAdminUpdateMaxUsers;
 
+// -------------------------------------------------------------
+// NSE Price Bands & Circuit Limits Modal Engine (2% & 5% Tracker)
+// -------------------------------------------------------------
+
+async function loadCircuitStats() {
+  try {
+    const res = await fetch('/api/circuit-limits');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success) {
+      circuitBandsMap = data.bands || {};
+      circuitStats = data.stats || null;
+      updateCircuitModalStats(data.stats, data.lastUpdated);
+    }
+  } catch (err) {
+    console.warn('[Circuit] Could not load circuit stats:', err.message);
+  }
+}
+
+function updateCircuitModalStats(stats, lastUpdated) {
+  if (!stats) return;
+  const elTotal = document.getElementById('circuit-stat-total');
+  const elBand2 = document.getElementById('circuit-stat-band2');
+  const elBand5 = document.getElementById('circuit-stat-band5');
+  const elUpdated = document.getElementById('circuit-stat-updated');
+  if (elTotal) elTotal.textContent = (stats.total || 0).toLocaleString();
+  if (elBand2) elBand2.textContent = (stats.band2 || 0).toLocaleString();
+  if (elBand5) elBand5.textContent = (stats.band5 || 0).toLocaleString();
+  if (elUpdated) {
+    if (lastUpdated) {
+      const d = new Date(lastUpdated);
+      elUpdated.textContent = isNaN(d.getTime()) ? lastUpdated : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } else {
+      elUpdated.textContent = 'Active';
+    }
+  }
+}
+
+function openCircuitModal() {
+  const modal = document.getElementById('circuit-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  loadCircuitStats();
+}
+
+function closeCircuitModal() {
+  const modal = document.getElementById('circuit-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  const statusEl = document.getElementById('circuit-upload-status');
+  if (statusEl) {
+    statusEl.classList.add('hidden');
+    statusEl.innerHTML = '';
+  }
+}
+
+function switchCircuitTab(tab) {
+  const tabUpload = document.getElementById('circuit-tab-upload');
+  const tabPaste = document.getElementById('circuit-tab-paste');
+  const viewUpload = document.getElementById('circuit-view-upload');
+  const viewPaste = document.getElementById('circuit-view-paste');
+
+  if (tab === 'upload') {
+    if (tabUpload) tabUpload.className = 'px-3 py-1.5 rounded-lg font-bold text-xs bg-rose-500/20 text-rose-300 border border-rose-500/40 transition-all cursor-pointer';
+    if (tabPaste) tabPaste.className = 'px-3 py-1.5 rounded-lg font-bold text-xs bg-dark-bg text-slate-400 hover:text-slate-200 border border-dark-border transition-all cursor-pointer';
+    if (viewUpload) viewUpload.classList.remove('hidden');
+    if (viewPaste) viewPaste.classList.add('hidden');
+  } else {
+    if (tabPaste) tabPaste.className = 'px-3 py-1.5 rounded-lg font-bold text-xs bg-rose-500/20 text-rose-300 border border-rose-500/40 transition-all cursor-pointer';
+    if (tabUpload) tabUpload.className = 'px-3 py-1.5 rounded-lg font-bold text-xs bg-dark-bg text-slate-400 hover:text-slate-200 border border-dark-border transition-all cursor-pointer';
+    if (viewPaste) viewPaste.classList.remove('hidden');
+    if (viewUpload) viewUpload.classList.add('hidden');
+  }
+}
+
+function handleCircuitFileSelect(event) {
+  const file = event.target?.files && event.target.files[0];
+  if (!file) return;
+  selectedCircuitFile = file;
+  const preview = document.getElementById('circuit-file-preview');
+  const nameSpan = document.getElementById('circuit-selected-filename');
+  if (nameSpan) nameSpan.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  if (preview) preview.classList.remove('hidden');
+}
+
+function clearSelectedCircuitFile() {
+  selectedCircuitFile = null;
+  const input = document.getElementById('circuit-file-input');
+  if (input) input.value = '';
+  const preview = document.getElementById('circuit-file-preview');
+  if (preview) preview.classList.add('hidden');
+}
+
+async function submitCircuitData() {
+  const btn = document.getElementById('btn-submit-circuit-upload');
+  const statusEl = document.getElementById('circuit-upload-status');
+  const viewUpload = document.getElementById('circuit-view-upload');
+  const isUploadActive = viewUpload && !viewUpload.classList.contains('hidden');
+
+  let csvContent = '';
+
+  if (isUploadActive) {
+    if (!selectedCircuitFile) {
+      if (statusEl) {
+        statusEl.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30';
+        statusEl.textContent = 'Please select a CSV file first.';
+        statusEl.classList.remove('hidden');
+      }
+      return;
+    }
+    try {
+      csvContent = await selectedCircuitFile.text();
+    } catch (fErr) {
+      if (statusEl) {
+        statusEl.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30';
+        statusEl.textContent = 'Failed to read file: ' + fErr.message;
+        statusEl.classList.remove('hidden');
+      }
+      return;
+    }
+  } else {
+    const textarea = document.getElementById('circuit-paste-textarea');
+    csvContent = textarea ? textarea.value.trim() : '';
+    if (!csvContent) {
+      if (statusEl) {
+        statusEl.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30';
+        statusEl.textContent = 'Please paste CSV content with Symbol and Band columns.';
+        statusEl.classList.remove('hidden');
+      }
+      return;
+    }
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin inline-block"></i><span>Processing...</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/circuit-limits/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csvContent })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update circuit limits');
+    }
+
+    if (statusEl) {
+      statusEl.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+      statusEl.textContent = `✅ ${data.message}`;
+      statusEl.classList.remove('hidden');
+    }
+
+    // Refresh state circuit band map and stats
+    await loadCircuitStats();
+
+    // Re-render explore table and update current chart badge
+    if (typeof renderExploreTable === 'function') renderExploreTable();
+    if (state.selectedStock) {
+      updateOnChartCircuitBadge(state.selectedStock);
+    }
+
+    showToast('Circuit limits updated successfully!', 'success');
+  } catch (err) {
+    if (statusEl) {
+      statusEl.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30';
+      statusEl.textContent = `❌ ${err.message}`;
+      statusEl.classList.remove('hidden');
+    }
+    showToast(err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 inline-block"></i><span>Process & Update Bands</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
 // Explore Screener Window Globals
 window.loadExploreData = loadExploreData;
 window.handleExploreSegmentChange = handleExploreSegmentChange;
@@ -6971,6 +7211,14 @@ window.resetExploreFilters = resetExploreFilters;
 window.handleExploreSort = handleExploreSort;
 window.handleExplorePageChange = handleExplorePageChange;
 window.handleExplorePageSizeChange = handleExplorePageSizeChange;
+window.openCircuitModal = openCircuitModal;
+window.closeCircuitModal = closeCircuitModal;
+window.switchCircuitTab = switchCircuitTab;
+window.handleCircuitFileSelect = handleCircuitFileSelect;
+window.clearSelectedCircuitFile = clearSelectedCircuitFile;
+window.submitCircuitData = submitCircuitData;
+window.loadCircuitStats = loadCircuitStats;
+window.getCircuitBadgeHtml = getCircuitBadgeHtml;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', async () => {
@@ -6978,6 +7226,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   loadSavedIndicatorPreferences();
   initAnalyticsSectionCollapses();
   loadExploreData();
+  await loadCircuitStats();
   await checkAuthStatus();
   lucide.createIcons();
 });

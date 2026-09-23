@@ -47,6 +47,7 @@ const SECTORS_FILE = path.join(__dirname, 'data', 'sectors_data.json');
 const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.json');
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const COMPANY_METADATA_FILE = path.join(__dirname, 'data', 'company_metadata.json');
+const PRICE_BANDS_FILE = path.join(__dirname, 'data', 'price_bands.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 function sanitizeDhanValue(val) {
@@ -1354,6 +1355,193 @@ function scheduleCompanyMetadataFlush() {
       console.warn('[COMPANY-METADATA] Error flushing metadata:', err.message);
     }
   }, 1000);
+}
+
+// =============================================================
+// NSE PRICE BANDS & CIRCUIT LIMITS ENGINE (2%, 5%, 10%, 20%)
+// =============================================================
+let memoryPriceBands = null;
+
+function normalizeNseSymbol(sym) {
+  if (!sym) return '';
+  return String(sym)
+    .toUpperCase()
+    .trim()
+    .replace(/\.(NS|BO)$/, '')
+    .replace(/-EQ$/, '')
+    .replace(/%26/g, '&');
+}
+
+function loadPriceBands() {
+  if (memoryPriceBands !== null) return memoryPriceBands;
+  try {
+    if (fs.existsSync(PRICE_BANDS_FILE)) {
+      const raw = fs.readFileSync(PRICE_BANDS_FILE, 'utf8');
+      memoryPriceBands = JSON.parse(raw);
+      return memoryPriceBands;
+    }
+  } catch (err) {
+    console.warn('[PRICE-BANDS] Notice loading price_bands.json:', err.message);
+  }
+  memoryPriceBands = {
+    lastUpdated: null,
+    source: 'CM - Price Band Complete List',
+    stats: { total: 0, band2: 0, band5: 0, band10: 0, band20: 0, band40: 0, noBand: 0 },
+    bands: {}
+  };
+  return memoryPriceBands;
+}
+
+function getStockCircuitBand(symbol) {
+  if (!symbol) return null;
+  const clean = normalizeNseSymbol(symbol);
+  const data = loadPriceBands();
+  if (!data || !data.bands) return null;
+  return data.bands[clean] || null;
+}
+
+function processPriceBandCsv(csvContent) {
+  if (!csvContent || typeof csvContent !== 'string') return null;
+  const lines = csvContent.split(/\r?\n/);
+  const bandsMap = {};
+  const stats = { total: 0, band2: 0, band5: 0, band10: 0, band20: 0, band40: 0, noBand: 0, newSymbolsAdded: 0 };
+  const newStocksToIngest = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || (i === 0 && line.toLowerCase().startsWith('symbol,'))) continue;
+
+    // Handle CSV line with potential quotes
+    const parts = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let c = 0; c < line.length; c++) {
+      const ch = line[c];
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) {
+        parts.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    parts.push(cur.trim());
+
+    if (parts.length < 4) continue;
+
+    const rawSym = parts[0].replace(/^"|"$/g, '').trim();
+    const series = parts[1].replace(/^"|"$/g, '').trim();
+    const name = parts[2].replace(/^"|"$/g, '').trim();
+    const bandRaw = parts[3].replace(/^"|"$/g, '').trim();
+    const remarks = parts[4] ? parts[4].replace(/^"|"$/g, '').trim() : '';
+
+    const cleanSym = normalizeNseSymbol(rawSym);
+    if (!cleanSym) continue;
+
+    let bandNum = null;
+    if (bandRaw === '2') {
+      bandNum = 2;
+      stats.band2++;
+    } else if (bandRaw === '5') {
+      bandNum = 5;
+      stats.band5++;
+    } else if (bandRaw === '10') {
+      bandNum = 10;
+      stats.band10++;
+    } else if (bandRaw === '20') {
+      bandNum = 20;
+      stats.band20++;
+    } else if (bandRaw === '40') {
+      bandNum = 40;
+      stats.band40++;
+    } else {
+      stats.noBand++;
+    }
+
+    bandsMap[cleanSym] = {
+      symbol: cleanSym,
+      series: series || 'EQ',
+      name: name || cleanSym,
+      band: bandNum,
+      bandRaw: bandRaw,
+      remarks: remarks && remarks !== '-' ? remarks : '',
+      isCircuitLimited: bandNum === 2 || bandNum === 5
+    };
+    stats.total++;
+
+    // Auto-discover new NSE symbols not yet in universe
+    const symbolSet = getUniverseSymbolSet();
+    if (!symbolSet.has(cleanSym)) {
+      newStocksToIngest.push({
+        symbol: cleanSym,
+        name: name || cleanSym,
+        exchange: 'NSE',
+        series: series || 'EQ',
+        circuitBand: bandNum,
+        sector: 'General',
+        industry: (series === 'SM' || series === 'ST') ? 'NSE SME' : 'Equities',
+        fno: false,
+        price: 0,
+        changePercent: 0,
+        rsi: 50,
+        rvol: 1
+      });
+      stats.newSymbolsAdded++;
+    }
+  }
+
+  const payload = {
+    lastUpdated: new Date().toISOString(),
+    source: 'Manual CSV Upload - CM Price Band Complete List',
+    stats,
+    bands: bandsMap
+  };
+
+  memoryPriceBands = payload;
+  try {
+    fs.writeFileSync(PRICE_BANDS_FILE, JSON.stringify(payload, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[PRICE-BANDS] Error writing price_bands.json:', err.message);
+  }
+
+  // Ingest new stocks if any
+  if (newStocksToIngest.length > 0) {
+    autoIngestStocksToUniverse(newStocksToIngest);
+  }
+
+  // Enrich all universe stocks with latest circuit band in memory
+  const universe = getUniverseStocks();
+  let updatedUniverseCount = 0;
+  universe.forEach(stk => {
+    if (stk && stk.symbol) {
+      const bInfo = bandsMap[normalizeNseSymbol(stk.symbol)];
+      if (bInfo) {
+        stk.circuitBand = bInfo.band;
+        if (bInfo.series) stk.series = bInfo.series;
+        if (bInfo.remarks) stk.remarks = bInfo.remarks;
+        updatedUniverseCount++;
+      }
+    }
+  });
+  if (updatedUniverseCount > 0) {
+    scheduleUniverseFlush(universe);
+  }
+
+  // Sync to MongoDB Atlas collection 'circuit_limits'
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('circuit_limits');
+        await col.updateOne({ _id: 'current_bands' }, { $set: { ...payload } }, { upsert: true });
+        console.log('[MongoDB] ✅ Synced updated circuit_limits to MongoDB Atlas.');
+      } catch (err) {
+        console.warn('[MongoDB] Notice syncing circuit_limits to MongoDB:', err.message);
+      }
+    })();
+  }
+
+  return payload;
 }
 
 function synthesizeCompanyMetadata(ticker, stock = null) {
@@ -3012,6 +3200,8 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
         const earningsDates = await getStockEarningsDates(rawSymbol);
 
+        const circuitInfo = getStockCircuitBand(rawSymbol);
+
         const responsePayload = {
           symbol: rawSymbol,
           exchange: candidate.endsWith('.NS') ? 'NSE' : 'BSE',
@@ -3030,6 +3220,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           allTimeHigh,
           pctFrom52wHigh,
           pctFromAth,
+          circuitBand: circuitInfo?.band || null,
+          circuitRemarks: circuitInfo?.remarks || '',
+          circuitSeries: circuitInfo?.series || '',
+          isCircuitLimited: circuitInfo ? (circuitInfo.band === 2 || circuitInfo.band === 5) : false,
           latestEMA10: ema10[ema10.length - 1],
           latestEMA20: ema20[ema20.length - 1],
           latestEMA50: ema50[ema50.length - 1],
@@ -5360,6 +5554,10 @@ async function computeExploreStocksData(forceRefresh = false) {
       weeklyPivotLabel = '< S1 🔴';
     }
 
+    const ckt = getStockCircuitBand(symbol);
+    const circuitBand = (stk.circuitBand !== undefined && stk.circuitBand !== null) ? stk.circuitBand : (ckt ? ckt.band : null);
+    const isCircuitLimited = circuitBand === 2 || circuitBand === 5;
+
     return {
       rank: index + 1,
       symbol,
@@ -5370,6 +5568,10 @@ async function computeExploreStocksData(forceRefresh = false) {
       fno,
       capCategory,
       capLabel,
+      circuitBand,
+      circuitSeries: ckt?.series || stk.series || '',
+      circuitRemarks: ckt?.remarks || stk.remarks || '',
+      isCircuitLimited,
       ltp,
       changePercent,
       dayHigh,
@@ -6885,6 +7087,44 @@ const server = http.createServer(async (req, res) => {
         } catch (eErr) {
           console.error(`Error fetching earnings dates for ${rawSymbol}:`, eErr.message);
           return sendJson(res, 500, { success: false, error: eErr.message });
+        }
+      }
+
+      // 9e. GET /api/circuit-limits - Current NSE Price Band Summary & Circuit Stats
+      if (pathname === '/api/circuit-limits' && method === 'GET') {
+        const data = loadPriceBands();
+        return sendJson(res, 200, {
+          success: true,
+          lastUpdated: data.lastUpdated,
+          source: data.source,
+          stats: data.stats,
+          bands: data.bands
+        });
+      }
+
+      // 9f. POST /api/circuit-limits/upload - Manual 1-Click CSV Upload & Universe Mapping
+      if (pathname === '/api/circuit-limits/upload' && method === 'POST') {
+        try {
+          const body = await parseJsonBody(req);
+          const csvContent = (body && typeof body.csvContent === 'string') ? body.csvContent : (typeof body === 'string' ? body : '');
+          if (!csvContent || csvContent.trim().length === 0) {
+            return sendJson(res, 400, { success: false, error: 'CSV content is required' });
+          }
+
+          const result = processPriceBandCsv(csvContent);
+          if (!result || !result.stats) {
+            return sendJson(res, 400, { success: false, error: 'Failed to process CSV file. Ensure it contains Symbol and Band columns.' });
+          }
+
+          return sendJson(res, 200, {
+            success: true,
+            message: `Successfully updated ${result.stats.total} price bands (${result.stats.band2} at 2%, ${result.stats.band5} at 5%). Added ${result.stats.newSymbolsAdded} new symbol(s) to universe.`,
+            stats: result.stats,
+            lastUpdated: result.lastUpdated
+          });
+        } catch (uErr) {
+          console.error('[PRICE-BANDS] Upload error:', uErr.message);
+          return sendJson(res, 500, { success: false, error: uErr.message });
         }
       }
 

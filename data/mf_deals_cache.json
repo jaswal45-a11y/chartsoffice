@@ -1,9 +1,79 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-09-22T18:22:19.193Z",
-  "latestDealId": "524d8a740abb",
+  "lastUpdated": "2026-09-23T18:45:09.408Z",
+  "latestDealId": "2bd2ea9b32aa",
   "deals": [
+    {
+      "id": "2bd2ea9b32aa",
+      "exchange": "BSE",
+      "date": "23-Sep-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Escorts Kubota",
+      "dealType": "SELL",
+      "volume": "1621352",
+      "dealPrice": "2794"
+    },
+    {
+      "id": "b55a174534df",
+      "exchange": "BSE",
+      "date": "23-Sep-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "Escorts Kubota",
+      "dealType": "BUY",
+      "volume": "1294552",
+      "dealPrice": "2794"
+    },
+    {
+      "id": "bc053ddf16d7",
+      "exchange": "NSE",
+      "date": "23-Sep-26",
+      "clientName": "BANK OF INDIA MUTUAL FUND",
+      "companyName": "Optiemus Infracom",
+      "dealType": "BUY",
+      "volume": "1769176",
+      "dealPrice": "815.68"
+    },
+    {
+      "id": "09a242f4162f",
+      "exchange": "BSE",
+      "date": "23-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Allied Blenders&Dist",
+      "dealType": "BUY",
+      "volume": "3400725",
+      "dealPrice": "650"
+    },
+    {
+      "id": "6db9e8a7aabc",
+      "exchange": "NSE",
+      "date": "23-Sep-26",
+      "clientName": "SBI FUNDS MANAGEMENT LIMITED",
+      "companyName": "Marine Electricals",
+      "dealType": "BUY",
+      "volume": "1155413",
+      "dealPrice": "394.79"
+    },
+    {
+      "id": "37d2f2ed505e",
+      "exchange": "BSE",
+      "date": "23-Sep-26",
+      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
+      "companyName": "Molbio Diagnostics",
+      "dealType": "BUY",
+      "volume": "2750000",
+      "dealPrice": "1315"
+    },
+    {
+      "id": "6fc7491ea0c2",
+      "exchange": "NSE",
+      "date": "22-Sep-26",
+      "clientName": "HSBC MUTUAL FUND",
+      "companyName": "Capital Infra Trust",
+      "dealType": "BUY",
+      "volume": "4500000",
+      "dealPrice": "77"
+    },
     {
       "id": "524d8a740abb",
       "exchange": "NSE",
@@ -35,14 +105,14 @@
       "dealPrice": "360"
     },
     {
-      "id": "6fc7491ea0c2",
+      "id": "cc9ba00895ed",
       "exchange": "NSE",
-      "date": "22-Sep-26",
-      "clientName": "HSBC MUTUAL FUND",
-      "companyName": "Capital Infra Trust",
+      "date": "21-Sep-26",
+      "clientName": "360 ONE PIPE FUND",
+      "companyName": "Anupam Rasayan India",
       "dealType": "BUY",
-      "volume": "4500000",
-      "dealPrice": "77"
+      "volume": "900000",
+      "dealPrice": "1165"
     },
     {
       "id": "174d182e427a",
@@ -53,16 +123,6 @@
       "dealType": "BUY",
       "volume": "113600",
       "dealPrice": "74.6"
-    },
-    {
-      "id": "cc9ba00895ed",
-      "exchange": "NSE",
-      "date": "21-Sep-26",
-      "clientName": "360 ONE PIPE FUND",
-      "companyName": "Anupam Rasayan India",
-      "dealType": "BUY",
-      "volume": "900000",
-      "dealPrice": "1165"
     },
     {
       "id": "29015fd2cf5b",
@@ -143,66 +203,6 @@
       "dealType": "BUY",
       "volume": "5468750",
       "dealPrice": "128"
-    },
-    {
-      "id": "f71f5cabb450",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "360 ONE MUTUL FUND",
-      "companyName": "Jamna Auto Inds.",
-      "dealType": "BUY",
-      "volume": "2573125",
-      "dealPrice": "128"
-    },
-    {
-      "id": "83b795da8d4c",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "DSP MUTUAL FUND",
-      "companyName": "Jamna Auto Inds.",
-      "dealType": "BUY",
-      "volume": "7812500",
-      "dealPrice": "128"
-    },
-    {
-      "id": "842af9684330",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "ABAKKUS INVESTMENT MANAGERS PRIVATE LIMITED",
-      "companyName": "BlackBuck",
-      "dealType": "BUY",
-      "volume": "2100000",
-      "dealPrice": "576.05"
-    },
-    {
-      "id": "d16c492fd837",
-      "exchange": "BSE",
-      "date": "10-Sep-26",
-      "clientName": "MOTILAL OSWAL MUTUAL FUND",
-      "companyName": "Spectrum Elec. Inds.",
-      "dealType": "BUY",
-      "volume": "115000",
-      "dealPrice": "2651"
-    },
-    {
-      "id": "122555dd4ece",
-      "exchange": "BSE",
-      "date": "10-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "CORONA Remedies",
-      "dealType": "BUY",
-      "volume": "680000",
-      "dealPrice": "2050"
-    },
-    {
-      "id": "efc26d2cb7f7",
-      "exchange": "BSE",
-      "date": "10-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "CORONA Remedies",
-      "dealType": "BUY",
-      "volume": "860000",
-      "dealPrice": "2050"
     }
   ]
 }
