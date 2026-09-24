@@ -86767,5 +86767,53 @@
     "last_updated": "Sep 2026",
     "ai_generated": false,
     "data_version": "2.0"
+  },
+  {
+    "ticker": "STOCKY",
+    "exchange": "NSE",
+    "company_name": "Stock Y Ltd",
+    "sector": "General",
+    "industry": "Equities",
+    "description": "Stock Y Ltd is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "STOCKX",
+    "exchange": "NSE",
+    "company_name": "Stock X Ltd",
+    "sector": "General",
+    "industry": "Equities",
+    "description": "Stock X Ltd is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
   }
 ]

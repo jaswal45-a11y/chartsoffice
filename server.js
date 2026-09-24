@@ -1403,8 +1403,11 @@ function getStockCircuitBand(symbol) {
 function processPriceBandCsv(csvContent) {
   if (!csvContent || typeof csvContent !== 'string') return null;
   const lines = csvContent.split(/\r?\n/);
-  const bandsMap = {};
-  const stats = { total: 0, band2: 0, band5: 0, band10: 0, band20: 0, band40: 0, noBand: 0, newSymbolsAdded: 0 };
+  
+  // Load existing price bands to support non-destructive persistent upsert / incremental merge
+  const existingData = loadPriceBands();
+  const mergedBandsMap = Object.assign({}, existingData?.bands || {});
+  let explicitlyUpdatedCount = 0;
   const newStocksToIngest = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -1442,33 +1445,27 @@ function processPriceBandCsv(csvContent) {
     let bandNum = null;
     if (bandRaw === '2') {
       bandNum = 2;
-      stats.band2++;
     } else if (bandRaw === '5') {
       bandNum = 5;
-      stats.band5++;
     } else if (bandRaw === '10') {
       bandNum = 10;
-      stats.band10++;
     } else if (bandRaw === '20') {
       bandNum = 20;
-      stats.band20++;
     } else if (bandRaw === '40') {
       bandNum = 40;
-      stats.band40++;
-    } else {
-      stats.noBand++;
     }
 
-    bandsMap[cleanSym] = {
+    mergedBandsMap[cleanSym] = {
       symbol: cleanSym,
       series: series || 'EQ',
       name: name || cleanSym,
       band: bandNum,
       bandRaw: bandRaw,
       remarks: remarks && remarks !== '-' ? remarks : '',
-      isCircuitLimited: bandNum === 2 || bandNum === 5
+      isCircuitLimited: bandNum === 2 || bandNum === 5,
+      updatedAt: new Date().toISOString()
     };
-    stats.total++;
+    explicitlyUpdatedCount++;
 
     // Auto-discover new NSE symbols not yet in universe
     const symbolSet = getUniverseSymbolSet();
@@ -1487,15 +1484,27 @@ function processPriceBandCsv(csvContent) {
         rsi: 50,
         rvol: 1
       });
-      stats.newSymbolsAdded++;
     }
+  }
+
+  // Recalculate full aggregate stats across the persistent merged dataset
+  const stats = { total: 0, band2: 0, band5: 0, band10: 0, band20: 0, band40: 0, noBand: 0, newSymbolsAdded: newStocksToIngest.length, explicitlyUpdated: explicitlyUpdatedCount };
+  for (const sym of Object.keys(mergedBandsMap)) {
+    const item = mergedBandsMap[sym];
+    stats.total++;
+    if (item.band === 2) stats.band2++;
+    else if (item.band === 5) stats.band5++;
+    else if (item.band === 10) stats.band10++;
+    else if (item.band === 20) stats.band20++;
+    else if (item.band === 40) stats.band40++;
+    else stats.noBand++;
   }
 
   const payload = {
     lastUpdated: new Date().toISOString(),
-    source: 'Manual CSV Upload - CM Price Band Complete List',
+    source: 'Manual CSV Upload - Persistent Incremental Price Bands',
     stats,
-    bands: bandsMap
+    bands: mergedBandsMap
   };
 
   memoryPriceBands = payload;
@@ -1510,12 +1519,12 @@ function processPriceBandCsv(csvContent) {
     autoIngestStocksToUniverse(newStocksToIngest);
   }
 
-  // Enrich all universe stocks with latest circuit band in memory
+  // Enrich all universe stocks with latest circuit band from merged map (preserve existing if not mentioned)
   const universe = getUniverseStocks();
   let updatedUniverseCount = 0;
   universe.forEach(stk => {
     if (stk && stk.symbol) {
-      const bInfo = bandsMap[normalizeNseSymbol(stk.symbol)];
+      const bInfo = mergedBandsMap[normalizeNseSymbol(stk.symbol)];
       if (bInfo) {
         stk.circuitBand = bInfo.band;
         if (bInfo.series) stk.series = bInfo.series;

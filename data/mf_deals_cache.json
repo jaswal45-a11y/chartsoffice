@@ -1,9 +1,129 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-09-24T08:34:32.351Z",
-  "latestDealId": "2bd2ea9b32aa",
+  "lastUpdated": "2026-09-24T18:50:46.180Z",
+  "latestDealId": "32894b7e0578",
   "deals": [
+    {
+      "id": "32894b7e0578",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Star Health & Allied",
+      "dealType": "BUY",
+      "volume": "8298710",
+      "dealPrice": "550.4"
+    },
+    {
+      "id": "185dbd7f8899",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Star Health & Allied",
+      "dealType": "SELL",
+      "volume": "8298434",
+      "dealPrice": "550.4"
+    },
+    {
+      "id": "7f9f1bc33693",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "INVESCO MUTUAL FUND",
+      "companyName": "Sedemac Mechatronics",
+      "dealType": "BUY",
+      "volume": "354006",
+      "dealPrice": "3010"
+    },
+    {
+      "id": "e8dfeca896fa",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Sedemac Mechatronics",
+      "dealType": "BUY",
+      "volume": "524917",
+      "dealPrice": "3010"
+    },
+    {
+      "id": "85ab9993f313",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "PB Fintech",
+      "dealType": "BUY",
+      "volume": "2500000",
+      "dealPrice": "1282.3"
+    },
+    {
+      "id": "7a1a63e4b282",
+      "exchange": "BSE",
+      "date": "24-Sep-26",
+      "clientName": "MIRAE ASSET MUTUAL FUND",
+      "companyName": "Bluestone Jewellery",
+      "dealType": "BUY",
+      "volume": "2079166",
+      "dealPrice": "827.6"
+    },
+    {
+      "id": "70eced36210c",
+      "exchange": "BSE",
+      "date": "24-Sep-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "Bluestone Jewellery",
+      "dealType": "BUY",
+      "volume": "973977",
+      "dealPrice": "827.6"
+    },
+    {
+      "id": "d0e581275c9a",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Ajax Engineering",
+      "dealType": "BUY",
+      "volume": "1078580",
+      "dealPrice": "575.2"
+    },
+    {
+      "id": "bec0cf71cc09",
+      "exchange": "NSE",
+      "date": "24-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Ajax Engineering",
+      "dealType": "SELL",
+      "volume": "871308",
+      "dealPrice": "575.2"
+    },
+    {
+      "id": "37d2f2ed505e",
+      "exchange": "BSE",
+      "date": "23-Sep-26",
+      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
+      "companyName": "Molbio Diagnostics",
+      "dealType": "BUY",
+      "volume": "2750000",
+      "dealPrice": "1315"
+    },
+    {
+      "id": "6db9e8a7aabc",
+      "exchange": "NSE",
+      "date": "23-Sep-26",
+      "clientName": "SBI FUNDS MANAGEMENT LIMITED",
+      "companyName": "Marine Electricals",
+      "dealType": "BUY",
+      "volume": "1155413",
+      "dealPrice": "394.79"
+    },
+    {
+      "id": "09a242f4162f",
+      "exchange": "BSE",
+      "date": "23-Sep-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Allied Blenders&Dist",
+      "dealType": "BUY",
+      "volume": "3400725",
+      "dealPrice": "650"
+    },
     {
       "id": "2bd2ea9b32aa",
       "exchange": "BSE",
@@ -33,46 +153,6 @@
       "dealType": "BUY",
       "volume": "1769176",
       "dealPrice": "815.68"
-    },
-    {
-      "id": "09a242f4162f",
-      "exchange": "BSE",
-      "date": "23-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "Allied Blenders&Dist",
-      "dealType": "BUY",
-      "volume": "3400725",
-      "dealPrice": "650"
-    },
-    {
-      "id": "6db9e8a7aabc",
-      "exchange": "NSE",
-      "date": "23-Sep-26",
-      "clientName": "SBI FUNDS MANAGEMENT LIMITED",
-      "companyName": "Marine Electricals",
-      "dealType": "BUY",
-      "volume": "1155413",
-      "dealPrice": "394.79"
-    },
-    {
-      "id": "37d2f2ed505e",
-      "exchange": "BSE",
-      "date": "23-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
-      "companyName": "Molbio Diagnostics",
-      "dealType": "BUY",
-      "volume": "2750000",
-      "dealPrice": "1315"
-    },
-    {
-      "id": "6fc7491ea0c2",
-      "exchange": "NSE",
-      "date": "22-Sep-26",
-      "clientName": "HSBC MUTUAL FUND",
-      "companyName": "Capital Infra Trust",
-      "dealType": "BUY",
-      "volume": "4500000",
-      "dealPrice": "77"
     },
     {
       "id": "524d8a740abb",
@@ -105,14 +185,14 @@
       "dealPrice": "360"
     },
     {
-      "id": "cc9ba00895ed",
+      "id": "6fc7491ea0c2",
       "exchange": "NSE",
-      "date": "21-Sep-26",
-      "clientName": "360 ONE PIPE FUND",
-      "companyName": "Anupam Rasayan India",
+      "date": "22-Sep-26",
+      "clientName": "HSBC MUTUAL FUND",
+      "companyName": "Capital Infra Trust",
       "dealType": "BUY",
-      "volume": "900000",
-      "dealPrice": "1165"
+      "volume": "4500000",
+      "dealPrice": "77"
     },
     {
       "id": "174d182e427a",
@@ -123,86 +203,6 @@
       "dealType": "BUY",
       "volume": "113600",
       "dealPrice": "74.6"
-    },
-    {
-      "id": "29015fd2cf5b",
-      "exchange": "NSE",
-      "date": "18-Sep-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Entero Healthcare",
-      "dealType": "BUY",
-      "volume": "1390000",
-      "dealPrice": "1695"
-    },
-    {
-      "id": "20bbb4927847",
-      "exchange": "NSE",
-      "date": "17-Sep-26",
-      "clientName": "HELIOS MUTUAL FUND",
-      "companyName": "Rentomojo",
-      "dealType": "BUY",
-      "volume": "870770",
-      "dealPrice": "510.42"
-    },
-    {
-      "id": "fe1bc0d32534",
-      "exchange": "NSE",
-      "date": "16-Sep-26",
-      "clientName": "GROWW MUTUAL FUND",
-      "companyName": "Kanohar Electricals",
-      "dealType": "BUY",
-      "volume": "475636",
-      "dealPrice": "740.38"
-    },
-    {
-      "id": "3e5cb1a4e15a",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "Westlife Foodworld",
-      "dealType": "BUY",
-      "volume": "2980072",
-      "dealPrice": "569.6"
-    },
-    {
-      "id": "4deb688d2367",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "Westlife Foodworld",
-      "dealType": "BUY",
-      "volume": "4000000",
-      "dealPrice": "569.6"
-    },
-    {
-      "id": "d8d558d1750f",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "Westlife Foodworld",
-      "dealType": "SELL",
-      "volume": "3033125",
-      "dealPrice": "569.6"
-    },
-    {
-      "id": "47ffc7cbed76",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "Westlife Foodworld",
-      "dealType": "SELL",
-      "volume": "4000000",
-      "dealPrice": "569.6"
-    },
-    {
-      "id": "1033264f60c0",
-      "exchange": "NSE",
-      "date": "11-Sep-26",
-      "clientName": "360 ONE ASSET MANAGEMENT LIMITED",
-      "companyName": "Jamna Auto Inds.",
-      "dealType": "BUY",
-      "volume": "5468750",
-      "dealPrice": "128"
     }
   ]
 }

@@ -1,15 +1,16 @@
 {
-  "lastUpdated": "2026-09-23T18:42:04.855Z",
-  "source": "Manual CSV Upload - CM Price Band Complete List",
+  "lastUpdated": "2026-09-24T18:42:14.911Z",
+  "source": "Manual CSV Upload - Persistent Incremental Price Bands",
   "stats": {
-    "total": 3538,
+    "total": 3537,
     "band2": 56,
     "band5": 643,
     "band10": 215,
-    "band20": 2082,
+    "band20": 2081,
     "band40": 1,
     "noBand": 541,
-    "newSymbolsAdded": 1924
+    "newSymbolsAdded": 0,
+    "explicitlyUpdated": 0
   },
   "bands": {
     "21STCENMGM": {
