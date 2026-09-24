@@ -121,15 +121,15 @@
           <span>Notes</span>
         </button>
 
-        <!-- Mutual Fund Bulk & Block Deals Launcher Tile (Live Accord Feed) -->
-        <button id="btn-open-mf-deals" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
+        <!-- Mutual Fund Bulk & Block Deals Launcher Tile (Visible only to Registered Users) -->
+        <button id="btn-open-mf-deals" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
           <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
           <span>MF Deals</span>
           <span id="mf-deals-unread-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-dark-bg animate-ping"></span>
         </button>
 
-        <!-- Update CKTs (Price Bands Complete List) Launcher Button -->
-        <button id="btn-open-circuit-modal" onclick="openCircuitModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Update & Inspect NSE Circuit Limits (2% & 5% Price Bands)">
+        <!-- Update CKTs (Price Bands Complete List) Launcher Button (Visible only to Registered Users) -->
+        <button id="btn-open-circuit-modal" onclick="openCircuitModal()" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Update & Inspect NSE Circuit Limits (2% & 5% Price Bands)">
           <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
           <span>Update CKTs</span>
         </button>
@@ -153,6 +153,13 @@
             <i data-lucide="user-check" class="w-3.5 h-3.5" id="user-badge-icon"></i>
             <span><strong id="user-badge-name" class="text-white">User</strong> <span id="user-badge-role" class="text-slate-400 text-[10px] font-normal">(User)</span></span>
           </div>
+
+          <!-- Change Password Button (Visible for Authenticated User) -->
+          <button id="btn-open-change-password-modal" onclick="openChangePasswordModal()" class="px-2.5 py-1.5 rounded-lg bg-dark-bg hover:bg-sky-500/20 text-slate-300 hover:text-sky-300 border border-dark-border hover:border-sky-500/40 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer" title="Change Account Password">
+            <i data-lucide="key-round" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>Password</span>
+          </button>
+
           <button id="btn-logout" onclick="handleLogout()" title="Log out" class="px-2.5 py-1.5 rounded-lg bg-dark-bg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-dark-border hover:border-rose-500/30 text-xs font-medium transition-all flex items-center gap-1 cursor-pointer">
             <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
             <span>Logout</span>
@@ -2415,6 +2422,91 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Change Password Modal for Registered Users -->
+  <div id="change-password-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm hidden">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30">
+            <i data-lucide="key-round" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              Change Account Password
+            </h3>
+            <p class="text-[11px] text-slate-400">Click the eye icon to view or unhide what you type</p>
+          </div>
+        </div>
+        <button onclick="closeChangePasswordModal()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-dark-accent transition-colors cursor-pointer" title="Close Modal">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <form id="change-password-form" onsubmit="handleChangePasswordSubmit(event)" class="p-5 flex flex-col gap-4 text-xs">
+        
+        <!-- Error & Success Alert Banners -->
+        <div id="change-password-error-banner" class="hidden p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs"></div>
+        <div id="change-password-success-banner" class="hidden p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-medium text-xs"></div>
+
+        <!-- Current Password -->
+        <div class="flex flex-col gap-1.5">
+          <label for="current-password-input" class="text-slate-300 font-semibold flex items-center justify-between">
+            <span>Current Password</span>
+            <span class="text-[10px] text-slate-500 font-normal">Required for verification</span>
+          </label>
+          <div class="relative flex items-center">
+            <input type="password" id="current-password-input" required placeholder="Enter current password" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 pr-10 font-mono transition-colors">
+            <button type="button" onclick="togglePasswordVisibility('current-password-input', 'icon-current-pw')" class="absolute right-3 text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5" title="Toggle Password Visibility">
+              <i id="icon-current-pw" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="flex flex-col gap-1.5">
+          <label for="new-password-input" class="text-slate-300 font-semibold flex items-center justify-between">
+            <span>New Password</span>
+            <span class="text-[10px] text-slate-500 font-normal">Min. 4 characters</span>
+          </label>
+          <div class="relative flex items-center">
+            <input type="password" id="new-password-input" required minlength="4" placeholder="Enter new password" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 pr-10 font-mono transition-colors">
+            <button type="button" onclick="togglePasswordVisibility('new-password-input', 'icon-new-pw')" class="absolute right-3 text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5" title="Toggle Password Visibility">
+              <i id="icon-new-pw" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm New Password -->
+        <div class="flex flex-col gap-1.5">
+          <label for="confirm-password-input" class="text-slate-300 font-semibold">
+            Confirm New Password
+          </label>
+          <div class="relative flex items-center">
+            <input type="password" id="confirm-password-input" required minlength="4" placeholder="Re-enter new password" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 pr-10 font-mono transition-colors">
+            <button type="button" onclick="togglePasswordVisibility('confirm-password-input', 'icon-confirm-pw')" class="absolute right-3 text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5" title="Toggle Password Visibility">
+              <i id="icon-confirm-pw" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Footer Buttons -->
+        <div class="pt-3 border-t border-dark-border flex items-center justify-end gap-2 mt-1">
+          <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" id="btn-submit-change-password" class="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Update Password</span>
+          </button>
+        </div>
+
+      </form>
     </div>
   </div>
 

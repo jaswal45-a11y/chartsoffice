@@ -132,9 +132,9 @@
   {
     "createdAt": "2026-09-07T07:15:40.385Z",
     "id": "usr_mtqwp61t_15zm",
-    "passwordHash": "359ba2f198a26ef8c1e69025a664bb296ad43398a116ac7adedfc6206314ceb97acbe3a58e14966fba91c8bb9f97c16d06a3256b8449b8e5ca6b34be9ab2a0ec",
+    "passwordHash": "76ad4fa2fa56533fb14d586e8ffcd9264898f0dbe34aae725181b5b0dd2853e5c32c8e3d51c5a9e27bb13308202ae9ac5505be06da400af568a59f7a99d63a3e",
     "role": "user",
-    "salt": "f29562938f29f865e706eae3082fd701",
+    "salt": "67b439bdfb378f03278dd4152858092b",
     "username": "boby",
     "watchlists": [
       {
@@ -5944,14 +5944,15 @@
       }
     },
     "maxWatchlists": 15,
-    "activeToken": "sess_user_0b0a5008002429b1191ae2287dbdcf51f91637ab12a8f96d",
+    "activeToken": "sess_user_4e2c1e6126b1863159e48c80db342d758d0a721e41728303",
     "tokens": [
       "sess_user_b840f951fb9842c3af6766a5b760dd884efdd4d9446e2818",
       "sess_user_2f927e3d45a65bbefc631e0c05c83a5e1f2c5199416a3597",
       "sess_user_ddaecec65c668eacb8956cfa2b61ffa30cca56af052b2139",
       "sess_user_2d4b00f0b9ca2f1815c7a1ac24b68fb451ce6b648bc0560a",
       "sess_user_6586389ac74984f1493986774c78d0a58ebff6c5f7e651b5",
-      "sess_user_0b0a5008002429b1191ae2287dbdcf51f91637ab12a8f96d"
+      "sess_user_0b0a5008002429b1191ae2287dbdcf51f91637ab12a8f96d",
+      "sess_user_4e2c1e6126b1863159e48c80db342d758d0a721e41728303"
     ]
   },
   {

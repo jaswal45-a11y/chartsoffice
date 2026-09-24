@@ -305,6 +305,16 @@ const el = {
   
   // Multi-User Auth Controls
   btnOpenAuthModal: document.getElementById('btn-open-auth-modal'),
+  btnOpenCircuitModal: document.getElementById('btn-open-circuit-modal'),
+  btnOpenChangePasswordModal: document.getElementById('btn-open-change-password-modal'),
+  changePasswordModal: document.getElementById('change-password-modal'),
+  changePasswordForm: document.getElementById('change-password-form'),
+  currentPasswordInput: document.getElementById('current-password-input'),
+  newPasswordInput: document.getElementById('new-password-input'),
+  confirmPasswordInput: document.getElementById('confirm-password-input'),
+  changePasswordErrorBanner: document.getElementById('change-password-error-banner'),
+  changePasswordSuccessBanner: document.getElementById('change-password-success-banner'),
+  btnSubmitChangePassword: document.getElementById('btn-submit-change-password'),
   userAuthBox: document.getElementById('user-auth-box'),
   userBadgeIcon: document.getElementById('user-badge-icon'),
   userBadgeName: document.getElementById('user-badge-name'),
@@ -1879,7 +1889,7 @@ function updateAuthUI(user) {
       el.userBadgeRole.textContent = user.role === 'admin' ? '(Admin)' : '(User)';
       el.userBadgeRole.className = user.role === 'admin' ? 'text-emerald-400 text-[10px] font-bold' : 'text-slate-400 text-[10px] font-normal';
     }
-    // Notes & MF Deals buttons visible strictly to logged-in/registered user
+    // Notes, MF Deals & Update CKTs buttons visible strictly to logged-in/registered user
     el.btnOpenNotes?.classList.remove('hidden');
     el.btnOpenNotes?.classList.add('flex');
     if (window.SangamNotes?.refreshAuth) {
@@ -1891,6 +1901,9 @@ function updateAuthUI(user) {
     if (window.SangamMfDeals?.refreshAuth) {
       window.SangamMfDeals.refreshAuth();
     }
+
+    el.btnOpenCircuitModal?.classList.remove('hidden');
+    el.btnOpenCircuitModal?.classList.add('flex');
 
     // Add Screener button in Command Deck category bar
     el.btnOpenAddModalDeck?.classList.remove('hidden');
@@ -1919,8 +1932,15 @@ function updateAuthUI(user) {
     if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
       window.SangamNotes.close();
     }
-    el.btnOpenMfDeals?.classList.remove('hidden');
-    el.btnOpenMfDeals?.classList.add('flex');
+    el.btnOpenMfDeals?.classList.add('hidden');
+    el.btnOpenMfDeals?.classList.remove('flex');
+    if (window.SangamMfDeals && typeof window.SangamMfDeals.close === 'function') {
+      window.SangamMfDeals.close();
+    }
+    el.btnOpenCircuitModal?.classList.add('hidden');
+    el.btnOpenCircuitModal?.classList.remove('flex');
+    closeCircuitModal();
+    closeChangePasswordModal();
     el.btnAdminConsole?.classList.add('hidden');
     el.btnAdminConsole?.classList.remove('flex');
   }
@@ -2109,6 +2129,147 @@ async function handleLogout() {
   switchSidebarTab('screeners');
   await loadScreeners();
   showToast('Logged out successfully.', 'info');
+}
+
+// -------------------------------------------------------------
+// User Change Password Modal Controller (with Eye Visibility Toggles)
+// -------------------------------------------------------------
+
+function openChangePasswordModal() {
+  if (!state.user) {
+    showToast('Please log in to change your password', 'info');
+    openAuthModal('login');
+    return;
+  }
+  const modal = document.getElementById('change-password-modal');
+  if (!modal) return;
+  const errBanner = document.getElementById('change-password-error-banner');
+  const succBanner = document.getElementById('change-password-success-banner');
+  if (errBanner) { errBanner.className = 'hidden'; errBanner.textContent = ''; }
+  if (succBanner) { succBanner.className = 'hidden'; succBanner.textContent = ''; }
+
+  const cp = document.getElementById('current-password-input');
+  const np = document.getElementById('new-password-input');
+  const cnp = document.getElementById('confirm-password-input');
+  if (cp) { cp.value = ''; cp.type = 'password'; }
+  if (np) { np.value = ''; np.type = 'password'; }
+  if (cnp) { cnp.value = ''; cnp.type = 'password'; }
+
+  // Reset eye icons
+  ['icon-current-pw', 'icon-new-pw', 'icon-confirm-pw'].forEach(id => {
+    const icon = document.getElementById(id);
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  });
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
+  if (cp) cp.focus();
+}
+
+function closeChangePasswordModal() {
+  const modal = document.getElementById('change-password-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function togglePasswordVisibility(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon = document.getElementById(iconId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.setAttribute('data-lucide', 'eye-off');
+  } else {
+    input.type = 'password';
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+async function handleChangePasswordSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const errBanner = document.getElementById('change-password-error-banner');
+  const succBanner = document.getElementById('change-password-success-banner');
+  if (errBanner) { errBanner.className = 'hidden'; errBanner.textContent = ''; }
+  if (succBanner) { succBanner.className = 'hidden'; succBanner.textContent = ''; }
+
+  const currentPassword = (document.getElementById('current-password-input')?.value || '').trim();
+  const newPassword = (document.getElementById('new-password-input')?.value || '').trim();
+  const confirmPassword = (document.getElementById('confirm-password-input')?.value || '').trim();
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'Please fill in all password fields.';
+    }
+    return;
+  }
+
+  if (newPassword.length < 4) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'New password must be at least 4 characters long.';
+    }
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'New password and confirm password do not match!';
+    }
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit-change-password');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Updating...</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/auth/change-password', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      if (errBanner) {
+        errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+        errBanner.textContent = data.error || 'Failed to update password.';
+      }
+      return;
+    }
+
+    if (succBanner) {
+      succBanner.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-medium text-xs';
+      succBanner.textContent = 'Password changed successfully!';
+    }
+    showToast('Password updated successfully!', 'success');
+    setTimeout(() => {
+      closeChangePasswordModal();
+    }, 1200);
+  } catch (err) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'Server connection error: ' + err.message;
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Update Password</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
 }
 
 // -------------------------------------------------------------
@@ -8923,6 +9084,10 @@ window.clearSelectedCircuitFile = clearSelectedCircuitFile;
 window.submitCircuitData = submitCircuitData;
 window.loadCircuitStats = loadCircuitStats;
 window.getCircuitBadgeHtml = getCircuitBadgeHtml;
+window.openChangePasswordModal = openChangePasswordModal;
+window.closeChangePasswordModal = closeChangePasswordModal;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.handleChangePasswordSubmit = handleChangePasswordSubmit;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);

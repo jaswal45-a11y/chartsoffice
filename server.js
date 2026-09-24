@@ -6295,7 +6295,57 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      // 0e. POST /api/auth/logout - End user session
+      // 0e. PUT or POST /api/auth/change-password - Change password for authenticated registered user
+      if (pathname === '/api/auth/change-password' && (method === 'PUT' || method === 'POST')) {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in.' });
+        }
+
+        const body = await parseJsonBody(req);
+        const currentPassword = (body.currentPassword || body.oldPassword || '').trim();
+        const newPassword = (body.newPassword || body.password || '').trim();
+
+        if (!currentPassword) {
+          return sendJson(res, 400, { success: false, error: 'Current password is required.' });
+        }
+        if (!newPassword || newPassword.length < 4) {
+          return sendJson(res, 400, { success: false, error: 'New password must be at least 4 characters long.' });
+        }
+
+        let users = readUsers();
+        const userObj = users.find(u => u.id === authUser.userId || u.username.toLowerCase() === authUser.username.toLowerCase());
+        if (!userObj) {
+          return sendJson(res, 404, { success: false, error: 'User account not found.' });
+        }
+
+        if (!verifyPassword(currentPassword, userObj.passwordHash, userObj.salt)) {
+          return sendJson(res, 400, { success: false, error: 'Incorrect current password. Please try again.' });
+        }
+
+        const { salt, hash } = hashPassword(newPassword);
+        userObj.salt = salt;
+        userObj.passwordHash = hash;
+        userObj.updatedAt = new Date().toISOString();
+
+        saveUsers(users);
+
+        if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+          try {
+            await MONGO_CONFIG.db.collection('users').updateOne(
+              { $or: [{ id: userObj.id }, { username: userObj.username }] },
+              { $set: { salt, passwordHash: hash, updatedAt: userObj.updatedAt } }
+            );
+          } catch (mErr) {
+            console.error('[MongoDB] Error updating user password in Atlas:', mErr.message);
+          }
+        }
+
+        console.log(`[AUTH] Password changed successfully for user "${authUser.username}" (${authUser.userId})`);
+        return sendJson(res, 200, { success: true, message: 'Password updated successfully!' });
+      }
+
+      // 0f. POST /api/auth/logout - End user session
       if (pathname === '/api/auth/logout' && method === 'POST') {
         const authHeader = req.headers['authorization'] || '';
         let token = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : null;
