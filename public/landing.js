@@ -170,12 +170,13 @@ function initBottomQuotes() {
    ========================================================================== */
 async function initLiveTickers() {
   await fetchLiveIndexQuotes();
-  liveTickerIntervalTimer = setInterval(fetchLiveIndexQuotes, 25000);
+  liveTickerIntervalTimer = setInterval(fetchLiveIndexQuotes, 20000);
 }
 
 async function fetchLiveIndexQuotes() {
   try {
-    const res = await fetch('/api/fno/live-quotes?symbols=NIFTY%2050,SENSEX,NIFTY%20BANK,NIFTY');
+    const symbols = 'NIFTY 50,SENSEX,NIFTY BANK,MIDSMALL400,DXY,GOLD CFD,SilverCFD,Copper,US10 Year yield,Bitcoin';
+    const res = await fetch(`/api/fno/live-quotes?symbols=${encodeURIComponent(symbols)}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.success && data.quotes) {
@@ -197,31 +198,51 @@ async function fetchLiveIndexQuotes() {
 }
 
 function updateTickerUI(quotes) {
-  const nifty = quotes['NIFTY 50'] || quotes['NIFTY'] || quotes['NIFTY50'];
-  const sensex = quotes['SENSEX'] || quotes['BSE:SENSEX'] || quotes['INDEX:SENSEX'];
-  const bank = quotes['NIFTY BANK'] || quotes['BANKNIFTY'] || quotes['NIFTYBANK'];
+  if (!quotes || typeof quotes !== 'object') return;
+
+  const nifty = quotes['NIFTY 50'] || quotes['NIFTY'] || quotes['^NSEI'];
+  const sensex = quotes['SENSEX'] || quotes['^BSESN'] || quotes['BSE:SENSEX'];
+  const bank = quotes['NIFTY BANK'] || quotes['BANKNIFTY'] || quotes['^NSEBANK'];
+  const midsmall = quotes['MIDSMALL400'] || quotes['MIDSMALL 400'] || quotes['^CRSLDX'] || quotes['NIFTY_MIDCAP_100.NS'];
+  const dxy = quotes['DXY'] || quotes['DX-Y.NYB'] || quotes['USD'];
+  const gold = quotes['GOLD CFD'] || quotes['GOLDCFD'] || quotes['GC=F'] || quotes['GOLD'];
+  const silver = quotes['SILVERCFD'] || quotes['SILVER CFD'] || quotes['SI=F'] || quotes['SILVER'];
+  const copper = quotes['COPPER'] || quotes['HG=F'];
+  const us10y = quotes['US10 YEAR YIELD'] || quotes['US10Y'] || quotes['US10YEAR YIELD'] || quotes['^TNX'];
+  const btc = quotes['BITCOIN'] || quotes['BTC'] || quotes['BTC-USD'];
 
   if (nifty) applyTicker('ticker-nifty', nifty);
   if (sensex) applyTicker('ticker-sensex', sensex);
   if (bank) applyTicker('ticker-bank', bank);
+  if (midsmall) applyTicker('ticker-midsmall', midsmall);
+  if (dxy) applyTicker('ticker-dxy', dxy, { prefix: '$', decimals: 2 });
+  if (gold) applyTicker('ticker-gold', gold, { prefix: '$', decimals: 1 });
+  if (silver) applyTicker('ticker-silver', silver, { prefix: '$', decimals: 2 });
+  if (copper) applyTicker('ticker-copper', copper, { prefix: '$', decimals: 3 });
+  if (us10y) applyTicker('ticker-us10y', us10y, { suffix: '%', decimals: 3 });
+  if (btc) applyTicker('ticker-btc', btc, { prefix: '$', decimals: 0 });
 }
 
-function applyTicker(prefix, quote) {
+function applyTicker(prefix, quote, opts = {}) {
   const priceEl = document.getElementById(prefix + '-price');
   const chgEl = document.getElementById(prefix + '-chg');
   if (!priceEl || !chgEl) return;
 
-  const price = quote.ltp || quote.close || quote.price || 0;
+  const price = quote.price || quote.ltp || quote.close || 0;
   const change = quote.change || (quote.close && quote.prevClose ? quote.close - quote.prevClose : 0);
-  const pChange = quote.pChange || quote.changePercent || (quote.prevClose ? (change / quote.prevClose) * 100 : 0);
+  const pChange = quote.changePercent != null ? quote.changePercent : (quote.pChange != null ? quote.pChange : (quote.prevClose ? (change / quote.prevClose) * 100 : 0));
 
   if (price > 0) {
-    priceEl.textContent = Number(price).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    const decimals = opts.decimals !== undefined ? opts.decimals : 2;
+    let formattedPrice = Number(price).toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    if (opts.prefix) formattedPrice = opts.prefix + formattedPrice;
+    if (opts.suffix) formattedPrice = formattedPrice + opts.suffix;
+    priceEl.textContent = formattedPrice;
   }
 
   const isPositive = pChange >= 0;
   const sign = isPositive ? '+' : '';
-  chgEl.textContent = sign + pChange.toFixed(2) + '%';
+  chgEl.textContent = sign + Number(pChange).toFixed(2) + '%';
 
   if (isPositive) {
     chgEl.className = 'px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
@@ -264,30 +285,17 @@ async function initAuthSessionCheck() {
 }
 
 function renderAuthenticatedUI(user) {
-  const unauthedHeader = document.getElementById('auth-header-unauthed');
-  const authedHeader = document.getElementById('auth-header-authed');
-  const loginForm = document.getElementById('landing-login-form');
-  const authedActions = document.getElementById('landing-authed-actions');
-  const divider = document.getElementById('auth-divider');
-  const guestSection = document.getElementById('auth-guest-section');
-  const registerFooter = document.getElementById('auth-register-footer');
+  const showcaseUnauthed = document.getElementById('showcase-unauthed');
+  const showcaseAuthed = document.getElementById('showcase-authed');
   const usernameEl = document.getElementById('recognized-username');
   const avatarEl = document.getElementById('recognized-user-avatar');
   const headerLoginBtn = document.getElementById('btn-header-login');
 
-  if (unauthedHeader) unauthedHeader.classList.add('hidden');
-  if (authedHeader) {
-    authedHeader.classList.remove('hidden');
-    authedHeader.classList.add('flex');
+  if (showcaseUnauthed) showcaseUnauthed.classList.add('hidden');
+  if (showcaseAuthed) {
+    showcaseAuthed.classList.remove('hidden');
+    showcaseAuthed.classList.add('flex');
   }
-  if (loginForm) loginForm.classList.add('hidden');
-  if (authedActions) {
-    authedActions.classList.remove('hidden');
-    authedActions.classList.add('flex');
-  }
-  if (divider) divider.classList.add('hidden');
-  if (guestSection) guestSection.classList.add('hidden');
-  if (registerFooter) registerFooter.classList.add('hidden');
 
   const name = user.username || 'Investor';
   if (usernameEl) usernameEl.textContent = name;
@@ -302,34 +310,48 @@ function renderAuthenticatedUI(user) {
 }
 
 function renderUnauthenticatedUI() {
-  const unauthedHeader = document.getElementById('auth-header-unauthed');
-  const authedHeader = document.getElementById('auth-header-authed');
-  const loginForm = document.getElementById('landing-login-form');
-  const authedActions = document.getElementById('landing-authed-actions');
-  const divider = document.getElementById('auth-divider');
-  const guestSection = document.getElementById('auth-guest-section');
-  const registerFooter = document.getElementById('auth-register-footer');
+  const showcaseUnauthed = document.getElementById('showcase-unauthed');
+  const showcaseAuthed = document.getElementById('showcase-authed');
   const headerLoginBtn = document.getElementById('btn-header-login');
 
-  if (unauthedHeader) unauthedHeader.classList.remove('hidden');
-  if (authedHeader) {
-    authedHeader.classList.add('hidden');
-    authedHeader.classList.remove('flex');
+  if (showcaseUnauthed) showcaseUnauthed.classList.remove('hidden');
+  if (showcaseAuthed) {
+    showcaseAuthed.classList.add('hidden');
+    showcaseAuthed.classList.remove('flex');
   }
-  if (loginForm) loginForm.classList.remove('hidden');
-  if (authedActions) {
-    authedActions.classList.add('hidden');
-    authedActions.classList.remove('flex');
-  }
-  if (divider) divider.classList.remove('hidden');
-  if (guestSection) guestSection.classList.remove('hidden');
-  if (registerFooter) registerFooter.classList.remove('hidden');
 
   if (headerLoginBtn) {
     headerLoginBtn.textContent = 'Login';
-    headerLoginBtn.onclick = focusAuthCard;
+    headerLoginBtn.onclick = openLoginModal;
   }
   initLucideIcons();
+}
+
+function openLoginModal() {
+  const modal = document.getElementById('modal-login');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    const banner = document.getElementById('auth-alert-banner');
+    if (banner) banner.className = 'hidden';
+    const input = document.getElementById('input-username');
+    if (input) setTimeout(() => input.focus(), 100);
+  }
+  initLucideIcons();
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('modal-login');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  const banner = document.getElementById('auth-alert-banner');
+  if (banner) banner.className = 'hidden';
+}
+
+function focusAuthCard() {
+  openLoginModal();
 }
 
 /* ==========================================================================
@@ -592,16 +614,7 @@ function togglePasswordVisibility() {
 }
 
 function focusAuthCard() {
-  const card = document.getElementById('auth-gateway-card');
-  const input = document.getElementById('input-username');
-  if (card) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('ring-2', 'ring-teal-400');
-    setTimeout(() => card.classList.remove('ring-2', 'ring-teal-400'), 1500);
-  }
-  if (input && !currentUser) {
-    setTimeout(() => input.focus(), 300);
-  }
+  openLoginModal();
 }
 
 function toggleTwilightMode() {
@@ -615,6 +628,7 @@ function toggleTwilightMode() {
 function setupKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      closeLoginModal();
       closeAboutModal();
       closeForgotPasswordModal();
       closeRegisterModal();
@@ -622,7 +636,7 @@ function setupKeyboardShortcuts() {
   });
 
   // Close modals on backdrop click
-  ['modal-about', 'modal-forgot-password', 'modal-register'].forEach(id => {
+  ['modal-login', 'modal-about', 'modal-forgot-password', 'modal-register'].forEach(id => {
     const modal = document.getElementById(id);
     if (modal) {
       modal.addEventListener('click', (e) => {
@@ -634,3 +648,24 @@ function setupKeyboardShortcuts() {
     }
   });
 }
+
+// Window Globals for inline HTML onclick handlers
+window.openLoginModal = openLoginModal;
+window.closeLoginModal = closeLoginModal;
+window.openRegisterModal = openRegisterModal;
+window.closeRegisterModal = closeRegisterModal;
+window.openForgotPasswordModal = openForgotPasswordModal;
+window.closeForgotPasswordModal = closeForgotPasswordModal;
+window.openAboutModal = openAboutModal;
+window.closeAboutModal = closeAboutModal;
+window.openTermsModal = openTermsModal;
+window.openPrivacyModal = openPrivacyModal;
+window.openContactModal = openContactModal;
+window.focusAuthCard = focusAuthCard;
+window.handleLandingLogin = handleLandingLogin;
+window.handleLandingRegister = handleLandingRegister;
+window.handleLandingLogout = handleLandingLogout;
+window.continueAsGuest = continueAsGuest;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.toggleTwilightMode = toggleTwilightMode;
+window.rotateNextQuote = rotateNextQuote;

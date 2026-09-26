@@ -138,6 +138,23 @@ const state = {
   circuitStats: null,
   selectedCircuitFile: null,
 
+  // Guest Feature Access Controls (Default: Pure Chart-Only for Guests)
+  guestPermissions: {
+    screenerDeck: false,
+    sidebarScans: false,
+    customScreener: false,
+    screenerExport: false,
+    watchlists: false,
+    indicatorsToolbar: false,
+    volumeIntelligence: false,
+    intradayTimeframes: false,
+    stockSearch: true,
+    chartExport: false,
+    navSubpages: false,
+    guestBanner: true,
+    guestBannerText: 'Viewing in Guest mode'
+  },
+
   // Visual Chart Themes & Custom Colors
   chartTheme: localStorage.getItem('chart_theme') || 'dark',
   customThemeColors: {
@@ -281,6 +298,7 @@ const el = {
   activeScreenerBadge: document.getElementById('active-screener-badge'),
   lastUpdatedTime: document.getElementById('last-updated-time'),
   resultsFooterMeta: document.getElementById('results-footer-meta'),
+  headerSummaryStats: document.getElementById('header-summary-stats'),
   statTotalScreeners: document.getElementById('stat-total-screeners'),
   statTotalStocks: document.getElementById('stat-total-stocks'),
   btnRunAll: document.getElementById('btn-run-all'),
@@ -562,6 +580,7 @@ const fmt = {
 // Initialize Application
 async function init() {
   applyTheme(state.theme);
+  await loadGuestPermissions();
   const localPrefs = JSON.parse(localStorage.getItem('user_indicator_prefs') || 'null');
   if (localPrefs) applyLoadedIndicatorPreferences(localPrefs);
 
@@ -1783,6 +1802,7 @@ function applyLoadedIndicatorPreferences(prefs) {
 
   updateTimeScalesVisibility();
   updatePivotLines();
+  syncChartIndicatorsWithPermissions();
   handleResize();
 }
 
@@ -1810,6 +1830,7 @@ async function checkAuthStatus() {
   } catch (err) {}
 
   if (!state.token) {
+    await loadGuestPermissions();
     updateAuthUI(null);
     return;
   }
@@ -1850,9 +1871,11 @@ async function checkAuthStatus() {
       state.token = null;
       localStorage.removeItem('authToken');
       localStorage.removeItem('adminToken');
+      await loadGuestPermissions();
       updateAuthUI(null);
     }
   } catch (err) {
+    await loadGuestPermissions();
     updateAuthUI(null);
   }
 }
@@ -1877,6 +1900,8 @@ function updateAuthUI(user) {
   state.isAdmin = (user && user.role === 'admin');
 
   if (user) {
+    el.headerSummaryStats?.classList.remove('hidden');
+    el.headerSummaryStats?.classList.add('sm:flex', 'flex');
     el.btnNavAnalytics?.classList.remove('hidden');
     el.btnNavAnalytics?.classList.add('flex');
     el.btnNavFno?.classList.remove('hidden');
@@ -1918,6 +1943,8 @@ function updateAuthUI(user) {
       el.btnAdminConsole?.classList.remove('flex');
     }
   } else {
+    el.headerSummaryStats?.classList.add('hidden');
+    el.headerSummaryStats?.classList.remove('sm:flex', 'flex');
     el.btnNavAnalytics?.classList.add('hidden');
     el.btnNavAnalytics?.classList.remove('flex');
     el.btnNavFno?.classList.add('hidden');
@@ -1947,7 +1974,213 @@ function updateAuthUI(user) {
 
   renderScreeners();
   renderChartWatchlistDropdown();
+  applyGuestPermissions();
   lucide.createIcons();
+}
+
+async function loadGuestPermissions() {
+  try {
+    const res = await fetch('/api/guest-permissions');
+    const data = await res.json();
+    if (data.success && data.permissions) {
+      state.guestPermissions = Object.assign({}, state.guestPermissions, data.permissions);
+    }
+  } catch (err) {
+    console.warn('[GuestPermissions] Failed to load guest permissions:', err.message);
+  }
+  applyGuestPermissions();
+}
+
+function syncChartIndicatorsWithPermissions() {
+  const isGuest = !state.user;
+  const p = state.guestPermissions || {};
+  const allowIndicators = !isGuest || Boolean(p.indicatorsToolbar);
+  const allowVolIntel = !isGuest || Boolean(p.volumeIntelligence);
+
+  const indToolbar = document.getElementById('chart-indicators-toolbar');
+  const indDivider = document.getElementById('chart-indicators-divider');
+  const btnSettings = document.getElementById('btn-open-line-settings');
+
+  if (indToolbar) {
+    if (allowIndicators) {
+      indToolbar.classList.remove('hidden');
+      indToolbar.classList.add('flex');
+    } else {
+      indToolbar.classList.add('hidden');
+      indToolbar.classList.remove('flex');
+    }
+  }
+  if (indDivider) {
+    if (allowIndicators) indDivider.classList.remove('hidden');
+    else indDivider.classList.add('hidden');
+  }
+  if (btnSettings) {
+    if (allowIndicators) btnSettings.classList.remove('hidden');
+    else btnSettings.classList.add('hidden');
+  }
+
+  if (state.charts?.series) {
+    const s = state.charts.series;
+    const t = state.toggles || {};
+
+    s.ema10?.applyOptions({ visible: allowIndicators && Boolean(t.ema10 !== false) });
+    s.ema20?.applyOptions({ visible: allowIndicators && Boolean(t.ema20 !== false) });
+    s.ema50?.applyOptions({ visible: allowIndicators && Boolean(t.ema50 !== false) });
+    s.ema150?.applyOptions({ visible: allowIndicators && Boolean(t.ema150 !== false) });
+    s.ema200?.applyOptions({ visible: allowIndicators && Boolean(t.ema200 !== false) });
+    s.vwap?.applyOptions({ visible: allowIndicators && Boolean(t.vwap !== false) });
+    s.darvasTop?.applyOptions({ visible: allowIndicators && Boolean(t.darvas !== false) });
+    s.darvasBottom?.applyOptions({ visible: allowIndicators && Boolean(t.darvas !== false) });
+
+    const showRsi = allowIndicators && Boolean(t.rsi !== false);
+    s.rsi?.applyOptions({ visible: showRsi });
+    s.rsiSma?.applyOptions({ visible: showRsi });
+
+    if (el.tvRsiContainer) el.tvRsiContainer.style.display = showRsi ? 'flex' : 'none';
+    if (el.resizerPriceRsi) el.resizerPriceRsi.style.display = showRsi ? 'flex' : 'none';
+    if (el.resizerRsiBottom) el.resizerRsiBottom.style.display = showRsi ? 'flex' : 'none';
+  }
+
+  updatePivotLines();
+
+  if (allowVolIntel && allowIndicators) {
+    if (!state.volOverlayMode || state.volOverlayMode === 'off') {
+      state.volOverlayMode = 'volintel';
+    }
+  } else if (!allowVolIntel) {
+    if (state.volOverlayMode === 'volintel') {
+      state.volOverlayMode = 'simple';
+    }
+  }
+  renderVolumeIntelligence();
+
+  updateTimeScalesVisibility();
+  if (typeof handleResize === 'function') {
+    handleResize();
+  }
+}
+
+function applyGuestPermissions() {
+  const p = state.guestPermissions || {};
+  const isGuest = !state.user;
+
+  // 0. Top Header Summary Stats (Screeners count & Stocks count) - Logged-in only
+  const headerStatsEl = document.getElementById('header-summary-stats');
+  if (isGuest) {
+    headerStatsEl?.classList.add('hidden');
+    headerStatsEl?.classList.remove('sm:flex', 'flex');
+  } else {
+    headerStatsEl?.classList.remove('hidden');
+    headerStatsEl?.classList.add('sm:flex', 'flex');
+  }
+
+  // 1. Guest Announcement & Call-to-Action Banner
+  const guestBannerEl = document.getElementById('guest-announcement-banner');
+  const guestBannerTextEl = document.getElementById('guest-banner-text-display');
+  if (isGuest && p.guestBanner) {
+    guestBannerEl?.classList.remove('hidden');
+    guestBannerEl?.classList.add('flex');
+    if (guestBannerTextEl) {
+      guestBannerTextEl.textContent = p.guestBannerText || 'Viewing in Guest mode';
+    }
+  } else {
+    guestBannerEl?.classList.add('hidden');
+    guestBannerEl?.classList.remove('flex');
+  }
+
+  // 2. Screener Command Deck (Top Pull-down Bar)
+  const deckEl = document.getElementById('screener-command-deck');
+  if (isGuest && !p.screenerDeck) {
+    deckEl?.classList.add('hidden');
+  } else {
+    deckEl?.classList.remove('hidden');
+  }
+
+  // 3. Left Sidebar & Dual Pane vs Fullscreen Chart
+  const sidebarEl = document.getElementById('sidebar-pane');
+  const splitterEl = document.getElementById('workspace-splitter');
+  const chartPaneEl = document.getElementById('chart-pane');
+
+  if (isGuest && !p.sidebarScans) {
+    sidebarEl?.classList.add('hidden');
+    splitterEl?.classList.add('hidden');
+    splitterEl?.classList.remove('lg:flex');
+    chartPaneEl?.classList.add('w-full');
+    chartPaneEl?.classList.remove('flex-1');
+  } else {
+    sidebarEl?.classList.remove('hidden');
+    splitterEl?.classList.remove('hidden');
+    splitterEl?.classList.add('lg:flex');
+    chartPaneEl?.classList.remove('w-full');
+    chartPaneEl?.classList.add('flex-1');
+  }
+
+  // 4. Custom Screener Button
+  const btnAddScreener = document.getElementById('btn-open-add-modal-deck');
+  if (isGuest && !p.customScreener) {
+    btnAddScreener?.classList.add('hidden');
+  } else if (!isGuest || p.customScreener) {
+    btnAddScreener?.classList.remove('hidden');
+  }
+
+  // 5. Screener Export & Copy Buttons
+  const btnExport = document.getElementById('btn-export-csv');
+  const btnCopy = document.getElementById('btn-copy-stocks');
+  if (isGuest && !p.screenerExport) {
+    btnExport?.classList.add('hidden');
+    btnCopy?.classList.add('hidden');
+  } else {
+    btnExport?.classList.remove('hidden');
+    btnCopy?.classList.remove('hidden');
+  }
+
+  // 6. Watchlists
+  const tabWl = document.getElementById('tab-btn-watchlists');
+  const chartWlWrapper = document.getElementById('chart-watchlist-wrapper');
+  if (isGuest && !p.watchlists) {
+    tabWl?.classList.add('hidden');
+    chartWlWrapper?.classList.add('hidden');
+  } else {
+    tabWl?.classList.remove('hidden');
+    chartWlWrapper?.classList.remove('hidden');
+  }
+
+  // 7. Technical Indicators Toolbar & Chart Series Sync
+  syncChartIndicatorsWithPermissions();
+
+  // 8. Intraday Timeframes Visual State
+  const intradayBtns = document.querySelectorAll('.timeframe-btn[data-interval="5m"], .timeframe-btn[data-interval="15m"], .timeframe-btn[data-interval="60m"]');
+  intradayBtns.forEach(btn => {
+    if (isGuest && !p.intradayTimeframes) {
+      btn.title = 'Intraday (5m, 15m, 1H) - Requires Account Login';
+      btn.classList.add('opacity-60');
+    } else {
+      btn.title = btn.dataset.interval + ' timeframe';
+      btn.classList.remove('opacity-60');
+    }
+  });
+
+  // 9. Stock Search Switcher
+  const manualSearch = document.getElementById('manual-search-wrapper');
+  if (isGuest && !p.stockSearch) {
+    manualSearch?.classList.add('hidden');
+  } else {
+    manualSearch?.classList.remove('hidden');
+  }
+
+  // 10. Sub-Page Links in Navbar
+  if (isGuest && p.navSubpages) {
+    el.btnNavAnalytics?.classList.remove('hidden');
+    el.btnNavAnalytics?.classList.add('flex');
+    el.btnNavFno?.classList.remove('hidden');
+    el.btnNavFno?.classList.add('flex');
+  }
+
+  // Resize chart to adapt to full-screen width smoothly
+  if (typeof handleResize === 'function') {
+    setTimeout(handleResize, 50);
+  }
+  if (window.lucide) lucide.createIcons();
 }
 
 function openAuthModal(tab = 'login') {
@@ -2125,6 +2358,7 @@ async function handleLogout() {
   localStorage.removeItem('authToken');
   localStorage.removeItem('adminToken');
 
+  await loadGuestPermissions();
   updateAuthUI(null);
   switchSidebarTab('screeners');
   await loadScreeners();
@@ -3217,16 +3451,23 @@ function setupEventListeners() {
     });
   });
 
-  // Timeframe Buttons (Daily, Weekly)
+  // Timeframe Buttons (Daily, Weekly, Intraday)
   document.querySelectorAll('.timeframe-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      const interval = btn.dataset.interval;
+      const isIntraday = ['1m', '5m', '15m', '60m'].includes(interval);
+      if (isIntraday && !state.user && !state.guestPermissions?.intradayTimeframes) {
+        showToast('Intraday timeframes (5m, 15m, 1H) are locked in Guest Mode. Please Login or Register!', 'warning');
+        openAuthModal('login');
+        return;
+      }
       document.querySelectorAll('.timeframe-btn').forEach(b => {
         b.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow');
         b.classList.add('hover:text-white');
       });
       btn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow');
       btn.classList.remove('hover:text-white');
-      state.activeInterval = btn.dataset.interval;
+      state.activeInterval = interval;
       const targetSym = state.selectedStock?.symbol || state.currentStockData?.symbol || el.manualStockInput?.value || 'RELIANCE';
       loadStockChart(targetSym);
     });
@@ -4243,6 +4484,7 @@ function initNativeCharts() {
   };
 
   updateTimeScalesVisibility();
+  syncChartIndicatorsWithPermissions();
   handleResize();
 }
 
@@ -5174,7 +5416,7 @@ function updateNativeChartTheme() {
 
 // Draw ONLY Pivot line (P), Resistance line 1 (R1), and Support line 1 (S1)
 function updatePivotLines() {
-  const { candles } = state.charts.series;
+  const { candles } = state.charts?.series || {};
   if (!candles) return;
 
   // Clear existing pivot lines
@@ -5185,14 +5427,18 @@ function updatePivotLines() {
     state.charts.pivotLines = [];
   }
 
-  if (!state.toggles.pivots || !state.currentStockData?.pivotPoints) return;
+  const isGuest = !state.user;
+  const p = state.guestPermissions || {};
+  const allowIndicators = !isGuest || Boolean(p.indicatorsToolbar);
 
-  const { p, r1, s1 } = state.currentStockData.pivotPoints;
+  if (!allowIndicators || !state.toggles.pivots || !state.currentStockData?.pivotPoints) return;
+
+  const { p: pivotPrice, r1, s1 } = state.currentStockData.pivotPoints;
   const pWidth = Number(state.lineWidths?.pivots || 1.2);
 
   // EXACTLY 3 lines only: P, R1, S1
   state.charts.pivotLines = [
-    candles.createPriceLine({ price: p, color: '#06b6d4', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `P ${p}` }),
+    candles.createPriceLine({ price: pivotPrice, color: '#06b6d4', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `P ${pivotPrice}` }),
     candles.createPriceLine({ price: r1, color: '#f97316', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `R1 ${r1}` }),
     candles.createPriceLine({ price: s1, color: '#10b981', lineWidth: pWidth, lineStyle: 2, axisLabelVisible: true, title: `S1 ${s1}` })
   ];
@@ -5904,6 +6150,7 @@ async function loadStockChart(rawSymbol) {
 
     // 4. POPULATE PANE 4: Dedicated Volume Intelligence (50-SMA, PP, BS, RVol, Dry Vol, HV/LV, Paint Bars)
     renderVolumeIntelligence();
+    syncChartIndicatorsWithPermissions();
 
     // Render any active drawings (AVWAPs, H-lines, V-lines) for this stock
     renderPersistedDrawings();
@@ -8021,16 +8268,19 @@ function switchAdminConsoleTab(tab) {
 
   // Desktop buttons
   const btnUsers = document.getElementById('admin-tab-btn-users');
+  const btnGuest = document.getElementById('admin-tab-btn-guest');
   const btnUniverse = document.getElementById('admin-tab-btn-universe');
   const btnDocs = document.getElementById('admin-tab-btn-docs');
 
   // Mobile buttons
   const mBtnUsers = document.getElementById('admin-mobile-tab-users');
+  const mBtnGuest = document.getElementById('admin-mobile-tab-guest');
   const mBtnUniverse = document.getElementById('admin-mobile-tab-universe');
   const mBtnDocs = document.getElementById('admin-mobile-tab-docs');
 
   // Content panels
   const contentUsers = document.getElementById('admin-tab-content-users');
+  const contentGuest = document.getElementById('admin-tab-content-guest');
   const contentUniverse = document.getElementById('admin-tab-content-universe');
   const contentDocs = document.getElementById('admin-tab-content-docs');
 
@@ -8038,10 +8288,12 @@ function switchAdminConsoleTab(tab) {
   const inactiveClass = 'text-slate-400 hover:text-white font-semibold hover:bg-dark-accent';
 
   if (btnUsers) btnUsers.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'users' ? activeClass : inactiveClass}`;
+  if (btnGuest) btnGuest.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'guest' ? activeClass : inactiveClass}`;
   if (btnUniverse) btnUniverse.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'universe' ? activeClass : inactiveClass}`;
   if (btnDocs) btnDocs.className = `px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer ${adminCurrentTab === 'docs' ? activeClass : inactiveClass}`;
 
   if (mBtnUsers) mBtnUsers.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'users' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
+  if (mBtnGuest) mBtnGuest.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'guest' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
   if (mBtnUniverse) mBtnUniverse.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'universe' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
   if (mBtnDocs) mBtnDocs.className = `px-2.5 py-1 rounded-lg ${adminCurrentTab === 'docs' ? 'font-bold text-amber-300 bg-amber-500/20' : 'text-slate-400'}`;
 
@@ -8052,6 +8304,17 @@ function switchAdminConsoleTab(tab) {
     } else {
       contentUsers.classList.add('hidden');
       contentUsers.classList.remove('flex');
+    }
+  }
+
+  if (contentGuest) {
+    if (adminCurrentTab === 'guest') {
+      contentGuest.classList.remove('hidden');
+      contentGuest.classList.add('flex');
+      loadAdminGuestPermissions();
+    } else {
+      contentGuest.classList.add('hidden');
+      contentGuest.classList.remove('flex');
     }
   }
 
@@ -8079,6 +8342,173 @@ function switchAdminConsoleTab(tab) {
   }
 
   if (window.lucide) lucide.createIcons();
+}
+
+async function loadAdminGuestPermissions() {
+  try {
+    const res = await fetch('/api/admin/guest-permissions', {
+      headers: { ...getAuthHeaders() }
+    });
+    const data = await res.json();
+    if (data.success && data.permissions) {
+      state.guestPermissions = Object.assign({}, state.guestPermissions, data.permissions);
+    }
+  } catch (e) {}
+
+  const p = state.guestPermissions || {};
+  
+  const setChk = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = Boolean(val);
+  };
+
+  setChk('admin-guest-screener-deck', p.screenerDeck);
+  setChk('admin-guest-sidebar-scans', p.sidebarScans);
+  setChk('admin-guest-custom-screener', p.customScreener);
+  setChk('admin-guest-screener-export', p.screenerExport);
+  setChk('admin-guest-watchlists', p.watchlists);
+  setChk('admin-guest-indicators-toolbar', p.indicatorsToolbar);
+  setChk('admin-guest-volume-intel', p.volumeIntelligence);
+  setChk('admin-guest-intraday', p.intradayTimeframes);
+  setChk('admin-guest-stock-search', p.stockSearch);
+  setChk('admin-guest-chart-export', p.chartExport);
+  setChk('admin-guest-nav-subpages', p.navSubpages);
+  setChk('admin-guest-banner', p.guestBanner);
+
+  const bannerInput = document.getElementById('admin-guest-banner-text');
+  if (bannerInput) {
+    bannerInput.value = p.guestBannerText || '';
+  }
+}
+
+function applyGuestPreset(preset) {
+  const setChk = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = Boolean(val);
+  };
+
+  if (preset === 'chart_only') {
+    setChk('admin-guest-screener-deck', false);
+    setChk('admin-guest-sidebar-scans', false);
+    setChk('admin-guest-custom-screener', false);
+    setChk('admin-guest-screener-export', false);
+    setChk('admin-guest-watchlists', false);
+    setChk('admin-guest-indicators-toolbar', false);
+    setChk('admin-guest-volume-intel', false);
+    setChk('admin-guest-intraday', false);
+    setChk('admin-guest-stock-search', true);
+    setChk('admin-guest-chart-export', false);
+    setChk('admin-guest-nav-subpages', false);
+    setChk('admin-guest-banner', true);
+    showToast('Applied "Pure Chart Only (Default)" preset.', 'info');
+  } else if (preset === 'chart_indicators') {
+    setChk('admin-guest-screener-deck', false);
+    setChk('admin-guest-sidebar-scans', false);
+    setChk('admin-guest-custom-screener', false);
+    setChk('admin-guest-screener-export', false);
+    setChk('admin-guest-watchlists', false);
+    setChk('admin-guest-indicators-toolbar', true);
+    setChk('admin-guest-volume-intel', true);
+    setChk('admin-guest-intraday', false);
+    setChk('admin-guest-stock-search', true);
+    setChk('admin-guest-chart-export', true);
+    setChk('admin-guest-nav-subpages', false);
+    setChk('admin-guest-banner', true);
+    showToast('Applied "Chart + Indicators" preset.', 'info');
+  } else if (preset === 'full_open') {
+    setChk('admin-guest-screener-deck', true);
+    setChk('admin-guest-sidebar-scans', true);
+    setChk('admin-guest-custom-screener', true);
+    setChk('admin-guest-screener-export', true);
+    setChk('admin-guest-watchlists', true);
+    setChk('admin-guest-indicators-toolbar', true);
+    setChk('admin-guest-volume-intel', true);
+    setChk('admin-guest-intraday', true);
+    setChk('admin-guest-stock-search', true);
+    setChk('admin-guest-chart-export', true);
+    setChk('admin-guest-nav-subpages', true);
+    setChk('admin-guest-banner', false);
+    showToast('Applied "Full Public Open" preset.', 'info');
+  }
+
+  handleAdminSaveGuestPermissions();
+}
+
+async function handleAdminSaveGuestPermissions(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  
+  const statusEl = document.getElementById('admin-guest-perms-status');
+  const btn = document.getElementById('btn-save-guest-perms');
+  if (statusEl) { statusEl.className = 'hidden'; statusEl.textContent = ''; }
+
+  const getChk = id => {
+    const el = document.getElementById(id);
+    return el ? Boolean(el.checked) : false;
+  };
+
+  const payload = {
+    screenerDeck: getChk('admin-guest-screener-deck'),
+    sidebarScans: getChk('admin-guest-sidebar-scans'),
+    customScreener: getChk('admin-guest-custom-screener'),
+    screenerExport: getChk('admin-guest-screener-export'),
+    watchlists: getChk('admin-guest-watchlists'),
+    indicatorsToolbar: getChk('admin-guest-indicators-toolbar'),
+    volumeIntelligence: getChk('admin-guest-volume-intel'),
+    intradayTimeframes: getChk('admin-guest-intraday'),
+    stockSearch: getChk('admin-guest-stock-search'),
+    chartExport: getChk('admin-guest-chart-export'),
+    navSubpages: getChk('admin-guest-nav-subpages'),
+    guestBanner: getChk('admin-guest-banner'),
+    guestBannerText: (document.getElementById('admin-guest-banner-text')?.value || '').trim()
+  };
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Saving Permissions...</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/admin/guest-permissions', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      if (statusEl) {
+        statusEl.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-semibold text-xs';
+        statusEl.textContent = data.error || 'Failed to save guest permissions.';
+      }
+      showToast(data.error || 'Failed to save guest permissions', 'error');
+      return;
+    }
+
+    state.guestPermissions = data.permissions || payload;
+    applyGuestPermissions();
+
+    if (statusEl) {
+      statusEl.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold text-xs';
+      statusEl.textContent = '✅ Guest access permissions saved & applied successfully!';
+    }
+    showToast('Guest permissions updated live!', 'success');
+  } catch (err) {
+    if (statusEl) {
+      statusEl.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-semibold text-xs';
+      statusEl.textContent = 'Error connecting to server: ' + err.message;
+    }
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Save & Apply Guest Access Controls</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
 }
 
 function openAdminConsole() {
@@ -9088,6 +9518,11 @@ window.openChangePasswordModal = openChangePasswordModal;
 window.closeChangePasswordModal = closeChangePasswordModal;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.handleChangePasswordSubmit = handleChangePasswordSubmit;
+window.applyGuestPreset = applyGuestPreset;
+window.handleAdminSaveGuestPermissions = handleAdminSaveGuestPermissions;
+window.loadAdminGuestPermissions = loadAdminGuestPermissions;
+window.loadGuestPermissions = loadGuestPermissions;
+window.applyGuestPermissions = applyGuestPermissions;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);

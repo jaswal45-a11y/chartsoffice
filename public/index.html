@@ -101,8 +101,8 @@
       <!-- Quick Metrics & Global Actions -->
       <div class="flex items-center flex-wrap gap-2 sm:gap-3">
         
-        <!-- Summary Stats Pills -->
-        <div class="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-dark-bg/60 border border-dark-border text-xs">
+        <!-- Summary Stats Pills (Visible only to Registered/Logged-in Users) -->
+        <div id="header-summary-stats" class="hidden items-center gap-3 px-3 py-1.5 rounded-lg bg-dark-bg/60 border border-dark-border text-xs">
           <div class="flex items-center gap-1.5">
             <span class="text-slate-400">Screeners:</span>
             <span id="stat-total-screeners" class="font-semibold text-slate-200">0</span>
@@ -178,6 +178,24 @@
   <!-- Main Workspace -->
   <main class="flex-1 max-w-[1920px] w-full mx-auto p-4 lg:p-6 flex flex-col gap-5">
     
+    <!-- Guest Announcement & Call-to-Action Banner (Visible for unauthenticated visitors when enabled) -->
+    <div id="guest-announcement-banner" class="hidden items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/60 border border-blue-500/30 text-xs shadow-lg animate-in fade-in duration-200">
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <span class="p-1 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+          <i data-lucide="info" class="w-3.5 h-3.5"></i>
+        </span>
+        <span id="guest-banner-text-display" class="font-medium text-slate-300">
+          Viewing in Guest mode
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="openAuthModal('login')" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-all cursor-pointer flex items-center gap-1">
+          <i data-lucide="log-in" class="w-3 h-3"></i>
+          <span>Login / Register</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Screener Deck: 10-15 Screeners visible in a single dashboard (Collapsible Pull-down Deck) -->
     <section id="screener-command-deck" class="bg-dark-card border border-dark-border rounded-2xl shadow-xl relative transition-all duration-300">
       
@@ -943,10 +961,10 @@
             </div>
           </div>
 
-          <span class="text-slate-700 select-none flex-shrink-0">|</span>
+          <span id="chart-indicators-divider" class="text-slate-700 select-none flex-shrink-0">|</span>
 
           <!-- Middle: Compact Overlays & Technical Indicators Checkboxes -->
-          <div class="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap sm:flex-nowrap">
+          <div id="chart-indicators-toolbar" class="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap sm:flex-nowrap">
             <label class="flex items-center gap-1 cursor-pointer hover:text-sky-300 transition-colors" title="10-period Exponential Moving Average">
               <input type="checkbox" id="chk-ema10" checked class="rounded border-slate-700 text-sky-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
               <span>10</span>
@@ -1372,6 +1390,10 @@
             <i data-lucide="users" class="w-3.5 h-3.5"></i>
             <span>User Accounts</span>
           </button>
+          <button id="admin-tab-btn-guest" onclick="switchAdminConsoleTab('guest')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 hover:bg-dark-accent cursor-pointer">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Guest Feature Access</span>
+          </button>
           <button id="admin-tab-btn-universe" onclick="switchAdminConsoleTab('universe')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 hover:bg-dark-accent cursor-pointer">
             <i data-lucide="database" class="w-3.5 h-3.5"></i>
             <span>Stock Universe</span>
@@ -1395,9 +1417,10 @@
 
       <!-- Mobile Tab Bar -->
       <div class="sm:hidden flex items-center justify-around border-b border-dark-border bg-dark-bg/90 p-1.5 text-xs">
-        <button onclick="switchAdminConsoleTab('users')" id="admin-mobile-tab-users" class="px-2.5 py-1 rounded-lg font-bold text-amber-300 bg-amber-500/20">Users</button>
-        <button onclick="switchAdminConsoleTab('universe')" id="admin-mobile-tab-universe" class="px-2.5 py-1 rounded-lg text-slate-400">Universe</button>
-        <button onclick="switchAdminConsoleTab('docs')" id="admin-mobile-tab-docs" class="px-2.5 py-1 rounded-lg text-slate-400">Docs</button>
+        <button onclick="switchAdminConsoleTab('users')" id="admin-mobile-tab-users" class="px-2 py-1 rounded-lg font-bold text-amber-300 bg-amber-500/20">Users</button>
+        <button onclick="switchAdminConsoleTab('guest')" id="admin-mobile-tab-guest" class="px-2 py-1 rounded-lg text-slate-400">Guest Access</button>
+        <button onclick="switchAdminConsoleTab('universe')" id="admin-mobile-tab-universe" class="px-2 py-1 rounded-lg text-slate-400">Universe</button>
+        <button onclick="switchAdminConsoleTab('docs')" id="admin-mobile-tab-docs" class="px-2 py-1 rounded-lg text-slate-400">Docs</button>
       </div>
 
       <!-- Console Body -->
@@ -1560,7 +1583,282 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- TAB 2: STOCK UNIVERSE DATABASE & MANAGEMENT                   -->
+        <!-- TAB 2: GUEST & FEATURE ACCESS CONTROLS                         -->
+        <!-- ============================================================== -->
+        <div id="admin-tab-content-guest" class="hidden flex-col gap-5">
+          
+          <!-- Banner / Overview Card -->
+          <div class="p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-dark-bg to-dark-card border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <span>Guest & Feature Access Controls</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">Public Gating</span>
+                </h3>
+                <p class="text-xs text-slate-300 mt-0.5">Control which tools and screeners are visible to unauthenticated (guest) visitors. By default, guests see ONLY the full-screen Candlestick Chart.</p>
+              </div>
+            </div>
+
+            <!-- Quick 1-Click Presets -->
+            <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+              <span class="text-[11px] font-semibold text-slate-400 mr-1">Presets:</span>
+              <button type="button" onclick="applyGuestPreset('chart_only')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-dark-bg hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 transition-all cursor-pointer shadow-sm" title="Strict Minimal: Only clean Candlestick Chart and Stock Search enabled">
+                🎯 Pure Chart Only (Default)
+              </button>
+              <button type="button" onclick="applyGuestPreset('chart_indicators')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-dark-bg hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 transition-all cursor-pointer shadow-sm" title="Enable Chart + Technical Indicators">
+                📊 Chart + Indicators
+              </button>
+              <button type="button" onclick="applyGuestPreset('full_open')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-dark-bg hover:bg-purple-600/30 text-purple-300 border border-purple-500/40 transition-all cursor-pointer shadow-sm" title="Fully Open Public Access">
+                🚀 Full Public Open
+              </button>
+            </div>
+          </div>
+
+          <!-- Permissions Form -->
+          <form id="form-admin-guest-permissions" onsubmit="handleAdminSaveGuestPermissions(event)" class="flex flex-col gap-4">
+            
+            <!-- Status & Alert Banner -->
+            <div id="admin-guest-perms-status" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+            <!-- Feature Toggles Grid (12 Feature Cards) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              
+              <!-- 1. Screener Command Deck -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                      <i data-lucide="sliders" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Screener Command Deck</span>
+                      <span class="text-[10px] text-slate-400">Top pull-down bar & 15+ scan presets</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-screener-deck" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Show the top multi-screener command deck and category filter pills to guests.</p>
+              </div>
+
+              <!-- 2. Sidebar Scans & Tables -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+                      <i data-lucide="columns" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Left Sidebar & Scans</span>
+                      <span class="text-[10px] text-slate-400">Results tables & Darvas/VCP scans</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-sidebar-scans" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">If disabled, the left sidebar is hidden and the chart expands to full 100% width.</p>
+              </div>
+
+              <!-- 3. Technical Indicators Toolbar -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-sky-500/15 text-sky-400 border border-sky-500/25">
+                      <i data-lucide="trending-up" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Technical Indicators</span>
+                      <span class="text-[10px] text-slate-400">5 EMAs, VWAP, Darvas, Pivots, RSI</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-indicators-toolbar" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Allow guest visitors to toggle Moving Averages, RSI, Darvas Boxes, and Pivots.</p>
+              </div>
+
+              <!-- 4. Intraday Timeframes -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                      <i data-lucide="clock" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Intraday Timeframes</span>
+                      <span class="text-[10px] text-slate-400">5m, 15m, 1H candles</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-intraday" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">If disabled, guests are restricted to Daily & Weekly charts (intraday requires login).</p>
+              </div>
+
+              <!-- 5. Global Stock Search -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-teal-500/15 text-teal-400 border border-teal-500/25">
+                      <i data-lucide="search" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Global Stock Search</span>
+                      <span class="text-[10px] text-slate-400">Search & view any ticker chart</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-stock-search" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Allow guests to type and search all 3,500+ NSE & BSE stocks on the chart.</p>
+              </div>
+
+              <!-- 6. Volume Intelligence & Paint Bars -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                      <i data-lucide="zap" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Volume Intelligence</span>
+                      <span class="text-[10px] text-slate-400">Bull Snort, Pocket Pivot, Paint Bars</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-volume-intel" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Enable proprietary institutional volume signatures and candle paint bars for guests.</p>
+              </div>
+
+              <!-- 7. Multi-Tab Watchlists -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                      <i data-lucide="star" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Multi-Tab Watchlists</span>
+                      <span class="text-[10px] text-slate-400">Custom portfolios & saving stocks</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-watchlists" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Allow guests to view or manage watchlists (otherwise restricted to registered users).</p>
+              </div>
+
+              <!-- 8. Custom Screener Creator -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                      <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Custom Screener Builder</span>
+                      <span class="text-[10px] text-slate-400">+ Add custom Chartink scan syntax</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-custom-screener" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Allow guests to create and run custom Chartink scanner equations.</p>
+              </div>
+
+              <!-- 9. Screener CSV Export -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-500/25">
+                      <i data-lucide="download" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Screener Data Export</span>
+                      <span class="text-[10px] text-slate-400">Download results as CSV</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-screener-export" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Allow guests to export and copy screener symbol lists.</p>
+              </div>
+
+              <!-- 10. Chart Image Snapshot Export -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-pink-500/15 text-pink-400 border border-pink-500/25">
+                      <i data-lucide="camera" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Chart Image Snapshot</span>
+                      <span class="text-[10px] text-slate-400">Download clean chart PNG</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-chart-export" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Allow guests to download chart snapshots as high-resolution PNGs.</p>
+              </div>
+
+              <!-- 11. Sub-Page Navigation Links -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-rose-500/15 text-rose-400 border border-rose-500/25">
+                      <i data-lucide="external-link" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Sub-Page Navigation</span>
+                      <span class="text-[10px] text-slate-400">Links to /analytics & /fno</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-nav-subpages" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Show direct navigation buttons to Analytics Hub and F&O Strategy Hub in header.</p>
+              </div>
+
+              <!-- 12. Guest Announcement Banner -->
+              <div class="p-3.5 rounded-xl bg-dark-bg/70 border border-dark-border flex flex-col justify-between gap-2.5 hover:border-slate-600 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <div class="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                      <i data-lucide="bell" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <span class="font-bold text-white text-xs block">Guest Notice Banner</span>
+                      <span class="text-[10px] text-slate-400">Top announcement bar for guests</span>
+                    </div>
+                  </div>
+                  <input type="checkbox" id="admin-guest-banner" class="w-4 h-4 rounded border-dark-border text-emerald-500 focus:ring-0 cursor-pointer">
+                </div>
+                <p class="text-[11px] text-slate-400">Display top notice bar informing guest visitors to login for full feature access.</p>
+              </div>
+
+            </div>
+
+            <!-- Custom Guest Banner Message Input -->
+            <div class="p-4 rounded-xl bg-dark-bg/50 border border-dark-border flex flex-col gap-2">
+              <label for="admin-guest-banner-text" class="text-slate-300 font-bold text-xs flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-blue-400"></i>
+                <span>Custom Guest Announcement Message:</span>
+              </label>
+              <input type="text" id="admin-guest-banner-text" placeholder="Viewing in Guest mode" class="w-full px-3.5 py-2.5 bg-dark-card border border-dark-border rounded-xl text-slate-100 text-xs focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <!-- Form Save Actions -->
+            <div class="flex items-center justify-between border-t border-dark-border pt-4">
+              <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="info" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Changes will take effect immediately for all guest visitors on the web.</span>
+              </div>
+              <button type="submit" id="btn-save-guest-perms" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-950/40 transition-all flex items-center gap-2 cursor-pointer active:scale-95">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Save & Apply Guest Access Controls</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- TAB 3: STOCK UNIVERSE DATABASE & MANAGEMENT                   -->
         <!-- ============================================================== -->
         <div id="admin-tab-content-universe" class="hidden flex-col gap-4">
           

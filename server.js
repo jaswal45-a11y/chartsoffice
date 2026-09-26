@@ -48,6 +48,7 @@ const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.j
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const COMPANY_METADATA_FILE = path.join(__dirname, 'data', 'company_metadata.json');
 const PRICE_BANDS_FILE = path.join(__dirname, 'data', 'price_bands.json');
+const GUEST_PERMISSIONS_FILE = path.join(__dirname, 'data', 'guest_permissions.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 function sanitizeDhanValue(val) {
@@ -807,6 +808,19 @@ async function syncMongoInitialData() {
       console.log(`[MongoDB] 📥 Loaded system configuration from MongoDB Atlas.`);
     }
 
+    const guestPermsDoc = await configCol.findOne({ _id: 'guest_permissions' });
+    if (!guestPermsDoc) {
+      const currentPerms = readGuestPermissions();
+      await configCol.insertOne({ _id: 'guest_permissions', ...currentPerms });
+    } else {
+      const { _id, ...rest } = guestPermsDoc;
+      memoryGuestPermissions = Object.assign({}, DEFAULT_GUEST_PERMISSIONS, rest);
+      try {
+        fs.writeFileSync(GUEST_PERMISSIONS_FILE, JSON.stringify(memoryGuestPermissions, null, 2), 'utf8');
+      } catch (e) {}
+      console.log(`[MongoDB] 📥 Loaded guest access permissions from MongoDB Atlas.`);
+    }
+
     // 4. Universe Stocks Collection (Self-Healing Persistent Quotes Store)
     const universeCol = db.collection('universe_stocks');
     const universeCount = await universeCol.countDocuments();
@@ -1024,6 +1038,69 @@ function saveSystemConfig(cfg) {
   } catch (err) {}
 
   return true;
+}
+
+// -------------------------------------------------------------
+// Guest Feature Access Controls (Default: Pure Chart-Only for Guests)
+// -------------------------------------------------------------
+const DEFAULT_GUEST_PERMISSIONS = {
+  screenerDeck: false,            // Screener Command Deck & 15+ presets
+  sidebarScans: false,            // Left sidebar screener table, DarvasScan, SS_RVOL, VCPscan
+  customScreener: false,          // + Add Custom Screener
+  screenerExport: false,          // Export screener results to CSV
+  watchlists: false,              // 5 User Watchlists & saving stocks
+  indicatorsToolbar: false,       // Technical Indicators Toolbar & Overlays
+  volumeIntelligence: false,      // Bull Snort, Pocket Pivot, Dry Vol & Paint Bars
+  intradayTimeframes: false,      // Intraday (5m, 15m, 1H) candles
+  stockSearch: true,              // Global Stock Search & Switcher (ON so guests can look up any chart)
+  chartExport: false,             // Chart snapshot PNG export
+  navSubpages: false,             // Direct navigation links to /analytics & /fno
+  guestBanner: true,              // Top announcement banner informing guests to register
+  guestBannerText: 'Viewing in Guest mode'
+};
+
+let memoryGuestPermissions = null;
+
+function readGuestPermissions() {
+  if (memoryGuestPermissions !== null) return memoryGuestPermissions;
+  try {
+    if (fs.existsSync(GUEST_PERMISSIONS_FILE)) {
+      const raw = fs.readFileSync(GUEST_PERMISSIONS_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      memoryGuestPermissions = Object.assign({}, DEFAULT_GUEST_PERMISSIONS, parsed);
+      return memoryGuestPermissions;
+    }
+  } catch (err) {
+    console.warn('[GUEST-PERMS] Notice loading guest_permissions.json:', err.message);
+  }
+  memoryGuestPermissions = Object.assign({}, DEFAULT_GUEST_PERMISSIONS);
+  return memoryGuestPermissions;
+}
+
+function saveGuestPermissions(perms) {
+  memoryGuestPermissions = Object.assign({}, DEFAULT_GUEST_PERMISSIONS, perms, { updatedAt: new Date().toISOString() });
+  
+  // 1. Write to local file
+  try {
+    const dir = path.dirname(GUEST_PERMISSIONS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(GUEST_PERMISSIONS_FILE, JSON.stringify(memoryGuestPermissions, null, 2), 'utf8');
+  } catch (err) {}
+
+  // 2. Sync to MongoDB Atlas collection 'config'
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('config');
+        await col.updateOne({ _id: 'guest_permissions' }, { $set: { ...memoryGuestPermissions } }, { upsert: true });
+        console.log('[MongoDB] ✅ Synced guest_permissions to MongoDB Atlas.');
+      } catch (err) {
+        console.warn('[MongoDB] Notice syncing guest_permissions to MongoDB:', err.message);
+      }
+    })();
+  }
+
+  return memoryGuestPermissions;
 }
 
 // -------------------------------------------------------------
@@ -2766,6 +2843,32 @@ const GLOBAL_INDEX_SYMBOL_MAP = {
   'SENSEX': '^BSESN',
   'BSESN': '^BSESN',
   '^BSESN': '^BSESN',
+  'MIDSMALL400': '^CRSLDX',
+  'MIDSMALL 400': '^CRSLDX',
+  'NIFTY MIDSMALL 400': '^CRSLDX',
+  'NIFTY MIDSMALLCAP 400': '^CRSLDX',
+  'NIFTY_MIDSMALL_400.NS': '^CRSLDX',
+  '^CRSLDX': '^CRSLDX',
+  'DXY': 'DX-Y.NYB',
+  'USD': 'DX-Y.NYB',
+  'DX-Y.NYB': 'DX-Y.NYB',
+  'GOLD CFD': 'GC=F',
+  'GOLDCFD': 'GC=F',
+  'GOLD': 'GC=F',
+  'GC=F': 'GC=F',
+  'SILVERCFD': 'SI=F',
+  'SILVER CFD': 'SI=F',
+  'SILVER': 'SI=F',
+  'SI=F': 'SI=F',
+  'COPPER': 'HG=F',
+  'HG=F': 'HG=F',
+  'US10 YEAR YIELD': '^TNX',
+  'US10YEAR YIELD': '^TNX',
+  'US10Y': '^TNX',
+  '^TNX': '^TNX',
+  'BITCOIN': 'BTC-USD',
+  'BTC': 'BTC-USD',
+  'BTC-USD': 'BTC-USD',
   'CNXIT': '^CNXIT',
   'NIFTY IT': '^CNXIT',
   'CNXAUTO': '^CNXAUTO',
@@ -2798,7 +2901,7 @@ function getCandidateSymbols(sym) {
   if (GLOBAL_INDEX_SYMBOL_MAP[clean]) {
     candidates.push(GLOBAL_INDEX_SYMBOL_MAP[clean]);
   }
-  if (clean.startsWith('^') || clean.endsWith('.NS') || clean.endsWith('.BO')) {
+  if (clean.startsWith('^') || clean.includes('=') || clean.includes('-') || clean.endsWith('.NS') || clean.endsWith('.BO') || clean.endsWith('.NYB')) {
     if (!candidates.includes(clean)) candidates.push(clean);
   } else if (/^\d+$/.test(clean)) {
     candidates.push(`${clean}.BO`, `${clean}.NS`);
@@ -4792,7 +4895,7 @@ async function fetchBatchQuotes(symbols, forceRefresh = false) {
     for (const s of uncached) {
       const mapped = GLOBAL_INDEX_SYMBOL_MAP[s] || YAHOO_SYMBOL_ALIASES[s] || s;
       let targetTicker = mapped;
-      if (!targetTicker.startsWith('^') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO')) {
+      if (!targetTicker.startsWith('^') && !targetTicker.includes('=') && !targetTicker.includes('-') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO') && !targetTicker.endsWith('.NYB')) {
         targetTicker = `${targetTicker}.NS`;
       }
       yahooTickers.push(targetTicker);
@@ -4891,7 +4994,7 @@ async function fetchBatchQuotes(symbols, forceRefresh = false) {
         try {
           const mapped = GLOBAL_INDEX_SYMBOL_MAP[s] || YAHOO_SYMBOL_ALIASES[s] || s;
           let targetTicker = mapped;
-          if (!targetTicker.startsWith('^') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO')) {
+          if (!targetTicker.startsWith('^') && !targetTicker.includes('=') && !targetTicker.includes('-') && !targetTicker.endsWith('.NS') && !targetTicker.endsWith('.BO') && !targetTicker.endsWith('.NYB')) {
             targetTicker = `${targetTicker}.NS`;
           }
           const res = await httpsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(targetTicker)}?range=5d&interval=1d${crumbParam}`, {
@@ -5716,7 +5819,7 @@ const server = http.createServer(async (req, res) => {
     try {
       // 0. AUTH ROUTES
 
-      // 0a. GET /api/auth/status - Check available registration slots (Configurable max users)
+      // 0a. GET /api/auth/status - Check available registration slots & Guest Permissions
       if (pathname === '/api/auth/status' && method === 'GET') {
         const users = readUsers();
         const maxUsers = getMaxUsersLimit();
@@ -5724,7 +5827,16 @@ const server = http.createServer(async (req, res) => {
           success: true,
           totalUsers: users.length,
           maxUsers: maxUsers,
-          slotsAvailable: Math.max(0, maxUsers - users.length)
+          slotsAvailable: Math.max(0, maxUsers - users.length),
+          guestPermissions: readGuestPermissions()
+        });
+      }
+
+      // 0a-2. GET /api/guest-permissions - Get current guest feature access configuration
+      if (pathname === '/api/guest-permissions' && method === 'GET') {
+        return sendJson(res, 200, {
+          success: true,
+          permissions: readGuestPermissions()
         });
       }
 
@@ -6268,6 +6380,55 @@ const server = http.createServer(async (req, res) => {
           message: `Stock "${result.symbol}" removed from universe successfully`,
           symbol: result.symbol,
           totalCount: getUniverseStocks().length
+        });
+      }
+
+      // A10. GET /api/admin/guest-permissions - Get Guest Feature Access configuration
+      if (pathname === '/api/admin/guest-permissions' && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+        return sendJson(res, 200, {
+          success: true,
+          permissions: readGuestPermissions()
+        });
+      }
+
+      // A11. PUT or POST /api/admin/guest-permissions - Update Guest Feature Access configuration
+      if (pathname === '/api/admin/guest-permissions' && (method === 'PUT' || method === 'POST')) {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const body = await parseJsonBody(req);
+        const current = readGuestPermissions();
+        const updated = Object.assign({}, current);
+
+        const booleanFields = [
+          'screenerDeck', 'sidebarScans', 'customScreener', 'screenerExport',
+          'watchlists', 'indicatorsToolbar', 'volumeIntelligence',
+          'intradayTimeframes', 'stockSearch', 'chartExport', 'navSubpages', 'guestBanner'
+        ];
+
+        booleanFields.forEach(field => {
+          if (body[field] !== undefined) {
+            updated[field] = Boolean(body[field]);
+          }
+        });
+
+        if (body.guestBannerText !== undefined && typeof body.guestBannerText === 'string') {
+          updated.guestBannerText = body.guestBannerText.trim();
+        }
+
+        saveGuestPermissions(updated);
+        console.log(`[ADMIN] Guest permissions updated by "${authUser.username}" (${authUser.userId})`);
+
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Guest feature access permissions updated successfully!',
+          permissions: updated
         });
       }
 

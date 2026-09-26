@@ -1,0 +1,16 @@
+{
+  "screenerDeck": false,
+  "sidebarScans": false,
+  "customScreener": false,
+  "screenerExport": false,
+  "watchlists": false,
+  "indicatorsToolbar": true,
+  "volumeIntelligence": true,
+  "intradayTimeframes": false,
+  "stockSearch": true,
+  "chartExport": true,
+  "navSubpages": false,
+  "guestBanner": true,
+  "guestBannerText": "Viewing in Guest mode",
+  "updatedAt": "2026-09-26T12:25:23.310Z"
+}

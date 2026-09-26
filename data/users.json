@@ -16339,6 +16339,141 @@
             "symbol": "FISCHER",
             "name": "Fischer Medical Ventures Ltd",
             "addedAt": "2026-09-22T11:41:39.334Z"
+          },
+          {
+            "symbol": "APOLLOHOSP",
+            "name": "Apollo Hospitals Enterprise Limited",
+            "addedAt": "2026-09-26T12:28:46.959Z"
+          },
+          {
+            "symbol": "HYUNDAI",
+            "name": "HYUNDAI Limited",
+            "addedAt": "2026-09-26T12:28:46.960Z"
+          },
+          {
+            "symbol": "FIEMIND",
+            "name": "FIEM INDUSTRIES LIMITED",
+            "addedAt": "2026-09-26T12:28:46.962Z"
+          },
+          {
+            "symbol": "BOSCH-HCIL",
+            "name": "Bosch Home Comfort India Ltd",
+            "addedAt": "2026-09-26T12:28:46.963Z"
+          },
+          {
+            "symbol": "AETHER",
+            "name": "Aether Industries Ltd",
+            "addedAt": "2026-09-26T12:28:46.963Z"
+          },
+          {
+            "symbol": "AUTOAXLES",
+            "name": "AUTOMOTIVE AXLES LIMITED",
+            "addedAt": "2026-09-26T12:28:46.964Z"
+          },
+          {
+            "symbol": "CCL",
+            "name": "CCL PRODUCTS (INDIA) LIMITED",
+            "addedAt": "2026-09-26T12:28:46.965Z"
+          },
+          {
+            "symbol": "WHIRLPOOL",
+            "name": "Whirlpool of India Limited",
+            "addedAt": "2026-09-26T12:28:46.965Z"
+          },
+          {
+            "symbol": "SANGAMIND",
+            "name": "SANGAM (INDIA) LIMITED",
+            "addedAt": "2026-09-26T12:28:46.966Z"
+          },
+          {
+            "symbol": "LCL",
+            "name": "Lohia Corp Ltd",
+            "addedAt": "2026-09-26T12:28:46.966Z"
+          },
+          {
+            "symbol": "JSFB",
+            "name": "Jana Small Finance Bank Ltd",
+            "addedAt": "2026-09-26T12:28:46.967Z"
+          },
+          {
+            "symbol": "DALMIASUG",
+            "name": "Dalmia Bharat Sugar And Industries Limited",
+            "addedAt": "2026-09-26T12:28:46.967Z"
+          },
+          {
+            "symbol": "SHOPERSTOP",
+            "name": "Shoppers Stop Limited",
+            "addedAt": "2026-09-26T12:28:46.967Z"
+          },
+          {
+            "symbol": "SUNFLAG",
+            "name": "Sunflag Iron and Steel Company",
+            "addedAt": "2026-09-26T12:28:46.967Z"
+          },
+          {
+            "symbol": "STYL",
+            "name": "SESHAASAI TECHNOLOGIES LIMITED",
+            "addedAt": "2026-09-26T12:28:46.968Z"
+          },
+          {
+            "symbol": "ARTEMISMED",
+            "name": "Artemis Medicare Services Ltd",
+            "addedAt": "2026-09-26T12:28:46.968Z"
+          },
+          {
+            "symbol": "SHANTIGOLD",
+            "name": "Shanti Gold International Ltd",
+            "addedAt": "2026-09-26T12:28:46.969Z"
+          },
+          {
+            "symbol": "BOROLTD",
+            "name": "BOROSIL LIMITED",
+            "addedAt": "2026-09-26T12:28:46.969Z"
+          },
+          {
+            "symbol": "SATIN",
+            "name": "Satin Creditcare Network Limited",
+            "addedAt": "2026-09-26T12:28:46.970Z"
+          },
+          {
+            "symbol": "SURYAROSNI",
+            "name": "SURYA ROSHNI LIMITED",
+            "addedAt": "2026-09-26T12:28:46.971Z"
+          },
+          {
+            "symbol": "SHRINGARMS",
+            "name": "Shringar House of Mangalsutra Ltd",
+            "addedAt": "2026-09-26T12:28:46.972Z"
+          },
+          {
+            "symbol": "CASTROLIND",
+            "name": "Castrol India Limited",
+            "addedAt": "2026-09-26T12:28:46.972Z"
+          },
+          {
+            "symbol": "ROLEXRINGS",
+            "name": "Rolex Rings Ltd",
+            "addedAt": "2026-09-26T12:28:46.972Z"
+          },
+          {
+            "symbol": "IREDA",
+            "name": "IREDA Limited",
+            "addedAt": "2026-09-26T12:28:46.972Z"
+          },
+          {
+            "symbol": "LLOYDSENGG",
+            "name": "Lloyds Engineering Works Ltd",
+            "addedAt": "2026-09-26T12:28:46.972Z"
+          },
+          {
+            "symbol": "LLOYDSENT",
+            "name": "LLOYDS ENTERPRISES LIMITED",
+            "addedAt": "2026-09-26T12:28:46.973Z"
+          },
+          {
+            "symbol": "SBC",
+            "name": "SBC Exports Ltd",
+            "addedAt": "2026-09-26T12:28:46.974Z"
           }
         ]
       },
@@ -16928,6 +17063,11 @@
             "symbol": "ZIMLAB",
             "name": "Zim Laboratories Ltd",
             "addedAt": "2026-09-24T17:16:16.415Z"
+          },
+          {
+            "symbol": "GABRIEL",
+            "name": "Gabriel India Limited",
+            "addedAt": "2026-09-25T09:38:43.861Z"
           }
         ]
       },
@@ -16984,6 +17124,11 @@
             "symbol": "LGEINDIA",
             "name": "LG Electronics India Ltd",
             "addedAt": "2026-09-23T09:47:47.136Z"
+          },
+          {
+            "symbol": "CORDSCABLE",
+            "name": "Cords Cable Industries Limited",
+            "addedAt": "2026-09-25T11:37:17.715Z"
           }
         ]
       },
@@ -19499,319 +19644,46 @@
         "isGlobal": false,
         "isCustom": true,
         "createdBy": "boby",
-        "lastRun": "2026-09-22T11:45:09.661Z",
-        "stockCount": 24,
+        "lastRun": "2026-09-25T04:28:10.781Z",
+        "stockCount": 3,
         "lastResults": [
           {
             "sr": 1,
-            "symbol": "GABRIEL",
-            "name": "Gabriel India Limited",
-            "bsecode": "505714",
-            "nsecode": "GABRIEL",
-            "close": 1471.4,
-            "price": 1471.4,
-            "changePercent": 14.04,
-            "volume": 7890789,
+            "symbol": "ARTEMISMED",
+            "name": "Artemis Medicare Services Ltd",
+            "bsecode": "542919",
+            "nsecode": "ARTEMISMED",
+            "close": 370.7,
+            "price": 370.7,
+            "changePercent": 11.41,
+            "volume": 3953226,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
             "sr": 2,
-            "symbol": "BLUESTONE",
-            "name": "Bluestone Jewellery and Lifestyle Ltd",
-            "bsecode": null,
-            "nsecode": "BLUESTONE",
-            "close": 930.4,
-            "price": 930.4,
-            "changePercent": 10.05,
-            "volume": 3686276,
+            "symbol": "SDBL",
+            "name": "Som Distilleries & Breweries Limited",
+            "bsecode": "507514",
+            "nsecode": "SDBL",
+            "close": 74.92,
+            "price": 74.92,
+            "changePercent": 11.43,
+            "volume": 9570735,
             "mcOver1000Cr": true,
-            "mcOver2000Cr": true
+            "mcOver2000Cr": false
           },
           {
             "sr": 3,
-            "symbol": "OPTIEMUS",
-            "name": "Optiemus Infracom Ltd",
-            "bsecode": "530135",
-            "nsecode": "OPTIEMUS",
-            "close": 708.9,
-            "price": 708.9,
-            "changePercent": 20,
-            "volume": 8044819,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 4,
-            "symbol": "PROTEAN",
-            "name": "Protean eGov Technologies Ltd",
-            "bsecode": "544021",
-            "nsecode": "PROTEAN",
-            "close": 620.65,
-            "price": 620.65,
-            "changePercent": 5.49,
-            "volume": 14817114,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 5,
-            "symbol": "RAMRAT",
-            "name": "Ram Ratna Wires Ltd",
-            "bsecode": "522281",
-            "nsecode": "RAMRAT",
-            "close": 562.75,
-            "price": 562.75,
-            "changePercent": 2.3,
-            "volume": 812222,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 6,
-            "symbol": "KLBRENG-B",
-            "name": "Kilburn Engineering Ltd",
-            "bsecode": "522101",
-            "nsecode": "KLBRENG-B",
-            "close": 519.5,
-            "price": 519.5,
-            "changePercent": 12.93,
-            "volume": 1922593,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 7,
-            "symbol": "SUNTV",
-            "name": "Sun Tv Network Limited",
-            "bsecode": "532733",
-            "nsecode": "SUNTV",
-            "close": 490.1,
-            "price": 490.1,
-            "changePercent": 7.11,
-            "volume": 3413786,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 8,
-            "symbol": "TRANSRAILL",
-            "name": "Transrail Lighting Ltd",
-            "bsecode": "544317",
-            "nsecode": "TRANSRAILL",
-            "close": 477.15,
-            "price": 477.15,
-            "changePercent": 15.2,
-            "volume": 23971383,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 9,
-            "symbol": "RHIM",
-            "name": "RHI Magnesita India Ltd",
-            "bsecode": "534076",
-            "nsecode": "RHIM",
-            "close": 379.2,
-            "price": 379.2,
-            "changePercent": 3.04,
-            "volume": 11881393,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 10,
-            "symbol": "KPIGREEN",
-            "name": "KPI Green Energy Ltd",
-            "bsecode": "542323",
-            "nsecode": "KPIGREEN",
-            "close": 346.45,
-            "price": 346.45,
-            "changePercent": 7.79,
-            "volume": 10750742,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 11,
-            "symbol": "BLSE",
-            "name": "BLS E-Services Ltd",
-            "bsecode": "544107",
-            "nsecode": "BLSE",
-            "close": 328.1,
-            "price": 328.1,
-            "changePercent": 3.42,
-            "volume": 1257680,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 12,
-            "symbol": "ENGINERSIN",
-            "name": "Engineers India Limited",
-            "bsecode": "532178",
-            "nsecode": "ENGINERSIN",
-            "close": 302.55,
-            "price": 302.55,
-            "changePercent": 6.06,
-            "volume": 23535059,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 13,
-            "symbol": "JAINREC",
-            "name": "Jain Resource Recycling Ltd",
-            "bsecode": "544537",
-            "nsecode": "JAINREC",
-            "close": 291.25,
-            "price": 291.25,
-            "changePercent": 6.78,
-            "volume": 15629100,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 14,
-            "symbol": "MEESHO",
-            "name": "Meesho Ltd",
-            "bsecode": "544632",
-            "nsecode": "MEESHO",
-            "close": 240.19,
-            "price": 240.19,
-            "changePercent": 9.6,
-            "volume": 108350028,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 15,
-            "symbol": "BHARATSE",
-            "name": "Bharat Seats Ltd",
-            "bsecode": "523229",
-            "nsecode": "BHARATSE",
-            "close": 219.86,
-            "price": 219.86,
-            "changePercent": 3.53,
-            "volume": 746102,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 16,
-            "symbol": "CHEMPLASTS",
-            "name": "Chemplast Sanmar Ltd",
-            "bsecode": "543336",
-            "nsecode": "CHEMPLASTS",
-            "close": 198.67,
-            "price": 198.67,
-            "changePercent": 9.66,
-            "volume": 7329679,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 17,
-            "symbol": "PACEDIGITK",
-            "name": "Pace Digitek Ltd",
-            "bsecode": "544550",
-            "nsecode": "PACEDIGITK",
-            "close": 167.74,
-            "price": 167.74,
-            "changePercent": 8.32,
-            "volume": 26732538,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 18,
-            "symbol": "TURTLEMINT",
-            "name": "Turtlemint Fintech Solutions Ltd",
-            "bsecode": "544799",
-            "nsecode": "TURTLEMINT",
-            "close": 140.23,
-            "price": 140.23,
-            "changePercent": 6.91,
-            "volume": 3711355,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 19,
-            "symbol": "AVTNPL",
-            "name": "Avt Natural Products Limited",
-            "bsecode": "519105",
-            "nsecode": "AVTNPL",
-            "close": 98.26,
-            "price": 98.26,
-            "changePercent": 9.13,
-            "volume": 4545400,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 20,
-            "symbol": "REGAAL",
-            "name": "Regaal Resources Ltd",
-            "bsecode": "544485",
-            "nsecode": "REGAAL",
-            "close": 97.21,
-            "price": 97.21,
-            "changePercent": 16.5,
-            "volume": 8177109,
+            "symbol": "VASCONEQ",
+            "name": "Vascon Engineers Limited",
+            "bsecode": "533156",
+            "nsecode": "VASCONEQ",
+            "close": 35.33,
+            "price": 35.33,
+            "changePercent": 6.14,
+            "volume": 3751238,
             "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 21,
-            "symbol": "ARIHANTCAP",
-            "name": "Arihant Capital Markets Ltd",
-            "bsecode": "511605",
-            "nsecode": "ARIHANTCAP",
-            "close": 90.99,
-            "price": 90.99,
-            "changePercent": 11.49,
-            "volume": 6068197,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 22,
-            "symbol": "UNIECOM",
-            "name": "Unicommerce eSolutions Ltd",
-            "bsecode": "544227",
-            "nsecode": "UNIECOM",
-            "close": 86.32,
-            "price": 86.32,
-            "changePercent": 6.42,
-            "volume": 13825216,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 23,
-            "symbol": "FEDDERSHOL",
-            "name": "Fedders Holding Ltd",
-            "bsecode": "511628",
-            "nsecode": "FEDDERSHOL",
-            "close": 64.8,
-            "price": 64.8,
-            "changePercent": 5.38,
-            "volume": 50901174,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 24,
-            "symbol": "ONEPOINT",
-            "name": "One Point One Solutions Ltd",
-            "bsecode": "535039",
-            "nsecode": "ONEPOINT",
-            "close": 63.2,
-            "price": 63.2,
-            "changePercent": 5.28,
-            "volume": 6890668,
-            "mcOver1000Cr": true,
             "mcOver2000Cr": false
           }
         ]
@@ -21479,9 +21351,8 @@
       }
     },
     "maxWatchlists": 15,
-    "activeToken": "sess_user_ddf568f46573969ea0eafc40ff870a6fa5da890ed5f81fc2",
+    "activeToken": "sess_user_6969cd035f7732b39dbc52c0ced6707ac20d5b2c2c6db3f1",
     "tokens": [
-      "sess_user_b840f951fb9842c3af6766a5b760dd884efdd4d9446e2818",
       "sess_user_2f927e3d45a65bbefc631e0c05c83a5e1f2c5199416a3597",
       "sess_user_ddaecec65c668eacb8956cfa2b61ffa30cca56af052b2139",
       "sess_user_2d4b00f0b9ca2f1815c7a1ac24b68fb451ce6b648bc0560a",
@@ -21489,7 +21360,10 @@
       "sess_user_0b0a5008002429b1191ae2287dbdcf51f91637ab12a8f96d",
       "sess_user_4e2c1e6126b1863159e48c80db342d758d0a721e41728303",
       "sess_user_026f2e5a8c72ec7221077b75bc18eedf517e4e835a147bbd",
-      "sess_user_ddf568f46573969ea0eafc40ff870a6fa5da890ed5f81fc2"
+      "sess_user_ddf568f46573969ea0eafc40ff870a6fa5da890ed5f81fc2",
+      "sess_user_809793014fb2efaaa44980d27a8c6e2d60175172aa8867aa",
+      "sess_user_fcbc5771ac478968b97a6424fc069fa7728618f47bb40da5",
+      "sess_user_6969cd035f7732b39dbc52c0ced6707ac20d5b2c2c6db3f1"
     ]
   },
   {

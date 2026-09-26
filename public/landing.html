@@ -275,10 +275,10 @@
 
       </div>
 
-      <!-- Right Column: Rotating Wisdom Quote + Glassmorphic Auth Gateway Card -->
+      <!-- Right Column: Rotating Wisdom Quote + Peaceful Platform Launchpad Showcase -->
       <div class="lg:col-span-6 flex flex-col items-center lg:items-end gap-3.5">
         
-        <!-- Rotating Quote Box (Sitting Cleanly Above Auth Card) -->
+        <!-- Rotating Quote Box (Sitting Cleanly Above Showcase Card) -->
         <div id="wisdom-quote-box" onclick="rotateNextQuote()" class="w-full max-w-md cursor-pointer group px-4 py-2.5 rounded-2xl bg-slate-950/60 hover:bg-slate-950/80 border border-teal-500/25 hover:border-teal-400/50 backdrop-blur-md transition-all duration-300 shadow-xl" title="Click to see next master quote">
           <p id="wisdom-quote-text" class="text-xs lg:text-sm text-slate-200 font-light italic leading-relaxed transition-all duration-500">
             "Better a peaceful investor than a busy trader."
@@ -294,117 +294,84 @@
           </div>
         </div>
 
-        <!-- Auth Gateway Card -->
-        <div id="auth-gateway-card" class="w-full max-w-md glass-card rounded-3xl p-7 sm:p-8 flex flex-col gap-4 relative shadow-2xl transition-all duration-300">
+        <!-- Platform Showcase & Quick Launch Card (Peaceful & Clean) -->
+        <div id="platform-showcase-card" class="w-full max-w-md glass-card rounded-3xl p-7 sm:p-8 flex flex-col gap-5 relative shadow-2xl transition-all duration-300">
           
           <!-- Subtle Top Card Glow Light -->
           <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-10 bg-teal-400/20 blur-2xl rounded-full pointer-events-none"></div>
 
-          <!-- Card Header (Unauthenticated State) -->
-          <div id="auth-header-unauthed" class="flex flex-col text-center">
-            <h3 class="text-2xl font-bold text-white tracking-tight">
-              Welcome Back
-            </h3>
-            <p class="text-xs text-slate-400 mt-1 font-light">
-              Continue your peaceful investing journey
-            </p>
-          </div>
-
-          <!-- Card Header (Recognized User State - Dynamic) -->
-          <div id="auth-header-authed" class="hidden flex-col text-center">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-slate-950 font-bold text-lg mx-auto shadow-lg shadow-teal-500/20 mb-2">
-              <span id="recognized-user-avatar">S</span>
+          <!-- Unauthenticated Showcase State -->
+          <div id="showcase-unauthed" class="flex flex-col gap-4">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-[0.25em] text-teal-300 font-semibold">Live Market Suite</span>
+              <h3 class="text-2xl font-bold text-white tracking-tight mt-0.5">
+                Precision & Confluence
+              </h3>
+              <p class="text-xs text-slate-400 mt-1 font-light leading-relaxed">
+                Experience institutional-grade analytics, custom screeners, and noise-free trading setups.
+              </p>
             </div>
-            <h3 class="text-2xl font-bold text-white tracking-tight">
-              Welcome back, <span id="recognized-username" class="text-teal-300">User</span>!
-            </h3>
-            <p class="text-xs text-slate-400 mt-1 font-light">
-              Your personalized screeners, watchlists & notes are ready.
-            </p>
-          </div>
 
-          <!-- Error / Success Alert Banner -->
-          <div id="auth-alert-banner" class="hidden px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-2 border"></div>
-
-          <!-- Login Form (Visible when unauthenticated) -->
-          <form id="landing-login-form" onsubmit="handleLandingLogin(event)" class="flex flex-col gap-4">
-            
-            <!-- Username or Email Input -->
-            <div class="flex flex-col gap-1.5 text-left">
-              <label for="input-username" class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="user" class="w-3.5 h-3.5 text-teal-400"></i>
-                <span>Username or Email</span>
-              </label>
-              <div class="relative">
-                <input 
-                  type="text" 
-                  id="input-username" 
-                  name="username" 
-                  required 
-                  autocomplete="username"
-                  placeholder="Enter your username or email" 
-                  class="w-full px-4 py-3 pl-10 rounded-xl bg-slate-950/70 border border-slate-700/60 hover:border-teal-500/40 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
-                >
-                <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <!-- Feature Pills Grid -->
+            <div class="grid grid-cols-2 gap-2.5 py-1">
+              <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-700/50 flex items-center gap-2 text-xs text-slate-300">
+                <i data-lucide="sliders" class="w-4 h-4 text-teal-400 shrink-0"></i>
+                <span class="font-medium">15+ Screeners</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-700/50 flex items-center gap-2 text-xs text-slate-300">
+                <i data-lucide="activity" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                <span class="font-medium">Volume Intel</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-700/50 flex items-center gap-2 text-xs text-slate-300">
+                <i data-lucide="target" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                <span class="font-medium">Darvas & VCP</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-700/50 flex items-center gap-2 text-xs text-slate-300">
+                <i data-lucide="layers" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                <span class="font-medium">5 Watchlists</span>
               </div>
             </div>
 
-            <!-- Password Input with Toggle Visibility -->
-            <div class="flex flex-col gap-1.5 text-left">
-              <label for="input-password" class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="lock" class="w-3.5 h-3.5 text-teal-400"></i>
-                <span>Password</span>
-              </label>
-              <div class="relative">
-                <input 
-                  type="password" 
-                  id="input-password" 
-                  name="password" 
-                  required 
-                  autocomplete="current-password"
-                  placeholder="Enter your password" 
-                  class="w-full px-4 py-3 pl-10 pr-10 rounded-xl bg-slate-950/70 border border-slate-700/60 hover:border-teal-500/40 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
-                >
-                <i data-lucide="lock" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <button 
-                  type="button" 
-                  id="btn-toggle-pwd" 
-                  onclick="togglePasswordVisibility()" 
-                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1 cursor-pointer"
-                  title="Show / Hide Password"
-                >
-                  <i data-lucide="eye" id="icon-pwd-eye" class="w-4 h-4"></i>
-                </button>
-              </div>
-            </div>
+            <!-- Primary Action Buttons -->
+            <div class="flex flex-col gap-2.5 pt-1">
+              <a 
+                href="/screener" 
+                class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              >
+                <span>Explore Live Platform</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </a>
 
-            <!-- Remember Me & Forgot Password Row -->
-            <div class="flex items-center justify-between text-xs pt-0.5">
-              <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300 select-none">
-                <input type="checkbox" id="chk-remember-me" checked class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-teal-500 focus:ring-teal-400/30">
-                <span>Remember me</span>
-              </label>
-              <button type="button" onclick="openForgotPasswordModal()" class="text-teal-400 hover:text-teal-300 hover:underline transition-all cursor-pointer">
-                Forgot password?
+              <button 
+                type="button" 
+                onclick="openLoginModal()" 
+                class="w-full py-3 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-slate-950/50 hover:bg-slate-900/80 border border-slate-700/70 hover:border-teal-400/40 flex items-center justify-center gap-2 transition-all duration-300 shadow-sm cursor-pointer"
+              >
+                <i data-lucide="log-in" class="w-4 h-4 text-teal-400"></i>
+                <span>Sign In to Account</span>
               </button>
             </div>
+          </div>
 
-            <!-- Submit Button: Enter SANGAM -->
-            <button 
-              type="submit" 
-              id="btn-submit-login" 
-              class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-1"
-            >
-              <span id="btn-login-text">Enter SANGAM</span>
-              <i data-lucide="arrow-right" class="w-4 h-4"></i>
-            </button>
-          </form>
+          <!-- Authenticated State (When recognized) -->
+          <div id="showcase-authed" class="hidden flex-col gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-slate-950 font-bold text-lg shadow-lg shadow-teal-500/20">
+                <span id="recognized-user-avatar">S</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-white tracking-tight">
+                  Welcome back, <span id="recognized-username" class="text-teal-300">User</span>!
+                </h3>
+                <p class="text-xs text-slate-400 font-light">
+                  Your personalized workspace is active
+                </p>
+              </div>
+            </div>
 
-          <!-- Authed Actions View (Visible when already logged in) -->
-          <div id="landing-authed-actions" class="hidden flex-col gap-3">
             <a 
               href="/screener" 
-              class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-2"
             >
               <span>Enter SANGAM Dashboard</span>
               <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -423,42 +390,15 @@
 
             <button 
               onclick="handleLandingLogout()" 
-              class="text-xs text-slate-400 hover:text-rose-400 py-1.5 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              class="text-xs text-slate-400 hover:text-rose-400 py-1 transition-colors flex items-center justify-center gap-1.5 cursor-pointer mt-1"
             >
               <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
               <span>Switch Account / Log Out</span>
             </button>
           </div>
 
-          <!-- Divider 'or' (Visible when unauthed) -->
-          <div id="auth-divider" class="flex items-center gap-3 text-xs text-slate-500 font-mono">
-            <div class="flex-1 h-px bg-slate-700/50"></div>
-            <span>or</span>
-            <div class="flex-1 h-px bg-slate-700/50"></div>
-          </div>
-
-          <!-- Secondary Button: Continue as Guest -->
-          <div id="auth-guest-section" class="flex flex-col gap-2">
-            <button 
-              type="button" 
-              onclick="continueAsGuest()" 
-              class="w-full py-3 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-slate-950/50 hover:bg-slate-900/80 border border-slate-700/70 hover:border-teal-400/40 flex items-center justify-center gap-2 transition-all duration-300 shadow-sm cursor-pointer"
-            >
-              <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
-              <span>Continue as Guest</span>
-            </button>
-          </div>
-
-          <!-- Register Link / Toggle -->
-          <div id="auth-register-footer" class="text-center text-[11px] text-slate-400 pt-0.5">
-            <span>Don't have an account? </span>
-            <button type="button" onclick="openRegisterModal()" class="text-teal-400 hover:text-teal-300 font-semibold hover:underline transition-colors cursor-pointer">
-              Create one
-            </button>
-          </div>
-
           <!-- Bottom Card Micro-Caption -->
-          <div class="text-center text-[11px] font-mono tracking-wider text-teal-300/60 uppercase pt-0.5">
+          <div class="text-center text-[11px] font-mono tracking-wider text-teal-300/60 uppercase pt-0.5 border-t border-slate-800/60">
             Same Markets. A Calmer You.
           </div>
 
@@ -468,49 +408,106 @@
     </main>
 
     <!-- Bottom Section: Live Tickers Bar -->
-    <div class="w-full max-w-7xl mx-auto px-6 lg:px-12 pb-4 z-20">
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pb-4 z-20">
       
       <!-- Glassmorphic Index Tickers Bar -->
-      <div class="w-full rounded-2xl glass-card-subtle px-5 py-3 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <div class="w-full rounded-2xl glass-card-subtle px-4 sm:px-5 py-3 flex items-center justify-between gap-4 shadow-xl overflow-hidden">
         
-        <!-- Live Indices Pills -->
-        <div class="flex items-center flex-wrap gap-4 sm:gap-6 text-xs">
+        <!-- Live Indices Pills (Horizontally Scrollable Strip) -->
+        <div class="flex items-center gap-4 sm:gap-6 text-xs whitespace-nowrap overflow-x-auto py-1" id="bottom-ticker-strip">
           
-          <!-- NIFTY 50 -->
-          <div class="flex items-center gap-2">
+          <!-- 1. NIFTY 50 -->
+          <div class="flex items-center gap-2 flex-shrink-0">
             <span class="font-mono font-semibold text-slate-400">NIFTY 50</span>
             <span id="ticker-nifty-price" class="font-mono font-bold text-white">--</span>
-            <span id="ticker-nifty-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              --
-            </span>
+            <span id="ticker-nifty-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
           </div>
 
-          <div class="hidden sm:block w-px h-4 bg-slate-700/50"></div>
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
 
-          <!-- SENSEX -->
-          <div class="flex items-center gap-2">
+          <!-- 2. SENSEX -->
+          <div class="flex items-center gap-2 flex-shrink-0">
             <span class="font-mono font-semibold text-slate-400">SENSEX</span>
             <span id="ticker-sensex-price" class="font-mono font-bold text-white">--</span>
-            <span id="ticker-sensex-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              --
-            </span>
+            <span id="ticker-sensex-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
           </div>
 
-          <div class="hidden md:block w-px h-4 bg-slate-700/50"></div>
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
 
-          <!-- NIFTY BANK -->
-          <div class="flex items-center gap-2">
+          <!-- 3. NIFTY BANK -->
+          <div class="flex items-center gap-2 flex-shrink-0">
             <span class="font-mono font-semibold text-slate-400">NIFTY BANK</span>
             <span id="ticker-bank-price" class="font-mono font-bold text-white">--</span>
-            <span id="ticker-bank-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              --
-            </span>
+            <span id="ticker-bank-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 4. MIDSMALL400 -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">MIDSMALL400</span>
+            <span id="ticker-midsmall-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-midsmall-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 5. DXY -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">DXY</span>
+            <span id="ticker-dxy-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-dxy-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 6. GOLD CFD -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">GOLD CFD</span>
+            <span id="ticker-gold-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-gold-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 7. SilverCFD -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">SilverCFD</span>
+            <span id="ticker-silver-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-silver-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 8. Copper -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">Copper</span>
+            <span id="ticker-copper-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-copper-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 9. US10 Year yield -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">US10Y Yield</span>
+            <span id="ticker-us10y-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-us10y-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
+          </div>
+
+          <div class="w-px h-4 bg-slate-700/50 flex-shrink-0"></div>
+
+          <!-- 10. Bitcoin -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-mono font-semibold text-slate-400">Bitcoin</span>
+            <span id="ticker-btc-price" class="font-mono font-bold text-white">--</span>
+            <span id="ticker-btc-chg" class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">--</span>
           </div>
 
         </div>
 
-        <!-- Right Side Quote Pill: "Peace is a position too." -->
-        <div class="flex items-center gap-2 text-xs italic text-teal-300/80 font-light select-none">
+        <!-- Right Side Quote Pill -->
+        <div class="hidden 2xl:flex items-center gap-2 text-xs italic text-teal-300/80 font-light select-none flex-shrink-0">
           <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-400 animate-pulse"></i>
           <span id="bottom-bar-quote">"Peace is a position too."</span>
         </div>
@@ -645,6 +642,130 @@
 
     </div>
   </footer>
+
+  <!-- MODAL: Dedicated Login Modal (Visible only when user clicks Login on top toolbar) -->
+  <div id="modal-login" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <div class="w-full max-w-md glass-card rounded-3xl p-7 sm:p-8 flex flex-col gap-4 relative shadow-2xl border border-teal-500/30">
+      
+      <!-- Close Button -->
+      <button onclick="closeLoginModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition-colors cursor-pointer" title="Close">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="flex flex-col text-center pt-1">
+        <h3 class="text-2xl font-bold text-white tracking-tight">
+          Welcome Back
+        </h3>
+        <p class="text-xs text-slate-400 mt-1 font-light">
+          Continue your peaceful investing journey
+        </p>
+      </div>
+
+      <!-- Error / Success Alert Banner -->
+      <div id="auth-alert-banner" class="hidden px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-2 border"></div>
+
+      <!-- Login Form -->
+      <form id="landing-login-form" onsubmit="handleLandingLogin(event)" class="flex flex-col gap-4">
+        
+        <!-- Username or Email Input -->
+        <div class="flex flex-col gap-1.5 text-left">
+          <label for="input-username" class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-teal-400"></i>
+            <span>Username or Email</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="input-username" 
+              name="username" 
+              required 
+              autocomplete="username"
+              placeholder="Enter your username or email" 
+              class="w-full px-4 py-3 pl-10 rounded-xl bg-slate-950/70 border border-slate-700/60 hover:border-teal-500/40 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
+            >
+            <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          </div>
+        </div>
+
+        <!-- Password Input with Toggle Visibility -->
+        <div class="flex flex-col gap-1.5 text-left">
+          <label for="input-password" class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="lock" class="w-3.5 h-3.5 text-teal-400"></i>
+            <span>Password</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="input-password" 
+              name="password" 
+              required 
+              autocomplete="current-password"
+              placeholder="Enter your password" 
+              class="w-full px-4 py-3 pl-10 pr-10 rounded-xl bg-slate-950/70 border border-slate-700/60 hover:border-teal-500/40 focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
+            >
+            <i data-lucide="lock" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <button 
+              type="button" 
+              id="btn-toggle-pwd" 
+              onclick="togglePasswordVisibility()" 
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1 cursor-pointer"
+              title="Show / Hide Password"
+            >
+              <i data-lucide="eye" id="icon-pwd-eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me & Forgot Password Row -->
+        <div class="flex items-center justify-between text-xs pt-0.5">
+          <label class="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300 select-none">
+            <input type="checkbox" id="chk-remember-me" checked class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-teal-500 focus:ring-teal-400/30">
+            <span>Remember me</span>
+          </label>
+          <button type="button" onclick="openForgotPasswordModal()" class="text-teal-400 hover:text-teal-300 hover:underline transition-all cursor-pointer">
+            Forgot password?
+          </button>
+        </div>
+
+        <!-- Submit Button: Enter SANGAM -->
+        <button 
+          type="submit" 
+          id="btn-submit-login" 
+          class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 btn-sangam-primary flex items-center justify-center gap-2 shadow-lg cursor-pointer mt-1"
+        >
+          <span id="btn-login-text">Enter SANGAM</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+      <!-- Divider 'or' -->
+      <div class="flex items-center gap-3 text-xs text-slate-500 font-mono">
+        <div class="flex-1 h-px bg-slate-700/50"></div>
+        <span>or</span>
+        <div class="flex-1 h-px bg-slate-700/50"></div>
+      </div>
+
+      <!-- Continue as Guest -->
+      <button 
+        type="button" 
+        onclick="continueAsGuest()" 
+        class="w-full py-3 rounded-xl text-xs font-semibold text-slate-200 hover:text-white bg-slate-950/50 hover:bg-slate-900/80 border border-slate-700/70 hover:border-teal-400/40 flex items-center justify-center gap-2 transition-all duration-300 shadow-sm cursor-pointer"
+      >
+        <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
+        <span>Continue as Guest</span>
+      </button>
+
+      <!-- Register Link -->
+      <div class="text-center text-[11px] text-slate-400 pt-0.5">
+        <span>Don't have an account? </span>
+        <button type="button" onclick="openRegisterModal()" class="text-teal-400 hover:text-teal-300 font-semibold hover:underline transition-colors cursor-pointer">
+          Create one
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- MODAL: About Sangam Philosophy -->
   <div id="modal-about" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
