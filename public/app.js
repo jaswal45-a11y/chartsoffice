@@ -8322,9 +8322,7 @@ function switchAdminConsoleTab(tab) {
     if (adminCurrentTab === 'universe') {
       contentUniverse.classList.remove('hidden');
       contentUniverse.classList.add('flex');
-      if (!adminUniverseState.isLoaded) {
-        loadAdminUniverse();
-      }
+      loadAdminUniverse(true);
     } else {
       contentUniverse.classList.add('hidden');
       contentUniverse.classList.remove('flex');

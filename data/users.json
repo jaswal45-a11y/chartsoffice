@@ -22053,9 +22053,8 @@
       }
     },
     "maxWatchlists": 15,
-    "activeToken": "sess_user_62a07decf857526edeb675744e6bbc5f7b47bcd3bde8f86f",
+    "activeToken": "sess_user_2e827c9944d8a9d62412bfc365a03aabf560fc6bbfa421cd",
     "tokens": [
-      "sess_user_0b0a5008002429b1191ae2287dbdcf51f91637ab12a8f96d",
       "sess_user_4e2c1e6126b1863159e48c80db342d758d0a721e41728303",
       "sess_user_026f2e5a8c72ec7221077b75bc18eedf517e4e835a147bbd",
       "sess_user_ddf568f46573969ea0eafc40ff870a6fa5da890ed5f81fc2",
@@ -22065,7 +22064,8 @@
       "sess_user_000d1a9d0ac2dec30493dd93827e3ff3f6a8d7304b187cbf",
       "sess_user_19976d46a8e42c9fef5d9e40f6e6882dced9facd80c4ab5f",
       "sess_user_d3b1de9c8e3b505907f010143b5b559de45ed8cfbbc3f318",
-      "sess_user_62a07decf857526edeb675744e6bbc5f7b47bcd3bde8f86f"
+      "sess_user_62a07decf857526edeb675744e6bbc5f7b47bcd3bde8f86f",
+      "sess_user_2e827c9944d8a9d62412bfc365a03aabf560fc6bbfa421cd"
     ]
   },
   {

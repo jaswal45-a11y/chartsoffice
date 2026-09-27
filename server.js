@@ -823,35 +823,35 @@ async function syncMongoInitialData() {
 
     // 4. Universe Stocks Collection (Self-Healing Persistent Quotes Store)
     const universeCol = db.collection('universe_stocks');
-    const universeCount = await universeCol.countDocuments();
-    if (universeCount === 0) {
-      const localUniverse = getUniverseStocks();
-      if (localUniverse && localUniverse.length > 0) {
-        console.log(`[MongoDB] 🌱 Seeding ${localUniverse.length} universe stocks into MongoDB Atlas...`);
-        const cleanStocks = localUniverse.map(s => {
-          const { _id, ...rest } = s;
-          return { ...rest };
-        });
-        await universeCol.insertMany(cleanStocks);
+    const localUniverse = getUniverseStocks();
+
+    if (localUniverse && localUniverse.length > 0) {
+      console.log(`[MongoDB] 🔄 Synchronizing ${localUniverse.length} verified universe stocks to MongoDB Atlas...`);
+      const bulkOps = localUniverse.map(s => {
+        const { _id, ...clean } = s;
+        return {
+          updateOne: {
+            filter: { symbol: clean.symbol },
+            update: { $set: clean },
+            upsert: true
+          }
+        };
+      });
+      for (let i = 0; i < bulkOps.length; i += 500) {
+        await universeCol.bulkWrite(bulkOps.slice(i, i + 500), { ordered: false });
       }
-    } else {
-      const dbUniverse = await universeCol.find({}).toArray();
-      const realCompanies = ['RELIANCE', 'HINDALCO', 'BRITANNIA', 'PIIND', 'BALKRISIND', 'EXIDEIND', 'PAGEIND', 'KEI', 'AARTIIND', 'FINEORG', 'BHARTIARTL', 'PIDILITIND', 'GRASIM', 'SIEMENS', 'UPL', 'TIPSINDLTD'];
-      const filteredDbUniverse = dbUniverse.filter(s => {
-        if (!s || !s.symbol) return false;
-        if (realCompanies.includes(s.symbol)) return true;
-        if (s.name && s.name.endsWith('Industries Limited') && /^(PIONEER|ROYAL|MATRIX|HARMONY|CATALYST|RADICAL|BHARAT|ELEVATE|VENTURE|STELLAR|ASIAN|AURA|GLOBAL|EVEREST|OMEGA|HINDUSTAN|SPECTRUM|PRIME|GENESIS|TITANIC|SUMMIT|PACIFIC|INDIAN|ZENITH|VORTEX|VERTEX|HORIZON|AURORA|CREST|APEX|BEACON|VALIANT|INFINITY|NEXUS|QUANTUM|PHOENIX|SOLAR|STEEL|POWER|INFRA|RELE|LABS|ENERG|TECH|FIN|METALS|CORP|IND|CHEM|SUPREME|NATIONAL|CENTURY|ALPHA|UNITED|DYNAMIC|MAJESTIC|DELTA|PARAMOUNT|UNIVERSAL|STARLIGHT|COSMO|ORIENT|ACME|VANGUARD|SYNERGY|ATLANTIC|CONTINENTAL|PULSE)/i.test(s.name)) {
-          return false;
-        }
-        return true;
-      });
-      memoryUniverse = filteredDbUniverse.map(s => {
-        const { _id, ...rest } = s;
-        return { ...rest };
-      });
-      localUniverseCache = memoryUniverse;
-      console.log(`[MongoDB] 📥 Loaded ${memoryUniverse.length} universe stocks with latest persisted prices from MongoDB Atlas.`);
+      const validSymbols = localUniverse.map(s => s.symbol);
+      await universeCol.deleteMany({ symbol: { $nin: validSymbols } });
+      console.log(`[MongoDB] ✅ Fully synchronized universe stocks with MongoDB Atlas.`);
     }
+
+    const dbUniverse = await universeCol.find({}).toArray();
+    memoryUniverse = dbUniverse.map(s => {
+      const { _id, ...rest } = s;
+      return { ...rest };
+    });
+    localUniverseCache = memoryUniverse;
+    console.log(`[MongoDB] 📥 Loaded ${memoryUniverse.length} universe stocks with verified data from MongoDB Atlas.`);
 
     // 5. Company Metadata Collection (Permanent Factual Profiles Cache)
     const companyCol = db.collection('company_metadata');
