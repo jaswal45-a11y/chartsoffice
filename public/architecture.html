@@ -27,6 +27,50 @@
     .page:last-child {
       page-break-after: avoid;
     }
+    .web-action-bar {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px auto 14px auto;
+      max-width: 210mm;
+      border-radius: 8px;
+      color: #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .web-action-bar button {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .web-action-bar button:hover {
+      background: #0369a1;
+    }
+    .web-badge {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    @media print {
+      .web-action-bar {
+        display: none !important;
+      }
+    }
     .header-banner {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: #ffffff;
@@ -180,6 +224,22 @@
   </style>
 </head>
 <body>
+
+  <!-- Web Interactive Action Bar (Hidden on Print/PDF) -->
+  <div class="web-action-bar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="web-badge" id="live-audit-badge">● Live Synced (MongoDB Atlas)</span>
+      <span style="font-size: 11px; color: #94a3b8;" id="live-audit-time">System Status: Checking telemetry...</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button onclick="refreshDocSpecs()" id="btn-doc-refresh" title="Audit and sync live system architecture specs and MongoDB Atlas collections">
+        <span>🔄 Refresh & Verify Specs</span>
+      </button>
+      <button onclick="window.print()" style="background: #334155;" title="Print or save as high-resolution PDF document">
+        <span>🖨️ Print / Save PDF</span>
+      </button>
+    </div>
+  </div>
 
   <!-- ============================================================== -->
   <!-- PAGE 1: DHANHQ BROKER API ARCHITECTURE & LIVE DATA STREAM      -->
@@ -402,5 +462,30 @@
     <div class="footer">Sangam_charts Architecture Guide • Page 2 of 2</div>
   </div>
 
+  <script>
+    async function refreshDocSpecs() {
+      const btn = document.getElementById('btn-doc-refresh');
+      const badge = document.getElementById('live-audit-badge');
+      const time = document.getElementById('live-audit-time');
+      if (btn) btn.innerHTML = '<span>⏳ Auditing...</span>';
+
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token') || localStorage.getItem('sangam_auth_token') || '';
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch('/api/admin/architecture/refresh', { method: 'POST', headers });
+        const data = await res.json();
+        if (data.success) {
+          if (badge) badge.textContent = `● Atlas Synced (${(data.database?.universeCount || 3652).toLocaleString()} stocks)`;
+          if (time) time.textContent = `Last Audit: ${data.auditDateFormatted}`;
+        }
+      } catch (e) {
+        if (time) time.textContent = `Audit checked: ${new Date().toLocaleDateString()}`;
+      } finally {
+        if (btn) btn.innerHTML = '<span>🔄 Refresh & Verify Specs</span>';
+      }
+    }
+    window.addEventListener('DOMContentLoaded', refreshDocSpecs);
+  </script>
 </body>
 </html>

@@ -2082,6 +2082,168 @@
         <!-- ============================================================== -->
         <div id="admin-tab-content-docs" class="hidden flex-col gap-4">
           
+          <!-- Top Audit Header & Refresh Toolbar -->
+          <div class="p-4 rounded-2xl bg-dark-bg/80 border border-dark-border flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 border border-teal-500/30 flex items-center justify-center text-teal-300">
+                <i data-lucide="activity" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="text-sm font-bold text-white">System Architecture, Cluster Health & Strategy Matrix</h3>
+                  <span id="admin-arch-system-health" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>100% Operational & Synced</span>
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  Live verification of MongoDB Atlas collections, broker data feeds, mathematical strategy models, and memory telemetry.
+                </p>
+              </div>
+            </div>
+
+            <!-- Audit Action Buttons & Last Verified Timestamp -->
+            <div class="flex items-center gap-2.5 flex-wrap self-start md:self-auto">
+              <div class="flex flex-col items-end text-right">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Weekly / Live Audit</span>
+                <span id="admin-arch-last-verified" class="text-[11px] font-mono font-bold text-teal-300" title="Timestamp of the most recent system architecture and database verification">
+                  Checking status...
+                </span>
+              </div>
+              <button id="btn-admin-refresh-arch" onclick="refreshAdminArchitecture(true)" 
+                title="Perform live audit: queries MongoDB Atlas counts, tests DhanHQ broker feed, inspects cache & runtime memory"
+                class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                <span id="btn-admin-refresh-arch-label">Refresh & Verify System Specs</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live 4-Card System Telemetry Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            
+            <!-- Telemetry Card 1: MongoDB Atlas Cluster -->
+            <div class="p-3.5 rounded-xl bg-dark-bg/60 border border-emerald-500/30 flex flex-col justify-between gap-2.5 relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Database Cluster
+                  </span>
+                  <span id="arch-db-badge" class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">MongoDB Atlas</span>
+                </div>
+                <div class="text-xs font-bold text-white" id="arch-db-host">cluster0.v9lxx1h.mongodb.net</div>
+                <div class="text-[10px] text-slate-400 font-mono" id="arch-db-name">db: sangam_stocks</div>
+              </div>
+              <div class="space-y-1 pt-2 border-t border-dark-border/60 text-[11px] font-mono">
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Universe Stocks:</span>
+                  <span id="arch-db-universe-count" class="font-bold text-emerald-400">--</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Researched Meta:</span>
+                  <span id="arch-db-meta-count" class="font-bold text-teal-300">--</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Users & Screeners:</span>
+                  <span id="arch-db-users-screeners" class="font-bold text-slate-200">--</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Telemetry Card 2: Market Data Feeds -->
+            <div class="p-3.5 rounded-xl bg-dark-bg/60 border border-blue-500/30 flex flex-col justify-between gap-2.5 relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl pointer-events-none"></div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                    Market Feeds
+                  </span>
+                  <span id="arch-feed-badge" class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">Dual Engine</span>
+                </div>
+                <div class="text-xs font-bold text-white truncate" id="arch-feed-primary">DhanHQ v2 + Multi-Source</div>
+                <div class="text-[10px] text-slate-400 font-mono" id="arch-feed-status">Fast 15ms In-Memory Fallback</div>
+              </div>
+              <div class="space-y-1 pt-2 border-t border-dark-border/60 text-[11px] font-mono">
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Price Cache:</span>
+                  <span id="arch-feed-quotes-cache" class="font-bold text-blue-400">--</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Candle History:</span>
+                  <span id="arch-feed-hist-cache" class="font-bold text-cyan-300">--</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Yahoo Crumb:</span>
+                  <span id="arch-feed-crumb-status" class="font-bold text-emerald-400">Active</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Telemetry Card 3: Strategy & Screener Algorithms -->
+            <div class="p-3.5 rounded-xl bg-dark-bg/60 border border-purple-500/30 flex flex-col justify-between gap-2.5 relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                    Strategy Engines
+                  </span>
+                  <span id="arch-strat-badge" class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">13 Models</span>
+                </div>
+                <div class="text-xs font-bold text-white truncate" id="arch-strat-title">6 Strategy Archetypes</div>
+                <div class="text-[10px] text-slate-400 font-mono truncate" id="arch-strat-sub">VCP · Darvas · 52W · RVOL · Snort</div>
+              </div>
+              <div class="space-y-1 pt-2 border-t border-dark-border/60 text-[11px] font-mono">
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Active Screeners:</span>
+                  <span id="arch-strat-total-count" class="font-bold text-purple-400">11</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Core Math:</span>
+                  <span class="font-bold text-violet-300">EMA / RVOL / RSI</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Ranking:</span>
+                  <span class="font-bold text-emerald-400">Real-Time Scoring</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Telemetry Card 4: Runtime, Memory & Network -->
+            <div class="p-3.5 rounded-xl bg-dark-bg/60 border border-amber-500/30 flex flex-col justify-between gap-2.5 relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none"></div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    Runtime & Memory
+                  </span>
+                  <span id="arch-runtime-node" class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Node.js</span>
+                </div>
+                <div class="text-xs font-bold text-white truncate" id="arch-runtime-uptime-label">Uptime: Checking...</div>
+                <div class="text-[10px] text-slate-400 font-mono truncate">DNS: Google 8.8.8.8 + Cloudflare</div>
+              </div>
+              <div class="space-y-1 pt-2 border-t border-dark-border/60 text-[11px] font-mono">
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Memory RSS:</span>
+                  <span id="arch-runtime-rss" class="font-bold text-amber-400">-- MB</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Heap Used / Total:</span>
+                  <span id="arch-runtime-heap" class="font-bold text-amber-300">-- / --</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                  <span class="text-slate-400">Platform:</span>
+                  <span id="arch-runtime-platform" class="font-bold text-slate-200">Node (win32)</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <!-- Documentation Card 1: System Architecture -->
             <div class="p-5 rounded-2xl bg-gradient-to-br from-dark-bg/90 via-slate-900/70 to-teal-950/20 border border-teal-500/30 flex flex-col justify-between gap-4">
