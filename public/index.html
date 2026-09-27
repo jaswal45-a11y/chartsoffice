@@ -212,13 +212,13 @@
 
           <!-- Category Filter Tabs -->
           <div class="flex items-center gap-1.5 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
-            <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">All</button>
-            <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Intraday</button>
-            <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Breakout</button>
-            <button data-category="Swing" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Swing</button>
-            <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Momentum</button>
-            <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">Reversal</button>
-            <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer">My Custom</button>
+            <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="View all 10+ built-in and custom scanner pipelines">All</button>
+            <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Intraday Scanners: Opening Range Breakout (ORB), Volume Spikes & Momentum">Intraday</button>
+            <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Breakout Scanners: 52-Week High Breakouts & Multi-Month Resistance Levels">Breakout</button>
+            <button data-category="Swing" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Swing Trading: Multi-day trend setups, EMA pullbacks & Stage-2 bases">Swing</button>
+            <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Momentum Scanners: High relative strength leaders & volume surges">Momentum</button>
+            <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Reversal Scanners: Oversold RSI bounces & bottom-fishing support reversals">Reversal</button>
+            <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="My Custom Scanners: User-defined Chartink queries created in this workspace">My Custom</button>
             <button id="btn-open-add-modal-deck" onclick="openAddModal()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 transition-all flex items-center gap-1 cursor-pointer ml-1" title="Add New Custom or System Screener">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i>
               <span>Add Screener</span>
@@ -328,18 +328,18 @@
 
               <!-- Market Cap 1k & 2k Toggles (Compact Space-saving UI) -->
               <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-bg border border-dark-border rounded-xl">
-                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc1000" title="Market Cap > ₹1000 Cr">
+                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc1000" title="Filter stocks with Market Cap > ₹1,000 Cr (Excludes Micro Caps)">
                   <input type="checkbox" id="chk-mc1000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
                   <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">1k</span>
                 </label>
                 <span class="text-slate-600 text-[10px] select-none">|</span>
-                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc2000" title="Market Cap > ₹2000 Cr">
+                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc2000" title="Filter stocks with Market Cap > ₹2,000 Cr (Mid & Large Cap High Liquidity)">
                   <input type="checkbox" id="chk-mc2000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
                   <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
                 </label>
               </div>
 
-              <div class="px-2.5 py-2 text-xs font-mono text-slate-400 bg-dark-bg rounded-xl border border-dark-border">
+              <div class="px-2.5 py-2 text-xs font-mono text-slate-400 bg-dark-bg rounded-xl border border-dark-border" title="Total matching stocks currently visible in table">
                 <span id="visible-stocks-count">0</span>
               </div>
             </div>
@@ -350,16 +350,16 @@
             <table class="w-full text-left text-xs border-collapse">
               <thead class="bg-dark-bg/80 sticky top-0 z-10 text-slate-400 font-semibold uppercase tracking-wider text-[10px] border-b border-dark-border">
                 <tr>
-                  <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200" data-sort="symbol">
+                  <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200" data-sort="symbol" title="Stock Trading Symbol & Legal Entity Name (Click to sort)">
                     <div class="flex items-center gap-1">Stock <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="close">
+                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="close" title="Last Traded Price (LTP) in INR ₹ (Click to sort)">
                     <div class="flex items-center justify-end gap-1">Close (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="changePercent">
+                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="changePercent" title="1-Day Percentage Price Change from Previous Close (Click to sort)">
                     <div class="flex items-center justify-end gap-1">% Change <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="volume">
+                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="volume" title="Total Shares Traded Today in Session (Click to sort)">
                     <div class="flex items-center justify-end gap-1">Volume <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                 </tr>
@@ -1969,31 +1969,38 @@
               <!-- Search Input -->
               <div>
                 <input type="text" id="admin-universe-search" oninput="handleAdminUniverseFilterChange()" placeholder="Search symbol, name, sector..."
+                  title="Search stock universe by ticker symbol, registered company name, or sector"
                   class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-100 text-xs focus:outline-none focus:border-blue-500">
               </div>
 
               <!-- Sector Dropdown -->
               <div>
-                <select id="admin-universe-sector-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                <select id="admin-universe-sector-filter" onchange="handleAdminUniverseFilterChange()" 
+                  title="Filter universe by economic sector classification (e.g., Defence, IT, Financial Services, Auto)"
+                  class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
                   <option value="ALL">All Sectors (All)</option>
                 </select>
               </div>
 
               <!-- Market Cap Tier Filter -->
               <div>
-                <select id="admin-universe-cap-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                <select id="admin-universe-cap-filter" onchange="handleAdminUniverseFilterChange()" 
+                  title="Filter by Market Cap Tier: Mega (≥₹50k Cr), Large (₹20k–50k Cr), Mid (₹5k–20k Cr), Small (₹1k–5k Cr), Micro (<₹1k Cr)"
+                  class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
                   <option value="ALL">All Market Caps</option>
-                  <option value="MEGA">Mega Cap (₹50k+ Cr)</option>
-                  <option value="LARGE">Large Cap (₹20k–50k Cr)</option>
-                  <option value="MID">Mid Cap (₹5k–20k Cr)</option>
-                  <option value="SMALL">Small Cap (₹1k–5k Cr)</option>
-                  <option value="MICRO">Micro Cap (<₹1k Cr)</option>
+                  <option value="MEGA">Mega Cap (≥₹50,000 Cr)</option>
+                  <option value="LARGE">Large Cap (₹20,000–50,000 Cr)</option>
+                  <option value="MID">Mid Cap (₹5,000–20,000 Cr)</option>
+                  <option value="SMALL">Small Cap (₹1,000–5,000 Cr)</option>
+                  <option value="MICRO">Micro Cap (<₹1,000 Cr)</option>
                 </select>
               </div>
 
               <!-- F&O Filter -->
               <div>
-                <select id="admin-universe-fno-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                <select id="admin-universe-fno-filter" onchange="handleAdminUniverseFilterChange()" 
+                  title="Filter by Derivative Segment: Active in NSE Futures & Options vs Cash Equities"
+                  class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
                   <option value="ALL">All Instruments</option>
                   <option value="FNO_ONLY">F&O Derivatives Only</option>
                   <option value="NON_FNO">Cash / Non-F&O Only</option>
@@ -2002,7 +2009,9 @@
 
               <!-- Ingestion Source Filter -->
               <div>
-                <select id="admin-universe-source-filter" onchange="handleAdminUniverseFilterChange()" class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                <select id="admin-universe-source-filter" onchange="handleAdminUniverseFilterChange()" 
+                  title="Filter by Ingestion Origin: Discovered via live scanners, manually added by Admin, or Base seed"
+                  class="w-full px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-slate-200 text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
                   <option value="ALL">All Sources</option>
                   <option value="AUTO">Auto-Ingested from Scanners</option>
                   <option value="ADMIN">Admin Added</option>
@@ -2018,16 +2027,16 @@
               <table class="w-full text-left text-xs border-collapse min-w-[950px]">
                 <thead class="bg-dark-bg text-slate-400 font-semibold border-b border-dark-border uppercase text-[10px]">
                   <tr>
-                    <th class="py-2.5 px-3 w-12 text-center">#</th>
-                    <th class="py-2.5 px-3">Symbol</th>
-                    <th class="py-2.5 px-3">Company Name</th>
-                    <th class="py-2.5 px-3">Sector & Industry</th>
-                    <th class="py-2.5 px-3">Market Cap</th>
-                    <th class="py-2.5 px-2 text-center">F&O</th>
-                    <th class="py-2.5 px-3 text-right">LTP / 1D %</th>
-                    <th class="py-2.5 px-3 text-center">52W Range</th>
-                    <th class="py-2.5 px-3">Tags & Metadata</th>
-                    <th class="py-2.5 px-3 text-right">Action</th>
+                    <th class="py-2.5 px-3 w-12 text-center" title="Row Index">#</th>
+                    <th class="py-2.5 px-3" title="NSE/BSE Listed Stock Trading Symbol">Symbol</th>
+                    <th class="py-2.5 px-3" title="Registered Legal Entity Name">Company Name</th>
+                    <th class="py-2.5 px-3" title="Authentic Sector & Sub-Industry Taxonomy">Sector & Industry</th>
+                    <th class="py-2.5 px-3" title="Market Capitalization (₹ Cr) & Classification Tier (Mega, Large, Mid, Small, Micro)">Market Cap</th>
+                    <th class="py-2.5 px-2 text-center" title="NSE Futures & Options Contract Status">F&O</th>
+                    <th class="py-2.5 px-3 text-right" title="Last Traded Price & 1-Day Price Change %">LTP / 1D %</th>
+                    <th class="py-2.5 px-3 text-center" title="52-Week High (Peak) / 52-Week Low (Trough)">52W Range</th>
+                    <th class="py-2.5 px-3" title="Active Technical Tags, Indicators & Ingestion Origin">Tags & Metadata</th>
+                    <th class="py-2.5 px-3 text-right" title="Administrative Actions">Action</th>
                   </tr>
                 </thead>
                 <tbody id="admin-universe-tbody" class="divide-y divide-dark-border/40 font-mono">

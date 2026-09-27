@@ -39,9 +39,31 @@ function isFnoStock(stockOrSymbol) {
   return FNO_SET_212.has(sym) || FNO_SET_212.has(SYMBOL_ALIAS_MAP[sym] || '');
 }
 
+function getCapCategoryTooltip(capCategory, mcap) {
+  const cat = String(capCategory || '').trim().toLowerCase();
+  const numCap = typeof mcap === 'number' ? mcap : parseFloat(mcap);
+  if (cat.includes('mega') || (!isNaN(numCap) && numCap >= 50000)) {
+    return 'Mega Cap: Market Cap ≥ ₹50,000 Cr (India\'s largest bluechip market titans)';
+  }
+  if (cat.includes('large') || (!isNaN(numCap) && numCap >= 20000)) {
+    return 'Large Cap: Market Cap ₹20,000 Cr to ₹50,000 Cr (Top 100 established market leaders)';
+  }
+  if (cat.includes('mid') || (!isNaN(numCap) && numCap >= 5000)) {
+    return 'Mid Cap: Market Cap ₹5,000 Cr to ₹20,000 Cr (High-growth companies ranked 101st–250th)';
+  }
+  if (cat.includes('small') || (!isNaN(numCap) && numCap >= 1000)) {
+    return 'Small Cap: Market Cap ₹1,000 Cr to ₹5,000 Cr (Small-cap growth companies ranked 251st–500th)';
+  }
+  if (cat.includes('micro') || (!isNaN(numCap) && numCap < 1000)) {
+    return 'Micro Cap: Market Cap < ₹1,000 Cr (High-beta emerging small enterprises)';
+  }
+  return 'Market Capitalization = Total Shares Outstanding × Current Market Price';
+}
+window.getCapCategoryTooltip = getCapCategoryTooltip;
+
 function getFnoBadgeHtml(stockOrSymbol, extraClass = '') {
   if (!isFnoStock(stockOrSymbol)) return '';
-  return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono ${extraClass}" title="F&O Contract Available">F&O</span>`;
+  return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono ${extraClass}" title="Active in NSE Futures & Options Segment (Derivatives Traded)">F&O</span>`;
 }
 
 function getCircuitBandInfo(stockOrSymbol) {
@@ -66,9 +88,9 @@ function getCircuitBandInfo(stockOrSymbol) {
 function getCircuitBadgeHtml(stockOrSymbol, extraClass = '') {
   const band = getCircuitBandInfo(stockOrSymbol);
   if (band === 2) {
-    return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono tracking-tight ${extraClass}" title="NSE Price Band: 2% Circuit Limit">2%</span>`;
+    return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono tracking-tight ${extraClass}" title="NSE 2% Circuit Limit: Price capped to ±2% max daily fluctuation">2%</span>`;
   } else if (band === 5) {
-    return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono tracking-tight ${extraClass}" title="NSE Price Band: 5% Circuit Limit">5%</span>`;
+    return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono tracking-tight ${extraClass}" title="NSE 5% Circuit Limit: Price capped to ±5% max daily fluctuation">5%</span>`;
   }
   return '';
 }
@@ -80,11 +102,11 @@ function updateOnChartCircuitBadge(stockOrData) {
   if (band === 2) {
     badge.className = 'flex pointer-events-auto items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide shadow-2xl backdrop-blur-md w-fit transition-all bg-rose-500/20 text-rose-300 border border-rose-500/40';
     badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span><span>2% CKT</span>`;
-    badge.title = 'NSE Price Band: 2% Circuit Limit';
+    badge.title = 'NSE 2% Circuit Limit: Price capped to ±2% max daily fluctuation';
   } else if (band === 5) {
     badge.className = 'flex pointer-events-auto items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide shadow-2xl backdrop-blur-md w-fit transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40';
     badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span><span>5% CKT</span>`;
-    badge.title = 'NSE Price Band: 5% Circuit Limit';
+    badge.title = 'NSE 5% Circuit Limit: Price capped to ±5% max daily fluctuation';
   } else {
     badge.className = 'hidden pointer-events-auto items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide shadow-2xl backdrop-blur-md w-fit transition-all';
     badge.innerHTML = '';
@@ -589,6 +611,9 @@ async function init() {
   await checkAuthStatus();
   await loadScreeners();
   await loadCircuitStats();
+
+  // Initialize Global High-Performance Tooltip Engine
+  initGlobalTooltipEngine();
 
   // Load default stock chart
   selectStock({
@@ -7853,13 +7878,13 @@ function renderStocksTable() {
     let mcBadgeHtml = '';
     if (stock.mcOver2000Cr) {
       mcBadgeHtml = `
-        <span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2000 Cr">
+        <span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2,000 Cr (Mid & Large Cap High Liquidity)">
           &gt;2k
         </span>
       `;
     } else if (stock.mcOver1000Cr) {
       mcBadgeHtml = `
-        <span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">
+        <span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1,000 Cr (Excludes Micro Caps)">
           &gt;1k
         </span>
       `;
@@ -7870,26 +7895,26 @@ function renderStocksTable() {
         <div class="flex items-center gap-2">
           <div>
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="font-bold font-mono text-slate-100 text-xs tracking-tight">${stock.symbol}</span>
+              <span class="font-bold font-mono text-slate-100 text-xs tracking-tight" title="Ticker: ${stock.symbol}">${stock.symbol}</span>
               ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
               ${getFnoBadgeHtml(stock.symbol)}
               ${getCircuitBadgeHtml(stock)}
               ${mcBadgeHtml}
               ${confluenceHtml}
             </div>
-            <span class="text-[11px] text-slate-400 block line-clamp-1 max-w-[170px]">${stock.name || stock.symbol}</span>
+            <span class="text-[11px] text-slate-400 block line-clamp-1 max-w-[170px]" title="${stock.name || stock.symbol}">${stock.name || stock.symbol}</span>
           </div>
         </div>
       </td>
-      <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-200">
+      <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-200" title="Close Price: ${fmt.currency(closePrice)}">
         ${fmt.currency(closePrice)}
       </td>
-      <td class="py-2.5 px-3 text-right">
+      <td class="py-2.5 px-3 text-right" title="1-Day Price Change: ${fmt.percent(chgVal)}">
         <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${changeBadge}">
           ${fmt.percent(chgVal)}
         </span>
       </td>
-      <td class="py-2.5 px-3 text-right font-mono text-slate-400 text-[11px]">
+      <td class="py-2.5 px-3 text-right font-mono text-slate-400 text-[11px]" title="Traded Volume: ${fmt.volume(stock.volume)} shares">
         ${fmt.volume(stock.volume)}
       </td>
     `;
@@ -8726,6 +8751,8 @@ function renderAdminUniverseTable() {
     const rowNum = startIdx + index + 1;
     const isFno = Boolean(stk.fno);
     const mcapCr = stk.marketCap ? `₹${Number(stk.marketCap).toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr` : '₹5,000 Cr';
+    const capCat = stk.capCategory || 'Small Cap';
+    const capTooltip = getCapCategoryTooltip(capCat, stk.marketCap);
     const ltpStr = typeof stk.price === 'number' && stk.price > 0 ? `₹${stk.price.toFixed(2)}` : '--';
     const chgStr = typeof stk.changePercent === 'number'
       ? `${stk.changePercent >= 0 ? '+' : ''}${stk.changePercent.toFixed(2)}%`
@@ -8736,44 +8763,44 @@ function renderAdminUniverseTable() {
     const l52 = stk.low52w ? Number(stk.low52w).toFixed(1) : '--';
 
     const tags = [];
-    if (isFno) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">F&O</span>');
-    if (stk.autoAdded) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">Auto-Ingested</span>');
-    if (stk.adminAdded) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">Admin Added</span>');
-    if (stk.rsi) tags.push(`<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-800 text-slate-300 border border-slate-700">RSI ${stk.rsi}</span>`);
-    if (stk.rvol && stk.rvol > 1) tags.push(`<span class="px-1.5 py-0.2 rounded text-[9px] bg-cyan-950 text-cyan-300 border border-cyan-800">RVOL ${stk.rvol}x</span>`);
+    if (isFno) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="Active in NSE Futures & Options Segment">F&O</span>');
+    if (stk.autoAdded) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30" title="Auto-Ingested: Added dynamically to universe from live scanner discovery">Auto-Ingested</span>');
+    if (stk.adminAdded) tags.push('<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30" title="Admin Added: Manually registered into persistent database by Administrator">Admin Added</span>');
+    if (stk.rsi) tags.push(`<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-800 text-slate-300 border border-slate-700" title="14-Period Relative Strength Index: Momentum oscillator">RSI ${stk.rsi}</span>`);
+    if (stk.rvol && stk.rvol > 1) tags.push(`<span class="px-1.5 py-0.2 rounded text-[9px] bg-cyan-950 text-cyan-300 border border-cyan-800" title="Relative Volume: ${stk.rvol}x vs 20-day average baseline">RVOL ${stk.rvol}x</span>`);
 
     tr.innerHTML = `
-      <td class="py-2.5 px-3 text-center text-slate-500 font-mono text-[11px]">${rowNum}</td>
+      <td class="py-2.5 px-3 text-center text-slate-500 font-mono text-[11px]" title="Row ${rowNum}">${rowNum}</td>
       <td class="py-2.5 px-3">
         <div class="flex items-center gap-1.5">
-          <span class="font-bold text-white font-mono text-xs tracking-wide">${stk.symbol}</span>
+          <span class="font-bold text-white font-mono text-xs tracking-wide" title="NSE Symbol: ${stk.symbol}">${stk.symbol}</span>
           ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
-          ${stk.exchange && stk.exchange !== 'NSE' ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400">${stk.exchange}</span>` : ''}
+          ${stk.exchange && stk.exchange !== 'NSE' ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-dark-card border border-dark-border text-slate-400" title="Exchange: ${stk.exchange}">${stk.exchange}</span>` : ''}
         </div>
       </td>
       <td class="py-2.5 px-3 text-slate-200 font-sans text-xs truncate max-w-[200px]" title="${stk.name}">${stk.name}</td>
-      <td class="py-2.5 px-3 whitespace-nowrap">
+      <td class="py-2.5 px-3 whitespace-nowrap" title="Sector: ${stk.sector || 'General'} | Industry: ${stk.industry || 'Diversified'}">
         <div class="flex flex-col">
           <span class="font-semibold text-teal-300 text-[11px]">${stk.sector || 'General'}</span>
           <span class="text-[10px] text-slate-500 truncate max-w-[150px]">${stk.industry || 'Diversified'}</span>
         </div>
       </td>
-      <td class="py-2.5 px-3 whitespace-nowrap font-mono">
+      <td class="py-2.5 px-3 whitespace-nowrap font-mono" title="${capTooltip}">
         <div class="flex flex-col">
           <span class="font-bold text-slate-200 text-xs">${mcapCr}</span>
-          <span class="text-[9px] text-slate-400">${stk.capCategory || 'Small Cap'}</span>
+          <span class="text-[9px] text-slate-400 font-semibold">${capCat}</span>
         </div>
       </td>
       <td class="py-2.5 px-2 text-center whitespace-nowrap">
-        ${isFno ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">F&O</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">Cash</span>'}
+        ${isFno ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" title="Active in NSE Futures & Options Segment">F&O</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700" title="Cash Equities Segment">Cash</span>'}
       </td>
-      <td class="py-2.5 px-3 text-right whitespace-nowrap font-mono">
+      <td class="py-2.5 px-3 text-right whitespace-nowrap font-mono" title="Last Traded Price: ${ltpStr} (${chgStr} today)">
         <div class="flex flex-col items-end">
           <span class="font-bold text-white text-xs">${ltpStr}</span>
           <span class="text-[10px] font-bold ${chgColor}">${chgStr}</span>
         </div>
       </td>
-      <td class="py-2.5 px-3 text-center whitespace-nowrap font-mono text-[11px] text-slate-400">
+      <td class="py-2.5 px-3 text-center whitespace-nowrap font-mono text-[11px] text-slate-400" title="52-Week High: ₹${h52} | 52-Week Low: ₹${l52}">
         ${h52} / ${l52}
       </td>
       <td class="py-2.5 px-3">
@@ -9521,6 +9548,97 @@ window.handleAdminSaveGuestPermissions = handleAdminSaveGuestPermissions;
 window.loadAdminGuestPermissions = loadAdminGuestPermissions;
 window.loadGuestPermissions = loadGuestPermissions;
 window.applyGuestPermissions = applyGuestPermissions;
+
+// =============================================================
+// Global Custom High-Performance Rich Tooltip Engine
+// =============================================================
+function initGlobalTooltipEngine() {
+  let tooltipEl = document.getElementById('global-app-tooltip');
+  if (!tooltipEl) {
+    tooltipEl = document.createElement('div');
+    tooltipEl.id = 'global-app-tooltip';
+    document.body.appendChild(tooltipEl);
+  }
+
+  let currentTarget = null;
+  let showTimeout = null;
+
+  function hideTooltip() {
+    clearTimeout(showTimeout);
+    if (currentTarget) {
+      if (currentTarget.hasAttribute('data-orig-title')) {
+        currentTarget.setAttribute('title', currentTarget.getAttribute('data-orig-title'));
+        currentTarget.removeAttribute('data-orig-title');
+      }
+      currentTarget = null;
+    }
+    tooltipEl.classList.remove('visible');
+  }
+
+  function showTooltip(el, text) {
+    if (!text || !text.trim()) return;
+    tooltipEl.textContent = text.trim();
+    tooltipEl.classList.add('visible');
+
+    const rect = el.getBoundingClientRect();
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+
+    const margin = 8;
+    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    let top = rect.top - tooltipRect.height - 8;
+
+    // Flip to bottom if top is out of bounds
+    if (top < margin) {
+      top = rect.bottom + 8;
+    }
+
+    // Clamp horizontally to viewport
+    if (left < margin) left = margin;
+    if (left + tooltipRect.width > window.innerWidth - margin) {
+      left = window.innerWidth - tooltipRect.width - margin;
+    }
+
+    tooltipEl.style.left = Math.round(left) + 'px';
+    tooltipEl.style.top = Math.round(top) + 'px';
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    const target = e.target.closest('[title], [data-tooltip]');
+    if (!target) return;
+    
+    // Ignore active typing inputs
+    if (target.tagName === 'INPUT' && (target.type === 'text' || target.type === 'password' || target.type === 'search') && target === document.activeElement) {
+      return;
+    }
+
+    const rawText = target.getAttribute('data-tooltip') || target.getAttribute('title');
+    if (!rawText || !rawText.trim()) return;
+
+    if (target.hasAttribute('title')) {
+      target.setAttribute('data-orig-title', rawText);
+      target.removeAttribute('title');
+    }
+
+    currentTarget = target;
+    clearTimeout(showTimeout);
+    showTimeout = setTimeout(() => {
+      if (currentTarget === target) {
+        showTooltip(target, rawText);
+      }
+    }, 150);
+  }, { passive: true });
+
+  document.addEventListener('mouseout', function(e) {
+    if (currentTarget && !currentTarget.contains(e.relatedTarget)) {
+      hideTooltip();
+    }
+  }, { passive: true });
+
+  window.addEventListener('scroll', hideTooltip, { passive: true });
+  document.addEventListener('click', hideTooltip, { passive: true });
+}
+
+window.initGlobalTooltipEngine = initGlobalTooltipEngine;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);

@@ -439,24 +439,24 @@
     const tagsHtml = (Array.isArray(themes) && themes.length > 0 ? themes : [sector, industry])
       .slice(0, 4)
       .map(function(tag) {
-        return '<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30 whitespace-nowrap shadow-xs">' + tag + '</span>';
+        return '<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30 whitespace-nowrap shadow-xs" title="Business Theme / Classification: ' + tag + '">' + tag + '</span>';
       })
       .join('');
 
     const productsHtml = Array.isArray(products) && products.length > 0
-      ? '<div class="text-[11px] text-slate-300 line-clamp-2"><strong class="text-slate-400 font-medium">Key Products:</strong> ' + products.join(', ') + '</div>'
+      ? '<div class="text-[11px] text-slate-300 line-clamp-2" title="Primary commercial products and services"><strong class="text-slate-400 font-medium">Key Products:</strong> ' + products.join(', ') + '</div>'
       : '';
 
     const exposureHtml = geographic_exposure
-      ? '<div class="flex items-center justify-between text-[11px]"><span class="text-slate-400">Exposure:</span><span class="font-medium text-slate-200 text-right truncate max-w-[200px]">' + geographic_exposure + '</span></div>'
+      ? '<div class="flex items-center justify-between text-[11px]" title="Geographic revenue footprint"><span class="text-slate-400">Exposure:</span><span class="font-medium text-slate-200 text-right truncate max-w-[200px]">' + geographic_exposure + '</span></div>'
       : '';
 
     const driverHtml = key_revenue_driver
-      ? '<div class="flex items-center justify-between text-[11px]"><span class="text-slate-400">Key Driver:</span><span class="font-medium text-slate-200 text-right truncate max-w-[200px]">' + key_revenue_driver + '</span></div>'
+      ? '<div class="flex items-center justify-between text-[11px]" title="Primary revenue and earnings driver"><span class="text-slate-400">Key Driver:</span><span class="font-medium text-slate-200 text-right truncate max-w-[200px]">' + key_revenue_driver + '</span></div>'
       : '';
 
     const bizTypeHtml = business_type
-      ? '<div class="flex items-center justify-between text-[11px]"><span class="text-slate-400">Business:</span><span class="font-medium text-slate-200 text-right truncate max-w-[200px]">' + business_type + '</span></div>'
+      ? '<div class="flex items-center justify-between text-[11px]" title="Business model and operational structure"><span class="text-slate-400">Business:</span><span class="font-medium text-slate-200 text-right truncate max-w-[200px]">' + business_type + '</span></div>'
       : '';
 
     popoverEl.innerHTML = 
@@ -470,8 +470,8 @@
             '<div class="min-w-0">' +
               '<div class="font-bold text-white text-xs leading-tight truncate max-w-[200px]" title="' + (company_name || ticker) + '">' + (company_name || ticker) + '</div>' +
               '<div class="flex items-center gap-1 mt-0.5">' +
-                '<span class="font-mono font-bold text-cyan-300 text-[11px] tracking-wide">' + ticker + '</span>' +
-                (exchange && exchange !== 'NSE' ? '<span class="px-1 py-0.2 rounded text-[8px] font-mono font-semibold bg-dark-bg border border-dark-border text-slate-400">' + exchange + '</span>' : '') +
+                '<span class="font-mono font-bold text-cyan-300 text-[11px] tracking-wide" title="Ticker: ' + ticker + '">' + ticker + '</span>' +
+                (exchange && exchange !== 'NSE' ? '<span class="px-1 py-0.2 rounded text-[8px] font-mono font-semibold bg-dark-bg border border-dark-border text-slate-400" title="Exchange: ' + exchange + '">' + exchange + '</span>' : '') +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -497,11 +497,11 @@
         '<div class="company-info-scroll-body flex-1 min-h-0 overflow-y-auto p-3.5 space-y-2.5">' +
           '<!-- Sector & Industry Row -->' +
           '<div class="bg-dark-bg/80 border border-dark-border/60 rounded-lg px-2.5 py-1.5 flex flex-col gap-0.5 text-[11px]">' +
-            '<div class="flex items-center justify-between">' +
+            '<div class="flex items-center justify-between" title="Economic Sector">' +
               '<span class="text-slate-400 font-medium">Sector</span>' +
               '<span class="font-semibold text-teal-300 truncate max-w-[190px]">' + sector + '</span>' +
             '</div>' +
-            '<div class="flex items-center justify-between">' +
+            '<div class="flex items-center justify-between" title="Sub-Industry">' +
               '<span class="text-slate-400 font-medium">Industry</span>' +
               '<span class="font-semibold text-slate-300 truncate max-w-[190px]">' + industry + '</span>' +
             '</div>' +

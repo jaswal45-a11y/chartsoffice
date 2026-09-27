@@ -542,6 +542,43 @@ html:not(.dark) .company-info-scroll-body::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.5);
 }
 
+/* =============================================================
+   Global Custom Rich Tooltip Engine
+   ============================================================= */
+#global-app-tooltip {
+  position: fixed;
+  z-index: 999999;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.97);
+  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s;
+  background: rgba(15, 23, 42, 0.96);
+  color: #f8fafc;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 12px 1px rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 500;
+  max-width: 320px;
+  word-wrap: break-word;
+  white-space: normal;
+}
 
+#global-app-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
 
-
+html:not(.dark) #global-app-tooltip {
+  background: rgba(15, 23, 42, 0.98);
+  color: #ffffff;
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35), 0 0 12px rgba(37, 99, 235, 0.2);
+}
