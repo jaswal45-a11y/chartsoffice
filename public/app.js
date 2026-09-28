@@ -210,11 +210,14 @@ const state = {
 
   // Volume Intelligence Indicator Parameters & Settings
   volIntelSettings: {
+    showVolMa: true,
     volMaPeriod: 50,
     ppLookback: 10,
     bsMult: 3.0,
     dryThresh: 0.20,
-    paintBars: false
+    paintBars: false,
+    bsMarkerShape: 'circle', // 'circle' | 'triangle' | 'off'
+    bsMarkerColor: '#a855f7'
   },
 
   // Authentication State
@@ -268,8 +271,8 @@ const state = {
     viDv: '#f59e0b',
     viSup: '#10b981',
     viSdn: '#ef4444',
-    viNup: '#15803d',
-    viNdn: '#991b1b'
+    viGrey: '#64748b',
+    viLowVol: '#e2e8f0'
   },
   pivotType: 'Traditional (Auto)',
 
@@ -998,7 +1001,8 @@ function updateLineStyle(indicatorKey) {
     viPv: ['setting-color-vi-pv', null],
     viDv: ['setting-color-vi-dv', null],
     viSup: ['setting-color-vi-sup', null],
-    viSdn: ['setting-color-vi-sdn', null]
+    viSdn: ['setting-color-vi-sdn', null],
+    viGrey: ['setting-color-vi-grey', null]
   };
 
   const widthMap = {
@@ -1081,7 +1085,7 @@ function updateLineStyle(indicatorKey) {
     }
   }
 
-  if (['viBs', 'viPp', 'viPv', 'viDv', 'viSup', 'viSdn', 'volIntelMa'].includes(indicatorKey)) {
+  if (['viBs', 'viPp', 'viPv', 'viDv', 'viSup', 'viSdn', 'viGrey', 'volIntelMa'].includes(indicatorKey)) {
     renderVolumeIntelligence();
   }
 
@@ -1122,7 +1126,8 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
     return {
       histogram: [],
       volMaSeries: [],
-      markers: [],
+      bsCandleMarkers: [],
+      qyVolumeMarkers: [],
       paintedCandles: [],
       barSignals: [],
       stats: { ppCount: 0, bsCount: 0, latestRVol: 1.0, latestUD: 1.0, udStatus: 'Neutral', signals: [] }
@@ -1134,16 +1139,18 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
   const bsMult = Number(options.bsMult) || 3.0;
   const dryThresh = Number(options.dryThresh) || 0.20;
   const paintBars = Boolean(options.paintBars);
+  const bsMarkerShape = options.bsMarkerShape || 'circle'; // 'circle' | 'triangle' | 'arrowUp' | 'off'
+  const bsMarkerColor = options.bsMarkerColor || customColors.viBs || '#a855f7';
 
   const colors = {
-    viBs: customColors.viBs || '#a855f7',
+    viBs: bsMarkerColor,
     viPp: customColors.viPp || '#0ea5e9',
     viPv: customColors.viPv || '#06b6d4',
     viDv: customColors.viDv || '#f59e0b',
     viSup: customColors.viSup || '#10b981',
     viSdn: customColors.viSdn || '#ef4444',
-    viNup: customColors.viNup || '#15803d',
-    viNdn: customColors.viNdn || '#991b1b',
+    viGrey: customColors.viGrey || '#64748b',
+    viLowVol: customColors.viLowVol || '#e2e8f0',
     ...customColors
   };
 
@@ -1165,7 +1172,8 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
 
   const histogram = [];
   const volMaSeries = [];
-  const markers = [];
+  const bsCandleMarkers = [];
+  const qyVolumeMarkers = [];
   const paintedCandles = [];
   const barSignals = [];
 
@@ -1186,15 +1194,26 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
 
     const signals = [];
 
-    // 1. Dry Volume (DV): Volume <= dryThresh * VolMA
+    // 1. Dry Volume (DV): Volume <= dryThresh * VolMA (<= 20% of 50-VolMA by default)
     const isDry = i >= 5 && vol <= (dryThresh * ma);
     if (isDry) signals.push('DV');
 
     // 2. Bull Snort (BS): Volume >= bsMult * VolMA && Close in upper 35% of bar range && Up bar
+    // Plotted as custom Circle or Triangle marker BELOW price candle
     const isBullSnort = i >= 5 && (vol >= bsMult * ma) && (clv >= 0.65) && isUp;
     if (isBullSnort) {
       signals.push('BS');
       bsCount++;
+      if (bsMarkerShape !== 'off') {
+        bsCandleMarkers.push({
+          time: c.time,
+          position: 'belowBar',
+          color: colors.viBs,
+          shape: (bsMarkerShape === 'triangle' || bsMarkerShape === 'arrowUp') ? 'arrowUp' : 'circle',
+          text: '',
+          size: 1
+        });
+      }
     }
 
     // 3. Pocket Pivot (PP): Up bar with Volume > max qualifying Down bar volume in lookback
@@ -1218,70 +1237,70 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
       }
     }
 
-    // 4. Highest Volume Events (HV)
-    let isHVE = false;
-    let isHVY = false;
-    let isHVQ = false;
-    if (i >= 10) {
-      const allPrevMax = Math.max(...volValues.slice(0, i));
-      if (vol >= allPrevMax) {
-        isHVE = true;
-        signals.push('HVE');
+    // 4. Lowest Volume in a Quarter and Year (Q & Y markers above Volume bars)
+    let isLVY = false;
+    let isLVQ = false;
+    if (i >= 20) {
+      const qStart = Math.max(0, i - 62);
+      const qSlice = volValues.slice(qStart, i);
+      const qMin = qSlice.length > 0 ? Math.min(...qSlice) : Infinity;
+      if (vol <= qMin) {
+        isLVQ = true;
+        signals.push('LVQ');
       }
-      if (i >= 20) {
+
+      if (i >= 60) {
         const yStart = Math.max(0, i - 251);
-        const yMax = Math.max(...volValues.slice(yStart, i));
-        if (vol >= yMax) {
-          isHVY = true;
-          signals.push('HVY');
+        const ySlice = volValues.slice(yStart, i);
+        const yMin = ySlice.length > 0 ? Math.min(...ySlice) : Infinity;
+        if (vol <= yMin) {
+          isLVY = true;
+          signals.push('LVY');
         }
       }
-      const qStart = Math.max(0, i - 62);
-      const qMax = Math.max(...volValues.slice(qStart, i));
-      if (vol >= qMax) {
-        isHVQ = true;
-        signals.push('HVQ');
+
+      if (isLVY) {
+        qyVolumeMarkers.push({
+          time: c.time,
+          position: 'aboveBar',
+          color: colors.viLowVol || '#e2e8f0',
+          shape: 'circle',
+          text: 'Y',
+          size: 0
+        });
+      } else if (isLVQ) {
+        qyVolumeMarkers.push({
+          time: c.time,
+          position: 'aboveBar',
+          color: '#cbd5e1',
+          shape: 'circle',
+          text: 'Q',
+          size: 0
+        });
       }
     }
 
-    // 5. Lowest Volume Events (LV)
-    if (i >= 10) {
-      const qStart = Math.max(0, i - 62);
-      const qMin = Math.min(...volValues.slice(qStart, i));
-      if (vol <= qMin) signals.push('LVQ');
-      if (i >= 20) {
-        const yStart = Math.max(0, i - 251);
-        const yMin = Math.min(...volValues.slice(yStart, i));
-        if (vol <= yMin) signals.push('LVY');
-      }
-    }
-
-    // 6. Power Volume (PV): Volume >= 2.5x VolMA (or >500k) & |pctChg| >= 5%
+    // 5. Power Volume (PV) for stats/signals tracking
     const isPowerVol = (vol >= 2.5 * ma || vol >= 500000) && Math.abs(pctChg) >= 5.0;
     if (isPowerVol) signals.push('PV');
 
-    // Hierarchy Priority: Bull Snort > Pocket Pivot > Power Volume > HVE/HVY > Dry Volume > Strong Up > Strong Down > Normal Up > Normal Down
-    let barColor = colors.viNup;
-    if (isBullSnort) {
-      barColor = colors.viBs;
-    } else if (isPocketPivot) {
-      barColor = colors.viPp;
-    } else if (isPowerVol) {
-      barColor = colors.viPv;
-    } else if (isHVE || isHVY) {
-      barColor = '#d946ef';
-    } else if (isDry) {
+    // Volume Bar Color Rules Hierarchy:
+    // 1. Dry Volume (vol <= 20% of 50-VolMA) -> Amber/Gold (viDv)
+    // 2. Pocket Pivot (Up day > max 10-down-day vol) -> Cyan/Blue (viPp)
+    // 3. Up day with vol > 50-SMA (including Bull Snort) -> Bright Green (viSup)
+    // 4. Down day with vol > 50-SMA -> Bright Red (viSdn)
+    // 5. Any day with vol <= 50-SMA -> Neutral Grey (viGrey: #64748b)
+    let barColor = colors.viGrey;
+    if (isDry) {
       barColor = colors.viDv;
+    } else if (isPocketPivot && !isBullSnort) {
+      barColor = colors.viPp;
     } else if (isUp && vol > ma) {
       barColor = colors.viSup;
     } else if (isDown && vol > ma) {
       barColor = colors.viSdn;
-    } else if (isUp) {
-      barColor = colors.viNup;
-    } else if (isDown) {
-      barColor = colors.viNdn;
     } else {
-      barColor = '#64748b';
+      barColor = colors.viGrey;
     }
 
     histogram.push({
@@ -1295,9 +1314,7 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
       value: Number(ma.toFixed(0))
     });
 
-    // Markers on Vol Intel Chart (Omitted PP/BS text markers per user preference; color coding on bars is used)
-
-    // Paint Bars formatting
+    // Paint Bars formatting on Candlesticks
     paintedCandles.push({
       time: c.time,
       open: c.open,
@@ -1320,6 +1337,8 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
       isBullSnort,
       isPocketPivot,
       isDry,
+      isLVQ,
+      isLVY,
       isPowerVol,
       barColor
     });
@@ -1346,7 +1365,8 @@ function calculateVolumeIntelligence(candles, options = {}, customColors = {}) {
   return {
     histogram,
     volMaSeries,
-    markers,
+    bsCandleMarkers,
+    qyVolumeMarkers,
     paintedCandles,
     barSignals,
     stats: {
@@ -1376,7 +1396,7 @@ function renderVolumeIntelligence() {
       state.charts.series.candles.setData(candles);
     }
     updateDefaultVolumeBadges();
-    updateEarningsVolumeMarkers();
+    updateAllChartMarkers();
     return;
   }
 
@@ -1404,7 +1424,7 @@ function renderVolumeIntelligence() {
       state.charts.series.candles.setData(candles);
     }
     updateDefaultVolumeBadges();
-    updateEarningsVolumeMarkers();
+    updateAllChartMarkers();
     return;
   }
 
@@ -1417,13 +1437,19 @@ function renderVolumeIntelligence() {
     state.charts.series.volume.setData(viData.histogram);
   }
 
-  if (state.charts?.series?.volAvg && viData.volMaSeries) {
-    state.charts.series.volAvg.applyOptions({
-      visible: true,
-      color: state.colors.volIntelMa || state.colors.volAvg || '#fbbf24',
-      lineWidth: Number(state.lineWidths?.volAvg || 1.5)
-    });
-    state.charts.series.volAvg.setData(viData.volMaSeries);
+  const showVolMa = state.volIntelSettings?.showVolMa !== false;
+  if (state.charts?.series?.volAvg) {
+    if (showVolMa && viData.volMaSeries) {
+      state.charts.series.volAvg.applyOptions({
+        visible: true,
+        color: state.colors.volIntelMa || state.colors.volAvg || '#fbbf24',
+        lineWidth: Number(state.lineWidths?.volAvg || 1.5)
+      });
+      state.charts.series.volAvg.setData(viData.volMaSeries);
+    } else {
+      state.charts.series.volAvg.applyOptions({ visible: false });
+      state.charts.series.volAvg.setData([]);
+    }
   }
 
   // Paint Bars on Main Candlesticks when toggled on
@@ -1436,7 +1462,7 @@ function renderVolumeIntelligence() {
   }
 
   updateDefaultVolumeBadges();
-  updateEarningsVolumeMarkers();
+  updateAllChartMarkers();
 }
 
 function setVolumeOverlayMode(mode) {
@@ -1460,9 +1486,27 @@ window.setVolumeOverlayMode = setVolumeOverlayMode;
 
 function updateVolIntelSetting(key, val) {
   if (!state.volIntelSettings) {
-    state.volIntelSettings = { volMaPeriod: 50, ppLookback: 10, bsMult: 3.0, dryThresh: 0.20, paintBars: false };
+    state.volIntelSettings = {
+      showVolMa: true,
+      volMaPeriod: 50,
+      ppLookback: 10,
+      bsMult: 3.0,
+      dryThresh: 0.20,
+      paintBars: false,
+      bsMarkerShape: 'circle',
+      bsMarkerColor: '#a855f7'
+    };
   }
-  state.volIntelSettings[key] = (key === 'paintBars') ? Boolean(val) : (typeof val === 'string' && !isNaN(val) ? Number(val) : val);
+  if (key === 'paintBars' || key === 'showVolMa') {
+    state.volIntelSettings[key] = Boolean(val);
+  } else if (key === 'bsMarkerShape') {
+    state.volIntelSettings[key] = val;
+  } else if (key === 'bsMarkerColor') {
+    state.volIntelSettings[key] = val;
+    state.colors.viBs = val;
+  } else {
+    state.volIntelSettings[key] = (typeof val === 'string' && !isNaN(val)) ? Number(val) : val;
+  }
   saveIndicatorPreferences();
 
   if (state.currentStockData?.candles) {
@@ -1521,7 +1565,8 @@ function openLineSettingsModal() {
     viPv: 'setting-color-vi-pv',
     viDv: 'setting-color-vi-dv',
     viSup: 'setting-color-vi-sup',
-    viSdn: 'setting-color-vi-sdn'
+    viSdn: 'setting-color-vi-sdn',
+    viGrey: 'setting-color-vi-grey'
   };
   Object.entries(colorMap).forEach(([key, id]) => {
     const colInput = document.getElementById(id);
@@ -1537,11 +1582,13 @@ function openLineSettingsModal() {
       else element.value = String(val);
     }
   };
+  setElVal('setting-vi-show-volma', vi.showVolMa !== false);
   setElVal('setting-vi-volma-period', vi.volMaPeriod ?? 50);
   setElVal('setting-vi-pp-lookback', vi.ppLookback ?? 10);
   setElVal('setting-vi-bs-mult', vi.bsMult ?? 3.0);
   setElVal('setting-vi-dry-thresh', vi.dryThresh ?? 0.20);
   setElVal('setting-vi-paint-bars', vi.paintBars ?? false);
+  setElVal('setting-vi-bs-marker-shape', vi.bsMarkerShape ?? 'circle');
 
   // Sync width selects
   const widthSelectMap = {
@@ -1624,8 +1671,8 @@ function resetLineStylesToDefaults() {
     viDv: '#f59e0b',
     viSup: '#10b981',
     viSdn: '#ef4444',
-    viNup: '#15803d',
-    viNdn: '#991b1b'
+    viGrey: '#64748b',
+    viLowVol: '#e2e8f0'
   };
   state.lineWidths = {
     ema10: 1.5,
@@ -1646,11 +1693,14 @@ function resetLineStylesToDefaults() {
     volIntelMa: 1.5
   };
   state.volIntelSettings = {
+    showVolMa: true,
     volMaPeriod: 50,
     ppLookback: 10,
     bsMult: 3.0,
     dryThresh: 0.20,
-    paintBars: false
+    paintBars: false,
+    bsMarkerShape: 'circle',
+    bsMarkerColor: '#a855f7'
   };
   state.customThemeColors = {
     bg: '#0b0f19',
@@ -3999,74 +4049,106 @@ function updateDefaultVolumeBadges() {
   }
 }
 
-function updateEarningsVolumeMarkers() {
+function updateAllChartMarkers() {
   const data = state.currentStockData;
   if (!data?.candles || !Array.isArray(data.candles) || data.candles.length === 0) return;
 
-  // Ensure price candles stay clean with no circle/e markers below price
+  const mode = state.volOverlayMode || 'volintel';
+  const viData = (mode === 'volintel' && data.volIntel) ? data.volIntel : null;
+
+  // 1. Candlestick Series Markers: Bull Snort markers below respective price candles
   if (state.charts?.series?.candles && typeof state.charts.series.candles.setMarkers === 'function') {
-    state.charts.series.candles.setMarkers([]);
-  }
-
-  const earningsDates = data.earningsDates || [];
-  if (!Array.isArray(earningsDates) || earningsDates.length === 0) {
-    if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
-      state.charts.series.volume.setMarkers([]);
-    }
-    return;
-  }
-
-  const candleTimes = data.candles.map(c => {
-    if (typeof c.time === 'string') return c.time;
-    if (c.time?.year) return `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
-    return String(c.time);
-  });
-
-  const markers = [];
-  earningsDates.forEach(eDate => {
-    if (typeof eDate !== 'string' || eDate < '2026-01-01') return;
-
-    let matchedCandleTime = null;
-    const exactIdx = candleTimes.indexOf(eDate);
-    if (exactIdx !== -1) {
-      matchedCandleTime = data.candles[exactIdx].time;
+    if (viData && Array.isArray(viData.bsCandleMarkers) && viData.bsCandleMarkers.length > 0 && state.volIntelSettings?.bsMarkerShape !== 'off') {
+      const candleMarkers = [...viData.bsCandleMarkers];
+      candleMarkers.sort((a, b) => {
+        const timeA = typeof a.time === 'string' ? a.time : (a.time?.year ? `${a.time.year}-${String(a.time.month).padStart(2, '0')}-${String(a.time.day).padStart(2, '0')}` : a.time);
+        const timeB = typeof b.time === 'string' ? b.time : (b.time?.year ? `${b.time.year}-${String(b.time.month).padStart(2, '0')}-${String(b.time.day).padStart(2, '0')}` : b.time);
+        return timeA > timeB ? 1 : (timeA < timeB ? -1 : 0);
+      });
+      state.charts.series.candles.setMarkers(candleMarkers);
     } else {
-      const nextIdx = candleTimes.findIndex(t => t >= eDate);
-      if (nextIdx !== -1) {
-        matchedCandleTime = data.candles[nextIdx].time;
-      }
+      state.charts.series.candles.setMarkers([]);
     }
+  }
 
-    if (matchedCandleTime) {
-      markers.push({
-        time: matchedCandleTime,
-        position: 'aboveBar',
-        color: '#f59e0b',
-        size: 0,
-        text: 'e'
+  // 2. Volume Series Markers: Lowest Volume Events (Q & Y) and Earnings Events ('e')
+  if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
+    const volMarkers = [];
+
+    // Add Q / Y markers if Volume Intelligence is active (stackOrder: 1 -> sits closest to the volume bar)
+    if (viData && Array.isArray(viData.qyVolumeMarkers)) {
+      viData.qyVolumeMarkers.forEach(m => {
+        const timeKey = typeof m.time === 'string' ? m.time : (m.time?.year ? `${m.time.year}-${String(m.time.month).padStart(2, '0')}-${String(m.time.day).padStart(2, '0')}` : JSON.stringify(m.time));
+        volMarkers.push({
+          time: m.time,
+          position: 'aboveBar',
+          color: m.color || '#cbd5e1',
+          shape: m.shape || 'circle',
+          text: m.text,
+          size: m.size ?? 0,
+          timeKey,
+          stackOrder: 1 // Q or Y is lower, directly above the volume bar
+        });
       });
     }
-  });
 
-  markers.sort((a, b) => {
-    const timeA = typeof a.time === 'string' ? a.time : (a.time?.year ? `${a.time.year}-${a.time.month}-${a.time.day}` : a.time);
-    const timeB = typeof b.time === 'string' ? b.time : (b.time?.year ? `${b.time.year}-${b.time.month}-${b.time.day}` : b.time);
-    return timeA > timeB ? 1 : (timeA < timeB ? -1 : 0);
-  });
+    // Add Earnings 'e' markers (stackOrder: 2 -> placed directly above Q or Y if on same day)
+    const earningsDates = data.earningsDates || [];
+    if (Array.isArray(earningsDates) && earningsDates.length > 0) {
+      const candleTimes = data.candles.map(c => {
+        if (typeof c.time === 'string') return c.time;
+        if (c.time?.year) return `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
+        return String(c.time);
+      });
 
-  const uniqueMarkers = [];
-  const seenTimes = new Set();
-  markers.forEach(m => {
-    const key = typeof m.time === 'string' ? m.time : JSON.stringify(m.time);
-    if (!seenTimes.has(key)) {
-      seenTimes.add(key);
-      uniqueMarkers.push(m);
+      earningsDates.forEach(eDate => {
+        if (typeof eDate !== 'string' || eDate < '2026-01-01') return;
+        let matchedCandleTime = null;
+        let matchedIdx = candleTimes.indexOf(eDate);
+        if (matchedIdx !== -1) {
+          matchedCandleTime = data.candles[matchedIdx].time;
+        } else {
+          const nextIdx = candleTimes.findIndex(t => t >= eDate);
+          if (nextIdx !== -1) {
+            matchedCandleTime = data.candles[nextIdx].time;
+            matchedIdx = nextIdx;
+          }
+        }
+
+        if (matchedCandleTime && matchedIdx !== -1) {
+          const timeKey = candleTimes[matchedIdx];
+          volMarkers.push({
+            time: matchedCandleTime,
+            position: 'aboveBar',
+            color: '#f59e0b',
+            size: 0,
+            text: 'e',
+            timeKey,
+            stackOrder: 2 // 'e' is higher, placed above Q or Y
+          });
+        }
+      });
     }
-  });
 
-  if (state.charts?.series?.volume && typeof state.charts.series.volume.setMarkers === 'function') {
-    state.charts.series.volume.setMarkers(uniqueMarkers);
+    // Sort ascending by timeKey, then by stackOrder (1 for Q/Y, 2 for 'e')
+    volMarkers.sort((a, b) => {
+      if (a.timeKey !== b.timeKey) {
+        return a.timeKey > b.timeKey ? 1 : -1;
+      }
+      return (a.stackOrder || 1) - (b.stackOrder || 1);
+    });
+
+    volMarkers.forEach(m => {
+      delete m.timeKey;
+      delete m.stackOrder;
+    });
+
+    state.charts.series.volume.setMarkers(volMarkers);
   }
+}
+
+function updateEarningsVolumeMarkers() {
+  updateAllChartMarkers();
 }
 
 function initNativeCharts() {
@@ -5834,6 +5916,66 @@ function normalizeCandleDateString(time) {
   return String(time);
 }
 
+function generateFutureRayPoints(lastCandle, gPrice, allCandles, count = 120) {
+  if (!lastCandle || lastCandle.time === undefined || lastCandle.time === null) return [];
+  const futurePoints = [];
+
+  if (typeof lastCandle.time === 'object' && lastCandle.time.year) {
+    let curr = new Date(lastCandle.time.year, lastCandle.time.month - 1, lastCandle.time.day);
+    let added = 0;
+    while (added < count) {
+      curr.setDate(curr.getDate() + 1);
+      const dayOfWeek = curr.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) continue; // skip Sat, Sun
+      futurePoints.push({
+        time: {
+          year: curr.getFullYear(),
+          month: curr.getMonth() + 1,
+          day: curr.getDate()
+        },
+        value: gPrice
+      });
+      added++;
+    }
+  } else if (typeof lastCandle.time === 'string') {
+    const parts = lastCandle.time.split('T')[0].split('-');
+    let curr = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    let added = 0;
+    while (added < count) {
+      curr.setDate(curr.getDate() + 1);
+      const dayOfWeek = curr.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) continue; // skip Sat, Sun
+      const y = curr.getFullYear();
+      const m = String(curr.getMonth() + 1).padStart(2, '0');
+      const d = String(curr.getDate()).padStart(2, '0');
+      futurePoints.push({
+        time: `${y}-${m}-${d}`,
+        value: gPrice
+      });
+      added++;
+    }
+  } else if (typeof lastCandle.time === 'number') {
+    let step = 86400; // default 1 day in seconds
+    if (allCandles && allCandles.length >= 2) {
+      const t1 = allCandles[allCandles.length - 2]?.time;
+      const t2 = allCandles[allCandles.length - 1]?.time;
+      if (typeof t1 === 'number' && typeof t2 === 'number' && t2 > t1) {
+        step = Math.max(60, t2 - t1);
+      }
+    }
+    let currTime = lastCandle.time;
+    for (let k = 0; k < count; k++) {
+      currTime += step;
+      futurePoints.push({
+        time: currTime,
+        value: gPrice
+      });
+    }
+  }
+
+  return futurePoints;
+}
+
 function renderPersistedDrawings() {
   const currentSymbol = state.selectedStock?.symbol;
   const { candles } = state.charts.series;
@@ -5961,6 +6103,13 @@ function renderPersistedDrawings() {
             time: c.time,
             value: gPrice
           });
+        }
+
+        // Extend into future bars across the right margin all the way to the end of the chart canvas
+        const lastCandle = allCandles[allCandles.length - 1];
+        const futureExtension = generateFutureRayPoints(lastCandle, gPrice, allCandles, 150);
+        for (const fp of futureExtension) {
+          rayPoints.push(fp);
         }
 
         if (rayPoints.length > 0) {
@@ -6624,6 +6773,10 @@ async function loadStockChart(rawSymbol) {
 
     if (!res.ok || !data.success) {
       throw new Error(data.error || 'Historical data not available for this stock');
+    }
+
+    if (Array.isArray(data.candles)) {
+      data.candles = data.candles.filter(c => !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001)));
     }
 
     state.currentStockData = data;

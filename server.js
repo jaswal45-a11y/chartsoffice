@@ -3042,6 +3042,7 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
         let c = q.close[i];
         let h = q.high[i];
         let l = q.low[i];
+        let v = q.volume ? (q.volume[i] || 0) : 1;
         const dateStr = getISTDateString(r.timestamp[i]);
 
         if (c === null || h === null || l === null) {
@@ -3049,6 +3050,7 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
             h = hourlyPivotMap[dateStr].high;
             l = hourlyPivotMap[dateStr].low;
             c = hourlyPivotMap[dateStr].close;
+            v = hourlyPivotMap[dateStr].volume;
           } else if (i === r.timestamp.length - 1 && meta.regularMarketPrice) {
             c = meta.regularMarketPrice;
             h = meta.regularMarketDayHigh || c;
@@ -3057,6 +3059,10 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
             continue;
           }
         }
+
+        // Exclude zero-volume flat holiday candles
+        if (v === 0 && (h === l || Math.abs(h - l) < 0.001)) continue;
+
         validCandles.push({
           time: r.timestamp[i],
           high: h,
@@ -3150,7 +3156,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
     try {
       const dhanRes = await fetchDhanHistorical(rawSymbol);
       if (dhanRes && dhanRes.candles && dhanRes.candles.length > 0) {
-        const candles = dhanRes.candles;
+        let candles = dhanRes.candles.filter(c => {
+          if (!c) return false;
+          const isZeroVolFlat = (c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001 || c.open === c.close));
+          return !isZeroVolFlat;
+        });
+        if (candles.length === 0) candles = dhanRes.candles;
         const closePrices = candles.map(c => c.close);
         const volumeValues = candles.map(c => c.volume);
 
@@ -3316,6 +3327,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           }
         }
 
+        // Filter out holiday / zero-volume synthetic placeholder candles
+        const isDummyHolidayBar = (v === 0 && (h === l || Math.abs(h - l) < 0.001 || o === c));
+        if (isDummyHolidayBar && i < timestamps.length - 1) {
+          continue;
+        }
+
         const candleTime = isIntraday ? timestamps[i] : candleDateStr;
 
         candles.push({
@@ -3334,16 +3351,30 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const missingDates = Object.keys(hourlyMap).filter(d => !existingDates.has(d)).sort();
         for (const mDate of missingDates) {
           const synth = hourlyMap[mDate];
-          candles.push({
-            time: mDate,
-            open: synth.open,
-            high: synth.high,
-            low: synth.low,
-            close: synth.close,
-            volume: synth.volume
-          });
+          if (synth && (synth.volume > 0 || synth.high !== synth.low)) {
+            candles.push({
+              time: mDate,
+              open: synth.open,
+              high: synth.high,
+              low: synth.low,
+              close: synth.close,
+              volume: synth.volume
+            });
+          }
         }
         candles.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+      }
+
+      // Sanitize holiday zero-volume flat bars across the full history
+      const cleanCandles = candles.filter((c, idx) => {
+        const isFlatZeroVol = (c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
+        if (isFlatZeroVol && idx < candles.length - 1) return false;
+        if (isFlatZeroVol && idx === candles.length - 1 && (!meta.regularMarketPrice || meta.marketState === 'CLOSED')) return false;
+        return true;
+      });
+      if (cleanCandles.length > 0) {
+        candles.length = 0;
+        cleanCandles.forEach(c => candles.push(c));
       }
 
       // Merge latest live quote from meta if available

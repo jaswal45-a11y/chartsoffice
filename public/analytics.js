@@ -268,6 +268,7 @@ const state = {
     volIntelMa: 1.5
   },
   volIntelSettings: {
+    showVolMa: true,
     volMaPeriod: 50,
     ppLookback: 10,
     bsMult: 3.0,
@@ -2452,13 +2453,19 @@ function renderVolumeIntelligence() {
     state.charts.series.volume.setData(viData.histogram);
   }
 
-  if (state.charts?.series?.volAvg && viData.volMaSeries) {
-    state.charts.series.volAvg.applyOptions({
-      visible: true,
-      color: state.colors.volIntelMa || state.colors.volAvg || '#fbbf24',
-      lineWidth: Number(state.lineWidths?.volAvg || 1.5)
-    });
-    state.charts.series.volAvg.setData(viData.volMaSeries);
+  const showVolMa = state.volIntelSettings?.showVolMa !== false;
+  if (state.charts?.series?.volAvg) {
+    if (showVolMa && viData.volMaSeries) {
+      state.charts.series.volAvg.applyOptions({
+        visible: true,
+        color: state.colors.volIntelMa || state.colors.volAvg || '#fbbf24',
+        lineWidth: Number(state.lineWidths?.volAvg || 1.5)
+      });
+      state.charts.series.volAvg.setData(viData.volMaSeries);
+    } else {
+      state.charts.series.volAvg.applyOptions({ visible: false });
+      state.charts.series.volAvg.setData([]);
+    }
   }
 
   // Paint Bars on Main Candlesticks when toggled on
@@ -2495,9 +2502,9 @@ window.setVolumeOverlayMode = setVolumeOverlayMode;
 
 function updateVolIntelSetting(key, val) {
   if (!state.volIntelSettings) {
-    state.volIntelSettings = { volMaPeriod: 50, ppLookback: 10, bsMult: 3.0, dryThresh: 0.20, paintBars: false };
+    state.volIntelSettings = { showVolMa: true, volMaPeriod: 50, ppLookback: 10, bsMult: 3.0, dryThresh: 0.20, paintBars: false };
   }
-  state.volIntelSettings[key] = (key === 'paintBars') ? Boolean(val) : (typeof val === 'string' && !isNaN(val) ? Number(val) : val);
+  state.volIntelSettings[key] = (key === 'paintBars' || key === 'showVolMa') ? Boolean(val) : (typeof val === 'string' && !isNaN(val) ? Number(val) : val);
   saveIndicatorPreferences();
 
   if (state.currentStockData?.candles) {
@@ -2588,6 +2595,9 @@ function openLineSettingsModal() {
 
   // Sync Volume Intelligence Parameters
   const vi = state.volIntelSettings || {};
+  const chkVolMa = document.getElementById('setting-vi-show-volma');
+  if (chkVolMa) chkVolMa.checked = (vi.showVolMa !== false);
+
   const chkPaint = document.getElementById('setting-vi-paint-bars');
   if (chkPaint) chkPaint.checked = Boolean(vi.paintBars);
 
@@ -2682,6 +2692,7 @@ function resetLineStylesToDefaults() {
     volIntelMa: 1.5
   };
   state.volIntelSettings = {
+    showVolMa: true,
     volMaPeriod: 50,
     ppLookback: 10,
     bsMult: 3.0,
@@ -4757,6 +4768,10 @@ async function loadStockChart(rawSymbol) {
 
     if (!res.ok || !data.success) {
       throw new Error(data.error || 'Historical data not available for this stock');
+    }
+
+    if (Array.isArray(data.candles)) {
+      data.candles = data.candles.filter(c => !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001)));
     }
 
     state.currentStockData = data;
