@@ -53,9 +53,10 @@
         "volAvg": true,
         "vwap": true,
         "pivots": false,
-        "darvas": true,
+        "darvas": false,
         "rsi": true,
-        "volIntel": true
+        "volIntel": true,
+        "vol": true
       },
       "colors": {
         "ema10": "#ff0055",
@@ -119,7 +120,10 @@
         "showP": true,
         "showBs": true,
         "showPv": true,
-        "showMa50": false
+        "showMa50": false,
+        "shapePp": "none",
+        "shapeBs": "arrowUp",
+        "shapePv": "square"
       },
       "volOverlayMode": "volintel",
       "rsiPeriod": 14,
@@ -16474,6 +16478,86 @@
             "symbol": "SBC",
             "name": "SBC Exports Ltd",
             "addedAt": "2026-09-26T12:28:46.974Z"
+          },
+          {
+            "symbol": "DIXON",
+            "name": "Dixon Technologies (India) Limited",
+            "addedAt": "2026-09-28T11:50:37.886Z"
+          },
+          {
+            "symbol": "HAWKINCOOK",
+            "name": "Hawkins Cookers Ltd",
+            "addedAt": "2026-09-28T11:50:37.886Z"
+          },
+          {
+            "symbol": "GLAXO",
+            "name": "Glaxosmithkline Pharmaceuticals Limited",
+            "addedAt": "2026-09-28T11:50:37.886Z"
+          },
+          {
+            "symbol": "GESHIP",
+            "name": "The Great Eastern Shipping Company Limited",
+            "addedAt": "2026-09-28T11:50:37.887Z"
+          },
+          {
+            "symbol": "ZYDUSLIFE",
+            "name": "Zydus Lifesciences Limited",
+            "addedAt": "2026-09-28T11:50:37.887Z"
+          },
+          {
+            "symbol": "BLISSGVS",
+            "name": "Bliss Gvs Pharma Limited",
+            "addedAt": "2026-09-28T11:50:37.887Z"
+          },
+          {
+            "symbol": "HONASA",
+            "name": "Honasa Consumer Ltd",
+            "addedAt": "2026-09-28T11:50:37.887Z"
+          },
+          {
+            "symbol": "AARTIDRUGS",
+            "name": "Aarti Drugs Limited",
+            "addedAt": "2026-09-28T11:50:37.888Z"
+          },
+          {
+            "symbol": "STYLEBAAZA",
+            "name": "Baazar Style Retail Ltd",
+            "addedAt": "2026-09-28T11:50:37.889Z"
+          },
+          {
+            "symbol": "RSYSTEMS",
+            "name": "R SYSTEMS INTERNATIONAL LIMITED",
+            "addedAt": "2026-09-28T11:50:37.889Z"
+          },
+          {
+            "symbol": "GODIGIT",
+            "name": "GO DIGIT GENERAL INSURANCE LIMITED",
+            "addedAt": "2026-09-28T11:50:37.890Z"
+          },
+          {
+            "symbol": "AEQUS",
+            "name": "Aequs Ltd",
+            "addedAt": "2026-09-28T11:50:37.890Z"
+          },
+          {
+            "symbol": "ELECTCAST",
+            "name": "ELECTROSTEEL CASTINGS LIMITED",
+            "addedAt": "2026-09-28T11:50:37.890Z"
+          },
+          {
+            "symbol": "ESAFSFB",
+            "name": "ESAF Small Finance Bank",
+            "addedAt": "2026-09-28T11:50:37.891Z"
+          },
+          {
+            "symbol": "TTML",
+            "name": "TATA TELESERVICES (MAHARASHTRA) LIMITED",
+            "addedAt": "2026-09-28T11:50:37.891Z"
+          },
+          {
+            "symbol": "BHARATCOAL",
+            "name": "Bharat Coking Coal Ltd",
+            "addedAt": "2026-09-28T11:50:37.891Z"
           }
         ]
       },
@@ -16746,6 +16830,31 @@
             "symbol": "SANSERA",
             "name": "Sansera Engineering Ltd",
             "addedAt": "2026-09-22T11:45:03.931Z"
+          },
+          {
+            "symbol": "SUNFLAG",
+            "name": "Sunflag Iron and Steel Company",
+            "addedAt": "2026-09-28T11:38:16.609Z"
+          },
+          {
+            "symbol": "RSYSTEMS",
+            "name": "R SYSTEMS INTERNATIONAL LIMITED",
+            "addedAt": "2026-09-28T11:38:16.610Z"
+          },
+          {
+            "symbol": "DAMCAPITAL",
+            "name": "DAM CAPITAL ADVISORS LIMITED",
+            "addedAt": "2026-09-28T11:38:16.612Z"
+          },
+          {
+            "symbol": "SMCGLOBAL",
+            "name": "SMC Global Securities Ltd",
+            "addedAt": "2026-09-28T11:38:16.612Z"
+          },
+          {
+            "symbol": "SDBL",
+            "name": "SOM DISTILLERIES & BREWERIES LIMITED",
+            "addedAt": "2026-09-28T11:38:16.613Z"
           }
         ]
       },
@@ -17129,6 +17238,36 @@
             "symbol": "CORDSCABLE",
             "name": "Cords Cable Industries Limited",
             "addedAt": "2026-09-25T11:37:17.715Z"
+          },
+          {
+            "symbol": "VENUSPIPES",
+            "name": "Venus Pipes & Tubes Ltd",
+            "addedAt": "2026-09-28T08:51:05.943Z"
+          },
+          {
+            "symbol": "WHEELS",
+            "name": "Wheels India Limited",
+            "addedAt": "2026-09-28T08:51:10.713Z"
+          },
+          {
+            "symbol": "GALAPREC",
+            "name": "Gala Precision Engineering Ltd",
+            "addedAt": "2026-09-28T08:51:44.829Z"
+          },
+          {
+            "symbol": "TBZ",
+            "name": "Tribhovandas Bhimji Zaveri Limited",
+            "addedAt": "2026-09-28T08:52:40.962Z"
+          },
+          {
+            "symbol": "SYRMA",
+            "name": "Syrma SGS Technology Ltd",
+            "addedAt": "2026-09-28T08:57:32.307Z"
+          },
+          {
+            "symbol": "OPTIEMUS",
+            "name": "Optiemus Infracom Ltd",
+            "addedAt": "2026-09-28T08:57:36.362Z"
           }
         ]
       },
@@ -17399,8 +17538,8 @@
         ]
       }
     ],
-    "notes": "check alert feature when some price corss such and then that stock gets added into alertrigg watchlist\n\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern\n\nV shape recoery onlywhle crash not durring correction---during such correction a W is formed generally",
-    "notesUpdatedAt": "2026-09-22T16:46:32.369Z",
+    "notes": "work on breadth: \n\nStandard & Sectoral Indices--indice data not correct fetching\nHPCl hstrcial data oit availae\ngain since custom date\n\nsee how much data since when is availbe?\ncheck alert feature when some price corss such and then that stock gets added into alertrigg watchlist\n\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern\n\nV shape recoery onlywhle crash not durring correction---during such correction a W is formed generally",
+    "notesUpdatedAt": "2026-09-28T17:27:32.662Z",
     "customScreeners": [
       {
         "id": "scr_usr_mtqwvqzy_rx4",
@@ -19644,359 +19783,151 @@
         "isGlobal": false,
         "isCustom": true,
         "createdBy": "boby",
-        "lastRun": "2026-09-26T18:36:18.861Z",
-        "stockCount": 27,
+        "lastRun": "2026-09-28T08:16:31.112Z",
+        "stockCount": 11,
         "lastResults": [
           {
             "sr": 1,
-            "symbol": "AETHER",
-            "name": "Aether Industries Ltd",
-            "bsecode": "543534",
-            "nsecode": "AETHER",
-            "close": 1767,
-            "price": 1767,
-            "changePercent": 7.34,
-            "volume": 1685135,
+            "symbol": "BLISSGVS",
+            "name": "Bliss Gvs Pharma Limited",
+            "bsecode": "506197",
+            "nsecode": "BLISSGVS",
+            "close": 739.9,
+            "price": 739.9,
+            "changePercent": 5,
+            "volume": 2772365,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
             "sr": 2,
-            "symbol": "ANTELOPUS",
-            "name": "Antelopus Selan Energy Ltd",
-            "bsecode": "530075",
-            "nsecode": "ANTELOPUS",
-            "close": 1261.7,
-            "price": 1261.7,
-            "changePercent": 11.56,
-            "volume": 7875095,
+            "symbol": "INDOBORAX",
+            "name": "Indo Borax & Chemicals Ltd",
+            "bsecode": "524342",
+            "nsecode": "INDOBORAX",
+            "close": 484.2,
+            "price": 484.2,
+            "changePercent": 7.61,
+            "volume": 5885812,
             "mcOver1000Cr": true,
-            "mcOver2000Cr": true
+            "mcOver2000Cr": false
           },
           {
             "sr": 3,
-            "symbol": "WHIRLPOOL",
-            "name": "Whirlpool Of India Limited",
-            "bsecode": "500238",
-            "nsecode": "WHIRLPOOL",
-            "close": 918.9,
-            "price": 918.9,
-            "changePercent": 7.67,
-            "volume": 27943204,
+            "symbol": "SUNFLAG",
+            "name": "Sunflag Iron And Steel Company Limited",
+            "bsecode": "500404",
+            "nsecode": "SUNFLAG",
+            "close": 442.85,
+            "price": 442.85,
+            "changePercent": 7.84,
+            "volume": 3971574,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
             "sr": 4,
-            "symbol": "TCI",
-            "name": "Transport Corporation Of India Limited",
-            "bsecode": "532349",
-            "nsecode": "TCI",
-            "close": 883.7,
-            "price": 883.7,
-            "changePercent": 6.03,
-            "volume": 5769242,
+            "symbol": "RSYSTEMS",
+            "name": "R Systems International Limited",
+            "bsecode": "532735",
+            "nsecode": "RSYSTEMS",
+            "close": 266.98,
+            "price": 266.98,
+            "changePercent": 13.31,
+            "volume": 43684281,
             "mcOver1000Cr": true,
             "mcOver2000Cr": true
           },
           {
             "sr": 5,
-            "symbol": "AVADHSUGAR",
-            "name": "Avadh Sugar & Energy",
-            "bsecode": "540649",
-            "nsecode": "AVADHSUGAR",
-            "close": 796.5,
-            "price": 796.5,
-            "changePercent": 10,
-            "volume": 465163,
+            "symbol": "AEQUS",
+            "name": "Aequs Ltd",
+            "bsecode": "544634",
+            "nsecode": "AEQUS",
+            "close": 255,
+            "price": 255,
+            "changePercent": 3.64,
+            "volume": 27724667,
             "mcOver1000Cr": true,
-            "mcOver2000Cr": false
+            "mcOver2000Cr": true
           },
           {
             "sr": 6,
-            "symbol": "BALRAMCHIN",
-            "name": "Balrampur Chini Mills Limited",
-            "bsecode": "500038",
-            "nsecode": "BALRAMCHIN",
-            "close": 685.8,
-            "price": 685.8,
-            "changePercent": 4,
-            "volume": 4510076,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
+            "symbol": "KRONOX",
+            "name": "Kronox Lab Sciences Ltd",
+            "bsecode": "544187",
+            "nsecode": "KRONOX",
+            "close": 216.9,
+            "price": 216.9,
+            "changePercent": 5,
+            "volume": 371008,
+            "mcOver1000Cr": false,
+            "mcOver2000Cr": false
           },
           {
             "sr": 7,
-            "symbol": "LCL",
-            "name": "Lohia Corp Ltd",
-            "bsecode": "544839",
-            "nsecode": "LCL",
-            "close": 594.7,
-            "price": 594.7,
-            "changePercent": 3.33,
-            "volume": 1672115,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
+            "symbol": "DAMCAPITAL",
+            "name": "Dam Capital Advisors Ltd",
+            "bsecode": "544316",
+            "nsecode": "DAMCAPITAL",
+            "close": 151.4,
+            "price": 151.4,
+            "changePercent": 9.56,
+            "volume": 10295407,
+            "mcOver1000Cr": false,
+            "mcOver2000Cr": false
           },
           {
             "sr": 8,
-            "symbol": "DALMIASUG",
-            "name": "Dalmia Bharat Sugar And Industries Limited",
-            "bsecode": "500097",
-            "nsecode": "DALMIASUG",
-            "close": 428.75,
-            "price": 428.75,
-            "changePercent": 7.32,
-            "volume": 1009127,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
+            "symbol": "ADSL",
+            "name": "Allied Digital Services Limited",
+            "bsecode": "532875",
+            "nsecode": "ADSL",
+            "close": 119.37,
+            "price": 119.37,
+            "changePercent": 3.33,
+            "volume": 5117063,
+            "mcOver1000Cr": false,
+            "mcOver2000Cr": false
           },
           {
             "sr": 9,
-            "symbol": "SHOPERSTOP",
-            "name": "Shoppers Stop Limited",
-            "bsecode": "532638",
-            "nsecode": "SHOPERSTOP",
-            "close": 423.55,
-            "price": 423.55,
-            "changePercent": 10,
-            "volume": 3588097,
+            "symbol": "SMCGLOBAL",
+            "name": "SMC Global Securities Ltd",
+            "bsecode": "543263",
+            "nsecode": "SMCGLOBAL",
+            "close": 97.22,
+            "price": 97.22,
+            "changePercent": 13.58,
+            "volume": 21258931,
             "mcOver1000Cr": true,
-            "mcOver2000Cr": true
+            "mcOver2000Cr": false
           },
           {
             "sr": 10,
-            "symbol": "SUNFLAG",
-            "name": "Sunflag Iron And Steel Company Limited",
-            "bsecode": "500404",
-            "nsecode": "SUNFLAG",
-            "close": 410.65,
-            "price": 410.65,
-            "changePercent": 3.49,
-            "volume": 2065851,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 11,
-            "symbol": "ARTEMISMED",
-            "name": "Artemis Medicare Services Ltd",
-            "bsecode": "542919",
-            "nsecode": "ARTEMISMED",
-            "close": 357.7,
-            "price": 357.7,
-            "changePercent": 7.51,
-            "volume": 18979972,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 12,
-            "symbol": "SHANTIGOLD",
-            "name": "Shanti Gold International Ltd",
-            "bsecode": "544459",
-            "nsecode": "SHANTIGOLD",
-            "close": 325.68,
-            "price": 325.68,
-            "changePercent": 14.83,
-            "volume": 36403975,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 13,
-            "symbol": "UTTAMSUGAR",
-            "name": "Uttam Sugar Mills Limited",
-            "bsecode": "532729",
-            "nsecode": "UTTAMSUGAR",
-            "close": 293.15,
-            "price": 293.15,
-            "changePercent": 12.75,
-            "volume": 2804540,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 14,
-            "symbol": "HEG",
-            "name": "Heg Limited",
-            "bsecode": "509631",
-            "nsecode": "HEG",
-            "close": 248.5,
-            "price": 248.5,
-            "changePercent": 0,
-            "volume": 1813114,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 15,
-            "symbol": "ROLEXRINGS",
-            "name": "Rolex Rings Ltd",
-            "bsecode": "543325",
-            "nsecode": "ROLEXRINGS",
-            "close": 195.35,
-            "price": 195.35,
-            "changePercent": 7.68,
-            "volume": 7168470,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 16,
-            "symbol": "CUBEXTUB",
-            "name": "Cubex Tubings Limited",
-            "bsecode": "526027",
-            "nsecode": "CUBEXTUB",
-            "close": 152.24,
-            "price": 152.24,
-            "changePercent": 10,
-            "volume": 2579589,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 17,
-            "symbol": "MAWANASUG",
-            "name": "Mawana Sugars Limited",
-            "bsecode": "523371",
-            "nsecode": "MAWANASUG",
-            "close": 149.64,
-            "price": 149.64,
-            "changePercent": 14.49,
-            "volume": 2561231,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 18,
-            "symbol": "TNPETRO",
-            "name": "Tamilnadu Petroproducts Limited",
-            "bsecode": "500777",
-            "nsecode": "TNPETRO",
-            "close": 132.93,
-            "price": 132.93,
-            "changePercent": 4.69,
-            "volume": 7029596,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 19,
-            "symbol": "REMSONSIND",
-            "name": "Remsons Industries Limited",
-            "bsecode": "530919",
-            "nsecode": "REMSONSIND",
-            "close": 116.8,
-            "price": 116.8,
-            "changePercent": 5.11,
-            "volume": 4261780,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 20,
-            "symbol": "LLOYDSENGG",
-            "name": "Lloyds Engineering Works Ltd",
-            "bsecode": "539992",
-            "nsecode": "LLOYDSENGG",
-            "close": 98.56,
-            "price": 98.56,
-            "changePercent": 8.41,
-            "volume": 60660334,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 21,
-            "symbol": "LLOYDSENT",
-            "name": "Lloyds Enterprises Ltd",
-            "bsecode": "512463",
-            "nsecode": "LLOYDSENT",
-            "close": 79.67,
-            "price": 79.67,
-            "changePercent": 5.41,
-            "volume": 11927517,
-            "mcOver1000Cr": true,
-            "mcOver2000Cr": true
-          },
-          {
-            "sr": 22,
             "symbol": "SDBL",
             "name": "Som Distilleries & Breweries Limited",
             "bsecode": "507514",
             "nsecode": "SDBL",
-            "close": 74.36,
-            "price": 74.36,
-            "changePercent": 10.59,
-            "volume": 22824080,
+            "close": 79.18,
+            "price": 79.18,
+            "changePercent": 6.48,
+            "volume": 14573101,
             "mcOver1000Cr": true,
             "mcOver2000Cr": false
           },
           {
-            "sr": 23,
-            "symbol": "UGARSUGAR",
-            "name": "The Ugar Sugar Works Limited",
-            "bsecode": "530363",
-            "nsecode": "UGARSUGAR",
-            "close": 64.03,
-            "price": 64.03,
-            "changePercent": 14.81,
-            "volume": 13696602,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 24,
-            "symbol": "DWARKESH",
-            "name": "Dwarikesh Sugar Industries Limited",
-            "bsecode": "532610",
-            "nsecode": "DWARKESH",
-            "close": 45.01,
-            "price": 45.01,
-            "changePercent": 10.48,
-            "volume": 9510474,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 25,
-            "symbol": "DCMSRIND",
-            "name": "DCM Shriram Industries Ltd",
-            "bsecode": "523369",
-            "nsecode": "DCMSRIND",
-            "close": 39.71,
-            "price": 39.71,
-            "changePercent": 4.83,
-            "volume": 2388286,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 26,
-            "symbol": "VASCONEQ",
-            "name": "Vascon Engineers Limited",
-            "bsecode": "533156",
-            "nsecode": "VASCONEQ",
-            "close": 34.76,
-            "price": 34.76,
-            "changePercent": 4.42,
-            "volume": 6715809,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
-          },
-          {
-            "sr": 27,
-            "symbol": "KMSUGAR",
-            "name": "K.m.sugar Mills Limited",
-            "bsecode": "532673",
-            "nsecode": "KMSUGAR",
-            "close": 32.46,
-            "price": 32.46,
-            "changePercent": 11.7,
-            "volume": 1179803,
-            "mcOver1000Cr": false,
-            "mcOver2000Cr": false
+            "sr": 11,
+            "symbol": "TTML",
+            "name": "Tata Teleservices (maharashtra) Limited",
+            "bsecode": "532371",
+            "nsecode": "TTML",
+            "close": 36.22,
+            "price": 36.22,
+            "changePercent": 5.17,
+            "volume": 66852878,
+            "mcOver1000Cr": true,
+            "mcOver2000Cr": true
           }
         ]
       },
@@ -21973,7 +21904,7 @@
         "vol": true
       },
       "colors": {
-        "ema10": "#e4ff14",
+        "ema10": "#fbfded",
         "ema20": "#11ff00",
         "ema50": "#ff000d",
         "ema150": "#2e54ea",
@@ -22017,7 +21948,7 @@
         "darvasTop": 1.5,
         "darvasBottom": 1.5,
         "volAvg": 1.5,
-        "rsi": 2,
+        "rsi": 1,
         "rsiSma": 1.5,
         "avwap": 1.5,
         "pivots": 1.2,
@@ -22053,10 +21984,8 @@
       }
     },
     "maxWatchlists": 15,
-    "activeToken": "sess_user_2e827c9944d8a9d62412bfc365a03aabf560fc6bbfa421cd",
+    "activeToken": "sess_user_269726fb466fc3c93bf3006a76fb641d56f9a3c2f14ce873",
     "tokens": [
-      "sess_user_4e2c1e6126b1863159e48c80db342d758d0a721e41728303",
-      "sess_user_026f2e5a8c72ec7221077b75bc18eedf517e4e835a147bbd",
       "sess_user_ddf568f46573969ea0eafc40ff870a6fa5da890ed5f81fc2",
       "sess_user_809793014fb2efaaa44980d27a8c6e2d60175172aa8867aa",
       "sess_user_fcbc5771ac478968b97a6424fc069fa7728618f47bb40da5",
@@ -22065,7 +21994,9 @@
       "sess_user_19976d46a8e42c9fef5d9e40f6e6882dced9facd80c4ab5f",
       "sess_user_d3b1de9c8e3b505907f010143b5b559de45ed8cfbbc3f318",
       "sess_user_62a07decf857526edeb675744e6bbc5f7b47bcd3bde8f86f",
-      "sess_user_2e827c9944d8a9d62412bfc365a03aabf560fc6bbfa421cd"
+      "sess_user_2e827c9944d8a9d62412bfc365a03aabf560fc6bbfa421cd",
+      "sess_user_b50800947abe3303b4b35959ea81a1635e406639cd920566",
+      "sess_user_269726fb466fc3c93bf3006a76fb641d56f9a3c2f14ce873"
     ]
   },
   {
@@ -41201,11 +41132,12 @@
         "stocks": []
       }
     ],
-    "activeToken": "sess_user_88d157d39801cb761a99654d4cbfe7aab13d433a5fddd10c",
+    "activeToken": "sess_user_729f548f3ef7a031b6925cb77e87ab65529ab2153d100c8b",
     "tokens": [
       "sess_user_6c5b36a81c55ed63ecaef90493ec76e090fbed2c99e06f3d",
       "sess_user_a8742a82c8770531b86e429078bd1b7e2418d124deab7aac",
-      "sess_user_88d157d39801cb761a99654d4cbfe7aab13d433a5fddd10c"
+      "sess_user_88d157d39801cb761a99654d4cbfe7aab13d433a5fddd10c",
+      "sess_user_729f548f3ef7a031b6925cb77e87ab65529ab2153d100c8b"
     ],
     "indicatorPreferences": {
       "volOverlayMode": "volintel",

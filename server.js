@@ -2883,33 +2883,108 @@ const GLOBAL_INDEX_SYMBOL_MAP = {
   'NIFTY ENERGY': '^CNXENERGY',
   'CNXINFRA': '^CNXINFRA',
   'NIFTY INFRA': '^CNXINFRA',
+  'CNXREALTY': '^CNXREALTY',
+  'NIFTY REALTY': '^CNXREALTY',
+  'CNXMEDIA': '^CNXMEDIA',
+  'NIFTY MEDIA': '^CNXMEDIA',
+  'CNXPSUBANK': '^CNXPSUBANK',
+  'NIFTY PSU BANK': '^CNXPSUBANK',
+  'NIFTY_PVT_BANK': 'NIFTY_PVT_BANK.NS',
+  'NIFTY_FIN_SERVICE': 'NIFTY_FIN_SERVICE.NS',
+  'NIFTY_HEALTHCARE': 'NIFTY_HEALTHCARE.NS',
+  'NIFTY_OIL_AND_GAS': 'NIFTY_OIL_AND_GAS.NS',
+  'NIFTY_CONSR_DURBL': 'NIFTY_CONSR_DURBL.NS',
+  'NIFTY_CHEMICALS': 'NIFTY_CHEMICALS.NS',
+  'NIFTY_MIDCAP_100': 'NIFTY_MIDCAP_100.NS',
+
+  // High-Volume Ticker Aliases & Mismatched Symbol Mappings
+  'HPCL': 'HINDPETRO.NS',
+  'HINDPETRO': 'HINDPETRO.NS',
+  'HINDUSTANPETROLEUM': 'HINDPETRO.NS',
   'TATAMOTORS': 'TMPV.NS',
+  'TATAMTRDVR': 'TMPV.NS',
   'LTIM': 'LTM.NS',
   'MCDOWELL-N': 'UNITDSPR.NS',
   'MCDOWELLN': 'UNITDSPR.NS',
+  'UNITEDSPR': 'UNITDSPR.NS',
+  'USL': 'UNITDSPR.NS',
   'ZOMATO': 'ETERNAL.NS',
   'MACROTECH': 'LODHA.NS',
+  'LODHA': 'LODHA.NS',
   'GMRINFRA': 'GMRP&UI.NS',
+  'GMRAIRPORTS': 'GMRP&UI.NS',
   'ITDEMENTION': 'ITDCEM.NS',
   'HITACHIENERG': 'POWERINDIA.NS',
-  'GUJGASLTD': 'FLUOROCHEM.NS'
+  'GUJGASLTD': 'FLUOROCHEM.NS',
+  'NESTLE': 'NESTLEIND.NS',
+  'BAJAJAUTO': 'BAJAJ-AUTO.NS',
+  'BAJAJ_AUTO': 'BAJAJ-AUTO.NS',
+  'M&M': 'M%26M.NS',
+  'MM': 'M%26M.NS',
+  'L&TFH': 'LTF.NS',
+  'LTFH': 'LTF.NS',
+  'L&T': 'LT.NS',
+  'MOTHERSUMI': 'MOTHERSON.NS',
+  'SAMVARDHANA': 'MOTHERSON.NS',
+  'LIC': 'LICI.NS',
+  'NAM-INDIA': 'NAM-INDIA.NS',
+  'NAM_INDIA': 'NAM-INDIA.NS',
+  'NIPPON': 'NAM-INDIA.NS',
+  'REC': 'RECLTD.NS',
+  'IDFCFIRST': 'IDFCFIRSTB.NS',
+  'CANARABANK': 'CANBK.NS',
+  'BOB': 'BANKBARODA.NS',
+  'SBI': 'SBIN.NS',
+  'ICICI': 'ICICIBANK.NS',
+  'HDFC': 'HDFCBANK.NS',
+  'AXIS': 'AXISBANK.NS',
+  'KOTAK': 'KOTAKBANK.NS',
+  'INDUSIND': 'INDUSINDBK.NS',
+  'BANDHAN': 'BANDHANBNK.NS',
+  'FEDERAL': 'FEDERALBNK.NS',
+  'IOCL': 'IOC.NS',
+  'POWERGRID': 'POWERGRID.NS',
+  'PGCIL': 'POWERGRID.NS',
+  'BHARTI': 'BHARTIARTL.NS',
+  'ULTRATECH': 'ULTRACEMCO.NS',
+  'ASIANPAINTS': 'ASIANPAINT.NS',
+  'HUL': 'HINDUNILVR.NS'
 };
 
 function getCandidateSymbols(sym) {
-  const clean = sym.trim().toUpperCase().replace(/&/g, '%26');
+  let raw = String(sym || '').trim().toUpperCase();
   const candidates = [];
-  if (GLOBAL_INDEX_SYMBOL_MAP[clean]) {
-    candidates.push(GLOBAL_INDEX_SYMBOL_MAP[clean]);
+
+  // 1. Direct match in GLOBAL_INDEX_SYMBOL_MAP
+  if (GLOBAL_INDEX_SYMBOL_MAP[raw]) {
+    candidates.push(GLOBAL_INDEX_SYMBOL_MAP[raw]);
   }
-  if (clean.startsWith('^') || clean.includes('=') || clean.includes('-') || clean.endsWith('.NS') || clean.endsWith('.BO') || clean.endsWith('.NYB')) {
-    if (!candidates.includes(clean)) candidates.push(clean);
-  } else if (/^\d+$/.test(clean)) {
-    candidates.push(`${clean}.BO`, `${clean}.NS`);
+
+  // 2. Check without .NS or .BO
+  const bareSym = raw.replace(/\.(NS|BO)$/, '');
+  if (GLOBAL_INDEX_SYMBOL_MAP[bareSym] && !candidates.includes(GLOBAL_INDEX_SYMBOL_MAP[bareSym])) {
+    candidates.push(GLOBAL_INDEX_SYMBOL_MAP[bareSym]);
+  }
+
+  // 3. Handle & character encoding for Yahoo Finance
+  const encodedBare = bareSym.replace(/&/g, '%26');
+
+  if (raw.startsWith('^') || raw.includes('=') || raw.endsWith('.NYB')) {
+    if (!candidates.includes(raw)) candidates.push(raw);
+  } else if (/^\d+$/.test(raw)) {
+    candidates.push(`${raw}.BO`, `${raw}.NS`);
   } else {
-    candidates.push(`${clean}.NS`, `${clean}.BO`);
+    if (!candidates.includes(`${encodedBare}.NS`)) candidates.push(`${encodedBare}.NS`);
+    if (!candidates.includes(`${encodedBare}.BO`)) candidates.push(`${encodedBare}.BO`);
+    if (bareSym !== encodedBare) {
+      if (!candidates.includes(`${bareSym}.NS`)) candidates.push(`${bareSym}.NS`);
+      if (!candidates.includes(`${bareSym}.BO`)) candidates.push(`${bareSym}.BO`);
+    }
   }
-  return candidates;
+
+  return [...new Set(candidates.filter(Boolean))];
 }
+
 
 // Traditional Auto Pivot Points (TradingView Standard)
 // Automatically selects reference period based on active timeframe:
@@ -3226,11 +3301,16 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             v = synth.volume;
           } else if (i === timestamps.length - 1 && meta.regularMarketPrice) {
             c = c !== null ? c : meta.regularMarketPrice;
-            h = h !== null ? h : (meta.regularMarketDayHigh || c);
-            l = l !== null ? l : (meta.regularMarketDayLow || c);
             const prevClose = candles.length > 0 ? candles[candles.length - 1].close : c;
             o = o !== null ? o : prevClose;
-            v = v || meta.regularMarketVolume || 0;
+            if (isIntraday) {
+              h = h !== null ? h : Math.max(o, c);
+              l = l !== null ? l : Math.min(o, c);
+            } else {
+              h = h !== null ? h : (meta.regularMarketDayHigh || Math.max(o, c));
+              l = l !== null ? l : (meta.regularMarketDayLow || Math.min(o, c));
+              v = v || meta.regularMarketVolume || 0;
+            }
           } else {
             continue;
           }
@@ -3271,9 +3351,16 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const livePrice = Number(meta.regularMarketPrice.toFixed(2));
         const lastC = candles[candles.length - 1];
         lastC.close = livePrice;
-        if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
-        if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
-        if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
+        if (isIntraday) {
+          // For intraday (5m, 15m, 1h), ensure high/low encompass current live price without injecting full-day extreme high/low
+          lastC.high = Math.max(lastC.high, livePrice);
+          lastC.low = Math.min(lastC.low, livePrice);
+        } else {
+          // For daily/weekly bars, apply full-day high, low and volume
+          if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
+          if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
+          if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
+        }
       }
 
       if (candles.length > 0) {

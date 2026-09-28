@@ -87625,5 +87625,201 @@
     "source": "Verified Exchange Classification",
     "last_updated": "Sep 2026",
     "data_version": "2.0"
+  },
+  {
+    "ticker": "ASMTEC",
+    "ai_generated": false,
+    "business_type": "Information Technology Services",
+    "company_name": "ASM Technologies Limited",
+    "data_version": "2.0",
+    "description": "ASM Technologies Limited provides consulting and product development services in India and internationally. The company offers automation solutions, including robot based automation, mechatronics, image based, overall system automation, and automated line solutions, as well as controller panel and related hardware/firm...",
+    "exchange": "BSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Information Technology Services",
+    "key_revenue_driver": "Operations in Information Technology Services",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Information Technology Services",
+      "Technology Solutions"
+    ],
+    "sector": "Technology",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Technology",
+      "Information Technology Services",
+      "asmltd.com"
+    ],
+    "website": "https://asmltd.com"
+  },
+  {
+    "ticker": "INDIAVIX",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "India VIX",
+    "data_version": "2.0",
+    "description": "India VIX is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "QUINTEGRA",
+    "ai_generated": false,
+    "business_type": "Information Technology Services",
+    "company_name": "Quintegra Solutions Limited",
+    "data_version": "2.0",
+    "description": "Quintegra Solutions Limited provides information technology (IT) and consulting services in India. The company offers application management, such as development, maintenance, migration, and reengineering; product engineering; and SAP services, including SAP implementation services, SAP upgrades, SAP functional support, SAP production support, basis and technical consulting, and SAP application innovation.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Information Technology Services",
+    "key_revenue_driver": "Operations in Information Technology Services",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Information Technology Services",
+      "Technology Solutions"
+    ],
+    "sector": "Technology",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Technology",
+      "Information Technology Services",
+      "quintegrasolutions.com"
+    ],
+    "website": "https://www.quintegrasolutions.com"
+  },
+  {
+    "ticker": "VARMORA",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "VARMORA GRANITO LIMITED",
+    "data_version": "2.0",
+    "description": "VARMORA GRANITO LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "JAYKAYPP",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "JAYKAY ENTERPRISES LIMITED",
+    "data_version": "2.0",
+    "description": "JAYKAY ENTERPRISES LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "PARTY-RE",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "PARTY CRUISERS LIMITED-RE",
+    "data_version": "2.0",
+    "description": "PARTY CRUISERS LIMITED-RE is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "MCDOWELL-N",
+    "exchange": "NSE",
+    "company_name": "United Spirits Limited",
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Wineries & Distilleries",
+    "description": "United Spirits Limited, together with its subsidiaries, manufactures, sells, and distributes alcoholic beverages and other allied spirits in India and internationally. The company offers alcoholic beverages, such as Scotch whisky, Indian made foreign liquor whisky, malts, tequila, brandy, rum, vodka, and gin under the Godawan, McDowell's No.",
+    "business_type": "Beverages - Wineries & Distilleries",
+    "products": [
+      "Beverages - Wineries & Distilleries",
+      "Consumer Defensive Solutions"
+    ],
+    "themes": [
+      "Consumer Defensive",
+      "Beverages - Wineries & Distilleries",
+      "diageoindia.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Beverages - Wineries & Distilleries",
+    "website": "https://www.diageoindia.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NESTLE",
+    "exchange": "NSE",
+    "company_name": "Nestlé India Limited",
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "description": "Nestlé India Limited engages in the manufacture and sale of food products in India and internationally. It offers milk products and nutrition, including dairy whitener, condensed milk, UHT milk, yogurt, maternal and infant formula, baby foods, health care nutrition; prepared dishes and cooking aids, such as noodles, sa...",
+    "business_type": "Packaged Foods",
+    "products": [
+      "Packaged Foods",
+      "Consumer Defensive Solutions"
+    ],
+    "themes": [
+      "Consumer Defensive",
+      "Packaged Foods",
+      "nestle.in"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Packaged Foods",
+    "website": "https://www.nestle.in",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
   }
 ]

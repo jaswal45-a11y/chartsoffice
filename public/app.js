@@ -274,12 +274,31 @@ const state = {
   pivotType: 'Traditional (Auto)',
 
   // Interactive Chart Drawing Tools & Persisted State
-  activeDrawingTool: null, // null | 'avwap'
+  activeDrawingTool: null, // null | 'avwap' | 'global_ray'
   lastCrosshairPrice: null, // Tracked from mouse cursor on price chart for Alt+H
   drawings: {}, // symbol -> { avwaps: [time], hlines: [price] }
+  globalDateRay: {
+    active: false,
+    anchorDate: null,
+    anchorTime: null,
+    price: null
+  },
+  measureTool: {
+    active: false,
+    step: 0,
+    startPoint: null,
+    startTime: null,
+    startPrice: null,
+    startIndex: -1,
+    endPoint: null,
+    endTime: null,
+    endPrice: null,
+    endIndex: -1
+  },
   activeDrawingSeries: {
     avwaps: [], // Array of LineSeries instances
-    hlines: []  // Array of priceLine instances
+    hlines: [], // Array of priceLine instances
+    globalRay: null // PriceLine instance
   },
 
   // Chart Instances & Series
@@ -334,7 +353,7 @@ const el = {
   btnOpenNotes: document.getElementById('btn-open-notes'),
   btnOpenMfDeals: document.getElementById('btn-open-mf-deals'),
 
-  // Floating On-Chart Controls & Badges (Symbol & AVWAP)
+  // Floating On-Chart Controls & Badges (Symbol & AVWAP & Global Ray)
   onchartStockSymbol: document.getElementById('onchart-stock-symbol'),
   floatingAvwapControl: document.getElementById('floating-avwap-control'),
   btnFloatingAvwap: document.getElementById('btn-floating-avwap'),
@@ -342,6 +361,16 @@ const el = {
   floatingAvwapDivider: document.getElementById('floating-avwap-divider'),
   floatingAvwapStatus: document.getElementById('floating-avwap-status'),
   btnFloatingAvwapClear: document.getElementById('btn-floating-avwap-clear'),
+  chkGlobalDateRay: document.getElementById('chk-global-date-ray'),
+  floatingGlobalRayBadge: document.getElementById('floating-global-ray-badge'),
+  globalRayDateLabel: document.getElementById('global-ray-date-label'),
+  btnMeasureTool: document.getElementById('btn-measure-tool'),
+  chartMeasureOverlay: document.getElementById('chart-measure-overlay'),
+  chartMeasureBox: document.getElementById('chart-measure-box'),
+  chartMeasurePill: document.getElementById('chart-measure-pill'),
+  chartMeasurePct: document.getElementById('chart-measure-pct'),
+  chartMeasureDetails: document.getElementById('chart-measure-details'),
+  chartMeasureSvg: document.getElementById('chart-measure-svg'),
   
   // Multi-User Auth Controls
   btnOpenAuthModal: document.getElementById('btn-open-auth-modal'),
@@ -614,6 +643,20 @@ async function init() {
 
   // Initialize Global High-Performance Tooltip Engine
   initGlobalTooltipEngine();
+
+  // Update Watchlists Tab count badge dynamically
+  updateWatchlistsTabBadge();
+
+  // Load persisted Global Date Ray
+  try {
+    const savedRay = JSON.parse(localStorage.getItem('sangam_global_date_ray') || 'null');
+    if (savedRay && typeof savedRay === 'object') {
+      state.globalDateRay = Object.assign(state.globalDateRay, savedRay);
+      const chk = document.getElementById('chk-global-date-ray');
+      if (chk) chk.checked = Boolean(state.globalDateRay.active);
+      updateGlobalRayWidgetUI();
+    }
+  } catch (e) {}
 
   // Load default stock chart
   selectStock({
@@ -2644,7 +2687,20 @@ function getActiveWatchlist() {
   return state.watchlists.find(w => w.id === state.activeWatchlistId) || state.watchlists[0] || null;
 }
 
+function updateWatchlistsTabBadge() {
+  const tabWl = document.getElementById('tab-btn-watchlists');
+  const tabLabel = document.getElementById('tab-watchlists-label') || tabWl?.querySelector('span:not(.sr-only)');
+  const count = Array.isArray(state.watchlists) ? state.watchlists.length : 0;
+  if (tabLabel) {
+    tabLabel.textContent = `W(${count})`;
+  }
+  if (tabWl) {
+    tabWl.title = `${count} User Custom Watchlist${count === 1 ? '' : 's'}`;
+  }
+}
+
 function renderWatchlistSelector() {
+  updateWatchlistsTabBadge();
   if (!el.selectActiveWatchlist) return;
   el.selectActiveWatchlist.innerHTML = '';
 
@@ -2672,6 +2728,7 @@ function renderWatchlistSelector() {
   populateSsrvolScopeOptions();
   populateVcpscanScopeOptions();
 }
+
 
 function renderWatchlistStocks() {
   if (!el.watchlistTbody) return;
@@ -4511,6 +4568,7 @@ function initNativeCharts() {
   updateTimeScalesVisibility();
   syncChartIndicatorsWithPermissions();
   handleResize();
+  initMeasureTool();
 }
 
 function updateTimeScalesVisibility() {
@@ -5545,6 +5603,47 @@ function handleChartClick(param) {
     state.drawings[currentSymbol].hlines = [];
   }
 
+  // 0. GLOBAL RAY PLACEMENT MODE: Lock selected candle date across ALL charts (anchoring from HIGH)
+  if (state.activeDrawingTool === 'global_ray') {
+    if (!param.time) return;
+    const anchorTime = param.time;
+    let dateStr = '';
+    if (typeof anchorTime === 'number') {
+      const d = new Date(anchorTime * 1000);
+      dateStr = d.toISOString().split('T')[0];
+    } else if (typeof anchorTime === 'object' && anchorTime.year) {
+      dateStr = `${anchorTime.year}-${String(anchorTime.month).padStart(2, '0')}-${String(anchorTime.day).padStart(2, '0')}`;
+    } else {
+      dateStr = String(anchorTime);
+    }
+
+    const allCandles = state.currentStockData?.candles || [];
+    let matchCandle = allCandles.find(c => {
+      let cDateStr = typeof c.time === 'number' ? new Date(c.time * 1000).toISOString().split('T')[0] : (typeof c.time === 'object' ? `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}` : String(c.time));
+      return cDateStr === dateStr;
+    });
+
+    const anchorHigh = matchCandle ? matchCandle.high : (param.seriesData?.get(state.charts.series.candles)?.high || null);
+
+    state.globalDateRay = {
+      active: true,
+      anchorDate: dateStr,
+      anchorTime: anchorTime,
+      price: anchorHigh,
+      color: state.globalDateRay?.color || '#06b6d4',
+      lineWidth: state.globalDateRay?.lineWidth || 2
+    };
+
+    state.activeDrawingTool = null;
+    saveGlobalDateRay();
+    renderPersistedDrawings();
+    updateGlobalRayWidgetUI();
+
+    const priceText = anchorHigh ? ` at High ₹${anchorHigh}` : '';
+    showToast(`🌐 Universal Global Ray anchored to ${dateStr}${priceText} across ALL stocks!`, 'success');
+    return;
+  }
+
   // 1. PLACING NEW ANCHORED VWAP: Add to list without deleting previous ones
   if (state.activeDrawingTool === 'avwap') {
     if (!param.time) return;
@@ -5750,10 +5849,17 @@ function renderPersistedDrawings() {
     state.activeDrawingSeries.hlines = [];
   }
 
+  // 3. Remove previously active Global Ray line
+  if (state.activeDrawingSeries.globalRay) {
+    try { state.charts.main.removeSeries(state.activeDrawingSeries.globalRay); } catch (e) {}
+    try { candles.removePriceLine(state.activeDrawingSeries.globalRay); } catch (e) {}
+    state.activeDrawingSeries.globalRay = null;
+  }
+
   const stockDrawings = state.drawings[currentSymbol] || { avwaps: [], hlines: [] };
   const avwapColors = ['#a855f7', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'];
 
-  // 3. Render AVWAPs for current stock
+  // 4. Render AVWAPs for current stock
   (stockDrawings.avwaps || []).forEach((anchorTime, idx) => {
     const avwapData = calculateAnchoredVwap(state.currentStockData.candles, anchorTime);
     if (avwapData.length > 0) {
@@ -5771,7 +5877,7 @@ function renderPersistedDrawings() {
     }
   });
 
-  // 4. Render H-lines for current stock
+  // 5. Render H-lines for current stock
   (stockDrawings.hlines || []).forEach(price => {
     const pLine = candles.createPriceLine({
       price: price,
@@ -5784,12 +5890,404 @@ function renderPersistedDrawings() {
     state.activeDrawingSeries.hlines.push(pLine);
   });
 
+  // 6. Render Universal Global Ray if active (Plain horizontal ray towards the right of clicked day)
+  if (state.globalDateRay && state.globalDateRay.active && state.globalDateRay.anchorDate) {
+    const targetDate = state.globalDateRay.anchorDate;
+    const allCandles = state.currentStockData.candles;
+
+    // Find candle index on target date or nearest previous trading date
+    let matchIdx = -1;
+    for (let i = 0; i < allCandles.length; i++) {
+      const c = allCandles[i];
+      let cDateStr = '';
+      if (typeof c.time === 'number') {
+        cDateStr = new Date(c.time * 1000).toISOString().split('T')[0];
+      } else if (typeof c.time === 'object' && c.time.year) {
+        cDateStr = `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
+      } else {
+        cDateStr = String(c.time);
+      }
+
+      if (cDateStr === targetDate) {
+        matchIdx = i;
+        break;
+      }
+    }
+
+    if (matchIdx === -1 && allCandles.length > 0) {
+      for (let i = allCandles.length - 1; i >= 0; i--) {
+        const c = allCandles[i];
+        let cDate = typeof c.time === 'number' ? new Date(c.time * 1000).toISOString().split('T')[0] : String(c.time);
+        if (cDate <= targetDate) {
+          matchIdx = i;
+          break;
+        }
+      }
+    }
+
+    if (matchIdx !== -1) {
+      const matchCandle = allCandles[matchIdx];
+      const candleHigh = (matchCandle.high !== undefined && matchCandle.high !== null && !isNaN(matchCandle.high)) ? matchCandle.high : matchCandle.close;
+      const gPrice = Number(candleHigh.toFixed(2));
+      const rayColor = state.globalDateRay.color || '#06b6d4';
+      const rayWidth = Number(state.globalDateRay.lineWidth || 2);
+
+      // Create line series points strictly from the clicked candle index to the right (latest candle)
+      const rayPoints = [];
+      for (let i = matchIdx; i < allCandles.length; i++) {
+        rayPoints.push({
+          time: allCandles[i].time,
+          value: gPrice
+        });
+      }
+
+      if (rayPoints.length > 0) {
+        const raySeries = state.charts.main.addLineSeries({
+          color: rayColor,
+          lineWidth: rayWidth,
+          lineStyle: 0,
+          lineType: 0,
+          crosshairMarkerVisible: false,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          axisLabelVisible: false,
+          title: ''
+        });
+        raySeries.setData(rayPoints);
+        state.activeDrawingSeries.globalRay = raySeries;
+      }
+    }
+  }
+
   updateAvwapWidgetUI();
+  updateGlobalRayWidgetUI();
 }
 
 function cancelActiveDrawingTool() {
   state.activeDrawingTool = null;
   updateAvwapWidgetUI();
+}
+
+// -------------------------------------------------------------
+// Universal Global Date Ray Tool (Checkbox Toggle Mode)
+// -------------------------------------------------------------
+
+function handleToggleGlobalDateRay(isChecked) {
+  if (isChecked) {
+    state.globalDateRay.active = true;
+    if (state.globalDateRay.anchorDate) {
+      renderPersistedDrawings();
+      updateGlobalRayWidgetUI();
+      showToast(`🌐 Global Ray active (anchored to ${state.globalDateRay.anchorDate})`, 'success');
+    } else {
+      state.activeDrawingTool = 'global_ray';
+      updateGlobalRayWidgetUI();
+      showToast('🎯 Global Ray active: Click any candle/date on the chart to anchor across all stocks!', 'info');
+    }
+  } else {
+    state.globalDateRay.active = false;
+    if (state.activeDrawingTool === 'global_ray') {
+      state.activeDrawingTool = null;
+    }
+    renderPersistedDrawings();
+    updateGlobalRayWidgetUI();
+    showToast('Global Ray hidden', 'info');
+  }
+  saveGlobalDateRay();
+}
+
+function handleGlobalRayColorChange(color) {
+  if (!state.globalDateRay) {
+    state.globalDateRay = { active: false, anchorDate: null, anchorTime: null, price: null, color: '#06b6d4', lineWidth: 2 };
+  }
+  state.globalDateRay.color = color;
+  saveGlobalDateRay();
+  renderPersistedDrawings();
+  updateGlobalRayWidgetUI();
+}
+
+function clearGlobalDateRay(e) {
+  if (e) e.stopPropagation();
+  const preservedColor = state.globalDateRay?.color || '#06b6d4';
+  state.globalDateRay = { active: false, anchorDate: null, anchorTime: null, price: null, color: preservedColor, lineWidth: 2 };
+  if (state.activeDrawingTool === 'global_ray') state.activeDrawingTool = null;
+  const chk = document.getElementById('chk-global-date-ray');
+  if (chk) chk.checked = false;
+  saveGlobalDateRay();
+  renderPersistedDrawings();
+  updateGlobalRayWidgetUI();
+  showToast('🌐 Universal Global Ray cleared', 'info');
+}
+
+function saveGlobalDateRay() {
+  try {
+    localStorage.setItem('sangam_global_date_ray', JSON.stringify(state.globalDateRay));
+  } catch (e) {}
+}
+
+function updateGlobalRayWidgetUI() {
+  const chk = document.getElementById('chk-global-date-ray');
+  const colorPicker = document.getElementById('global-ray-color-picker');
+  const badge = document.getElementById('floating-global-ray-badge');
+  const label = document.getElementById('global-ray-date-label');
+  const isActive = Boolean(state.globalDateRay?.active && state.globalDateRay?.anchorDate);
+
+  if (chk) chk.checked = Boolean(state.globalDateRay?.active);
+  if (colorPicker && state.globalDateRay?.color) {
+    colorPicker.value = state.globalDateRay.color;
+  }
+  if (isActive) {
+    if (badge) badge.classList.remove('hidden');
+    if (label) label.textContent = `${state.globalDateRay.anchorDate}`;
+  } else {
+    if (badge) badge.classList.add('hidden');
+  }
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+}
+
+// -------------------------------------------------------------
+// Interactive Measure / Ruler Tool Engine (2-Click Measurement)
+// -------------------------------------------------------------
+
+function toggleMeasureTool() {
+  state.measureTool.active = !state.measureTool.active;
+  state.measureTool.step = 0;
+  const btn = document.getElementById('btn-measure-tool');
+  const pricePane = document.getElementById('tv_price_pane');
+
+  if (state.measureTool.active) {
+    if (btn) {
+      btn.className = 'p-1 px-1.5 rounded-lg bg-emerald-600 text-white border border-emerald-400 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-md ring-2 ring-emerald-400/40';
+    }
+    if (pricePane) pricePane.classList.add('measuring-cursor');
+    showToast('📏 Measure Tool: Click 1st point, move to 2nd point and click to measure (Esc to cancel)', 'info');
+  } else {
+    if (btn) {
+      btn.className = 'p-1 px-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm';
+    }
+    if (pricePane) pricePane.classList.remove('measuring-cursor');
+    clearChartMeasurement();
+  }
+}
+
+function clearChartMeasurement() {
+  const overlay = document.getElementById('chart-measure-overlay');
+  const box = document.getElementById('chart-measure-box');
+  const svg = document.getElementById('chart-measure-svg');
+  if (overlay) overlay.classList.add('hidden');
+  if (box) {
+    box.style.width = '0px';
+    box.style.height = '0px';
+    box.className = 'absolute border border-dashed rounded pointer-events-none transition-all duration-75';
+  }
+  if (svg) svg.innerHTML = '';
+  state.measureTool.step = 0;
+  state.measureTool.startPoint = null;
+  state.measureTool.startPrice = null;
+  state.measureTool.startTime = null;
+  state.measureTool.startIndex = -1;
+  state.measureTool.endPoint = null;
+  state.measureTool.endPrice = null;
+  state.measureTool.endTime = null;
+  state.measureTool.endIndex = -1;
+}
+
+function initMeasureTool() {
+  const pricePane = document.getElementById('tv_price_pane');
+  if (!pricePane || pricePane._hasMeasureBound) return;
+  pricePane._hasMeasureBound = true;
+
+  pricePane.addEventListener('click', (e) => {
+    // If Shift key clicked in normal mode, auto-activate measure tool
+    if (e.shiftKey && !state.measureTool.active) {
+      toggleMeasureTool();
+    }
+
+    if (!state.measureTool.active) return;
+
+    // Ignore clicks on close buttons inside measurement pill
+    if (e.target.closest('#chart-measure-pill button')) return;
+
+    const rect = pricePane.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+
+    const candlesSeries = state.charts.series?.candles;
+    if (!candlesSeries || !state.charts.main) return;
+
+    const price = candlesSeries.coordinateToPrice(y);
+    if (typeof price !== 'number' || isNaN(price)) return;
+
+    const candles = state.currentStockData?.candles || [];
+    const logical = state.charts.main.timeScale().coordinateToLogical(x);
+    const time = state.charts.main.timeScale().coordinateToTime(x);
+
+    let candleIdx = -1;
+    if (typeof logical === 'number') {
+      candleIdx = Math.max(0, Math.min(candles.length - 1, Math.round(logical)));
+    } else if (time) {
+      candleIdx = candles.findIndex(c => String(c.time) === String(time));
+    }
+
+    if (state.measureTool.step === 0 || state.measureTool.step === 2) {
+      // FIRST CLICK: Set Point 1 & start live tracking
+      state.measureTool.step = 1;
+      state.measureTool.startPoint = { x, y };
+      state.measureTool.startPrice = price;
+      state.measureTool.startTime = time;
+      state.measureTool.startIndex = candleIdx !== -1 ? candleIdx : 0;
+
+      const overlay = document.getElementById('chart-measure-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+
+      renderMeasureOverlay(x, y, x, y, price, price, state.measureTool.startIndex, state.measureTool.startIndex);
+      showToast('🎯 Point 1 set. Move mouse and click Point 2 to lock measurement.', 'info');
+
+    } else if (state.measureTool.step === 1) {
+      // SECOND CLICK: Set Point 2 & lock measurement in place
+      state.measureTool.step = 2;
+      state.measureTool.endPoint = { x, y };
+      state.measureTool.endPrice = price;
+      state.measureTool.endTime = time;
+      state.measureTool.endIndex = candleIdx !== -1 ? candleIdx : state.measureTool.startIndex;
+
+      renderMeasureOverlay(
+        state.measureTool.startPoint.x,
+        state.measureTool.startPoint.y,
+        x,
+        y,
+        state.measureTool.startPrice,
+        price,
+        state.measureTool.startIndex,
+        state.measureTool.endIndex
+      );
+
+      const deltaPrice = price - state.measureTool.startPrice;
+      const pct = state.measureTool.startPrice > 0 ? ((deltaPrice / state.measureTool.startPrice) * 100) : 0;
+      const sign = deltaPrice >= 0 ? '+' : '';
+      showToast(`📏 Measurement locked: ${sign}${pct.toFixed(2)}% (${sign}₹${deltaPrice.toFixed(2)})`, 'success');
+    }
+
+    e.stopPropagation();
+  }, true);
+
+  pricePane.addEventListener('mousemove', (e) => {
+    // Only update preview when waiting for 2nd click (step === 1)
+    if (!state.measureTool.active || state.measureTool.step !== 1 || !state.measureTool.startPoint) return;
+
+    const rect = pricePane.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+
+    const candlesSeries = state.charts.series?.candles;
+    if (!candlesSeries || !state.charts.main) return;
+
+    const currentPrice = candlesSeries.coordinateToPrice(y);
+    if (typeof currentPrice !== 'number' || isNaN(currentPrice)) return;
+
+    const candles = state.currentStockData?.candles || [];
+    const logical = state.charts.main.timeScale().coordinateToLogical(x);
+    const time = state.charts.main.timeScale().coordinateToTime(x);
+
+    let candleIdx = -1;
+    if (typeof logical === 'number') {
+      candleIdx = Math.max(0, Math.min(candles.length - 1, Math.round(logical)));
+    } else if (time) {
+      candleIdx = candles.findIndex(c => String(c.time) === String(time));
+    }
+
+    renderMeasureOverlay(
+      state.measureTool.startPoint.x,
+      state.measureTool.startPoint.y,
+      x,
+      y,
+      state.measureTool.startPrice,
+      currentPrice,
+      state.measureTool.startIndex,
+      candleIdx !== -1 ? candleIdx : state.measureTool.startIndex
+    );
+  }, { passive: true });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (state.measureTool.active || state.measureTool.step > 0) {
+        clearChartMeasurement();
+        if (state.measureTool.active) toggleMeasureTool();
+      }
+    }
+  });
+}
+
+function renderMeasureOverlay(x1, y1, x2, y2, price1, price2, idx1, idx2) {
+  const overlay = document.getElementById('chart-measure-overlay');
+  const box = document.getElementById('chart-measure-box');
+  const pill = document.getElementById('chart-measure-pill');
+  const pctEl = document.getElementById('chart-measure-pct');
+  const detailsEl = document.getElementById('chart-measure-details');
+  const svg = document.getElementById('chart-measure-svg');
+
+  if (!overlay || !box || !pill || !pctEl || !detailsEl) return;
+  overlay.classList.remove('hidden');
+
+  const left = Math.min(x1, x2);
+  const top = Math.min(y1, y2);
+  const width = Math.max(2, Math.abs(x2 - x1));
+  const height = Math.max(2, Math.abs(y2 - y1));
+
+  const deltaPrice = price2 - price1;
+  const pct = price1 > 0 ? ((deltaPrice / price1) * 100) : 0;
+  const isUp = deltaPrice >= 0;
+  const barsCount = Math.abs(idx2 - idx1) + 1;
+
+  box.style.left = `${left}px`;
+  box.style.top = `${top}px`;
+  box.style.width = `${width}px`;
+  box.style.height = `${height}px`;
+
+  if (isUp) {
+    box.className = 'absolute border border-dashed rounded pointer-events-none up';
+    pill.className = 'pointer-events-auto absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 up';
+    pctEl.className = 'font-mono font-bold text-sm leading-none text-emerald-400';
+    pctEl.textContent = `+${pct.toFixed(2)}%`;
+  } else {
+    box.className = 'absolute border border-dashed rounded pointer-events-none down';
+    pill.className = 'pointer-events-auto absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 down';
+    pctEl.className = 'font-mono font-bold text-sm leading-none text-rose-400';
+    pctEl.textContent = `${pct.toFixed(2)}%`;
+  }
+
+  const sign = isUp ? '+' : '';
+  detailsEl.textContent = `${sign}₹${deltaPrice.toFixed(2)} · ${barsCount} bars (₹${price1.toFixed(2)} → ₹${price2.toFixed(2)})`;
+
+  // Draw arrow line in SVG
+  if (svg) {
+    const strokeColor = isUp ? '#10b981' : '#f43f5e';
+    svg.innerHTML = `
+      <defs>
+        <marker id="measure-arrow-${isUp ? 'up' : 'down'}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="${strokeColor}" />
+        </marker>
+      </defs>
+      <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#measure-arrow-${isUp ? 'up' : 'down'})" />
+    `;
+  }
+
+  // Position Pill
+  let pillX = x2 + 10;
+  let pillY = y2 - 20;
+
+  // Clamp within price pane bounds
+  const paneRect = overlay.getBoundingClientRect();
+  if (pillX + 160 > paneRect.width) pillX = x2 - 170;
+  if (pillX < 10) pillX = 10;
+  if (pillY < 10) pillY = 10;
+  if (pillY + 60 > paneRect.height) pillY = paneRect.height - 65;
+
+  pill.style.left = `${Math.round(pillX)}px`;
+  pill.style.top = `${Math.round(pillY)}px`;
 }
 
 // -------------------------------------------------------------
@@ -6069,6 +6567,9 @@ function updateDefaultLegend() {
 async function loadStockChart(rawSymbol) {
   if (!rawSymbol) return;
   const cleanSymbol = rawSymbol.trim().toUpperCase();
+
+  // Clear prior measurement on stock switch
+  clearChartMeasurement();
 
   // Show loading spinner
   el.chartLoadingOverlay.classList.remove('hidden');
@@ -9814,6 +10315,12 @@ function initGlobalTooltipEngine() {
 }
 
 window.initGlobalTooltipEngine = initGlobalTooltipEngine;
+window.handleToggleGlobalDateRay = handleToggleGlobalDateRay;
+window.handleGlobalRayColorChange = handleGlobalRayColorChange;
+window.clearGlobalDateRay = clearGlobalDateRay;
+window.updateWatchlistsTabBadge = updateWatchlistsTabBadge;
+window.toggleMeasureTool = toggleMeasureTool;
+window.clearChartMeasurement = clearChartMeasurement;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);
