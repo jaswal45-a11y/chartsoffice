@@ -49,7 +49,7 @@
     }
   </script>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3.2.0">
 </head>
 <body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white transition-colors duration-200">
 
@@ -593,21 +593,45 @@
                 </div>
               </div>
 
-              <!-- Filter 5: % From 52-Week High & Custom Lookback Gain -->
+              <!-- Filter 5: % From 52-Week High & Custom Reference Date Gain -->
               <div class="flex flex-col gap-1 bg-dark-card/60 p-2 rounded-xl border border-dark-border">
                 <div class="flex items-center justify-between text-[11px]">
-                  <span class="font-bold text-slate-300">% 52WH / Gain:</span>
-                  <span id="label-filter-52wh" class="font-mono text-emerald-400 font-semibold text-[10px]">All</span>
+                  <span class="font-bold text-slate-300 flex items-center gap-1">
+                    <i data-lucide="calendar-range" class="w-3 h-3 text-emerald-400"></i>
+                    <span>% 52WH / Gain:</span>
+                  </span>
+                  <span id="label-filter-52wh" class="font-mono text-emerald-400 font-semibold text-[10px]">20D</span>
                 </div>
-                <select id="select-filter-52wh" onchange="handleExploreFilterChange()" class="w-full px-2 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
-                  <option value="all">Any 52WH Dist</option>
-                  <option value="at_high">At 52W High (0%) 🚀</option>
-                  <option value="within_2">Within 2% of 52WH</option>
-                  <option value="within_5">Within 5% of 52WH</option>
-                  <option value="within_10">Within 10% of 52WH</option>
-                  <option value="gain_20d_10">&gt; 10% Gain in past 20d</option>
-                  <option value="gain_30d_20">&gt; 20% Gain in past 30d</option>
-                </select>
+                
+                <div class="flex items-center gap-1 mb-1">
+                  <select id="select-filter-gain-preset" onchange="handleExploreGainPresetChange(this.value)" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer font-mono" title="Lookback Period / Custom Date Preset">
+                    <option value="5d">5D Gain</option>
+                    <option value="10d">10D Gain</option>
+                    <option value="20d" selected>20D Gain</option>
+                    <option value="30d">1M Gain (30D)</option>
+                    <option value="60d">2M Gain (60D)</option>
+                    <option value="90d">3M Gain (90D)</option>
+                    <option value="180d">6M Gain (180D)</option>
+                    <option value="ytd">YTD Gain</option>
+                    <option value="custom">📅 Custom Date...</option>
+                  </select>
+                  
+                  <input type="date" id="input-explore-gain-date" onchange="handleExploreGainCustomDateChange(this.value)" class="w-1/2 px-1.5 py-0.5 text-[10px] bg-dark-bg border border-emerald-500/50 rounded-lg text-emerald-300 focus:outline-none focus:border-emerald-500 cursor-pointer font-mono hidden" title="Select custom start date for gain calculation">
+                  
+                  <select id="select-filter-52wh" onchange="handleExploreFilterChange()" class="w-1/2 px-1.5 py-1 text-[11px] bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                    <option value="all">Any Dist/Gain</option>
+                    <option value="gain_gt_0">&gt; 0% Gain 🟢</option>
+                    <option value="gain_gt_5">&gt; 5% Gain 🚀</option>
+                    <option value="gain_gt_10">&gt; 10% Gain 🔥</option>
+                    <option value="gain_gt_20">&gt; 20% Gain 🌟</option>
+                    <option value="gain_lt_0">&lt; 0% Loss 🔴</option>
+                    <option value="gain_lt_minus5">&lt; -5% Loss ⚠️</option>
+                    <option value="at_high">At 52W High (0%) 🚀</option>
+                    <option value="within_2">Within 2% of 52WH</option>
+                    <option value="within_5">Within 5% of 52WH</option>
+                    <option value="within_10">Within 10% of 52WH</option>
+                  </select>
+                </div>
               </div>
 
               <!-- Filter 6: Daily & Weekly Pivots Selector -->
@@ -653,7 +677,60 @@
                   <th class="py-2.5 px-3 font-semibold text-center" title="10, 20, 50, 150 EMA Traffic Light Posture (🟢 Above / 🔴 Below)">EMAs (10/20/50/150)</th>
                   <th id="th-explore-ema-cross" class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('crossDaysAgo')" title="Days elapsed since the selected EMA crossover occurred">EMA Cross (10/20) ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('pctFrom52wHigh')">% 52WH ⇅</th>
-                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('gain20d')">20D Gain ⇅</th>
+                  <th id="th-explore-custom-gain" class="py-2.5 px-3 font-semibold text-right select-none relative group" title="Gain calculated from custom selected start date or lookback period">
+                    <div class="flex items-center justify-end gap-1">
+                      <div class="flex items-center gap-0.5 cursor-pointer hover:text-emerald-300 transition-colors" onclick="handleExploreSort('customGain')">
+                        <span id="label-explore-gain-col" class="font-bold">20D Gain</span>
+                        <span id="sort-icon-explore-gain" class="text-slate-400 text-[10px]">⇅</span>
+                      </div>
+                      <div class="relative inline-block" onclick="event.stopPropagation()">
+                        <button type="button" id="btn-explore-gain-cal" onclick="toggleExploreGainDatePicker(event)" class="p-0.5 px-1 rounded bg-dark-bg/80 hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 border border-slate-700 hover:border-emerald-500/50 text-[10px] font-mono flex items-center gap-0.5 cursor-pointer transition-all shadow-sm" title="Pick custom reference date or lookback period">
+                          <i data-lucide="calendar" class="w-3 h-3"></i>
+                          <i data-lucide="chevron-down" class="w-2.5 h-2.5 opacity-70"></i>
+                        </button>
+                        
+                        <!-- Dropdown Popover for Custom Date Picker -->
+                        <div id="popover-explore-gain-date" class="hidden absolute right-0 top-full mt-1.5 z-50 w-64 bg-slate-900/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl p-3 text-left font-sans text-xs">
+                          <div class="flex items-center justify-between pb-2 mb-2 border-b border-dark-border">
+                            <span class="font-bold text-white flex items-center gap-1.5 text-xs">
+                              <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-emerald-400"></i>
+                              <span>Gain Reference Date</span>
+                            </span>
+                            <button type="button" onclick="closeExploreGainDatePicker()" class="text-slate-400 hover:text-white p-0.5 rounded cursor-pointer">
+                              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
+                          </div>
+
+                          <!-- Custom Date Input -->
+                          <div class="flex flex-col gap-1 mb-2.5">
+                            <label class="text-[11px] text-slate-300 font-semibold flex items-center justify-between">
+                              <span>Pick Start Date:</span>
+                              <span id="label-gain-cal-days-ago" class="text-[10px] text-emerald-400 font-mono">20d lookback</span>
+                            </label>
+                            <input type="date" id="popover-gain-date-input" onchange="handleExploreCustomGainDatePicked(this.value)" class="w-full px-2.5 py-1.5 bg-dark-bg border border-dark-border focus:border-emerald-500 rounded-lg text-xs font-mono text-emerald-300 focus:outline-none cursor-pointer">
+                          </div>
+
+                          <!-- Quick Presets Grid -->
+                          <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Quick Presets:</div>
+                          <div class="grid grid-cols-4 gap-1 mb-2">
+                            <button type="button" onclick="setExploreGainPreset('5d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">5D</button>
+                            <button type="button" onclick="setExploreGainPreset('10d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">10D</button>
+                            <button type="button" onclick="setExploreGainPreset('20d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">20D</button>
+                            <button type="button" onclick="setExploreGainPreset('30d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">1M</button>
+                            <button type="button" onclick="setExploreGainPreset('60d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">2M</button>
+                            <button type="button" onclick="setExploreGainPreset('90d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">3M</button>
+                            <button type="button" onclick="setExploreGainPreset('180d')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">6M</button>
+                            <button type="button" onclick="setExploreGainPreset('ytd')" class="px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer">YTD</button>
+                          </div>
+
+                          <div class="pt-2 border-t border-dark-border flex items-center justify-between">
+                            <button type="button" onclick="setExploreGainPreset('20d'); closeExploreGainDatePicker();" class="text-[10px] text-slate-400 hover:text-white cursor-pointer">Reset (20D)</button>
+                            <button type="button" onclick="closeExploreGainDatePicker()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-[11px] font-semibold cursor-pointer">Close</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </th>
                   <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('dailyPivot')">D-Pivot ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('weeklyPivot')">W-Pivot ⇅</th>
                 </tr>
@@ -2255,7 +2332,7 @@
   <!-- Global Reusable Company Info Component -->
   <script src="company-info.js?v=1.0.0"></script>
   <!-- Dedicated Analytics JS Script -->
-  <script src="analytics.js?v=2.6.7"></script>
+  <script src="analytics.js?v=2.7.0"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
 </body>

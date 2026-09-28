@@ -5605,25 +5605,17 @@ function handleChartClick(param) {
 
   // 0. GLOBAL RAY PLACEMENT MODE: Lock selected candle date across ALL charts (anchoring from HIGH)
   if (state.activeDrawingTool === 'global_ray') {
-    if (!param.time) return;
+    if (!param || !param.time) return;
     const anchorTime = param.time;
-    let dateStr = '';
-    if (typeof anchorTime === 'number') {
-      const d = new Date(anchorTime * 1000);
-      dateStr = d.toISOString().split('T')[0];
-    } else if (typeof anchorTime === 'object' && anchorTime.year) {
-      dateStr = `${anchorTime.year}-${String(anchorTime.month).padStart(2, '0')}-${String(anchorTime.day).padStart(2, '0')}`;
-    } else {
-      dateStr = String(anchorTime);
-    }
+    const dateStr = normalizeCandleDateString(anchorTime);
+    if (!dateStr) return;
 
     const allCandles = state.currentStockData?.candles || [];
-    let matchCandle = allCandles.find(c => {
-      let cDateStr = typeof c.time === 'number' ? new Date(c.time * 1000).toISOString().split('T')[0] : (typeof c.time === 'object' ? `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}` : String(c.time));
-      return cDateStr === dateStr;
-    });
+    let matchCandle = allCandles.find(c => normalizeCandleDateString(c.time) === dateStr);
 
-    const anchorHigh = matchCandle ? matchCandle.high : (param.seriesData?.get(state.charts.series.candles)?.high || null);
+    const anchorHigh = (matchCandle && matchCandle.high !== undefined && matchCandle.high !== null) 
+      ? matchCandle.high 
+      : (param.seriesData?.get(state.charts.series?.candles)?.high || (matchCandle?.close || null));
 
     state.globalDateRay = {
       active: true,
@@ -5639,7 +5631,7 @@ function handleChartClick(param) {
     renderPersistedDrawings();
     updateGlobalRayWidgetUI();
 
-    const priceText = anchorHigh ? ` at High ₹${anchorHigh}` : '';
+    const priceText = (anchorHigh !== null && anchorHigh !== undefined) ? ` at High ₹${anchorHigh}` : '';
     showToast(`🌐 Universal Global Ray anchored to ${dateStr}${priceText} across ALL stocks!`, 'success');
     return;
   }
@@ -5828,6 +5820,20 @@ function clearStockAvwaps() {
   showToast('All Anchored VWAPs removed', 'info');
 }
 
+function normalizeCandleDateString(time) {
+  if (!time) return '';
+  if (typeof time === 'string') return time.split('T')[0];
+  if (typeof time === 'number') {
+    const ms = time > 1e11 ? time : time * 1000;
+    const d = new Date(ms);
+    return d.toISOString().split('T')[0];
+  }
+  if (typeof time === 'object' && time.year) {
+    return `${time.year}-${String(time.month).padStart(2, '0')}-${String(time.day).padStart(2, '0')}`;
+  }
+  return String(time);
+}
+
 function renderPersistedDrawings() {
   const currentSymbol = state.selectedStock?.symbol;
   const { candles } = state.charts.series;
@@ -5893,68 +5899,89 @@ function renderPersistedDrawings() {
   // 6. Render Universal Global Ray if active (Plain horizontal ray towards the right of clicked day)
   if (state.globalDateRay && state.globalDateRay.active && state.globalDateRay.anchorDate) {
     const targetDate = state.globalDateRay.anchorDate;
-    const allCandles = state.currentStockData.candles;
+    const allCandles = state.currentStockData?.candles || [];
 
-    // Find candle index on target date or nearest previous trading date
-    let matchIdx = -1;
-    for (let i = 0; i < allCandles.length; i++) {
-      const c = allCandles[i];
-      let cDateStr = '';
-      if (typeof c.time === 'number') {
-        cDateStr = new Date(c.time * 1000).toISOString().split('T')[0];
-      } else if (typeof c.time === 'object' && c.time.year) {
-        cDateStr = `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
-      } else {
-        cDateStr = String(c.time);
-      }
-
-      if (cDateStr === targetDate) {
-        matchIdx = i;
-        break;
-      }
-    }
-
-    if (matchIdx === -1 && allCandles.length > 0) {
-      for (let i = allCandles.length - 1; i >= 0; i--) {
-        const c = allCandles[i];
-        let cDate = typeof c.time === 'number' ? new Date(c.time * 1000).toISOString().split('T')[0] : String(c.time);
-        if (cDate <= targetDate) {
+    if (allCandles.length > 0) {
+      // Find candle index on target date or nearest trading date
+      let matchIdx = -1;
+      for (let i = 0; i < allCandles.length; i++) {
+        const cDateStr = normalizeCandleDateString(allCandles[i]?.time);
+        if (cDateStr === targetDate) {
           matchIdx = i;
           break;
         }
       }
-    }
 
-    if (matchIdx !== -1) {
-      const matchCandle = allCandles[matchIdx];
-      const candleHigh = (matchCandle.high !== undefined && matchCandle.high !== null && !isNaN(matchCandle.high)) ? matchCandle.high : matchCandle.close;
-      const gPrice = Number(candleHigh.toFixed(2));
-      const rayColor = state.globalDateRay.color || '#06b6d4';
-      const rayWidth = Number(state.globalDateRay.lineWidth || 2);
-
-      // Create line series points strictly from the clicked candle index to the right (latest candle)
-      const rayPoints = [];
-      for (let i = matchIdx; i < allCandles.length; i++) {
-        rayPoints.push({
-          time: allCandles[i].time,
-          value: gPrice
-        });
+      // Fallback 1: If exact date not found (e.g. weekend, holiday, or missing bar), find the first candle ON or AFTER target date
+      if (matchIdx === -1) {
+        for (let i = 0; i < allCandles.length; i++) {
+          const cDateStr = normalizeCandleDateString(allCandles[i]?.time);
+          if (cDateStr && cDateStr >= targetDate) {
+            matchIdx = i;
+            break;
+          }
+        }
       }
 
-      if (rayPoints.length > 0) {
-        const raySeries = state.charts.main.addLineSeries({
-          color: rayColor,
-          lineWidth: rayWidth,
-          lineStyle: 0,
-          lineType: 0,
-          crosshairMarkerVisible: false,
-          lastValueVisible: false,
-          priceLineVisible: false,
-          axisLabelVisible: false,
-          title: ''
-        });
-        raySeries.setData(rayPoints);
-        state.activeDrawingSeries.globalRay = raySeries;
+      // Fallback 2: If targetDate is earlier than history, start from index 0
+      if (matchIdx === -1) {
+        const firstDate = normalizeCandleDateString(allCandles[0]?.time);
+        if (firstDate && targetDate <= firstDate) {
+          matchIdx = 0;
+        }
+      }
+
+      if (matchIdx !== -1 && matchIdx < allCandles.length) {
+        const matchCandle = allCandles[matchIdx];
+        const candleHigh = (matchCandle && matchCandle.high !== undefined && matchCandle.high !== null && !isNaN(matchCandle.high))
+          ? matchCandle.high
+          : (matchCandle?.close || 0);
+        const gPrice = Number(Number(candleHigh).toFixed(2));
+        const rayColor = state.globalDateRay.color || '#06b6d4';
+        const rayWidth = Number(state.globalDateRay.lineWidth || 2);
+
+        // Deduplicate and strictly validate ascending time points for Lightweight Charts
+        const rayPoints = [];
+        const seenTimes = new Set();
+        for (let i = matchIdx; i < allCandles.length; i++) {
+          const c = allCandles[i];
+          if (!c || c.time === undefined || c.time === null) continue;
+
+          let timeKey = '';
+          if (typeof c.time === 'object' && c.time.year) {
+            timeKey = `${c.time.year}-${String(c.time.month).padStart(2, '0')}-${String(c.time.day).padStart(2, '0')}`;
+          } else {
+            timeKey = String(c.time);
+          }
+
+          if (seenTimes.has(timeKey)) continue;
+          seenTimes.add(timeKey);
+
+          rayPoints.push({
+            time: c.time,
+            value: gPrice
+          });
+        }
+
+        if (rayPoints.length > 0) {
+          try {
+            const raySeries = state.charts.main.addLineSeries({
+              color: rayColor,
+              lineWidth: rayWidth,
+              lineStyle: 0,
+              lineType: 0,
+              crosshairMarkerVisible: false,
+              lastValueVisible: false,
+              priceLineVisible: false,
+              axisLabelVisible: false,
+              title: ''
+            });
+            raySeries.setData(rayPoints);
+            state.activeDrawingSeries.globalRay = raySeries;
+          } catch (err) {
+            console.warn('[GlobalRay] Failed to set ray series data:', err);
+          }
+        }
       }
     }
   }
@@ -5973,6 +6000,10 @@ function cancelActiveDrawingTool() {
 // -------------------------------------------------------------
 
 function handleToggleGlobalDateRay(isChecked) {
+  if (!state.globalDateRay) {
+    state.globalDateRay = { active: false, anchorDate: null, anchorTime: null, price: null, color: '#06b6d4', lineWidth: 2 };
+  }
+
   if (isChecked) {
     state.globalDateRay.active = true;
     if (state.globalDateRay.anchorDate) {
@@ -5994,6 +6025,18 @@ function handleToggleGlobalDateRay(isChecked) {
     showToast('Global Ray hidden', 'info');
   }
   saveGlobalDateRay();
+}
+
+function promptPickGlobalRayDate() {
+  if (!state.globalDateRay) {
+    state.globalDateRay = { active: true, anchorDate: null, anchorTime: null, price: null, color: '#06b6d4', lineWidth: 2 };
+  }
+  state.globalDateRay.active = true;
+  state.activeDrawingTool = 'global_ray';
+  const chk = document.getElementById('chk-global-date-ray');
+  if (chk) chk.checked = true;
+  updateGlobalRayWidgetUI();
+  showToast('🎯 Click any candle/date on the chart to set or update the Global Ray anchor!', 'info');
 }
 
 function handleGlobalRayColorChange(color) {
@@ -10318,6 +10361,7 @@ window.initGlobalTooltipEngine = initGlobalTooltipEngine;
 window.handleToggleGlobalDateRay = handleToggleGlobalDateRay;
 window.handleGlobalRayColorChange = handleGlobalRayColorChange;
 window.clearGlobalDateRay = clearGlobalDateRay;
+window.promptPickGlobalRayDate = promptPickGlobalRayDate;
 window.updateWatchlistsTabBadge = updateWatchlistsTabBadge;
 window.toggleMeasureTool = toggleMeasureTool;
 window.clearChartMeasurement = clearChartMeasurement;

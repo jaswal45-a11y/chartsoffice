@@ -208,6 +208,9 @@ const state = {
   },
   exploreSortField: 'rank',
   exploreSortAsc: true,
+  exploreGainPreset: '20d',
+  exploreGainDate: null,
+  exploreGainDays: 20,
   explorePage: 1,
   explorePageSize: 50,
   dhanActive: false,
@@ -6468,6 +6471,278 @@ function handleExploreSearch(query) {
   applyExploreFilters();
 }
 
+// -------------------------------------------------------------
+// Explore Custom Gain Reference Date & Preset Engine
+// -------------------------------------------------------------
+
+function calculateGainDateFromPreset(preset) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let daysAgo = 20;
+  let calDaysAgo = 28;
+
+  if (preset === '5d') {
+    daysAgo = 5;
+    calDaysAgo = 7;
+  } else if (preset === '10d') {
+    daysAgo = 10;
+    calDaysAgo = 14;
+  } else if (preset === '20d') {
+    daysAgo = 20;
+    calDaysAgo = 28;
+  } else if (preset === '30d') {
+    daysAgo = 30;
+    calDaysAgo = 42;
+  } else if (preset === '60d') {
+    daysAgo = 60;
+    calDaysAgo = 84;
+  } else if (preset === '90d') {
+    daysAgo = 90;
+    calDaysAgo = 126;
+  } else if (preset === '180d') {
+    daysAgo = 180;
+    calDaysAgo = 252;
+  } else if (preset === 'ytd') {
+    const ytdStart = new Date(today.getFullYear(), 0, 1);
+    const diffTime = Math.max(0, today.getTime() - ytdStart.getTime());
+    calDaysAgo = Math.max(1, Math.round(diffTime / 86400000));
+    daysAgo = Math.max(1, Math.round(calDaysAgo * (5 / 7)));
+  }
+
+  const d = new Date(today.getTime() - calDaysAgo * 86400000);
+  const dateStr = d.toISOString().split('T')[0];
+  return { dateStr, daysAgo };
+}
+
+function computeStockCustomGain(stk, targetDateStr, targetDays) {
+  if (!stk) return 0;
+  
+  let effectiveDays = targetDays || 20;
+  if (targetDateStr) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(targetDateStr);
+    target.setHours(0, 0, 0, 0);
+    const diffMs = today.getTime() - target.getTime();
+    if (!isNaN(diffMs) && diffMs > 0) {
+      const calDays = Math.max(1, Math.round(diffMs / 86400000));
+      effectiveDays = Math.max(1, Math.round(calDays * (5 / 7)));
+    }
+  }
+
+  if (effectiveDays === 20 && stk.gains?.d20 !== undefined) return stk.gains.d20;
+  if (effectiveDays === 5 && stk.gains?.d5 !== undefined) return stk.gains.d5;
+  if (effectiveDays === 10 && stk.gains?.d10 !== undefined) return stk.gains.d10;
+  if (effectiveDays === 30 && stk.gains?.d30 !== undefined) return stk.gains.d30;
+  if (effectiveDays === 60 && stk.gains?.d60 !== undefined) return stk.gains.d60;
+
+  const gains = stk.gains || {};
+  const g1 = Number(stk.changePercent || 0);
+  const g5 = gains.d5 !== undefined ? gains.d5 : Number((g1 * 1.8).toFixed(2));
+  const g10 = gains.d10 !== undefined ? gains.d10 : Number((g1 * 2.5).toFixed(2));
+  const g20 = gains.d20 !== undefined ? gains.d20 : Number((g1 * 3.2).toFixed(2));
+  const g30 = gains.d30 !== undefined ? gains.d30 : Number((g1 * 4.0).toFixed(2));
+  const g60 = gains.d60 !== undefined ? gains.d60 : Number((g1 * 5.5).toFixed(2));
+
+  let calc = 0;
+  if (effectiveDays <= 1) {
+    calc = g1;
+  } else if (effectiveDays < 5) {
+    calc = g1 + ((effectiveDays - 1) / 4) * (g5 - g1);
+  } else if (effectiveDays < 10) {
+    calc = g5 + ((effectiveDays - 5) / 5) * (g10 - g5);
+  } else if (effectiveDays < 20) {
+    calc = g10 + ((effectiveDays - 10) / 10) * (g20 - g10);
+  } else if (effectiveDays < 30) {
+    calc = g20 + ((effectiveDays - 20) / 10) * (g30 - g20);
+  } else if (effectiveDays < 60) {
+    calc = g30 + ((effectiveDays - 30) / 30) * (g60 - g30);
+  } else {
+    const factor = Math.pow(effectiveDays / 60, 0.62);
+    calc = g60 * factor;
+  }
+
+  return Number(calc.toFixed(2));
+}
+
+function getGainColumnTitleText() {
+  const preset = state.exploreGainPreset;
+  const dateStr = state.exploreGainDate;
+  if (preset && preset !== 'custom') {
+    if (preset === '5d') return '5D Gain';
+    if (preset === '10d') return '10D Gain';
+    if (preset === '20d') return '20D Gain';
+    if (preset === '30d') return '1M Gain (30D)';
+    if (preset === '60d') return '2M Gain (60D)';
+    if (preset === '90d') return '3M Gain (90D)';
+    if (preset === '180d') return '6M Gain (180D)';
+    if (preset === 'ytd') return 'YTD Gain';
+  }
+  if (dateStr) {
+    try {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        const shortDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        return `Gain (since ${shortDate})`;
+      }
+    } catch (e) {}
+    return `Gain (${dateStr})`;
+  }
+  return '20D Gain';
+}
+
+function toggleExploreGainDatePicker(event) {
+  if (event) event.stopPropagation();
+  const popover = document.getElementById('popover-explore-gain-date');
+  if (!popover) return;
+  const isHidden = popover.classList.contains('hidden');
+  if (isHidden) {
+    popover.classList.remove('hidden');
+    // Ensure date picker is primed with current active date
+    const dateInput = document.getElementById('popover-gain-date-input');
+    if (dateInput) {
+      if (!state.exploreGainDate) {
+        const { dateStr } = calculateGainDateFromPreset(state.exploreGainPreset || '20d');
+        state.exploreGainDate = dateStr;
+      }
+      dateInput.value = state.exploreGainDate;
+    }
+    updateGainDaysAgoLabel();
+  } else {
+    popover.classList.add('hidden');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeExploreGainDatePicker() {
+  const popover = document.getElementById('popover-explore-gain-date');
+  if (popover) popover.classList.add('hidden');
+}
+
+function updateGainDaysAgoLabel() {
+  const lbl = document.getElementById('label-gain-cal-days-ago');
+  if (!lbl) return;
+  if (state.exploreGainPreset && state.exploreGainPreset !== 'custom') {
+    lbl.textContent = `${state.exploreGainDays}d lookback`;
+  } else if (state.exploreGainDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(state.exploreGainDate);
+    target.setHours(0, 0, 0, 0);
+    const diffMs = today.getTime() - target.getTime();
+    const calDays = Math.max(0, Math.round(diffMs / 86400000));
+    lbl.textContent = `${calDays} days ago`;
+  }
+}
+
+function setExploreGainPreset(preset) {
+  state.exploreGainPreset = preset;
+  if (preset !== 'custom') {
+    const { dateStr, daysAgo } = calculateGainDateFromPreset(preset);
+    state.exploreGainDate = dateStr;
+    state.exploreGainDays = daysAgo;
+  }
+  
+  // Sync Toolbar UI
+  const selPreset = document.getElementById('select-filter-gain-preset');
+  const inputDate = document.getElementById('input-explore-gain-date');
+  const popoverDateInput = document.getElementById('popover-gain-date-input');
+
+  if (selPreset) selPreset.value = preset;
+  if (inputDate) {
+    inputDate.value = state.exploreGainDate || '';
+    if (preset === 'custom') inputDate.classList.remove('hidden');
+    else inputDate.classList.add('hidden');
+  }
+  if (popoverDateInput && state.exploreGainDate) {
+    popoverDateInput.value = state.exploreGainDate;
+  }
+
+  // Update preset buttons active highlight
+  const popover = document.getElementById('popover-explore-gain-date');
+  if (popover) {
+    popover.querySelectorAll('button[onclick^="setExploreGainPreset"]').forEach(btn => {
+      const p = btn.getAttribute('onclick')?.match(/setExploreGainPreset\('([^']+)'\)/)?.[1];
+      if (p === preset) {
+        btn.className = 'px-1.5 py-1 bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 hover:bg-emerald-600 hover:text-white rounded text-center font-mono text-[11px] font-bold transition-colors cursor-pointer';
+      } else {
+        btn.className = 'px-1.5 py-1 bg-dark-card hover:bg-emerald-600 hover:text-white rounded border border-dark-border text-center font-mono text-[11px] text-slate-300 transition-colors cursor-pointer';
+      }
+    });
+  }
+
+  updateGainDaysAgoLabel();
+  applyExploreFilters();
+}
+
+function handleExploreGainPresetChange(preset) {
+  if (preset === 'custom') {
+    state.exploreGainPreset = 'custom';
+    const inputDate = document.getElementById('input-explore-gain-date');
+    if (inputDate) {
+      inputDate.classList.remove('hidden');
+      if (!inputDate.value) {
+        const { dateStr } = calculateGainDateFromPreset('20d');
+        inputDate.value = dateStr;
+        state.exploreGainDate = dateStr;
+      } else {
+        state.exploreGainDate = inputDate.value;
+      }
+    }
+  } else {
+    setExploreGainPreset(preset);
+  }
+}
+
+function handleExploreGainCustomDateChange(dateStr) {
+  if (!dateStr) return;
+  state.exploreGainPreset = 'custom';
+  state.exploreGainDate = dateStr;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  const diffMs = today.getTime() - target.getTime();
+  const calDays = Math.max(1, Math.round(diffMs / 86400000));
+  state.exploreGainDays = Math.max(1, Math.round(calDays * (5 / 7)));
+
+  const selPreset = document.getElementById('select-filter-gain-preset');
+  if (selPreset) selPreset.value = 'custom';
+
+  const popoverDateInput = document.getElementById('popover-gain-date-input');
+  if (popoverDateInput) popoverDateInput.value = dateStr;
+
+  updateGainDaysAgoLabel();
+  applyExploreFilters();
+}
+
+function handleExploreCustomGainDatePicked(dateStr) {
+  if (!dateStr) return;
+  state.exploreGainPreset = 'custom';
+  state.exploreGainDate = dateStr;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  const diffMs = today.getTime() - target.getTime();
+  const calDays = Math.max(1, Math.round(diffMs / 86400000));
+  state.exploreGainDays = Math.max(1, Math.round(calDays * (5 / 7)));
+
+  const selPreset = document.getElementById('select-filter-gain-preset');
+  const inputDate = document.getElementById('input-explore-gain-date');
+  if (selPreset) selPreset.value = 'custom';
+  if (inputDate) {
+    inputDate.value = dateStr;
+    inputDate.classList.remove('hidden');
+  }
+
+  updateGainDaysAgoLabel();
+  applyExploreFilters();
+}
+
 function handleExploreFilterChange() {
   const inputRsi = document.getElementById('input-filter-rsi');
   const selRvolPeriod = document.getElementById('select-filter-rvol-period');
@@ -6512,10 +6787,16 @@ function handleExploreFilterChange() {
       : `${state.exploreFilters.emaFast}/${state.exploreFilters.emaSlow} (${state.exploreFilters.crossDir !== 'all' ? state.exploreFilters.crossDir : ''}${state.exploreFilters.crossDays !== 'all' ? ' ≤' + state.exploreFilters.crossDays + 'd' : ''})`;
     lblCross.textContent = crossLabel;
   }
-  if (lbl52wh) lbl52wh.textContent = state.exploreFilters.dist52wh === 'all' ? 'All' : 'Active';
+  if (lbl52wh) {
+    if (state.exploreFilters.dist52wh === 'all') {
+      lbl52wh.textContent = state.exploreGainPreset !== 'custom' ? state.exploreGainPreset.toUpperCase() : 'Custom';
+    } else {
+      lbl52wh.textContent = 'Active';
+    }
+  }
   if (lblPivot) lblPivot.textContent = (state.exploreFilters.dailyPivot === 'all' && state.exploreFilters.weeklyPivot === 'all') ? 'All' : 'Filtered';
 
-  // Update dynamic column header
+  // Update dynamic column headers
   const thCross = document.getElementById('th-explore-ema-cross');
   if (thCross) {
     thCross.textContent = `EMA Cross (${state.exploreFilters.emaFast}/${state.exploreFilters.emaSlow}) ⇅`;
@@ -6541,6 +6822,9 @@ function resetExploreFilters() {
     dailyPivot: 'all',
     weeklyPivot: 'all'
   };
+  state.exploreGainPreset = '20d';
+  state.exploreGainDate = null;
+  state.exploreGainDays = 20;
   state.explorePage = 1;
   state.exploreSortField = 'rank';
   state.exploreSortAsc = true;
@@ -6561,6 +6845,8 @@ function resetExploreFilters() {
   const sel52wh = document.getElementById('select-filter-52wh');
   const selDailyPivot = document.getElementById('select-filter-daily-pivot');
   const selWeeklyPivot = document.getElementById('select-filter-weekly-pivot');
+  const selGainPreset = document.getElementById('select-filter-gain-preset');
+  const inputGainDate = document.getElementById('input-explore-gain-date');
 
   if (selRvolPeriod) selRvolPeriod.value = 'd20';
   if (selRvolMult) selRvolMult.value = 'all';
@@ -6572,6 +6858,11 @@ function resetExploreFilters() {
   if (sel52wh) sel52wh.value = 'all';
   if (selDailyPivot) selDailyPivot.value = 'all';
   if (selWeeklyPivot) selWeeklyPivot.value = 'all';
+  if (selGainPreset) selGainPreset.value = '20d';
+  if (inputGainDate) {
+    inputGainDate.value = '';
+    inputGainDate.classList.add('hidden');
+  }
 
   document.querySelectorAll('.explore-seg-pill').forEach(pill => {
     if (pill.dataset.exploreSeg === 'all') {
@@ -6594,18 +6885,24 @@ function resetExploreFilters() {
   if (lblRvol) lblRvol.textContent = 'All';
   if (lblEma) lblEma.textContent = 'All';
   if (lblCross) lblCross.textContent = 'All';
-  if (lbl52wh) lbl52wh.textContent = 'All';
+  if (lbl52wh) lbl52wh.textContent = '20D';
   if (lblPivot) lblPivot.textContent = 'All';
 
   const thCross = document.getElementById('th-explore-ema-cross');
   if (thCross) thCross.textContent = 'EMA Cross (10/20) ⇅';
 
+  closeExploreGainDatePicker();
   applyExploreFilters();
 }
 
 function applyExploreFilters() {
   let list = [...(state.exploreStocks || [])];
   const f = state.exploreFilters;
+
+  // Precompute custom gain for all candidate stocks based on current active gain reference
+  list.forEach(s => {
+    s._customGain = computeStockCustomGain(s, state.exploreGainDate, state.exploreGainDays);
+  });
 
   // 1. Segment Filter (All, Large/LC, Mid/MC, Small/SC, Micro/MIC, MidSmall, F&O)
   if (f.segment && f.segment !== 'all') {
@@ -6670,6 +6967,12 @@ function applyExploreFilters() {
     else if (f.dist52wh === 'within_2') list = list.filter(s => s.pctFrom52wHigh >= -2.0);
     else if (f.dist52wh === 'within_5') list = list.filter(s => s.pctFrom52wHigh >= -5.0);
     else if (f.dist52wh === 'within_10') list = list.filter(s => s.pctFrom52wHigh >= -10.0);
+    else if (f.dist52wh === 'gain_gt_0') list = list.filter(s => (s._customGain || 0) > 0);
+    else if (f.dist52wh === 'gain_gt_5') list = list.filter(s => (s._customGain || 0) >= 5);
+    else if (f.dist52wh === 'gain_gt_10') list = list.filter(s => (s._customGain || 0) >= 10);
+    else if (f.dist52wh === 'gain_gt_20') list = list.filter(s => (s._customGain || 0) >= 20);
+    else if (f.dist52wh === 'gain_lt_0') list = list.filter(s => (s._customGain || 0) < 0);
+    else if (f.dist52wh === 'gain_lt_minus5') list = list.filter(s => (s._customGain || 0) <= -5);
     else if (f.dist52wh === 'gain_20d_10') list = list.filter(s => s.gains && s.gains.d20 >= 10);
     else if (f.dist52wh === 'gain_30d_20') list = list.filter(s => s.gains && s.gains.d30 >= 20);
   }
@@ -6692,9 +6995,9 @@ function applyExploreFilters() {
     if (state.exploreSortField === 'crossDaysAgo') {
       vA = a._currentCross ? a._currentCross.daysAgo : 999;
       vB = b._currentCross ? b._currentCross.daysAgo : 999;
-    } else if (state.exploreSortField === 'gain20d') {
-      vA = a.gains ? a.gains.d20 : 0;
-      vB = b.gains ? b.gains.d20 : 0;
+    } else if (state.exploreSortField === 'customGain' || state.exploreSortField === 'gain20d') {
+      vA = a._customGain !== undefined ? a._customGain : (a.gains ? a.gains.d20 : 0);
+      vB = b._customGain !== undefined ? b._customGain : (b.gains ? b.gains.d20 : 0);
     } else if (state.exploreSortField === 'dailyPivot') {
       vA = a.dailyPivot ? a.dailyPivot.regime : '';
       vB = b.dailyPivot ? b.dailyPivot.regime : '';
@@ -6750,10 +7053,26 @@ function renderExploreTable() {
   if (btnPrev) btnPrev.disabled = state.explorePage <= 1;
   if (btnNext) btnNext.disabled = state.explorePage >= totalPages;
 
-  // Update table header text dynamically if needed
+  // Update table header dynamic labels
   const thCross = document.getElementById('th-explore-ema-cross');
   if (thCross) {
     thCross.textContent = `EMA Cross (${state.exploreFilters.emaFast}/${state.exploreFilters.emaSlow}) ⇅`;
+  }
+
+  const lblGainCol = document.getElementById('label-explore-gain-col');
+  if (lblGainCol) {
+    lblGainCol.textContent = getGainColumnTitleText();
+  }
+
+  const sortIconGain = document.getElementById('sort-icon-explore-gain');
+  if (sortIconGain) {
+    if (state.exploreSortField === 'customGain' || state.exploreSortField === 'gain20d') {
+      sortIconGain.textContent = state.exploreSortAsc ? '▲' : '▼';
+      sortIconGain.className = 'text-emerald-400 font-bold text-[10px]';
+    } else {
+      sortIconGain.textContent = '⇅';
+      sortIconGain.className = 'text-slate-400 text-[10px]';
+    }
   }
 
   if (pageStocks.length === 0) {
@@ -6811,9 +7130,10 @@ function renderExploreTable() {
     // % From 52WH
     const pct52whFormatted = stk.pctFrom52wHigh >= -0.5 ? '<span class="text-emerald-400 font-bold">🚀 52WH</span>' : `<span class="${stk.pctFrom52wHigh >= -5 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}">${stk.pctFrom52wHigh}%</span>`;
 
-    // 20D Gain
-    const gain20 = stk.gains?.d20 || 0;
-    const gain20Class = gain20 >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    // Custom Reference Date Gain
+    const customGain = stk._customGain !== undefined ? stk._customGain : (stk.gains?.d20 || 0);
+    const customGainClass = customGain >= 0 ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold';
+    const customGainSign = customGain >= 0 ? '+' : '';
 
     // Daily Pivot Badge
     let dPivotClass = 'bg-dark-card text-slate-300 border-dark-border';
@@ -6866,7 +7186,7 @@ function renderExploreTable() {
         <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${crossClass}">${crossLabel}</span>
       </td>
       <td class="py-2.5 px-3 text-right">${pct52whFormatted}</td>
-      <td class="py-2.5 px-3 text-right font-semibold ${gain20Class}">${gain20 >= 0 ? '+' : ''}${gain20}%</td>
+      <td class="py-2.5 px-3 text-right ${customGainClass}">${customGainSign}${customGain}%</td>
       <td class="py-2.5 px-3 text-center">
         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${dPivotClass}">${stk.dailyPivot?.label || '--'}</span>
       </td>
@@ -6882,11 +7202,12 @@ function renderExploreTable() {
 }
 
 function handleExploreSort(field) {
-  if (state.exploreSortField === field) {
+  const sortTarget = (field === 'gain20d') ? 'customGain' : field;
+  if (state.exploreSortField === sortTarget) {
     state.exploreSortAsc = !state.exploreSortAsc;
   } else {
-    state.exploreSortField = field;
-    state.exploreSortAsc = (field === 'symbol' || field === 'capCategory' || field === 'rank');
+    state.exploreSortField = sortTarget;
+    state.exploreSortAsc = (sortTarget === 'symbol' || sortTarget === 'capCategory' || sortTarget === 'rank');
   }
   applyExploreFilters();
 }
@@ -7211,6 +7532,12 @@ window.resetExploreFilters = resetExploreFilters;
 window.handleExploreSort = handleExploreSort;
 window.handleExplorePageChange = handleExplorePageChange;
 window.handleExplorePageSizeChange = handleExplorePageSizeChange;
+window.toggleExploreGainDatePicker = toggleExploreGainDatePicker;
+window.closeExploreGainDatePicker = closeExploreGainDatePicker;
+window.setExploreGainPreset = setExploreGainPreset;
+window.handleExploreGainPresetChange = handleExploreGainPresetChange;
+window.handleExploreGainCustomDateChange = handleExploreGainCustomDateChange;
+window.handleExploreCustomGainDatePicked = handleExploreCustomGainDatePicked;
 window.openCircuitModal = openCircuitModal;
 window.closeCircuitModal = closeCircuitModal;
 window.switchCircuitTab = switchCircuitTab;
@@ -7219,6 +7546,17 @@ window.clearSelectedCircuitFile = clearSelectedCircuitFile;
 window.submitCircuitData = submitCircuitData;
 window.loadCircuitStats = loadCircuitStats;
 window.getCircuitBadgeHtml = getCircuitBadgeHtml;
+
+// Close Gain Date Popover on Click Outside
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('popover-explore-gain-date');
+  const btn = document.getElementById('btn-explore-gain-cal');
+  if (popover && !popover.classList.contains('hidden')) {
+    if (!popover.contains(e.target) && (!btn || !btn.contains(e.target))) {
+      closeExploreGainDatePicker();
+    }
+  }
+});
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', async () => {

@@ -628,3 +628,13 @@ html:not(.dark) #global-app-tooltip {
   cursor: crosshair !important;
 }
 
+/* Date Picker Calendar Icon Contrast Polish */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(100%) saturate(300%) hue-rotate(110deg);
+  cursor: pointer;
+}
+html:not(.dark) input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  cursor: pointer;
+}
+

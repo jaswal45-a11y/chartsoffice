@@ -51,7 +51,7 @@
   </script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3.2.0">
 </head>
 <body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white transition-colors duration-200">
 
@@ -1106,9 +1106,9 @@
                 </div>
 
                 <!-- Floating Universal Global Ray Badge (When Active) -->
-                <div id="floating-global-ray-badge" class="hidden pointer-events-auto flex items-center bg-slate-900/90 backdrop-blur-md border border-amber-500/80 rounded-lg px-2 py-0.5 shadow-xl text-[10px] font-mono gap-1.5 text-amber-300 w-fit">
-                  <span class="font-bold flex items-center gap-1"><i data-lucide="crosshair" class="w-3 h-3 text-amber-400"></i> Global Ray:</span>
-                  <span id="global-ray-date-label">--</span>
+                <div id="floating-global-ray-badge" class="hidden pointer-events-auto flex items-center bg-slate-900/90 backdrop-blur-md border border-cyan-500/80 rounded-lg px-2 py-0.5 shadow-xl text-[10px] font-mono gap-1.5 text-cyan-300 w-fit">
+                  <span class="font-bold flex items-center gap-1 cursor-pointer hover:text-cyan-200" onclick="promptPickGlobalRayDate()" title="Click to pick a new date/candle on chart"><i data-lucide="crosshair" class="w-3 h-3 text-cyan-400"></i> Global Ray:</span>
+                  <span id="global-ray-date-label" class="cursor-pointer hover:underline text-white font-semibold" onclick="promptPickGlobalRayDate()" title="Click to pick a new date/candle on chart">--</span>
                   <button onclick="clearGlobalDateRay(event)" class="text-slate-400 hover:text-rose-400 cursor-pointer p-0.5 rounded hover:bg-rose-500/20" title="Clear Global Date Ray">
                     <i data-lucide="x" class="w-2.5 h-2.5"></i>
                   </button>
@@ -3029,7 +3029,7 @@
   <!-- Global Reusable Company Info Component -->
   <script src="company-info.js?v=1.0.0"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.1.4"></script>
+  <script src="app.js?v=3.2.0"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->
