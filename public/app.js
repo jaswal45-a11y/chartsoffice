@@ -280,6 +280,16 @@ const state = {
   activeDrawingTool: null, // null | 'avwap' | 'global_ray'
   lastCrosshairPrice: null, // Tracked from mouse cursor on price chart for Alt+H
   drawings: {}, // symbol -> { avwaps: [time], hlines: [price] }
+  
+  // Visual Trading Journal State
+  journal: {
+    charts: [],
+    activeFilterSetup: 'all',
+    searchQuery: '',
+    sortOrder: 'newest',
+    currentLightboxChart: null,
+    pendingScreenshotBase64: null
+  },
   globalDateRay: {
     active: false,
     anchorDate: null,
@@ -355,6 +365,12 @@ const el = {
   btnAdminConsole: document.getElementById('btn-admin-console'),
   btnOpenNotes: document.getElementById('btn-open-notes'),
   btnOpenMfDeals: document.getElementById('btn-open-mf-deals'),
+  btnOpenChartJournal: document.getElementById('btn-open-chart-journal'),
+  journalCountBadge: document.getElementById('journal-count-badge'),
+  btnSaveChartScreenshot: document.getElementById('btn-save-chart-screenshot'),
+  saveChartModal: document.getElementById('save-chart-modal'),
+  chartJournalModal: document.getElementById('chart-journal-modal'),
+  chartLightboxModal: document.getElementById('chart-lightbox-modal'),
 
   // Floating On-Chart Controls & Badges (Symbol & AVWAP & Global Ray)
   onchartStockSymbol: document.getElementById('onchart-stock-symbol'),
@@ -1638,6 +1654,7 @@ function openLineSettingsModal() {
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
 }
 
 function closeLineSettingsModal() {
@@ -2048,6 +2065,13 @@ function updateAuthUI(user) {
     el.btnOpenCircuitModal?.classList.remove('hidden');
     el.btnOpenCircuitModal?.classList.add('flex');
 
+    // Chart Journal launcher button visible to logged-in users
+    el.btnOpenChartJournal?.classList.remove('hidden');
+    el.btnOpenChartJournal?.classList.add('flex');
+    if (typeof refreshJournalBadgeCount === 'function') {
+      refreshJournalBadgeCount();
+    }
+
     // Add Screener button in Command Deck category bar
     el.btnOpenAddModalDeck?.classList.remove('hidden');
     el.btnOpenAddModalDeck?.classList.add('flex');
@@ -2084,8 +2108,13 @@ function updateAuthUI(user) {
     }
     el.btnOpenCircuitModal?.classList.add('hidden');
     el.btnOpenCircuitModal?.classList.remove('flex');
+    el.btnOpenChartJournal?.classList.add('hidden');
+    el.btnOpenChartJournal?.classList.remove('flex');
     closeCircuitModal();
     closeChangePasswordModal();
+    if (typeof closeSaveChartModal === 'function') closeSaveChartModal();
+    if (typeof closeChartJournalModal === 'function') closeChartJournalModal();
+    if (typeof closeChartLightboxModal === 'function') closeChartLightboxModal();
     el.btnAdminConsole?.classList.add('hidden');
     el.btnAdminConsole?.classList.remove('flex');
   }
@@ -6673,12 +6702,18 @@ function setupKeyboardNavigation() {
       if (e.key === 'Escape') {
         document.activeElement.blur();
         cancelActiveDrawingTool();
+        if (typeof closeSaveChartModal === 'function') closeSaveChartModal();
+        if (typeof closeChartJournalModal === 'function') closeChartJournalModal();
+        if (typeof closeChartLightboxModal === 'function') closeChartLightboxModal();
       }
       return;
     }
 
     if (e.key === 'Escape') {
       cancelActiveDrawingTool();
+      if (typeof closeSaveChartModal === 'function') closeSaveChartModal();
+      if (typeof closeChartJournalModal === 'function') closeChartJournalModal();
+      if (typeof closeChartLightboxModal === 'function') closeChartLightboxModal();
       return;
     }
 
@@ -10510,6 +10545,592 @@ function initGlobalTooltipEngine() {
   document.addEventListener('click', hideTooltip, { passive: true });
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// =============================================================
+// Visual Trading Journal (Chart Screenshot & Journal Gallery)
+// =============================================================
+
+function getSelectedStockSymbol() {
+  if (state.selectedStock) {
+    if (typeof state.selectedStock === 'string') return state.selectedStock.toUpperCase().trim();
+    if (typeof state.selectedStock === 'object' && state.selectedStock.symbol) {
+      return String(state.selectedStock.symbol).toUpperCase().trim();
+    }
+  }
+  if (state.currentStockData?.symbol) {
+    return String(state.currentStockData.symbol).toUpperCase().trim();
+  }
+  if (el.manualStockInput?.value) {
+    return String(el.manualStockInput.value).toUpperCase().trim();
+  }
+  return 'TATAMOTORS';
+}
+
+/**
+ * Capture high-resolution visual screenshot of current chart (Price + Indicators + RSI)
+ * Returns a Base64 WebP/PNG Data URL.
+ */
+function captureChartScreenshot() {
+  if (!state.charts?.main) {
+    showToast('Chart is not initialized', 'warning');
+    return null;
+  }
+
+  try {
+    // 1. Capture primary price + volume pane
+    const mainCanvas = state.charts.main.takeScreenshot();
+    if (!mainCanvas) {
+      showToast('Unable to capture chart canvas', 'error');
+      return null;
+    }
+
+    // 2. Capture RSI sub-pane if visible
+    let rsiCanvas = null;
+    const isRsiVisible = Boolean(state.toggles.rsi && state.charts.rsi && el.tvRsiPane && !el.tvRsiPane.classList.contains('hidden'));
+    if (isRsiVisible) {
+      try {
+        rsiCanvas = state.charts.rsi.takeScreenshot();
+      } catch (e) {}
+    }
+
+    // 3. Create composite off-screen canvas
+    const width = mainCanvas.width;
+    const separatorHeight = rsiCanvas ? 2 : 0;
+    const height = mainCanvas.height + (rsiCanvas ? (rsiCanvas.height + separatorHeight) : 0);
+
+    const compositeCanvas = document.createElement('canvas');
+    compositeCanvas.width = width;
+    compositeCanvas.height = height;
+    const ctx = compositeCanvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Draw dark background fallback
+    ctx.fillStyle = '#0b0f19';
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw main chart canvas
+    ctx.drawImage(mainCanvas, 0, 0);
+
+    // Draw RSI sub-pane canvas if present
+    if (rsiCanvas) {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, mainCanvas.height, width, separatorHeight);
+      ctx.drawImage(rsiCanvas, 0, mainCanvas.height + separatorHeight);
+    }
+
+    // Draw watermark badge in top-left
+    const symbol = getSelectedStockSymbol();
+    const timeframe = state.activeInterval === '1wk' ? '1W (Weekly)' : (state.activeInterval === '1h' ? '1H' : (state.activeInterval === '15m' ? '15m' : (state.activeInterval === '5m' ? '5m' : '1D (Daily)')));
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    // Watermark badge
+    const badgePadX = 14;
+    const badgePadY = 8;
+    const badgeX = 14;
+    const badgeY = 14;
+    const badgeText = `${symbol} • ${timeframe} • ${dateStr}`;
+
+    ctx.font = 'bold 12px Inter, system-ui, -apple-system, sans-serif';
+    const textMetrics = ctx.measureText(badgeText);
+    const badgeWidth = textMetrics.width + (badgePadX * 2);
+    const badgeHeight = 28;
+
+    // Badge background pill
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.lineWidth = 1;
+
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 6);
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+      ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
+    }
+
+    // Badge text
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillText(badgeText, badgeX + badgePadX, badgeY + 18);
+    ctx.restore();
+
+    // Convert to WebP (92% quality for great compression + crisp lines)
+    try {
+      return compositeCanvas.toDataURL('image/webp', 0.92);
+    } catch (e) {
+      return compositeCanvas.toDataURL('image/png');
+    }
+  } catch (err) {
+    console.error('Screenshot capture failed:', err);
+    showToast('Screenshot capture failed: ' + err.message, 'error');
+    return null;
+  }
+}
+
+/**
+ * Open Save Chart Modal with live screenshot & metadata pre-filled
+ */
+function openSaveChartModal() {
+  if (!state.user && !state.isAdmin && !state.token) {
+    showToast('Please login to save charts to your journal', 'warning');
+    openAuthModal('login');
+    return;
+  }
+
+  const screenshot = captureChartScreenshot();
+  if (!screenshot) return;
+
+  state.journal.pendingScreenshotBase64 = screenshot;
+
+  const symbol = getSelectedStockSymbol();
+  const tfLabel = state.activeInterval === '1wk' ? 'Weekly (1W)' : (state.activeInterval === '1h' ? '1 Hour' : (state.activeInterval === '15m' ? '15 Min' : (state.activeInterval === '5m' ? '5 Min' : 'Daily (1D)')));
+  const now = new Date();
+  const dateFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const symEl = document.getElementById('save-chart-symbol');
+  const tfEl = document.getElementById('save-chart-timeframe');
+  const dtEl = document.getElementById('save-chart-datetime');
+  const prevImg = document.getElementById('save-chart-preview-img');
+  const setupEl = document.getElementById('save-chart-setup');
+  const notesEl = document.getElementById('save-chart-notes');
+  const alertEl = document.getElementById('save-chart-alert');
+  const btnText = document.getElementById('save-chart-btn-text');
+  const btnSubmit = document.getElementById('btn-submit-save-chart');
+
+  if (symEl) symEl.textContent = symbol;
+  if (tfEl) tfEl.textContent = tfLabel;
+  if (dtEl) dtEl.textContent = dateFormatted;
+  if (prevImg) prevImg.src = screenshot;
+  if (setupEl) setupEl.value = 'None';
+  if (notesEl) notesEl.value = '';
+  if (alertEl) {
+    alertEl.className = 'hidden p-2.5 rounded-xl text-xs font-medium';
+    alertEl.textContent = '';
+  }
+  if (btnText) btnText.textContent = 'Save Chart';
+  if (btnSubmit) btnSubmit.disabled = false;
+
+  const modal = document.getElementById('save-chart-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    if (setupEl) setupEl.focus();
+  }
+  lucide.createIcons();
+}
+
+function closeSaveChartModal() {
+  const modal = document.getElementById('save-chart-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  state.journal.pendingScreenshotBase64 = null;
+}
+
+/**
+ * Handle submission of Save Chart form
+ */
+async function handleSaveChartSubmit(e) {
+  if (e) e.preventDefault();
+
+  if (!state.journal.pendingScreenshotBase64) {
+    showToast('No screenshot available. Please try again.', 'error');
+    return;
+  }
+
+  const btnSubmit = document.getElementById('btn-submit-save-chart');
+  const btnText = document.getElementById('save-chart-btn-text');
+  const alertEl = document.getElementById('save-chart-alert');
+  const setupEl = document.getElementById('save-chart-setup');
+  const notesEl = document.getElementById('save-chart-notes');
+
+  const symbol = getSelectedStockSymbol();
+  const timeframe = state.activeInterval === '1wk' ? '1W' : (state.activeInterval === '1h' ? '1H' : (state.activeInterval === '15m' ? '15m' : (state.activeInterval === '5m' ? '5m' : '1D')));
+  const setup = setupEl ? setupEl.value : 'None';
+  const notes = notesEl ? notesEl.value.trim() : '';
+
+  if (btnSubmit) btnSubmit.disabled = true;
+  if (btnText) btnText.textContent = 'Saving...';
+  if (alertEl) {
+    alertEl.className = 'p-2.5 rounded-xl text-xs font-medium bg-blue-500/15 border border-blue-500/30 text-blue-300';
+    alertEl.textContent = 'Uploading high-res chart to journal...';
+  }
+
+  try {
+    const res = await fetch('/api/charts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        screenshot: state.journal.pendingScreenshotBase64,
+        symbol,
+        timeframe,
+        exchange: 'NSE',
+        setup,
+        notes
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Unable to save chart. Please try again.');
+    }
+
+    showToast('Chart saved successfully to journal! 📸', 'success');
+    closeSaveChartModal();
+    refreshJournalBadgeCount();
+
+    // If journal modal is open, reload list
+    const jModal = document.getElementById('chart-journal-modal');
+    if (jModal && !jModal.classList.contains('hidden')) {
+      loadJournalCharts();
+    }
+  } catch (err) {
+    console.error('Save chart error:', err);
+    if (alertEl) {
+      alertEl.className = 'p-2.5 rounded-xl text-xs font-medium bg-rose-500/15 border border-rose-500/30 text-rose-300';
+      alertEl.textContent = err.message || 'Unable to save chart. Please try again.';
+    }
+    showToast(err.message || 'Unable to save chart', 'error');
+  } finally {
+    if (btnSubmit) btnSubmit.disabled = false;
+    if (btnText) btnText.textContent = 'Save Chart';
+  }
+}
+
+/**
+ * Open Chart Journal Gallery Modal
+ */
+function openChartJournalModal() {
+  if (!state.user && !state.isAdmin && !state.token) {
+    showToast('Please login to view your Chart Journal', 'warning');
+    openAuthModal('login');
+    return;
+  }
+
+  const modal = document.getElementById('chart-journal-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    loadJournalCharts();
+  }
+  lucide.createIcons();
+}
+
+function closeChartJournalModal() {
+  const modal = document.getElementById('chart-journal-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+let journalFilterDebounce = null;
+function handleJournalFilterChange() {
+  if (journalFilterDebounce) clearTimeout(journalFilterDebounce);
+  journalFilterDebounce = setTimeout(() => {
+    loadJournalCharts();
+  }, 250);
+}
+
+function selectJournalSetupFilter(setup) {
+  state.journal.activeFilterSetup = setup;
+
+  // Update pill styles
+  const pills = document.querySelectorAll('.journal-filter-pill');
+  pills.forEach(p => {
+    if (p.getAttribute('data-setup') === setup) {
+      p.className = 'journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-indigo-600 text-white shadow-sm cursor-pointer whitespace-nowrap transition-all';
+    } else {
+      p.className = 'journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all';
+    }
+  });
+
+  loadJournalCharts();
+}
+
+/**
+ * Fetch and render saved charts list from /api/charts
+ */
+async function loadJournalCharts() {
+  const searchInput = document.getElementById('journal-search-input');
+  const sortSelect = document.getElementById('journal-sort-select');
+  const loadingEl = document.getElementById('journal-loading-state');
+  const emptyEl = document.getElementById('journal-empty-state');
+  const gridEl = document.getElementById('journal-cards-grid');
+  const countEl = document.getElementById('journal-header-count');
+
+  const symbolQuery = searchInput ? searchInput.value.trim() : '';
+  const setupQuery = state.journal.activeFilterSetup || 'all';
+  const sortQuery = sortSelect ? sortSelect.value : 'newest';
+
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (gridEl) gridEl.innerHTML = '';
+
+  try {
+    const params = new URLSearchParams();
+    if (symbolQuery) params.append('symbol', symbolQuery);
+    if (setupQuery && setupQuery !== 'all') params.append('setup', setupQuery);
+    if (sortQuery) params.append('sort', sortQuery);
+
+    const res = await fetch(`/api/charts?${params.toString()}`, {
+      headers: getAuthHeaders()
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to load journal');
+    }
+
+    state.journal.charts = data.charts || [];
+    if (countEl) countEl.textContent = `${state.journal.charts.length} Chart${state.journal.charts.length === 1 ? '' : 's'}`;
+
+    renderJournalGrid(state.journal.charts);
+    updateJournalBadgeCount(state.journal.charts.length);
+  } catch (err) {
+    console.error('Failed to load journal:', err);
+    showToast('Failed to load chart journal: ' + err.message, 'error');
+  } finally {
+    if (loadingEl) loadingEl.classList.add('hidden');
+  }
+}
+
+function getSetupBadgeColor(setup) {
+  switch ((setup || '').toUpperCase()) {
+    case 'VCP':
+      return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+    case 'DARVAS':
+      return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+    case 'BREAKOUT':
+      return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+    case 'PULLBACK':
+      return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+    case 'REVERSAL':
+      return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+    case 'RANGE':
+      return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+    case 'BASE':
+      return 'bg-teal-500/20 text-teal-300 border-teal-500/30';
+    default:
+      return 'bg-slate-700/50 text-slate-300 border-slate-600/30';
+  }
+}
+
+/**
+ * Render Journal Cards Grid
+ */
+function renderJournalGrid(charts) {
+  const gridEl = document.getElementById('journal-cards-grid');
+  const emptyEl = document.getElementById('journal-empty-state');
+  if (!gridEl) return;
+
+  gridEl.innerHTML = '';
+
+  if (!charts || charts.length === 0) {
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  charts.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'group bg-dark-bg/80 hover:bg-dark-card border border-dark-border hover:border-indigo-500/50 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-200 flex flex-col cursor-pointer';
+    card.onclick = () => openChartLightbox(c.id);
+
+    const setupBadgeColor = getSetupBadgeColor(c.setup);
+    const dateFormatted = new Date(c.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const notesPreview = c.notes ? escapeHtml(c.notes.slice(0, 90) + (c.notes.length > 90 ? '...' : '')) : '<span class="text-slate-500 italic">No notes</span>';
+
+    card.innerHTML = `
+      <!-- Screenshot Thumbnail -->
+      <div class="relative w-full aspect-video bg-black/60 overflow-hidden border-b border-dark-border">
+        <img src="${c.screenshotUrl}" alt="${escapeHtml(c.symbol)}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        
+        <!-- Setup Tag Floating Badge -->
+        ${c.setup && c.setup !== 'None' ? `
+          <div class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold border backdrop-blur-md shadow-md ${setupBadgeColor}">
+            ${escapeHtml(c.setup)}
+          </div>
+        ` : ''}
+
+        <!-- Timeframe Floating Badge -->
+        <div class="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-black/70 text-sky-300 border border-white/10 backdrop-blur-md">
+          ${escapeHtml(c.timeframe || '1D')}
+        </div>
+      </div>
+
+      <!-- Card Metadata Body -->
+      <div class="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
+        <div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-white font-mono text-sm tracking-tight">${escapeHtml(c.symbol)}</span>
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">(${escapeHtml(c.exchange || 'NSE')})</span>
+            </div>
+            <span class="text-[10px] text-slate-400">${dateFormatted}</span>
+          </div>
+
+          <div class="text-[11px] text-slate-300 leading-snug mt-2 line-clamp-2">
+            ${notesPreview}
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="pt-2 border-t border-dark-border/60 flex items-center justify-between text-[11px] text-indigo-400 group-hover:text-indigo-300 font-semibold">
+          <span class="flex items-center gap-1"><i data-lucide="zoom-in" class="w-3.5 h-3.5"></i> View Details</span>
+          <button onclick="event.stopPropagation(); deleteJournalChart('${c.id}')" class="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors" title="Delete Saved Chart">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    gridEl.appendChild(card);
+  });
+
+  lucide.createIcons();
+}
+
+/**
+ * Open Lightbox Detail Viewer for a single saved chart
+ */
+function openChartLightbox(chartId) {
+  const chart = state.journal.charts.find(c => c.id === chartId);
+  if (!chart) return;
+
+  state.journal.currentLightboxChart = chart;
+
+  const symEl = document.getElementById('lightbox-symbol');
+  const exEl = document.getElementById('lightbox-exchange');
+  const tfEl = document.getElementById('lightbox-timeframe');
+  const setupEl = document.getElementById('lightbox-setup');
+  const dtEl = document.getElementById('lightbox-datetime');
+  const imgEl = document.getElementById('lightbox-image');
+  const notesEl = document.getElementById('lightbox-notes');
+  const extLink = document.getElementById('lightbox-open-external');
+
+  if (symEl) symEl.textContent = chart.symbol;
+  if (exEl) exEl.textContent = chart.exchange || 'NSE';
+  if (tfEl) tfEl.textContent = chart.timeframe || '1D';
+
+  if (setupEl) {
+    if (chart.setup && chart.setup !== 'None') {
+      setupEl.textContent = chart.setup;
+      setupEl.className = `px-2 py-0.5 rounded text-[10px] font-semibold border ${getSetupBadgeColor(chart.setup)}`;
+      setupEl.classList.remove('hidden');
+    } else {
+      setupEl.classList.add('hidden');
+    }
+  }
+
+  const dateFormatted = new Date(chart.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(chart.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  if (dtEl) dtEl.textContent = dateFormatted;
+
+  if (imgEl) imgEl.src = chart.screenshotUrl;
+  if (extLink) extLink.href = chart.screenshotUrl;
+  if (notesEl) notesEl.textContent = chart.notes || 'No notes attached to this chart record.';
+
+  const modal = document.getElementById('chart-lightbox-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  lucide.createIcons();
+}
+
+function closeChartLightboxModal() {
+  const modal = document.getElementById('chart-lightbox-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  state.journal.currentLightboxChart = null;
+}
+
+function handleDeleteCurrentLightboxChart() {
+  if (!state.journal.currentLightboxChart) return;
+  const chartId = state.journal.currentLightboxChart.id;
+  closeChartLightboxModal();
+  deleteJournalChart(chartId);
+}
+
+/**
+ * Delete a chart from the journal (with confirmation)
+ */
+async function deleteJournalChart(chartId) {
+  if (!confirm('Are you sure you want to delete this saved chart from your journal? This will also remove the image from Cloudinary.')) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/charts/${chartId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to delete chart');
+    }
+
+    showToast('Chart deleted successfully', 'info');
+    state.journal.charts = state.journal.charts.filter(c => c.id !== chartId);
+    renderJournalGrid(state.journal.charts);
+    updateJournalBadgeCount(state.journal.charts.length);
+
+    const countEl = document.getElementById('journal-header-count');
+    if (countEl) countEl.textContent = `${state.journal.charts.length} Chart${state.journal.charts.length === 1 ? '' : 's'}`;
+  } catch (err) {
+    console.error('Delete chart error:', err);
+    showToast('Failed to delete chart: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Refresh badge counter in top header
+ */
+async function refreshJournalBadgeCount() {
+  if (!state.user && !state.isAdmin && !state.token) return;
+  try {
+    const res = await fetch('/api/charts', {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (res.ok && data.success && Array.isArray(data.charts)) {
+      updateJournalBadgeCount(data.charts.length);
+    }
+  } catch (e) {}
+}
+
+function updateJournalBadgeCount(count) {
+  const badge = document.getElementById('journal-count-badge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
 window.initGlobalTooltipEngine = initGlobalTooltipEngine;
 window.handleToggleGlobalDateRay = handleToggleGlobalDateRay;
 window.handleGlobalRayColorChange = handleGlobalRayColorChange;
@@ -10518,6 +11139,21 @@ window.promptPickGlobalRayDate = promptPickGlobalRayDate;
 window.updateWatchlistsTabBadge = updateWatchlistsTabBadge;
 window.toggleMeasureTool = toggleMeasureTool;
 window.clearChartMeasurement = clearChartMeasurement;
+
+// Visual Trading Journal Window Exports
+window.openSaveChartModal = openSaveChartModal;
+window.closeSaveChartModal = closeSaveChartModal;
+window.handleSaveChartSubmit = handleSaveChartSubmit;
+window.openChartJournalModal = openChartJournalModal;
+window.closeChartJournalModal = closeChartJournalModal;
+window.handleJournalFilterChange = handleJournalFilterChange;
+window.selectJournalSetupFilter = selectJournalSetupFilter;
+window.loadJournalCharts = loadJournalCharts;
+window.openChartLightbox = openChartLightbox;
+window.closeChartLightboxModal = closeChartLightboxModal;
+window.handleDeleteCurrentLightboxChart = handleDeleteCurrentLightboxChart;
+window.deleteJournalChart = deleteJournalChart;
+window.refreshJournalBadgeCount = refreshJournalBadgeCount;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);

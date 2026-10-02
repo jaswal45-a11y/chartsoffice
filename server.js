@@ -49,6 +49,7 @@ const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
 const COMPANY_METADATA_FILE = path.join(__dirname, 'data', 'company_metadata.json');
 const PRICE_BANDS_FILE = path.join(__dirname, 'data', 'price_bands.json');
 const GUEST_PERMISSIONS_FILE = path.join(__dirname, 'data', 'guest_permissions.json');
+const SAVED_CHARTS_FILE = path.join(__dirname, 'data', 'saved_charts.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 function sanitizeDhanValue(val) {
@@ -681,6 +682,7 @@ async function initDatabase() {
   memoryScreeners = loadFileScreeners();
   memoryUsers = loadFileUsers();
   memoryConfig = loadFileConfig();
+  memorySavedCharts = loadFileSavedCharts();
 
   if (!MONGO_CONFIG.uri || !MongoClient) {
     if (!MONGO_CONFIG.uri) {
@@ -900,6 +902,32 @@ async function syncMongoInitialData() {
       console.log(`[MongoDB] 📥 Loaded ${memoryCompanyMetadata.size} company metadata profiles from MongoDB Atlas.`);
     }
 
+    // 6. Saved Charts Collection
+    const savedChartsCol = db.collection('saved_charts');
+    try {
+      await savedChartsCol.createIndex({ userId: 1, createdAt: -1 });
+      await savedChartsCol.createIndex({ userId: 1, symbol: 1 });
+    } catch (idxErr) {}
+
+    const savedChartsCount = await savedChartsCol.countDocuments();
+    if (savedChartsCount === 0) {
+      if (memorySavedCharts && memorySavedCharts.length > 0) {
+        console.log('[MongoDB] 🌱 Seeding initial saved charts into MongoDB...');
+        const cleanCharts = memorySavedCharts.map(c => {
+          const { _id, ...rest } = c;
+          return { ...rest, id: rest.id || _id };
+        });
+        await savedChartsCol.insertMany(cleanCharts);
+      }
+    } else {
+      const dbSavedCharts = await savedChartsCol.find({}).sort({ createdAt: -1 }).toArray();
+      memorySavedCharts = dbSavedCharts.map(c => {
+        const { _id, ...rest } = c;
+        return { ...rest, id: rest.id || String(_id) };
+      });
+      console.log(`[MongoDB] 📥 Loaded ${memorySavedCharts.length} saved charts from MongoDB Atlas.`);
+    }
+
   } catch (err) {
     console.error('[MongoDB] Error during initial data sync:', err.message);
   }
@@ -1035,6 +1063,192 @@ function saveSystemConfig(cfg) {
     const dir = path.dirname(CONFIG_FILE);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
+  } catch (err) {}
+
+  return true;
+}
+
+// -------------------------------------------------------------
+// Cloudinary & Saved Chart Journal Persistence Layer
+// -------------------------------------------------------------
+let cloudinary = null;
+try {
+  cloudinary = require('cloudinary').v2;
+} catch (e) {
+  console.warn('[Cloudinary] Module not found:', e.message);
+}
+
+// Direct Fallback Configuration (You can put credentials here directly or via .env / data/config.json)
+const CLOUDINARY_CONFIG = {
+  cloudName: '', // e.g. 'dxyz123ab'
+  apiKey: '',    // e.g. '123456789012345'
+  apiSecret: ''  // e.g. 'aBcdEFghIjkLMNopQ_RstU-VwxY'
+};
+
+function getCloudinaryCredentials() {
+  let cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_NAME || CLOUDINARY_CONFIG.cloudName || '';
+  let apiKey = process.env.CLOUDINARY_API_KEY || CLOUDINARY_CONFIG.apiKey || '';
+  let apiSecret = process.env.CLOUDINARY_API_SECRET || CLOUDINARY_CONFIG.apiSecret || '';
+
+  // Fallback check in data/config.json
+  if (!cloudName || !apiKey || !apiSecret) {
+    try {
+      if (fs.existsSync(CONFIG_FILE)) {
+        const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8') || '{}');
+        if (!cloudName) cloudName = cfg.cloudinaryCloudName || cfg.CLOUDINARY_CLOUD_NAME || '';
+        if (!apiKey) apiKey = cfg.cloudinaryApiKey || cfg.CLOUDINARY_API_KEY || '';
+        if (!apiSecret) apiSecret = cfg.cloudinaryApiSecret || cfg.CLOUDINARY_API_SECRET || '';
+      }
+    } catch (e) {}
+  }
+
+  return {
+    cloudName: String(cloudName).trim(),
+    apiKey: String(apiKey).trim(),
+    apiSecret: String(apiSecret).trim()
+  };
+}
+
+function isCloudinaryConfigured() {
+  const { cloudName, apiKey, apiSecret } = getCloudinaryCredentials();
+  return Boolean(cloudName && apiKey && apiSecret);
+}
+
+function getCloudinaryInstance() {
+  if (!cloudinary) return null;
+  const { cloudName, apiKey, apiSecret } = getCloudinaryCredentials();
+  if (!cloudName || !apiKey || !apiSecret) return null;
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    secure: true
+  });
+  return cloudinary;
+}
+
+async function uploadScreenshotToCloudinary({ base64Data, userId, symbol }) {
+  const cld = getCloudinaryInstance();
+  if (!cld) {
+    throw new Error('Cloudinary credentials missing. Please configure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env');
+  }
+
+  const cleanUserId = String(userId || 'anonymous').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cleanSymbol = String(symbol || 'CHART').toUpperCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+  const now = new Date();
+  const year = String(now.getUTCFullYear());
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+
+  const folder = `chartsoffice/charts/${cleanUserId}/${cleanSymbol}/${year}/${month}`;
+  const publicId = `chart_${cleanSymbol}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+
+  const result = await cld.uploader.upload(base64Data, {
+    folder: folder,
+    public_id: publicId,
+    resource_type: 'image',
+    format: 'webp',
+    transformation: [{ quality: 'auto:good' }]
+  });
+
+  return {
+    url: result.secure_url || result.url,
+    publicId: result.public_id
+  };
+}
+
+async function deleteCloudinaryAsset(publicId) {
+  const cld = getCloudinaryInstance();
+  if (!cld || !publicId) return;
+  try {
+    await cld.uploader.destroy(publicId, { resource_type: 'image' });
+  } catch (err) {
+    console.warn(`[Cloudinary] Failed to delete asset ${publicId}:`, err.message);
+  }
+}
+
+// In-memory cache for saved charts
+let memorySavedCharts = null;
+
+function loadFileSavedCharts() {
+  try {
+    if (!fs.existsSync(SAVED_CHARTS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(SAVED_CHARTS_FILE, 'utf8') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function readSavedCharts(userId = null) {
+  if (memorySavedCharts === null) {
+    memorySavedCharts = loadFileSavedCharts();
+  }
+  if (!userId) return memorySavedCharts;
+  return memorySavedCharts.filter(c => c && (c.userId === userId || String(c.userId).toLowerCase() === String(userId).toLowerCase()));
+}
+
+async function saveSavedChartRecord(chartDoc) {
+  if (memorySavedCharts === null) {
+    memorySavedCharts = loadFileSavedCharts();
+  }
+
+  // Prepend new record so newest is first in memory
+  const existingIdx = memorySavedCharts.findIndex(c => c.id === chartDoc.id);
+  if (existingIdx !== -1) {
+    memorySavedCharts[existingIdx] = chartDoc;
+  } else {
+    memorySavedCharts.unshift(chartDoc);
+  }
+
+  // 1. Asynchronous write to MongoDB
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    try {
+      const col = MONGO_CONFIG.db.collection('saved_charts');
+      const { _id, ...cleanDoc } = chartDoc;
+      await col.updateOne({ id: cleanDoc.id }, { $set: cleanDoc }, { upsert: true });
+    } catch (err) {
+      console.error('[MongoDB] Error saving chart record:', err.message);
+    }
+  }
+
+  // 2. Local file backup
+  try {
+    const dir = path.dirname(SAVED_CHARTS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(SAVED_CHARTS_FILE, JSON.stringify(memorySavedCharts, null, 2), 'utf8');
+  } catch (err) {}
+
+  return chartDoc;
+}
+
+async function deleteSavedChartRecord(chartId, userId, isAdmin = false) {
+  if (memorySavedCharts === null) {
+    memorySavedCharts = loadFileSavedCharts();
+  }
+
+  const chart = memorySavedCharts.find(c => c.id === chartId);
+  if (!chart) return false;
+
+  if (!isAdmin && chart.userId !== userId && String(chart.userId).toLowerCase() !== String(userId).toLowerCase()) {
+    throw new Error('Unauthorized to delete this chart');
+  }
+
+  // Remove from memory
+  memorySavedCharts = memorySavedCharts.filter(c => c.id !== chartId);
+
+  // 1. Delete from MongoDB
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    try {
+      const col = MONGO_CONFIG.db.collection('saved_charts');
+      await col.deleteOne({ id: chartId });
+    } catch (err) {
+      console.error('[MongoDB] Error deleting chart record:', err.message);
+    }
+  }
+
+  // 2. Local file backup
+  try {
+    fs.writeFileSync(SAVED_CHARTS_FILE, JSON.stringify(memorySavedCharts, null, 2), 'utf8');
   } catch (err) {}
 
   return true;
@@ -4461,12 +4675,12 @@ async function scanSsRvol(scope = 'current', stockList = [], lookback = 20, inte
 }
 
 // Parse request JSON body helper
-function parseJsonBody(req) {
+function parseJsonBody(req, limitBytes = 15 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', chunk => {
       body += chunk;
-      if (body.length > 2 * 1024 * 1024) { // 2MB limit
+      if (body.length > limitBytes) {
         reject(new Error('Request entity too large'));
       }
     });
@@ -7787,6 +8001,165 @@ const server = http.createServer(async (req, res) => {
           message: healthy ? 'Dhan API credentials verified and active! 🟢' : `Credentials saved, but notice: ${lastDhanErrorMsg}`,
           dhanActive: healthy,
           dhanMessage: lastDhanErrorMsg || 'Active'
+        });
+      }
+
+      // -------------------------------------------------------------
+      // 14. Visual Trading Journal (Chart Screenshot) APIs
+      // -------------------------------------------------------------
+
+      // 14a. POST /api/charts - Save Chart Screenshot & Journal Entry
+      if (pathname === '/api/charts' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Login required to save charts to journal' });
+        }
+
+        try {
+          const body = await parseJsonBody(req);
+          const { screenshot, symbol, timeframe, exchange, setup, notes } = body;
+
+          if (!screenshot || typeof screenshot !== 'string' || !screenshot.startsWith('data:image/')) {
+            return sendJson(res, 400, { success: false, error: 'Valid chart screenshot image is required' });
+          }
+
+          if (!symbol) {
+            return sendJson(res, 400, { success: false, error: 'Stock symbol is required' });
+          }
+
+          const userId = authUser.userId || authUser.id || authUser.username;
+          const cleanSymbol = String(symbol).toUpperCase().trim();
+          const cleanTimeframe = String(timeframe || '1D').trim();
+          const cleanExchange = String(exchange || 'NSE').toUpperCase().trim();
+          const cleanSetup = String(setup || 'None').trim();
+          const cleanNotes = typeof notes === 'string' ? notes.trim() : '';
+
+          // 1. Upload screenshot to Cloudinary
+          let uploadResult = null;
+          try {
+            uploadResult = await uploadScreenshotToCloudinary({
+              base64Data: screenshot,
+              userId,
+              symbol: cleanSymbol
+            });
+          } catch (uploadErr) {
+            console.error('[Cloudinary Upload Error]:', uploadErr.message);
+            return sendJson(res, 500, {
+              success: false,
+              error: isCloudinaryConfigured() 
+                ? 'Failed to upload screenshot to Cloudinary. Please try again.' 
+                : 'Cloudinary storage is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env file.'
+            });
+          }
+
+          // 2. Create metadata record
+          const chartRecord = {
+            id: 'chart_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+            userId,
+            username: authUser.username,
+            symbol: cleanSymbol,
+            exchange: cleanExchange,
+            timeframe: cleanTimeframe,
+            screenshotUrl: uploadResult.url,
+            cloudinaryPublicId: uploadResult.publicId,
+            setup: cleanSetup,
+            notes: cleanNotes,
+            createdAt: new Date().toISOString()
+          };
+
+          // 3. Save to MongoDB & Local JSON storage
+          try {
+            await saveSavedChartRecord(chartRecord);
+          } catch (dbErr) {
+            console.error('[Database Save Error]:', dbErr.message);
+            // Cleanup orphaned Cloudinary asset if DB write fails
+            if (uploadResult && uploadResult.publicId) {
+              await deleteCloudinaryAsset(uploadResult.publicId);
+            }
+            return sendJson(res, 500, { success: false, error: 'Failed to save chart record to database' });
+          }
+
+          return sendJson(res, 201, {
+            success: true,
+            message: 'Chart saved successfully to journal',
+            chart: chartRecord
+          });
+        } catch (err) {
+          console.error('Error saving chart:', err);
+          return sendJson(res, 500, { success: false, error: 'Internal error saving chart' });
+        }
+      }
+
+      // 14b. GET /api/charts - Fetch Current User's Saved Charts
+      if (pathname === '/api/charts' && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Login required to view chart journal' });
+        }
+
+        try {
+          const userId = authUser.userId || authUser.id || authUser.username;
+          let charts = readSavedCharts(userId);
+
+          // Filtering by symbol if query present
+          const querySymbol = parsedUrl.query.symbol ? String(parsedUrl.query.symbol).toUpperCase().trim() : '';
+          if (querySymbol) {
+            charts = charts.filter(c => c && c.symbol && c.symbol.toUpperCase().includes(querySymbol));
+          }
+
+          // Filtering by setup tag if query present
+          const querySetup = parsedUrl.query.setup ? String(parsedUrl.query.setup).trim() : '';
+          if (querySetup && querySetup.toLowerCase() !== 'all') {
+            charts = charts.filter(c => c && c.setup && c.setup.toLowerCase() === querySetup.toLowerCase());
+          }
+
+          // Sorting
+          const sortOrder = parsedUrl.query.sort === 'oldest' ? 'oldest' : 'newest';
+          charts.sort((a, b) => {
+            const timeA = new Date(a.createdAt || 0).getTime();
+            const timeB = new Date(b.createdAt || 0).getTime();
+            return sortOrder === 'oldest' ? (timeA - timeB) : (timeB - timeA);
+          });
+
+          return sendJson(res, 200, {
+            success: true,
+            count: charts.length,
+            charts
+          });
+        } catch (err) {
+          console.error('Error fetching saved charts:', err);
+          return sendJson(res, 500, { success: false, error: 'Failed to fetch saved charts' });
+        }
+      }
+
+      // 14c. DELETE /api/charts/:id - Delete a Saved Chart
+      const deleteChartMatch = pathname.match(/^\/api\/charts\/([a-zA-Z0-9_\-]+)$/);
+      if (deleteChartMatch && method === 'DELETE') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Login required to delete saved charts' });
+        }
+
+        const chartId = deleteChartMatch[1];
+        const userId = authUser.userId || authUser.id || authUser.username;
+        const allUserCharts = readSavedCharts(authUser.role === 'admin' ? null : userId);
+        const chartToDelete = allUserCharts.find(c => c.id === chartId);
+
+        if (!chartToDelete) {
+          return sendJson(res, 404, { success: false, error: 'Chart not found or unauthorized' });
+        }
+
+        // Delete from Cloudinary
+        if (chartToDelete.cloudinaryPublicId) {
+          await deleteCloudinaryAsset(chartToDelete.cloudinaryPublicId);
+        }
+
+        // Delete from MongoDB & memory
+        await deleteSavedChartRecord(chartId, userId, authUser.role === 'admin');
+
+        return sendJson(res, 200, {
+          success: true,
+          message: 'Chart deleted successfully'
         });
       }
 

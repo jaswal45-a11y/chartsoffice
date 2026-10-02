@@ -2637,6 +2637,7 @@ function openLineSettingsModal() {
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
 }
 
 function closeLineSettingsModal() {

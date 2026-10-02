@@ -121,6 +121,13 @@
           <span>Notes</span>
         </button>
 
+        <!-- Chart Journal Launcher Button (Visible only to Registered Users) -->
+        <button id="btn-open-chart-journal" onclick="openChartJournalModal()" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Open Visual Trading Journal (Saved Chart Screenshots & Trade Setups)">
+          <i data-lucide="camera" class="w-4 h-4 text-indigo-400"></i>
+          <span>Journal</span>
+          <span id="journal-count-badge" class="hidden px-1.5 py-0.2 text-[10px] rounded-full bg-indigo-500/30 text-indigo-200 font-bold">0</span>
+        </button>
+
         <!-- Mutual Fund Bulk & Block Deals Launcher Tile (Visible only to Registered Users) -->
         <button id="btn-open-mf-deals" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
           <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
@@ -1030,8 +1037,14 @@
             </div>
           </div>
 
-          <!-- Right: Measure Tool, Line Customizer, Toolbar Next/Prev Capsule & Watchlist Action -->
+          <!-- Right: Save Chart, Measure Tool, Line Customizer, Toolbar Next/Prev Capsule & Watchlist Action -->
           <div class="flex items-center gap-1.5 flex-shrink-0">
+            <!-- Save Chart Screenshot to Journal Button -->
+            <button id="btn-save-chart-screenshot" onclick="openSaveChartModal()" class="p-1 px-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm" title="📸 Save Chart: Capture visual chart screenshot and save to Trading Journal">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+              <span class="text-[10px] hidden sm:inline">Save Chart</span>
+            </button>
+
             <!-- Measure Tool Button (Ruler Icon) -->
             <button id="btn-measure-tool" onclick="toggleMeasureTool()" class="p-1 px-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm" title="Measure Tool (or Shift+Drag): Measure % gain/drop, price difference, and bar count between any two points on chart">
               <i data-lucide="ruler" class="w-3.5 h-3.5"></i>
@@ -1122,13 +1135,78 @@
                   <span id="badge-vol-ma-label" class="text-amber-400 font-medium">Avg:</span>
                   <strong id="vol-avg-live-badge" class="text-amber-300">--</strong>
                   <span id="badge-vi-divider" class="hidden text-slate-600">|</span>
-                  <span id="badge-vi-pp-wrap" class="hidden text-sky-400 font-medium">PP: <strong id="vi-pp-badge" class="text-sky-300">--</strong></span>
-                  <span id="badge-vi-bs-wrap" class="hidden text-purple-400 font-medium">BS: <strong id="vi-bs-badge" class="text-purple-300">--</strong></span>
-                  <span id="badge-vi-ud-wrap" class="hidden text-amber-400 font-medium">U/D: <strong id="vi-ud-badge" class="text-amber-300">--</strong></span>
-                  <span id="badge-vi-rvol-wrap" class="hidden text-teal-400 font-medium">RVol: <strong id="vi-rvol-badge" class="text-teal-300">--</strong></span>
-                  <span id="vi-signals-badge" class="hidden px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono"></span>
+                  <span id="badge-vi-pp-wrap" class="hidden text-sky-400 font-medium cursor-help" title="Pocket Pivot (PP): Count of Up days where Volume > highest down-day volume of the past 10 sessions (Cyan/Sky Blue Bar)">PP: <strong id="vi-pp-badge" class="text-sky-300">--</strong></span>
+                  <span id="badge-vi-bs-wrap" class="hidden text-purple-400 font-medium cursor-help" title="Bull Snort (BS): Count of Up candles with monster volume surge >= 3.0x 50-VolMA (Purple Marker below candle)">BS: <strong id="vi-bs-badge" class="text-purple-300">--</strong></span>
+                  <span id="badge-vi-ud-wrap" class="hidden text-amber-400 font-medium cursor-help" title="Up/Down Volume Ratio over past 20 bars (>1.2 Bullish accumulation, <0.8 Bearish distribution)">U/D: <strong id="vi-ud-badge" class="text-amber-300">--</strong></span>
+                  <span id="badge-vi-rvol-wrap" class="hidden text-teal-400 font-medium cursor-help" title="Relative Volume (RVol): Ratio of current volume to the 50-day Volume MA">RVol: <strong id="vi-rvol-badge" class="text-teal-300">--</strong></span>
+                  <span id="vi-signals-badge" class="hidden px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono" title="Active Volume Signals on current bar"></span>
                   <span class="text-slate-600">|</span>
                   <strong id="candle-chg-badge" class="font-bold text-emerald-400">--</strong>
+
+                  <!-- Volume Intelligence Color Tooltip / Guide Trigger -->
+                  <div class="relative group inline-flex items-center ml-0.5">
+                    <button type="button" class="cursor-pointer text-slate-400 hover:text-amber-400 p-0.5 rounded hover:bg-slate-800 transition-colors flex items-center" title="Volume Intelligence Color Guide & Priority Rules">
+                      <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-400/90"></i>
+                    </button>
+                    <!-- Popup Tooltip Card on Hover -->
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block z-50 w-80 p-3 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-xl shadow-2xl text-[11px] font-sans text-slate-200 pointer-events-none">
+                      <div class="font-bold text-xs text-white pb-1.5 mb-2 border-b border-slate-700/80 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5 text-amber-400">
+                          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                          <span>Volume Intelligence Colors</span>
+                        </span>
+                        <span class="text-[10px] font-mono text-slate-400">Rules & Priority</span>
+                      </div>
+                      <div class="space-y-2 text-left">
+                        <div class="flex items-start gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full bg-sky-400 mt-0.5 flex-shrink-0 shadow-sm shadow-sky-500/50"></span>
+                          <div>
+                            <strong class="text-sky-300 font-semibold">Cyan / Sky Blue: Pocket Pivot (PP)</strong>
+                            <p class="text-[10px] text-slate-400 leading-tight">Up day volume strictly &gt; highest down-day volume in last 10 days.</p>
+                          </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-0.5 flex-shrink-0 shadow-sm shadow-emerald-500/50"></span>
+                          <div>
+                            <strong class="text-emerald-400 font-semibold">Bright Green: Super Up Vol</strong>
+                            <p class="text-[10px] text-slate-400 leading-tight">Up day with volume &gt; 50-day Volume MA (institutional buying).</p>
+                          </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full bg-purple-500 mt-0.5 flex-shrink-0 shadow-sm shadow-purple-500/50"></span>
+                          <div>
+                            <strong class="text-purple-300 font-semibold">Purple Marker: Bull Snort (BS)</strong>
+                            <p class="text-[10px] text-slate-400 leading-tight">Extreme surge &ge; 3.0x 50-VolMA on Up candle (Marker below candle).</p>
+                          </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mt-0.5 flex-shrink-0 shadow-sm shadow-rose-500/50"></span>
+                          <div>
+                            <strong class="text-rose-400 font-semibold">Bright Red: Super Down Vol</strong>
+                            <p class="text-[10px] text-slate-400 leading-tight">Down day with volume &gt; 50-day Volume MA (institutional selling).</p>
+                          </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 mt-0.5 flex-shrink-0 shadow-sm shadow-amber-500/50"></span>
+                          <div>
+                            <strong class="text-amber-300 font-semibold">Amber / Gold: Dry Volume (DV)</strong>
+                            <p class="text-[10px] text-slate-400 leading-tight">Supply Dry-up: Volume contracted to &le; 20% of 50-VolMA.</p>
+                          </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full bg-slate-500 mt-0.5 flex-shrink-0"></span>
+                          <div>
+                            <strong class="text-slate-300 font-semibold">Slate Grey: Normal Volume</strong>
+                            <p class="text-[10px] text-slate-400 leading-tight">Sub-average volume &le; 50-VolMA (neutral market noise).</p>
+                          </div>
+                        </div>
+                        <div class="flex items-start gap-2 pt-1 border-t border-slate-800 text-[10px] text-slate-400">
+                          <span class="font-mono font-bold text-slate-200">Q / Y:</span>
+                          <span>Lowest volume in Quarter (63 bars) / Year (252 bars).</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- On-Chart 2% & 5% Circuit Limit Badge (Below Vol & Avg Vol) -->
@@ -2797,34 +2875,50 @@
           <!-- Color Customization Row for Vol Intel -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-2.5">
             <!-- Bull Snort Marker Color -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Bull Snort (BS): Extreme volume surge >= 3.0x 50-VolMA on Up candle (Marker below candle)">
               <span class="text-[11px] font-semibold text-purple-300">Bull Snort (Marker)</span>
               <input type="color" id="setting-color-vi-bs" value="#a855f7" class="indicator-color-picker" onchange="updateLineStyle('viBs')">
             </div>
             <!-- Pocket Pivot Color -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Pocket Pivot (PP): Up day volume > highest down-day volume in previous 10 days (Cyan/Sky blue bar)">
               <span class="text-[11px] font-semibold text-sky-300">Pocket Pivot (Bar)</span>
               <input type="color" id="setting-color-vi-pp" value="#0ea5e9" class="indicator-color-picker" onchange="updateLineStyle('viPp')">
             </div>
             <!-- Dry Volume Color (<= 20% 50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Dry Volume (DV): Volume contracted to <= 20% of 50-VolMA (Amber/Gold bar)">
               <span class="text-[11px] font-semibold text-amber-300">Dry Vol (&le;20%)</span>
               <input type="color" id="setting-color-vi-dv" value="#f59e0b" class="indicator-color-picker" onchange="updateLineStyle('viDv')">
             </div>
             <!-- Up Day (>50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Super Up Volume: Up day with volume > 50-day Volume MA (Bright Green bar)">
               <span class="text-[11px] font-semibold text-emerald-400">Up Day (&gt;50-SMA)</span>
               <input type="color" id="setting-color-vi-sup" value="#10b981" class="indicator-color-picker" onchange="updateLineStyle('viSup')">
             </div>
             <!-- Down Day (>50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Super Down Volume: Down day with volume > 50-day Volume MA (Bright Red bar)">
               <span class="text-[11px] font-semibold text-rose-400">Down Day (&gt;50-SMA)</span>
               <input type="color" id="setting-color-vi-sdn" value="#ef4444" class="indicator-color-picker" onchange="updateLineStyle('viSdn')">
             </div>
             <!-- Normal Volume (<=50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Normal Volume: Sub-average volume <= 50-day Volume MA (Slate Grey bar)">
               <span class="text-[11px] font-semibold text-slate-300">Normal (&le;50-SMA)</span>
               <input type="color" id="setting-color-vi-grey" value="#64748b" class="indicator-color-picker" onchange="updateLineStyle('viGrey')">
+            </div>
+          </div>
+
+          <!-- Color Rules & Priority Callout Box -->
+          <div class="mt-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[11px] space-y-1.5 text-slate-300">
+            <div class="font-bold text-xs text-amber-400 flex items-center gap-1.5">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              <span>Volume Intelligence Color Selection & Priority:</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-slate-400">
+              <div><span class="text-sky-400 font-semibold">1. Cyan / Sky Blue (PP):</span> Up day with Volume &gt; max down-day volume of past 10 sessions.</div>
+              <div><span class="text-emerald-400 font-semibold">2. Bright Green (Up):</span> Up day with Volume &gt; 50-day Volume MA.</div>
+              <div><span class="text-purple-400 font-semibold">3. Purple Marker (BS):</span> Monster Volume explosion &ge; 3.0x 50-VolMA on Up candle.</div>
+              <div><span class="text-rose-400 font-semibold">4. Bright Red (Down):</span> Down day with Volume &gt; 50-day Volume MA.</div>
+              <div><span class="text-amber-400 font-semibold">5. Amber / Gold (Dry):</span> Volume contracted to &le; 20% of 50-VolMA.</div>
+              <div><span class="text-slate-400 font-semibold">6. Slate Grey (Normal):</span> Sub-average Volume &le; 50-VolMA.</div>
             </div>
           </div>
         </div>
@@ -3033,6 +3127,232 @@
         </div>
 
       </form>
+    </div>
+  </div>
+
+  <!-- 1. Save Chart Screenshot Dialog Modal -->
+  <div id="save-chart-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/60">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              Save Chart to Journal
+            </h3>
+            <p class="text-[11px] text-slate-400">Visual trading screenshot with metadata</p>
+          </div>
+        </div>
+        <button onclick="closeSaveChartModal()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-dark-accent transition-colors cursor-pointer" title="Close Modal">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <form id="save-chart-form" onsubmit="handleSaveChartSubmit(event)" class="p-4 flex flex-col gap-3.5 text-xs">
+        
+        <!-- Error & Alert Banner -->
+        <div id="save-chart-alert" class="hidden p-2.5 rounded-xl text-xs font-medium"></div>
+
+        <!-- Automatic Metadata Badges Row -->
+        <div class="grid grid-cols-3 gap-2 bg-dark-bg/60 border border-dark-border/80 rounded-xl p-2.5">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-slate-400 font-medium">Symbol</span>
+            <span id="save-chart-symbol" class="font-bold text-white text-xs font-mono">TATAMOTORS</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] text-slate-400 font-medium">Timeframe</span>
+            <span id="save-chart-timeframe" class="font-bold text-sky-400 text-xs">Daily (1D)</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] text-slate-400 font-medium">Date & Time</span>
+            <span id="save-chart-datetime" class="font-medium text-slate-300 text-[11px]">30 Sep 2026, 3:15 PM</span>
+          </div>
+        </div>
+
+        <!-- Screenshot Preview Thumbnail Container -->
+        <div class="relative w-full aspect-video bg-black/60 border border-dark-border rounded-xl overflow-hidden flex items-center justify-center group shadow-inner">
+          <img id="save-chart-preview-img" src="" alt="Chart Screenshot Preview" class="w-full h-full object-contain rounded-lg">
+          <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/70 text-[10px] text-slate-300 font-mono backdrop-blur-sm pointer-events-none border border-white/10">
+            1:1 Visual Screenshot
+          </div>
+        </div>
+
+        <!-- Setup Dropdown -->
+        <div class="flex flex-col gap-1">
+          <label for="save-chart-setup" class="text-slate-300 font-semibold flex items-center justify-between">
+            <span>Trading Setup / Tag</span>
+            <span class="text-[10px] text-slate-500">Optional</span>
+          </label>
+          <select id="save-chart-setup" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer transition-colors">
+            <option value="None">None</option>
+            <option value="VCP">VCP (Volatility Contraction)</option>
+            <option value="Darvas">Darvas Box</option>
+            <option value="Breakout">Breakout</option>
+            <option value="Pullback">Pullback / Dip</option>
+            <option value="Reversal">Reversal</option>
+            <option value="Range">Range / Consolidation</option>
+            <option value="Base">Base Formation (Stage 1 / 2)</option>
+            <option value="Other">Other Setup</option>
+          </select>
+        </div>
+
+        <!-- Notes Textarea -->
+        <div class="flex flex-col gap-1">
+          <label for="save-chart-notes" class="text-slate-300 font-semibold flex items-center justify-between">
+            <span>Notes & Thesis</span>
+            <span class="text-[10px] text-slate-500">Optional</span>
+          </label>
+          <textarea id="save-chart-notes" rows="3" placeholder="Key observations, volume dry-up, entry price, stop-loss, catalyst..." class="w-full bg-dark-bg border border-dark-border rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none transition-colors"></textarea>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="pt-2 border-t border-dark-border flex items-center justify-end gap-2 mt-1">
+          <button type="button" onclick="closeSaveChartModal()" class="px-4 py-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer">
+            Cancel
+          </button>
+          <button type="submit" id="btn-submit-save-chart" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 active:scale-95">
+            <i data-lucide="camera" class="w-4 h-4" id="save-chart-btn-icon"></i>
+            <span id="save-chart-btn-text">Save Chart</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Chart Journal Gallery Modal -->
+  <div id="chart-journal-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-2 sm:p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-6xl h-[92vh] shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Journal Header -->
+      <div class="p-3.5 sm:p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/70 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              Chart Journal
+              <span id="journal-header-count" class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">0 Charts</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">Historical visual trade records & chart screenshots</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="loadJournalCharts()" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-white hover:bg-dark-accent transition-colors cursor-pointer" title="Refresh Journal">
+            <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeChartJournalModal()" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-white hover:bg-dark-accent transition-colors cursor-pointer" title="Close Journal (Esc)">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Journal Toolbar: Search, Setup Filter Tags, Sort -->
+      <div class="p-3 border-b border-dark-border bg-dark-card/60 flex flex-wrap items-center justify-between gap-2.5 flex-shrink-0">
+        
+        <!-- Left: Search Box -->
+        <div class="relative flex items-center min-w-[180px] max-w-xs flex-1">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none"></i>
+          <input type="text" id="journal-search-input" oninput="handleJournalFilterChange()" placeholder="Search symbol..." class="w-full bg-dark-bg border border-dark-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors uppercase font-mono">
+        </div>
+
+        <!-- Middle: Setup Filter Tags (Horizontal Scrollable Pills) -->
+        <div id="journal-setup-pills" class="flex items-center gap-1 overflow-x-auto py-1 max-w-full text-[11px]">
+          <button data-setup="all" onclick="selectJournalSetupFilter('all')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-indigo-600 text-white shadow-sm cursor-pointer whitespace-nowrap transition-all">All</button>
+          <button data-setup="VCP" onclick="selectJournalSetupFilter('VCP')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">VCP</button>
+          <button data-setup="Darvas" onclick="selectJournalSetupFilter('Darvas')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Darvas</button>
+          <button data-setup="Breakout" onclick="selectJournalSetupFilter('Breakout')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Breakout</button>
+          <button data-setup="Pullback" onclick="selectJournalSetupFilter('Pullback')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Pullback</button>
+          <button data-setup="Reversal" onclick="selectJournalSetupFilter('Reversal')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Reversal</button>
+          <button data-setup="Range" onclick="selectJournalSetupFilter('Range')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Range</button>
+          <button data-setup="Base" onclick="selectJournalSetupFilter('Base')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Base</button>
+          <button data-setup="Other" onclick="selectJournalSetupFilter('Other')" class="journal-filter-pill px-2.5 py-1 rounded-lg font-semibold bg-dark-bg text-slate-300 hover:text-white hover:bg-dark-accent border border-dark-border cursor-pointer whitespace-nowrap transition-all">Other</button>
+        </div>
+
+        <!-- Right: Sort Order -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[11px] text-slate-400 hidden sm:inline">Sort:</span>
+          <select id="journal-sort-select" onchange="handleJournalFilterChange()" class="bg-dark-bg border border-dark-border rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer transition-colors">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Journal Cards Grid Container -->
+      <div id="journal-grid-container" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <!-- Dynamic Cards Grid -->
+        <div id="journal-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Loading State -->
+        <div id="journal-loading-state" class="hidden py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
+          <i data-lucide="loader-2" class="w-8 h-8 text-indigo-400 animate-spin"></i>
+          <span class="text-xs">Loading chart journal...</span>
+        </div>
+
+        <!-- Empty State -->
+        <div id="journal-empty-state" class="hidden py-20 flex flex-col items-center justify-center gap-3 text-center px-4">
+          <div class="w-16 h-16 rounded-2xl bg-dark-bg border border-dark-border flex items-center justify-center text-slate-500">
+            <i data-lucide="camera" class="w-8 h-8 text-slate-400"></i>
+          </div>
+          <h4 class="text-sm font-bold text-white mt-1">No Saved Charts Found</h4>
+          <p class="text-xs text-slate-400 max-w-sm">Capture any chart by clicking the <span class="text-indigo-400 font-semibold">📸 Save Chart</span> button on the chart toolbar to save screenshots and notes here.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3. Chart Screenshot Lightbox / Detail Viewer Modal -->
+  <div id="chart-lightbox-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-2 sm:p-4">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-5xl max-h-[95vh] shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Lightbox Header -->
+      <div class="p-3.5 border-b border-dark-border flex items-center justify-between bg-dark-bg/80 flex-shrink-0">
+        <div class="flex items-center gap-2.5 sm:gap-3">
+          <span id="lightbox-symbol" class="text-sm font-bold text-white font-mono">TATAMOTORS</span>
+          <span id="lightbox-exchange" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold uppercase">NSE</span>
+          <span id="lightbox-timeframe" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-semibold">1D</span>
+          <span id="lightbox-setup" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-semibold">VCP</span>
+          <span id="lightbox-datetime" class="text-xs text-slate-400 hidden sm:inline">02 Oct 2026, 6:30 PM</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a id="lightbox-open-external" href="#" target="_blank" rel="noopener noreferrer" class="p-1.5 px-2.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1" title="Open Full High-Res Image in New Tab">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <span class="text-[10px] hidden sm:inline">Open Full Image</span>
+          </a>
+          <button id="lightbox-btn-delete" onclick="handleDeleteCurrentLightboxChart()" class="p-1.5 px-2.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 hover:border-rose-500 text-rose-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer" title="Delete Chart Record">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span class="text-[10px] hidden sm:inline">Delete</span>
+          </button>
+          <button onclick="closeChartLightboxModal()" class="p-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer" title="Close Viewer (Esc)">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Image Display Area -->
+      <div class="flex-1 overflow-auto bg-black/80 flex items-center justify-center p-2 min-h-[300px]">
+        <img id="lightbox-image" src="" alt="Chart Screenshot" class="max-w-full max-h-[68vh] object-contain rounded-lg shadow-2xl">
+      </div>
+
+      <!-- Notes & Context Footer -->
+      <div id="lightbox-notes-container" class="p-3.5 border-t border-dark-border bg-dark-bg/90 flex flex-col gap-1 flex-shrink-0">
+        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Notes & Thesis:</span>
+        <p id="lightbox-notes" class="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">No notes attached.</p>
+      </div>
+
     </div>
   </div>
 

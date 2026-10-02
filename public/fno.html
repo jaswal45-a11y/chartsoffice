@@ -888,13 +888,78 @@
               <span id="badge-vol-ma-label" class="text-amber-400 font-medium">Avg:</span>
               <strong id="vol-avg-live-badge" class="text-amber-300">--</strong>
               <span id="badge-vi-divider" class="hidden text-slate-600">|</span>
-              <span id="badge-vi-pp-wrap" class="hidden text-sky-400 font-medium">PP: <strong id="vi-pp-badge" class="text-sky-300">--</strong></span>
-              <span id="badge-vi-bs-wrap" class="hidden text-purple-400 font-medium">BS: <strong id="vi-bs-badge" class="text-purple-300">--</strong></span>
-              <span id="badge-vi-ud-wrap" class="hidden text-amber-400 font-medium">U/D: <strong id="vi-ud-badge" class="text-amber-300">--</strong></span>
-              <span id="badge-vi-rvol-wrap" class="hidden text-teal-400 font-medium">RVol: <strong id="vi-rvol-badge" class="text-teal-300">--</strong></span>
-              <span id="vi-signals-badge" class="hidden px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono"></span>
+              <span id="badge-vi-pp-wrap" class="hidden text-sky-400 font-medium cursor-help" title="Pocket Pivot (PP): Count of Up days where Volume > highest down-day volume of the past 10 sessions (Cyan/Sky Blue Bar)">PP: <strong id="vi-pp-badge" class="text-sky-300">--</strong></span>
+              <span id="badge-vi-bs-wrap" class="hidden text-purple-400 font-medium cursor-help" title="Bull Snort (BS): Count of Up candles with monster volume surge >= 3.0x 50-VolMA (Purple Marker below candle)">BS: <strong id="vi-bs-badge" class="text-purple-300">--</strong></span>
+              <span id="badge-vi-ud-wrap" class="hidden text-amber-400 font-medium cursor-help" title="Up/Down Volume Ratio over past 20 bars (>1.2 Bullish accumulation, <0.8 Bearish distribution)">U/D: <strong id="vi-ud-badge" class="text-amber-300">--</strong></span>
+              <span id="badge-vi-rvol-wrap" class="hidden text-teal-400 font-medium cursor-help" title="Relative Volume (RVol): Ratio of current volume to the 50-day Volume MA">RVol: <strong id="vi-rvol-badge" class="text-teal-300">--</strong></span>
+              <span id="vi-signals-badge" class="hidden px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono" title="Active Volume Signals on current bar"></span>
               <span class="text-slate-600">|</span>
               <strong id="candle-chg-badge" class="font-bold text-emerald-400">--</strong>
+
+              <!-- Volume Intelligence Color Tooltip / Guide Trigger -->
+              <div class="relative group inline-flex items-center ml-0.5">
+                <button type="button" class="cursor-pointer text-slate-400 hover:text-amber-400 p-0.5 rounded hover:bg-slate-800 transition-colors flex items-center" title="Volume Intelligence Color Guide & Priority Rules">
+                  <i data-lucide="help-circle" class="w-3.5 h-3.5 text-amber-400/90"></i>
+                </button>
+                <!-- Popup Tooltip Card on Hover -->
+                <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block z-50 w-80 p-3 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-xl shadow-2xl text-[11px] font-sans text-slate-200 pointer-events-none">
+                  <div class="font-bold text-xs text-white pb-1.5 mb-2 border-b border-slate-700/80 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5 text-amber-400">
+                      <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                      <span>Volume Intelligence Colors</span>
+                    </span>
+                    <span class="text-[10px] font-mono text-slate-400">Rules & Priority</span>
+                  </div>
+                  <div class="space-y-2 text-left">
+                    <div class="flex items-start gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-sky-400 mt-0.5 flex-shrink-0 shadow-sm shadow-sky-500/50"></span>
+                      <div>
+                        <strong class="text-sky-300 font-semibold">Cyan / Sky Blue: Pocket Pivot (PP)</strong>
+                        <p class="text-[10px] text-slate-400 leading-tight">Up day volume strictly &gt; highest down-day volume in last 10 days.</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-0.5 flex-shrink-0 shadow-sm shadow-emerald-500/50"></span>
+                      <div>
+                        <strong class="text-emerald-400 font-semibold">Bright Green: Super Up Vol</strong>
+                        <p class="text-[10px] text-slate-400 leading-tight">Up day with volume &gt; 50-day Volume MA (institutional buying).</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-purple-500 mt-0.5 flex-shrink-0 shadow-sm shadow-purple-500/50"></span>
+                      <div>
+                        <strong class="text-purple-300 font-semibold">Purple Marker: Bull Snort (BS)</strong>
+                        <p class="text-[10px] text-slate-400 leading-tight">Extreme surge &ge; 3.0x 50-VolMA on Up candle (Marker below candle).</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mt-0.5 flex-shrink-0 shadow-sm shadow-rose-500/50"></span>
+                      <div>
+                        <strong class="text-rose-400 font-semibold">Bright Red: Super Down Vol</strong>
+                        <p class="text-[10px] text-slate-400 leading-tight">Down day with volume &gt; 50-day Volume MA (institutional selling).</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 mt-0.5 flex-shrink-0 shadow-sm shadow-amber-500/50"></span>
+                      <div>
+                        <strong class="text-amber-300 font-semibold">Amber / Gold: Dry Volume (DV)</strong>
+                        <p class="text-[10px] text-slate-400 leading-tight">Supply Dry-up: Volume contracted to &le; 20% of 50-VolMA.</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-slate-500 mt-0.5 flex-shrink-0"></span>
+                      <div>
+                        <strong class="text-slate-300 font-semibold">Slate Grey: Normal Volume</strong>
+                        <p class="text-[10px] text-slate-400 leading-tight">Sub-average volume &le; 50-VolMA (neutral market noise).</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2 pt-1 border-t border-slate-800 text-[10px] text-slate-400">
+                      <span class="font-mono font-bold text-slate-200">Q / Y:</span>
+                      <span>Lowest volume in Quarter (63 bars) / Year (252 bars).</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- On-Chart 2% & 5% Circuit Limit Badge (Below Vol & Avg Vol) -->
@@ -1390,34 +1455,50 @@
           <!-- Color Customization Row for Vol Intel -->
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-2.5">
             <!-- Bull Snort Marker Color -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Bull Snort (BS): Extreme volume surge >= 3.0x 50-VolMA on Up candle (Marker below candle)">
               <span class="text-[11px] font-semibold text-purple-300">Bull Snort (Marker)</span>
               <input type="color" id="setting-color-vi-bs" value="#a855f7" class="indicator-color-picker" onchange="updateLineStyle('viBs')">
             </div>
             <!-- Pocket Pivot Color -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Pocket Pivot (PP): Up day volume > highest down-day volume in previous 10 days (Cyan/Sky blue bar)">
               <span class="text-[11px] font-semibold text-sky-300">Pocket Pivot (Bar)</span>
               <input type="color" id="setting-color-vi-pp" value="#0ea5e9" class="indicator-color-picker" onchange="updateLineStyle('viPp')">
             </div>
             <!-- Dry Volume Color (<= 20% 50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Dry Volume (DV): Volume contracted to <= 20% of 50-VolMA (Amber/Gold bar)">
               <span class="text-[11px] font-semibold text-amber-300">Dry Vol (&le;20%)</span>
               <input type="color" id="setting-color-vi-dv" value="#f59e0b" class="indicator-color-picker" onchange="updateLineStyle('viDv')">
             </div>
             <!-- Up Day (>50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Super Up Volume: Up day with volume > 50-day Volume MA (Bright Green bar)">
               <span class="text-[11px] font-semibold text-emerald-400">Up Day (&gt;50-SMA)</span>
               <input type="color" id="setting-color-vi-sup" value="#10b981" class="indicator-color-picker" onchange="updateLineStyle('viSup')">
             </div>
             <!-- Down Day (>50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Super Down Volume: Down day with volume > 50-day Volume MA (Bright Red bar)">
               <span class="text-[11px] font-semibold text-rose-400">Down Day (&gt;50-SMA)</span>
               <input type="color" id="setting-color-vi-sdn" value="#ef4444" class="indicator-color-picker" onchange="updateLineStyle('viSdn')">
             </div>
             <!-- Normal Volume (<=50-SMA) -->
-            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between">
+            <div class="p-2 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between" title="Normal Volume: Sub-average volume <= 50-day Volume MA (Slate Grey bar)">
               <span class="text-[11px] font-semibold text-slate-300">Normal (&le;50-SMA)</span>
               <input type="color" id="setting-color-vi-grey" value="#64748b" class="indicator-color-picker" onchange="updateLineStyle('viGrey')">
+            </div>
+          </div>
+
+          <!-- Color Rules & Priority Callout Box -->
+          <div class="mt-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[11px] space-y-1.5 text-slate-300">
+            <div class="font-bold text-xs text-amber-400 flex items-center gap-1.5">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              <span>Volume Intelligence Color Selection & Priority:</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-slate-400">
+              <div><span class="text-sky-400 font-semibold">1. Cyan / Sky Blue (PP):</span> Up day with Volume &gt; max down-day volume of past 10 sessions.</div>
+              <div><span class="text-emerald-400 font-semibold">2. Bright Green (Up):</span> Up day with Volume &gt; 50-day Volume MA.</div>
+              <div><span class="text-purple-400 font-semibold">3. Purple Marker (BS):</span> Monster Volume explosion &ge; 3.0x 50-VolMA on Up candle.</div>
+              <div><span class="text-rose-400 font-semibold">4. Bright Red (Down):</span> Down day with Volume &gt; 50-day Volume MA.</div>
+              <div><span class="text-amber-400 font-semibold">5. Amber / Gold (Dry):</span> Volume contracted to &le; 20% of 50-VolMA.</div>
+              <div><span class="text-slate-400 font-semibold">6. Slate Grey (Normal):</span> Sub-average Volume &le; 50-VolMA.</div>
             </div>
           </div>
         </div>
