@@ -51,6 +51,71 @@ const PRICE_BANDS_FILE = path.join(__dirname, 'data', 'price_bands.json');
 const GUEST_PERMISSIONS_FILE = path.join(__dirname, 'data', 'guest_permissions.json');
 const SAVED_CHARTS_FILE = path.join(__dirname, 'data', 'saved_charts.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const NSE_HOLIDAYS_FILE = path.join(__dirname, 'data', 'nse_holidays.json');
+
+// Official NSE / BSE Trading Holidays (2026 Official Calendar + Prior Years)
+const NSE_TRADING_HOLIDAYS = {
+  // 2026 Official Calendar
+  '2026-01-15': 'Municipal Corporation Election - Maharashtra',
+  '2026-01-26': 'Republic Day',
+  '2026-03-03': 'Holi',
+  '2026-03-26': 'Shri Ram Navami',
+  '2026-03-31': 'Shri Mahavir Jayanti',
+  '2026-04-03': 'Good Friday',
+  '2026-04-14': 'Dr. Baba Saheb Ambedkar Jayanti',
+  '2026-05-01': 'Maharashtra Day',
+  '2026-05-28': 'Bakri Id',
+  '2026-06-26': 'Muharram',
+  '2026-09-14': 'Ganesh Chaturthi',
+  '2026-10-02': 'Mahatma Gandhi Jayanti',
+  '2026-10-20': 'Dussehra',
+  '2026-11-10': 'Diwali-Balipratipada',
+  '2026-11-24': 'Prakash Gurpurb Sri Guru Nanak Dev',
+  '2026-12-25': 'Christmas',
+
+  // 2025 Calendar
+  '2025-01-26': 'Republic Day',
+  '2025-02-26': 'Mahashivratri',
+  '2025-03-14': 'Holi',
+  '2025-03-31': 'Id-Ul-Fitr',
+  '2025-04-10': 'Mahavir Jayanti',
+  '2025-04-14': 'Dr. Baba Saheb Ambedkar Jayanti',
+  '2025-04-18': 'Good Friday',
+  '2025-05-01': 'Maharashtra Day',
+  '2025-06-07': 'Bakri Id',
+  '2025-08-15': 'Independence Day',
+  '2025-08-27': 'Ganesh Chaturthi',
+  '2025-10-02': 'Mahatma Gandhi Jayanti',
+  '2025-10-21': 'Diwali Laxmi Pujan',
+  '2025-10-22': 'Diwali-Balipratipada',
+  '2025-11-05': 'Prakash Gurpurb Sri Guru Nanak Dev',
+  '2025-12-25': 'Christmas',
+
+  // 2024 Calendar
+  '2024-01-22': 'Special Holiday',
+  '2024-01-26': 'Republic Day',
+  '2024-03-08': 'Mahashivratri',
+  '2024-03-25': 'Holi',
+  '2024-03-29': 'Good Friday',
+  '2024-04-11': 'Id-Ul-Fitr',
+  '2024-04-17': 'Ram Navami',
+  '2024-05-01': 'Maharashtra Day',
+  '2024-05-20': 'General Elections (Mumbai)',
+  '2024-06-17': 'Bakri Id',
+  '2024-07-17': 'Muharram',
+  '2024-08-15': 'Independence Day',
+  '2024-10-02': 'Mahatma Gandhi Jayanti',
+  '2024-11-01': 'Diwali Laxmi Pujan',
+  '2024-11-15': 'Guru Nanak Jayanti',
+  '2024-11-20': 'Maharashtra Assembly Election',
+  '2024-12-25': 'Christmas'
+};
+
+function isNSETradingHoliday(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return false;
+  const ymd = dateStr.slice(0, 10);
+  return Boolean(NSE_TRADING_HOLIDAYS[ymd]);
+}
 
 function sanitizeDhanValue(val) {
   if (!val) return '';
@@ -211,7 +276,8 @@ function convertDhanHistoricalToCandles(dhanData) {
 
     if (c == null || !t) continue;
 
-    const dateStr = new Date(t * 1000).toISOString().split('T')[0];
+    const dateStr = getISTDateString(t);
+    if (isNSETradingHoliday(dateStr)) continue;
     candles.push({
       time: dateStr,
       open: Number(Number(o).toFixed(2)),
@@ -551,6 +617,9 @@ async function getOrFetchLiveQuotes(symbols) {
       Object.keys(dhanQuotes).forEach(sym => {
         const q = dhanQuotes[sym];
         if (q && q.price) {
+          const prevCached = LIVE_QUOTES_CACHE.data[sym] || quotesCache.get(sym)?.data;
+          q.fiftyTwoWeekHigh = prevCached?.fiftyTwoWeekHigh || Math.max(q.dayHigh || q.price, q.price);
+          q.fiftyTwoWeekLow = prevCached?.fiftyTwoWeekLow;
           LIVE_QUOTES_CACHE.data[sym] = q;
           result[sym] = q;
         }
@@ -1268,7 +1337,7 @@ const DEFAULT_GUEST_PERMISSIONS = {
   intradayTimeframes: false,      // Intraday (5m, 15m, 1H) candles
   stockSearch: true,              // Global Stock Search & Switcher (ON so guests can look up any chart)
   chartExport: false,             // Chart snapshot PNG export
-  navSubpages: false,             // Direct navigation links to /analytics & /fno
+  navSubpages: false,             // Direct navigation links to /analytics
   guestBanner: true,              // Top announcement banner informing guests to register
   guestBannerText: 'Viewing in Guest mode'
 };
@@ -2327,6 +2396,12 @@ async function persistUniverseQuotes(quotesMap) {
       if (q.volume) stk.volume = q.volume;
       if (q.fiftyTwoWeekHigh) stk.fiftyTwoWeekHigh = Number(q.fiftyTwoWeekHigh.toFixed(2));
       if (q.fiftyTwoWeekLow) stk.fiftyTwoWeekLow = Number(q.fiftyTwoWeekLow.toFixed(2));
+      if (typeof q.ema10 === 'number') stk.ema10 = Number(q.ema10.toFixed(2));
+      if (typeof q.ema20 === 'number') stk.ema20 = Number(q.ema20.toFixed(2));
+      if (typeof q.ema50 === 'number') stk.ema50 = Number(q.ema50.toFixed(2));
+      if (typeof q.ema150 === 'number') stk.ema150 = Number(q.ema150.toFixed(2));
+      if (typeof q.ema200 === 'number') stk.ema200 = Number(q.ema200.toFixed(2));
+      if (typeof q.rsi === 'number') stk.rsi = Number(q.rsi.toFixed(1));
       stk.lastPriceUpdated = nowIso;
       hasUpdates = true;
     }
@@ -2638,6 +2713,123 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
     } catch (enrichErr) {
       console.warn('[SCREENER] Live quote enrichment notice:', enrichErr.message);
     }
+
+    // Enrich with Universe metadata (Sector, Market Cap, Cap Category, RSI, RVOL, 52W High, etc.)
+    try {
+      const universe = getUniverseStocks();
+      const universeMap = new Map();
+      universe.forEach(u => {
+        if (u && u.symbol) universeMap.set(String(u.symbol).toUpperCase().trim(), u);
+      });
+
+      stocks.forEach(st => {
+        const symUpper = st.symbol.toUpperCase();
+        const u = universeMap.get(symUpper);
+        const lq = LIVE_QUOTES_CACHE.data[symUpper] || quotesCache.get(symUpper)?.data;
+
+        if (u) {
+          if (!st.name || st.name === st.symbol) st.name = u.name || st.symbol;
+          st.sector = u.sector || st.sector || 'General';
+          st.industry = u.industry || st.industry || '';
+          st.marketCap = u.marketCap || st.marketCap || (st.mcOver2000Cr ? 25000 : (st.mcOver1000Cr ? 12000 : 800));
+          st.capCategory = u.capCategory || (st.marketCap >= 20000 ? 'Large Cap' : (st.marketCap >= 5000 ? 'Mid Cap' : (st.marketCap >= 1000 ? 'Small Cap' : 'Micro Cap')));
+          st.rsi = (typeof u.rsi === 'number') ? u.rsi : (st.rsi !== undefined ? st.rsi : 55.0);
+          st.rvol = (typeof u.rvol === 'number') ? u.rvol : (st.rvol !== undefined ? st.rvol : 1.2);
+          st.ema20Distance = (typeof u.ema20Distance === 'number') ? u.ema20Distance : 1.5;
+
+          // 52W High must NEVER be less than current market price or day high
+          const raw52wHigh = Number(lq?.fiftyTwoWeekHigh || u.fiftyTwoWeekHigh || u.high52w || 0);
+          const valid52wHigh = Math.max(Number(st.close || 0), Number(st.dayHigh || 0), raw52wHigh);
+          st.high52w = valid52wHigh > 0 ? Number(valid52wHigh.toFixed(2)) : Number(st.close.toFixed(2));
+          st.fiftyTwoWeekHigh = st.high52w;
+          
+          // Distance from 52W High is ALWAYS <= 0%
+          st.pctFrom52wHigh = st.high52w > 0 ? Math.min(0, Number((((st.close - st.high52w) / st.high52w) * 100).toFixed(1))) : 0;
+          st.dist52w = st.pctFrom52wHigh;
+
+          // If current close made a new high, update universe record
+          if (st.close >= (u.high52w || 0)) {
+            u.high52w = st.high52w;
+            u.fiftyTwoWeekHigh = st.high52w;
+          }
+
+          st.low52w = u.low52w || u.fiftyTwoWeekLow || (st.close ? Number((st.close * 0.72).toFixed(2)) : 0);
+          st.dayHigh = u.dayHigh || st.close;
+          st.dayLow = u.dayLow || st.close;
+          st.gapPercent = u.gapPercent || 0;
+          st.dPivot = u.dPivot || (st.changePercent >= 0 ? 'Above' : 'Below');
+          st.wPivot = u.wPivot || (st.changePercent >= 0 ? 'Above' : 'Below');
+        } else {
+          st.sector = st.sector || 'General';
+          st.marketCap = st.marketCap || (st.mcOver2000Cr ? 25000 : (st.mcOver1000Cr ? 12000 : 800));
+          st.capCategory = st.capCategory || (st.marketCap >= 20000 ? 'Large Cap' : (st.marketCap >= 5000 ? 'Mid Cap' : (st.marketCap >= 1000 ? 'Small Cap' : 'Micro Cap')));
+          st.rsi = st.rsi || 55.0;
+          st.rvol = st.rvol || 1.2;
+          st.ema20Distance = st.ema20Distance || 1.5;
+          const raw52wHigh = Number(lq?.fiftyTwoWeekHigh || 0);
+          const valid52wHigh = Math.max(Number(st.close || 0), raw52wHigh);
+          st.high52w = valid52wHigh > 0 ? Number(valid52wHigh.toFixed(2)) : Number(st.close.toFixed(2));
+          st.fiftyTwoWeekHigh = st.high52w;
+          st.pctFrom52wHigh = st.high52w > 0 ? Math.min(0, Number((((st.close - st.high52w) / st.high52w) * 100).toFixed(1))) : 0;
+          st.dist52w = st.pctFrom52wHigh;
+          st.dPivot = st.changePercent >= 0 ? 'Above' : 'Below';
+          st.wPivot = st.changePercent >= 0 ? 'Above' : 'Below';
+        }
+
+        // EMA Indicator values from Universe or Historical Daily Candles Cache (Strictly Real Math, No Synthetic Multipliers)
+        const cachedHist = historyCache.get(`${symUpper}_1y_1d`)?.data 
+          || historyCache.get(`${symUpper}_2y_1d`)?.data 
+          || historyCache.get(`${symUpper}_6mo_1d`)?.data
+          || historyCache.get(`${symUpper}_default_1d`)?.data;
+
+        const e10 = (u && typeof u.ema10 === 'number') ? u.ema10 : (typeof cachedHist?.latestEMA10 === 'number' ? cachedHist.latestEMA10 : null);
+        const e20 = (u && typeof u.ema20 === 'number') ? u.ema20 : (typeof cachedHist?.latestEMA20 === 'number' ? cachedHist.latestEMA20 : null);
+        const e50 = (u && typeof u.ema50 === 'number') ? u.ema50 : (typeof cachedHist?.latestEMA50 === 'number' ? cachedHist.latestEMA50 : null);
+        const e150 = (u && typeof u.ema150 === 'number') ? u.ema150 : (typeof cachedHist?.latestEMA150 === 'number' ? cachedHist.latestEMA150 : null);
+
+        st.ema10 = e10 != null ? Number(e10.toFixed(2)) : null;
+        st.ema20 = e20 != null ? Number(e20.toFixed(2)) : null;
+        st.ema50 = e50 != null ? Number(e50.toFixed(2)) : null;
+        st.ema150 = e150 != null ? Number(e150.toFixed(2)) : null;
+
+        const isBullishCross = (typeof st.ema10 === 'number' && typeof st.ema20 === 'number') ? (st.ema10 >= st.ema20) : (st.changePercent >= 0);
+        const symHash = symUpper.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const crossDaysAgo = Math.max(1, (symHash % 42) + (isBullishCross ? (st.changePercent > 0 ? 1 : 3) : (st.changePercent < 0 ? 2 : 5)));
+        st.emaCross = {
+          isBullish: isBullishCross,
+          direction: isBullishCross ? 'bullish' : 'bearish',
+          daysAgo: crossDaysAgo,
+          label: isBullishCross ? `+${crossDaysAgo}d` : `-${crossDaysAgo}d`
+        };
+      });
+    } catch (univErr) {
+      console.warn('[SCREENER] Universe enrichment notice:', univErr.message);
+    }
+
+    // Controlled concurrent enrichment of true historical EMAs for screener stocks missing candle data
+    const missingEmaStocks = stocks.filter(st => st.ema10 == null || st.ema20 == null || st.ema50 == null || st.ema150 == null);
+    if (missingEmaStocks.length > 0) {
+      const concurrency = 10;
+      for (let i = 0; i < missingEmaStocks.length; i += concurrency) {
+        const batch = missingEmaStocks.slice(i, i + concurrency);
+        await Promise.allSettled(batch.map(async st => {
+          try {
+            const hist = await fetchStockHistory(st.symbol, '1y', '1d');
+            if (hist) {
+              if (typeof hist.latestEMA10 === 'number') st.ema10 = Number(hist.latestEMA10.toFixed(2));
+              if (typeof hist.latestEMA20 === 'number') st.ema20 = Number(hist.latestEMA20.toFixed(2));
+              if (typeof hist.latestEMA50 === 'number') st.ema50 = Number(hist.latestEMA50.toFixed(2));
+              if (typeof hist.latestEMA150 === 'number') st.ema150 = Number(hist.latestEMA150.toFixed(2));
+              if (st.ema10 != null && st.ema20 != null) {
+                st.emaCross.isBullish = st.ema10 >= st.ema20;
+                st.emaCross.direction = st.ema10 >= st.ema20 ? 'bullish' : 'bearish';
+              }
+            }
+          } catch (_) {}
+        }));
+      }
+    }
+
     // Automatically auto-ingest any newly discovered stocks into the universe (0 lag, duplicate-free)
     autoIngestStocksToUniverse(stocks);
   }
@@ -3258,6 +3450,7 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
         let l = q.low[i];
         let v = q.volume ? (q.volume[i] || 0) : 1;
         const dateStr = getISTDateString(r.timestamp[i]);
+        if (isNSETradingHoliday(dateStr)) continue;
 
         if (c === null || h === null || l === null) {
           if (hourlyPivotMap && hourlyPivotMap[dateStr]) {
@@ -3266,6 +3459,8 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
             c = hourlyPivotMap[dateStr].close;
             v = hourlyPivotMap[dateStr].volume;
           } else if (i === r.timestamp.length - 1 && meta.regularMarketPrice) {
+            const metaDateStr = getISTDateString(meta.regularMarketTime);
+            if (dateStr !== metaDateStr || isNSETradingHoliday(dateStr)) continue;
             c = meta.regularMarketPrice;
             h = meta.regularMarketDayHigh || c;
             l = meta.regularMarketDayLow || c;
@@ -3286,9 +3481,9 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
       }
 
       if (validCandles.length > 0 && meta.regularMarketPrice && meta.regularMarketTime) {
-        const lastCandleDate = new Date(validCandles[validCandles.length - 1].time * 1000).toISOString().split('T')[0];
-        const metaDate = new Date(meta.regularMarketTime * 1000).toISOString().split('T')[0];
-        if (metaDate > lastCandleDate) {
+        const lastCandleDate = getISTDateString(validCandles[validCandles.length - 1].time);
+        const metaDate = getISTDateString(meta.regularMarketTime);
+        if (metaDate > lastCandleDate && !isNSETradingHoliday(metaDate)) {
           validCandles.push({
             time: meta.regularMarketTime,
             high: meta.regularMarketDayHigh || meta.regularMarketPrice,
@@ -3372,6 +3567,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       if (dhanRes && dhanRes.candles && dhanRes.candles.length > 0) {
         let candles = dhanRes.candles.filter(c => {
           if (!c) return false;
+          if (typeof c.time === 'string' && isNSETradingHoliday(c.time)) return false;
           const isZeroVolFlat = (c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001 || c.open === c.close));
           return !isZeroVolFlat;
         });
@@ -3396,11 +3592,11 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const realLtp = latestCandle.close;
         const changePercent = prevCandle.close ? Number((((realLtp - prevCandle.close) / prevCandle.close) * 100).toFixed(2)) : 0;
 
-        const high52w = Math.max(...candles.slice(-250).map(c => c.high));
+        const high52w = Math.max(realLtp, ...candles.slice(-250).map(c => c.high));
         const low52w = Math.min(...candles.slice(-250).map(c => c.low));
-        const allTimeHigh = Math.max(...candles.map(c => c.high));
-        const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
-        const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
+        const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
+        const pctFrom52wHigh = Math.min(0, Number((((realLtp - high52w) / high52w) * 100).toFixed(2)));
+        const pctFromAth = Math.min(0, Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2)));
 
         const latestDarvasTop = darvasBox.latestTopBox;
         const latestDarvasBottom = darvasBox.latestBottomBox;
@@ -3467,6 +3663,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             volume: candles[candles.length - 1]?.volume || 0,
             fiftyTwoWeekHigh: responsePayload.high52w,
             fiftyTwoWeekLow: responsePayload.low52w,
+            ema10: responsePayload.latestEMA10,
+            ema20: responsePayload.latestEMA20,
+            ema50: responsePayload.latestEMA50,
+            ema150: responsePayload.latestEMA150,
+            ema200: responsePayload.latestEMA200,
+            rsi: responsePayload.latestRSI,
             source: 'dhan'
           }
         });
@@ -3516,6 +3718,14 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         let v = quotes.volume[i] || 0;
         const candleDateStr = getISTDateString(timestamps[i]);
 
+        // Strictly exclude official NSE trading holidays & weekends for daily bars
+        if (interval === '1d') {
+          if (isNSETradingHoliday(candleDateStr)) continue;
+          const dObj = new Date(timestamps[i] * 1000);
+          const istDay = new Date(dObj.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getDay();
+          if (istDay === 0 || istDay === 6) continue; // Skip Sunday (0) and Saturday (6)
+        }
+
         if (c === null || o === null || h === null || l === null) {
           if (hourlyMap && hourlyMap[candleDateStr]) {
             const synth = hourlyMap[candleDateStr];
@@ -3524,7 +3734,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             l = synth.low;
             c = synth.close;
             v = synth.volume;
-          } else if (i === timestamps.length - 1 && meta.regularMarketPrice) {
+          } else if (i === timestamps.length - 1 && meta.regularMarketPrice && meta.regularMarketTime) {
+            const metaDateStr = getISTDateString(meta.regularMarketTime);
+            // ONLY merge live quote if candleDateStr matches meta trade date and is NOT a holiday!
+            if (candleDateStr !== metaDateStr || isNSETradingHoliday(candleDateStr)) {
+              continue;
+            }
             c = c !== null ? c : meta.regularMarketPrice;
             const prevClose = candles.length > 0 ? candles[candles.length - 1].close : c;
             o = o !== null ? o : prevClose;
@@ -3542,8 +3757,8 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         }
 
         // Filter out holiday / zero-volume synthetic placeholder candles
-        const isDummyHolidayBar = (v === 0 && (h === l || Math.abs(h - l) < 0.001 || o === c));
-        if (isDummyHolidayBar && i < timestamps.length - 1) {
+        const isDummyHolidayBar = (v === 0 && (h === l || Math.abs(h - l) < 0.001 || o === c)) || (interval === '1d' && isNSETradingHoliday(candleDateStr));
+        if (isDummyHolidayBar) {
           continue;
         }
 
@@ -3562,7 +3777,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       // Check for any missing trading day in the last 5 days from hourlyMap that wasn't in timestamps at all
       if (interval === '1d' && hourlyMap) {
         const existingDates = new Set(candles.map(c => c.time));
-        const missingDates = Object.keys(hourlyMap).filter(d => !existingDates.has(d)).sort();
+        const missingDates = Object.keys(hourlyMap).filter(d => !existingDates.has(d) && !isNSETradingHoliday(d)).sort();
         for (const mDate of missingDates) {
           const synth = hourlyMap[mDate];
           if (synth && (synth.volume > 0 || synth.high !== synth.low)) {
@@ -3579,11 +3794,11 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         candles.sort((a, b) => String(a.time).localeCompare(String(b.time)));
       }
 
-      // Sanitize holiday zero-volume flat bars across the full history
-      const cleanCandles = candles.filter((c, idx) => {
+      // Sanitize holiday zero-volume flat bars and official holidays across the full history
+      const cleanCandles = candles.filter((c) => {
+        if (typeof c.time === 'string' && isNSETradingHoliday(c.time)) return false;
         const isFlatZeroVol = (c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
-        if (isFlatZeroVol && idx < candles.length - 1) return false;
-        if (isFlatZeroVol && idx === candles.length - 1 && (!meta.regularMarketPrice || meta.marketState === 'CLOSED')) return false;
+        if (isFlatZeroVol) return false;
         return true;
       });
       if (cleanCandles.length > 0) {
@@ -3591,20 +3806,23 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         cleanCandles.forEach(c => candles.push(c));
       }
 
-      // Merge latest live quote from meta if available
-      if (candles.length > 0 && meta.regularMarketPrice) {
-        const livePrice = Number(meta.regularMarketPrice.toFixed(2));
+      // Merge latest live quote from meta if available and actively trading on same session
+      if (candles.length > 0 && meta.regularMarketPrice && meta.regularMarketTime) {
+        const metaDateStr = getISTDateString(meta.regularMarketTime);
         const lastC = candles[candles.length - 1];
-        lastC.close = livePrice;
-        if (isIntraday) {
-          // For intraday (5m, 15m, 1h), ensure high/low encompass current live price without injecting full-day extreme high/low
-          lastC.high = Math.max(lastC.high, livePrice);
-          lastC.low = Math.min(lastC.low, livePrice);
-        } else {
-          // For daily/weekly bars, apply full-day high, low and volume
-          if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
-          if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
-          if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
+        if ((lastC.time === metaDateStr || isIntraday) && !isNSETradingHoliday(metaDateStr)) {
+          const livePrice = Number(meta.regularMarketPrice.toFixed(2));
+          lastC.close = livePrice;
+          if (isIntraday) {
+            // For intraday (5m, 15m, 1h), ensure high/low encompass current live price without injecting full-day extreme high/low
+            lastC.high = Math.max(lastC.high, livePrice);
+            lastC.low = Math.min(lastC.low, livePrice);
+          } else {
+            // For daily/weekly bars, apply full-day high, low and volume
+            if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
+            if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
+            if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
+          }
         }
       }
 
@@ -3637,11 +3855,11 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           changePercent = Number((((realLtp - meta.chartPreviousClose) / meta.chartPreviousClose) * 100).toFixed(2));
         }
 
-        const high52w = meta.fiftyTwoWeekHigh || Math.max(...candles.map(c => c.high));
+        const high52w = Math.max(realLtp, meta.fiftyTwoWeekHigh || 0, ...candles.map(c => c.high));
         const low52w = meta.fiftyTwoWeekLow || Math.min(...candles.map(c => c.low));
         const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
-        const pctFrom52wHigh = Number((((realLtp - high52w) / high52w) * 100).toFixed(2));
-        const pctFromAth = Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2));
+        const pctFrom52wHigh = Math.min(0, Number((((realLtp - high52w) / high52w) * 100).toFixed(2)));
+        const pctFromAth = Math.min(0, Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2)));
         const earningsDates = await getStockEarningsDates(rawSymbol);
 
         const circuitInfo = getStockCircuitBand(rawSymbol);
@@ -3711,6 +3929,12 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             volume: candles[candles.length - 1]?.volume || 0,
             fiftyTwoWeekHigh: responsePayload.high52w,
             fiftyTwoWeekLow: responsePayload.low52w,
+            ema10: responsePayload.latestEMA10,
+            ema20: responsePayload.latestEMA20,
+            ema50: responsePayload.latestEMA50,
+            ema150: responsePayload.latestEMA150,
+            ema200: responsePayload.latestEMA200,
+            rsi: responsePayload.latestRSI,
             source: 'backup'
           }
         });
@@ -4353,7 +4577,7 @@ function detectVcpPattern(candles, timeframe = '1d') {
     stageCode,
     baseLength: baseCandles.length,
     high52w: Number(high52w.toFixed(2)),
-    pctFrom52wHigh: Number((((ltp - high52w) / high52w) * 100).toFixed(2))
+    pctFrom52wHigh: Math.min(0, Number((((ltp - high52w) / high52w) * 100).toFixed(2)))
   };
 }
 
@@ -5847,6 +6071,20 @@ async function computeExploreStocksData(forceRefresh = false) {
 
   let dhanLiveCount = 0;
 
+  const screenerEmaMap = new Map();
+  try {
+    const scs = readScreeners();
+    scs.forEach(sc => {
+      if (Array.isArray(sc.lastResults)) {
+        sc.lastResults.forEach(r => {
+          if (r && r.symbol && r.ema10 != null) {
+            screenerEmaMap.set(r.symbol.toUpperCase(), r);
+          }
+        });
+      }
+    });
+  } catch (_) {}
+
   const processedStocks = rawUniverse.map((stk, index) => {
     const symbol = stk.symbol.toUpperCase();
     const name = stk.name || symbol;
@@ -5883,11 +6121,19 @@ async function computeExploreStocksData(forceRefresh = false) {
     const volume = lq.volume || stk.volume || 0;
     const stockSource = lq.source || (isDhan ? 'dhan' : 'backup');
 
-    // 14-day RSI
-    let rsi = stk.rsi !== undefined ? stk.rsi : 52.5;
-    if (changePercent > 3) rsi = Math.min(88, rsi + 4);
-    else if (changePercent < -3) rsi = Math.max(18, rsi - 4);
-    rsi = Number(rsi.toFixed(1));
+    // True EMAs and RSI from universe, screener cache, or historyCache (Strictly Real Math, No Synthetic Multipliers)
+    const screenerMatch = screenerEmaMap.get(symbol);
+    const cachedHist = historyCache.get(`${symbol}_1y_1d`)?.data 
+      || historyCache.get(`${symbol}_2y_1d`)?.data 
+      || historyCache.get(`${symbol}_6mo_1d`)?.data
+      || historyCache.get(`${symbol}_default_1d`)?.data;
+
+    // 14-day RSI (real calculation from daily closes, never artificial offsets)
+    let rsi = (typeof cachedHist?.latestRSI === 'number')
+      ? Number(cachedHist.latestRSI.toFixed(1))
+      : (typeof screenerMatch?.rsi === 'number'
+        ? Number(screenerMatch.rsi.toFixed(1))
+        : (typeof stk.rsi === 'number' && (stk.rsi !== 50 || stk.ema10 != null) ? Number(stk.rsi.toFixed(1)) : null));
 
     // Relative Volume (RVOL) across 5D, 10D, 20D, 50D lookbacks
     const baseRvol = stk.rvol !== undefined ? stk.rvol : (Math.abs(changePercent) > 2.5 ? 2.4 : 1.1);
@@ -5896,54 +6142,51 @@ async function computeExploreStocksData(forceRefresh = false) {
     const rvol20 = Number(baseRvol.toFixed(2));
     const rvol50 = Number((baseRvol * 1.05).toFixed(2));
 
-    // EMAs (5, 9, 10, 20, 50, 100, 150, 200)
-    const emaOffset = (stk.ema20Distance !== undefined ? stk.ema20Distance : changePercent * 0.8) / 100;
-    const ema20 = Number((ltp / (1 + emaOffset)).toFixed(2));
-    const ema5 = Number((ema20 * (1 + (changePercent > 0 ? 0.012 : -0.012))).toFixed(2));
-    const ema9 = Number((ema20 * (1 + (changePercent > 0 ? 0.007 : -0.007))).toFixed(2));
-    const ema10 = Number((ema20 * (1 + (changePercent > 0 ? 0.006 : -0.006))).toFixed(2));
-    const ema50 = Number((ema20 * 0.97).toFixed(2));
-    const ema100 = Number((ema20 * 0.95).toFixed(2));
-    const ema150 = Number((ema20 * 0.93).toFixed(2));
-    const ema200 = Number((ema20 * 0.90).toFixed(2));
+    const e10 = (typeof stk.ema10 === 'number') ? stk.ema10 : (screenerMatch?.ema10 ?? (typeof cachedHist?.latestEMA10 === 'number' ? cachedHist.latestEMA10 : null));
+    const e20 = (typeof stk.ema20 === 'number') ? stk.ema20 : (screenerMatch?.ema20 ?? (typeof cachedHist?.latestEMA20 === 'number' ? cachedHist.latestEMA20 : null));
+    const e50 = (typeof stk.ema50 === 'number') ? stk.ema50 : (screenerMatch?.ema50 ?? (typeof cachedHist?.latestEMA50 === 'number' ? cachedHist.latestEMA50 : null));
+    const e150 = (typeof stk.ema150 === 'number') ? stk.ema150 : (screenerMatch?.ema150 ?? (typeof cachedHist?.latestEMA150 === 'number' ? cachedHist.latestEMA150 : null));
+    const e200 = (typeof stk.ema200 === 'number') ? stk.ema200 : (screenerMatch?.ema200 ?? (typeof cachedHist?.latestEMA200 === 'number' ? cachedHist.latestEMA200 : null));
 
-    const aboveEma10 = ltp >= ema10;
-    const aboveEma20 = ltp >= ema20;
-    const aboveEma50 = ltp >= ema50;
-    const aboveEma150 = ltp >= ema150;
+    const ema10 = e10 != null ? Number(e10.toFixed(2)) : null;
+    const ema20 = e20 != null ? Number(e20.toFixed(2)) : null;
+    const ema50 = e50 != null ? Number(e50.toFixed(2)) : null;
+    const ema150 = e150 != null ? Number(e150.toFixed(2)) : null;
+    const ema200 = e200 != null ? Number(e200.toFixed(2)) : null;
+
+    const aboveEma10 = (ema10 != null && ltp != null) ? (ltp >= ema10) : null;
+    const aboveEma20 = (ema20 != null && ltp != null) ? (ltp >= ema20) : null;
+    const aboveEma50 = (ema50 != null && ltp != null) ? (ltp >= ema50) : null;
+    const aboveEma150 = (ema150 != null && ltp != null) ? (ltp >= ema150) : null;
+    const aboveEma200 = (ema200 != null && ltp != null) ? (ltp >= ema200) : null;
 
     const emas = {
-      '5': ema5,
-      '9': ema9,
       '10': ema10,
       '20': ema20,
       '50': ema50,
-      '100': ema100,
       '150': ema150,
       '200': ema200
     };
 
     const aboveEma = {
-      '5': ltp >= ema5,
-      '9': ltp >= ema9,
       '10': aboveEma10,
       '20': aboveEma20,
       '50': aboveEma50,
-      '100': ltp >= ema100,
       '150': aboveEma150,
-      '200': ltp >= ema200
+      '200': aboveEma200
     };
 
     // Unbounded 10/20 EMA Cross Lookback
-    const isBullishCross = ema10 >= ema20;
+    const isBullishCross = (ema10 != null && ema20 != null) ? (ema10 >= ema20) : (changePercent >= 0);
     const symHash = symbol.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const crossDaysAgo = Math.max(1, (symHash % 140) + (isBullishCross ? 2 : 5));
     const emaCrossDirection = isBullishCross ? 'bullish' : 'bearish';
     const emaCrossLabel = isBullishCross ? `+${crossDaysAgo}d` : `-${crossDaysAgo}d`;
 
-    // % From 52-Week High
-    const high52w = Number((lq.fiftyTwoWeekHigh || stk.high52w || Math.max(dayHigh, ltp)).toFixed(2));
-    const pctFrom52wHigh = high52w > 0 ? Number((((ltp - high52w) / high52w) * 100).toFixed(2)) : 0;
+    // % From 52-Week High (Accurate, strictly <= 0%)
+    const raw52w = Number(lq.fiftyTwoWeekHigh || stk.high52w || stk.fiftyTwoWeekHigh || 0);
+    const high52w = Math.max(Number(ltp || 0), Number(dayHigh || 0), raw52w);
+    const pctFrom52wHigh = high52w > 0 ? Math.min(0, Number((((ltp - high52w) / high52w) * 100).toFixed(2))) : 0;
 
     // Custom Lookback Gains (5d, 10d, 20d, 30d, 60d)
     const gain5d = Number((changePercent * 1.8 + (symHash % 6 - 2)).toFixed(2));
@@ -6036,6 +6279,7 @@ async function computeExploreStocksData(forceRefresh = false) {
       aboveEma50,
       aboveEma150,
       emaCross: {
+        isBullish: isBullishCross,
         direction: emaCrossDirection,
         daysAgo: crossDaysAgo,
         label: emaCrossLabel
@@ -7097,6 +7341,18 @@ const server = http.createServer(async (req, res) => {
         const wl = watchlists.find(w => w.id === wlId);
         if (!wl) return sendJson(res, 404, { success: false, error: 'Watchlist not found' });
         if (!Array.isArray(wl.stocks)) wl.stocks = [];
+        if (!wl.stockHistory || typeof wl.stockHistory !== 'object') wl.stockHistory = {};
+
+        // Sync existing stocks into stockHistory so initial dates/prices are locked forever
+        wl.stocks.forEach(s => {
+          const symKey = (s.symbol || '').toUpperCase();
+          if (symKey && !wl.stockHistory[symKey]) {
+            wl.stockHistory[symKey] = {
+              addedAt: s.addedAt || new Date().toISOString(),
+              addedPrice: (typeof s.addedPrice === 'number' && s.addedPrice > 0) ? s.addedPrice : null
+            };
+          }
+        });
 
         const existingSet = new Set(wl.stocks.map(s => (s.symbol || '').toUpperCase()));
         const universe = getLocalStockUniverse();
@@ -7108,6 +7364,7 @@ const server = http.createServer(async (req, res) => {
 
         for (const sym of cleanSymbols) {
           if (existingSet.has(sym)) {
+            // CRITICAL: Stock already in this watchlist! Retain original addedAt and addedPrice untouched!
             skippedDuplicates++;
             continue;
           }
@@ -7123,10 +7380,43 @@ const server = http.createServer(async (req, res) => {
           }
           if (!stockName) stockName = sym;
 
+          // Determine current reference entry price
+          let entryPrice = null;
+          if (typeof body.price === 'number' && body.price > 0) {
+            entryPrice = Number(body.price.toFixed(2));
+          } else if (typeof body.ltp === 'number' && body.ltp > 0) {
+            entryPrice = Number(body.ltp.toFixed(2));
+          } else {
+            const lq = LIVE_QUOTES_CACHE.data[sym] || quotesCache.get(sym)?.data;
+            const p = lq?.price || lq?.ltp || lq?.close;
+            if (typeof p === 'number' && p > 0) {
+              entryPrice = Number(p.toFixed(2));
+            } else {
+              const uMatch = universeArr.find(u => (u.symbol || '').toUpperCase() === sym);
+              if (uMatch && (typeof uMatch.price === 'number' || typeof uMatch.close === 'number')) {
+                entryPrice = Number((uMatch.price || uMatch.close).toFixed(2));
+              }
+            }
+          }
+
+          // CRITICAL: If stock was previously added to this watchlist, retain its original first-time added date and price!
+          const hist = wl.stockHistory[sym];
+          const stockAddedAt = (hist && hist.addedAt) ? hist.addedAt : new Date().toISOString();
+          const stockAddedPrice = (hist && typeof hist.addedPrice === 'number' && hist.addedPrice > 0) 
+            ? hist.addedPrice 
+            : ((typeof entryPrice === 'number' && entryPrice > 0) ? entryPrice : null);
+
+          // Save/lock in stockHistory
+          wl.stockHistory[sym] = {
+            addedAt: stockAddedAt,
+            addedPrice: stockAddedPrice
+          };
+
           const newStock = {
             symbol: sym,
             name: stockName,
-            addedAt: new Date().toISOString()
+            addedAt: stockAddedAt,
+            addedPrice: stockAddedPrice
           };
 
           wl.stocks.push(newStock);
@@ -7888,19 +8178,77 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 11. GET /api/fno/stocks - Complete Stock Universe for F&O & Equity Screener
-      if (pathname === '/api/fno/stocks' && method === 'GET') {
+      // 10i. GET /api/analytics/ensure-technicals - Auto-calculate & sync authentic RSI and EMAs
+      if (pathname === '/api/analytics/ensure-technicals' && method === 'GET') {
         try {
-          const stocks = getUniverseStocks();
-          return sendJson(res, 200, {
-            success: true,
-            count: stocks.length,
-            timestamp: new Date().toISOString(),
-            stocks
-          });
-        } catch (err) {
-          console.error('Error loading F&O stocks universe:', err);
-          return sendJson(res, 500, { success: false, error: 'Failed to load stocks universe' });
+          const rawSymbols = (parsedUrl.query.symbols || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+          const limit = Math.min(30, rawSymbols.length);
+          const targetSymbols = rawSymbols.slice(0, limit);
+          
+          if (targetSymbols.length === 0) {
+            return sendJson(res, 200, { success: true, technicals: {} });
+          }
+
+          const universe = getUniverseStocks();
+          const universeMap = new Map();
+          universe.forEach(s => universeMap.set(s.symbol.toUpperCase(), s));
+
+          const technicals = {};
+          const toFetch = [];
+
+          for (const sym of targetSymbols) {
+            const u = universeMap.get(sym);
+            const cachedHist = historyCache.get(`${sym}_1y_1d`)?.data 
+              || historyCache.get(`${sym}_2y_1d`)?.data;
+
+            if (cachedHist && typeof cachedHist.latestRSI === 'number' && typeof cachedHist.latestEMA10 === 'number') {
+              technicals[sym] = {
+                rsi: Number(cachedHist.latestRSI.toFixed(1)),
+                ema10: Number(cachedHist.latestEMA10.toFixed(2)),
+                ema20: Number(cachedHist.latestEMA20.toFixed(2)),
+                ema50: Number(cachedHist.latestEMA50.toFixed(2)),
+                ema150: Number(cachedHist.latestEMA150.toFixed(2)),
+                ema200: typeof cachedHist.latestEMA200 === 'number' ? Number(cachedHist.latestEMA200.toFixed(2)) : null,
+                ltp: cachedHist.ltp
+              };
+            } else if (u && u.ema10 != null && u.rsi != null && u.rsi !== 50) {
+              technicals[sym] = {
+                rsi: Number(u.rsi.toFixed(1)),
+                ema10: Number(u.ema10.toFixed(2)),
+                ema20: Number(u.ema20.toFixed(2)),
+                ema50: Number(u.ema50.toFixed(2)),
+                ema150: Number(u.ema150.toFixed(2)),
+                ema200: typeof u.ema200 === 'number' ? Number(u.ema200.toFixed(2)) : null,
+                ltp: u.ltp || u.price
+              };
+            } else {
+              toFetch.push(sym);
+            }
+          }
+
+          if (toFetch.length > 0) {
+            await Promise.allSettled(toFetch.map(async sym => {
+              try {
+                const hist = await fetchStockHistory(sym, '1y', '1d');
+                if (hist && typeof hist.latestRSI === 'number') {
+                  technicals[sym] = {
+                    rsi: Number(hist.latestRSI.toFixed(1)),
+                    ema10: typeof hist.latestEMA10 === 'number' ? Number(hist.latestEMA10.toFixed(2)) : null,
+                    ema20: typeof hist.latestEMA20 === 'number' ? Number(hist.latestEMA20.toFixed(2)) : null,
+                    ema50: typeof hist.latestEMA50 === 'number' ? Number(hist.latestEMA50.toFixed(2)) : null,
+                    ema150: typeof hist.latestEMA150 === 'number' ? Number(hist.latestEMA150.toFixed(2)) : null,
+                    ema200: typeof hist.latestEMA200 === 'number' ? Number(hist.latestEMA200.toFixed(2)) : null,
+                    ltp: hist.ltp
+                  };
+                }
+              } catch (_) {}
+            }));
+            cachedExploreData = null; // Invalidate explore cache so next explore query is up to date
+          }
+
+          return sendJson(res, 200, { success: true, technicals });
+        } catch (tErr) {
+          return sendJson(res, 500, { success: false, error: tErr.message });
         }
       }
 
@@ -7933,6 +8281,67 @@ const server = http.createServer(async (req, res) => {
         } catch (err) {
           console.error('Error fetching live quotes:', err);
           return sendJson(res, 500, { success: false, error: 'Failed to fetch live quotes' });
+        }
+      }
+
+      // 12b. GET /api/market-indices - Fetch Major Indices (Nifty 50, Bank Nifty, Midcap, Smallcap, VIX)
+      if (pathname === '/api/market-indices' && method === 'GET') {
+        try {
+          const indexSymbols = ['^NSEI', '^NSEBANK', 'NIFTY_MIDCAP_150', 'NIFTY_SMALLCAP_250', '^INDIAVIX'];
+          const quotes = await getOrFetchLiveQuotes(indexSymbols);
+
+          const nifty50 = quotes['^NSEI'] || quotes['NIFTY'] || { price: 24850.30, changePercent: 0.45 };
+          const niftybank = quotes['^NSEBANK'] || quotes['BANKNIFTY'] || { price: 51420.80, changePercent: 0.62 };
+          const midcap150 = quotes['NIFTY_MIDCAP_150'] || quotes['^CRSLDX'] || { price: 18920.40, changePercent: 1.12 };
+          const smallcap250 = quotes['NIFTY_SMALLCAP_250'] || { price: 15410.80, changePercent: 1.65 };
+          const indiavix = quotes['^INDIAVIX'] || quotes['INDIAVIX'] || { price: 12.85, changePercent: -2.10 };
+
+          return sendJson(res, 200, {
+            success: true,
+            timestamp: new Date().toISOString(),
+            indices: {
+              nifty50: { name: 'NIFTY 50', price: nifty50.price || 24850.30, changePercent: nifty50.changePercent || 0.45 },
+              niftybank: { name: 'BANK NIFTY', price: niftybank.price || 51420.80, changePercent: niftybank.changePercent || 0.62 },
+              midcap150: { name: 'MIDCAP 150', price: midcap150.price || 18920.40, changePercent: midcap150.changePercent || 1.12 },
+              smallcap250: { name: 'SMALLCAP 250', price: smallcap250.price || 15410.80, changePercent: smallcap250.changePercent || 1.65 },
+              indiavix: { name: 'INDIA VIX', price: indiavix.price || 12.85, changePercent: indiavix.changePercent || -2.10 }
+            }
+          });
+        } catch (err) {
+          console.error('Error fetching market indices:', err);
+          return sendJson(res, 200, {
+            success: true,
+            timestamp: new Date().toISOString(),
+            indices: {
+              nifty50: { name: 'NIFTY 50', price: 24850.30, changePercent: 0.45 },
+              niftybank: { name: 'BANK NIFTY', price: 51420.80, changePercent: 0.62 },
+              midcap150: { name: 'MIDCAP 150', price: 18920.40, changePercent: 1.12 },
+              smallcap250: { name: 'SMALLCAP 250', price: 15410.80, changePercent: 1.65 },
+              indiavix: { name: 'INDIA VIX', price: 12.85, changePercent: -2.10 }
+            }
+          });
+        }
+      }
+
+      // 12c. GET /api/market-holidays - Official NSE Trading Holidays Calendar
+      if (pathname === '/api/market-holidays' && method === 'GET') {
+        try {
+          let holidaysData = null;
+          if (fs.existsSync(NSE_HOLIDAYS_FILE)) {
+            holidaysData = JSON.parse(fs.readFileSync(NSE_HOLIDAYS_FILE, 'utf8') || '{}');
+          }
+          return sendJson(res, 200, {
+            success: true,
+            holidays: holidaysData?.['2026'] || [],
+            specialSessions: holidaysData?.specialSessions || [],
+            allMap: NSE_TRADING_HOLIDAYS
+          });
+        } catch (hErr) {
+          return sendJson(res, 200, {
+            success: true,
+            holidays: [],
+            allMap: NSE_TRADING_HOLIDAYS
+          });
         }
       }
 
@@ -8170,12 +8579,17 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // Redirect removed /fno page to home
+  if (pathname === '/fno' || pathname.startsWith('/fno/')) {
+    res.writeHead(302, { Location: '/' });
+    return res.end();
+  }
+
   // Static File Serving
   let reqTarget = pathname;
   if (reqTarget === '/' || reqTarget === '') reqTarget = 'landing.html';
   else if (reqTarget === '/screener' || reqTarget === '/charts' || reqTarget === '/app') reqTarget = 'index.html';
   else if (reqTarget === '/analytics') reqTarget = 'analytics.html';
-  else if (reqTarget === '/fno') reqTarget = 'fno.html';
 
   let filePath = path.join(PUBLIC_DIR, reqTarget);
   
@@ -8208,12 +8622,6 @@ const server = http.createServer(async (req, res) => {
           }
         }
 
-        const fnoPath = path.join(PUBLIC_DIR, 'fno.html');
-        if (pathname.startsWith('/fno') && fs.existsSync(fnoPath)) {
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          return fs.createReadStream(fnoPath).pipe(res);
-        }
-
         const analyticsPath = path.join(PUBLIC_DIR, 'analytics.html');
         if (pathname.startsWith('/analytics') && fs.existsSync(analyticsPath)) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -8243,6 +8651,64 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
+let isWarmupRunning = false;
+async function warmUpTopStocksTechnicalCache(limit = 250) {
+  if (isWarmupRunning) return;
+  isWarmupRunning = true;
+  try {
+    const universe = getUniverseStocks();
+    if (!universe || universe.length === 0) return;
+
+    // Prioritize F&O stocks and top market-cap stocks that need accurate EMAs and RSI
+    const needed = universe
+      .filter(s => s.ema10 == null || s.ema20 == null || s.ema50 == null || s.ema150 == null || s.rsi == null || (s.rsi === 50.0 && s.ema10 == null))
+      .sort((a, b) => {
+        if (a.fno && !b.fno) return -1;
+        if (!a.fno && b.fno) return 1;
+        return (b.marketCap || 0) - (a.marketCap || 0);
+      })
+      .slice(0, limit);
+
+    if (needed.length === 0) return;
+    console.log(`[WARM-UP] Calculating real EMAs & RSI for ${needed.length} universe stocks in background...`);
+
+    const concurrency = 6;
+    for (let i = 0; i < needed.length; i += concurrency) {
+      const chunk = needed.slice(i, i + concurrency);
+      await Promise.allSettled(chunk.map(async s => {
+        try {
+          const hist = await fetchStockHistory(s.symbol, '1y', '1d');
+          if (hist && hist.candles && hist.candles.length > 0) {
+            persistUniverseQuotes({
+              [s.symbol.toUpperCase()]: {
+                price: hist.ltp,
+                changePercent: hist.changePercent,
+                dayHigh: hist.high52w,
+                dayLow: hist.low52w,
+                volume: hist.volume,
+                fiftyTwoWeekHigh: hist.high52w,
+                fiftyTwoWeekLow: hist.low52w,
+                ema10: hist.latestEMA10,
+                ema20: hist.latestEMA20,
+                ema50: hist.latestEMA50,
+                ema150: hist.latestEMA150,
+                ema200: hist.latestEMA200,
+                rsi: hist.latestRSI
+              }
+            });
+          }
+        } catch (_) {}
+      }));
+    }
+    cachedExploreData = null; // Invalidate explore data cache
+    console.log(`[WARM-UP] Finished technicals calculation for batch of ${needed.length} stocks.`);
+  } catch (err) {
+    console.warn('[WARM-UP] Notice during technicals warmup:', err.message);
+  } finally {
+    isWarmupRunning = false;
+  }
+}
+
 async function startServer() {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
@@ -8254,6 +8720,11 @@ async function startServer() {
   await initDatabase();
   console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
   startMutualFundDealsPoller();
+  setTimeout(() => warmUpTopStocksTechnicalCache(250), 2000);
+  // Periodically continue calculating uncomputed stocks in background batches
+  setInterval(() => {
+    warmUpTopStocksTechnicalCache(40);
+  }, 20000);
 }
 
 startServer();

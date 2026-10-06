@@ -155,7 +155,7 @@ const state = {
   runningScreeners: new Set(),
   isRunAllInProgress: false,
   isAggregatedMode: false,
-  theme: localStorage.getItem('theme') || 'dark',
+  theme: localStorage.getItem('sangam_theme') || localStorage.getItem('theme') || 'nordic',
   circuitBandsMap: {},
   circuitStats: null,
   selectedCircuitFile: null,
@@ -290,6 +290,17 @@ const state = {
     currentLightboxChart: null,
     pendingScreenshotBase64: null
   },
+
+  // High-Density ScreeningMantis Layout & Customizer State
+  denseColumns: {
+    symbol: true,
+    close: true,
+    chg: true,
+    vol: true,
+    emas: true
+  },
+  recFilter: 'all',
+
   globalDateRay: {
     active: false,
     anchorDate: null,
@@ -361,7 +372,6 @@ const el = {
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeIcon: document.getElementById('theme-icon'),
   btnNavAnalytics: document.getElementById('btn-nav-analytics'),
-  btnNavFno: document.getElementById('btn-nav-fno'),
   btnAdminConsole: document.getElementById('btn-admin-console'),
   btnOpenNotes: document.getElementById('btn-open-notes'),
   btnOpenMfDeals: document.getElementById('btn-open-mf-deals'),
@@ -404,9 +414,14 @@ const el = {
   changePasswordSuccessBanner: document.getElementById('change-password-success-banner'),
   btnSubmitChangePassword: document.getElementById('btn-submit-change-password'),
   userAuthBox: document.getElementById('user-auth-box'),
+  btnUserProfileMenu: document.getElementById('btn-user-profile-menu'),
+  userProfileDropdown: document.getElementById('user-profile-dropdown'),
+  userDropdownArrow: document.getElementById('user-dropdown-arrow'),
   userBadgeIcon: document.getElementById('user-badge-icon'),
   userBadgeName: document.getElementById('user-badge-name'),
   userBadgeRole: document.getElementById('user-badge-role'),
+  dropdownUserName: document.getElementById('dropdown-user-name'),
+  dropdownUserRoleBadge: document.getElementById('dropdown-user-role-badge'),
   headerSlotsBadge: document.getElementById('header-slots-badge'),
   modalSlotsBadge: document.getElementById('modal-slots-badge'),
   btnLogout: document.getElementById('btn-logout'),
@@ -663,6 +678,12 @@ async function init() {
   // Initialize Global High-Performance Tooltip Engine
   initGlobalTooltipEngine();
 
+  // Initialize Dense Table Column Preferences
+  loadColumnPreferences();
+
+  // Initialize Live Market Indices Tape
+  initMarketIndicesStrip();
+
   // Update Watchlists Tab count badge dynamically
   updateWatchlistsTabBadge();
 
@@ -733,22 +754,40 @@ async function syncDataFeedStatus() {
 
 const CHART_THEME_CONFIGS = {
   'dark': {
-    name: 'Dark',
-    bg: '#0b0f19',
+    name: 'Midnight Obsidian',
+    bg: '#121721',
     text: '#94a3b8',
     grid: 'rgba(255, 255, 255, 0.04)',
-    border: '#1f293d',
-    candleUp: '#10b981',
-    candleDown: '#ef4444'
+    border: '#232b3e',
+    candleUp: '#22c55e',
+    candleDown: '#f43f5e'
+  },
+  'obsidian': {
+    name: 'Midnight Obsidian',
+    bg: '#121721',
+    text: '#94a3b8',
+    grid: 'rgba(255, 255, 255, 0.04)',
+    border: '#232b3e',
+    candleUp: '#22c55e',
+    candleDown: '#f43f5e'
   },
   'light': {
-    name: 'Light',
+    name: 'Nordic Minimalist',
     bg: '#ffffff',
-    text: '#334155',
-    grid: 'rgba(0, 0, 0, 0.05)',
+    text: '#1e293b',
+    grid: 'rgba(0, 0, 0, 0.04)',
     border: '#e2e8f0',
-    candleUp: '#16a34a',
-    candleDown: '#dc2626'
+    candleUp: '#10b981',
+    candleDown: '#f43f5e'
+  },
+  'nordic': {
+    name: 'Nordic Minimalist',
+    bg: '#ffffff',
+    text: '#1e293b',
+    grid: 'rgba(0, 0, 0, 0.04)',
+    border: '#e2e8f0',
+    candleUp: '#10b981',
+    candleDown: '#f43f5e'
   },
   'tv-dark': {
     name: 'TradingView Dark',
@@ -769,13 +808,22 @@ const CHART_THEME_CONFIGS = {
     candleDown: '#ff1744'
   },
   'paper': {
-    name: 'Paper',
-    bg: '#fbf7ee',
-    text: '#44403c',
-    grid: 'rgba(120, 113, 108, 0.08)',
+    name: 'Warm Paper',
+    bg: '#fdfbf7',
+    text: '#2c2621',
+    grid: 'rgba(44, 38, 33, 0.06)',
     border: '#e7e0d3',
-    candleUp: '#059669',
-    candleDown: '#b91c1c'
+    candleUp: '#2d7a46',
+    candleDown: '#b93c2a'
+  },
+  'warm': {
+    name: 'Warm Paper',
+    bg: '#fdfbf7',
+    text: '#2c2621',
+    grid: 'rgba(44, 38, 33, 0.06)',
+    border: '#e7e0d3',
+    candleUp: '#2d7a46',
+    candleDown: '#b93c2a'
   },
   'high-contrast': {
     name: 'High Contrast',
@@ -2035,12 +2083,9 @@ function updateAuthUI(user) {
   state.isAdmin = (user && user.role === 'admin');
 
   if (user) {
-    el.headerSummaryStats?.classList.remove('hidden');
-    el.headerSummaryStats?.classList.add('sm:flex', 'flex');
+    el.headerSummaryStats?.classList.add('hidden');
     el.btnNavAnalytics?.classList.remove('hidden');
     el.btnNavAnalytics?.classList.add('flex');
-    el.btnNavFno?.classList.remove('hidden');
-    el.btnNavFno?.classList.add('flex');
     el.btnOpenAuthModal?.classList.add('hidden');
     el.userAuthBox?.classList.remove('hidden');
     el.userAuthBox?.classList.add('flex');
@@ -2084,16 +2129,24 @@ function updateAuthUI(user) {
       el.btnAdminConsole?.classList.add('hidden');
       el.btnAdminConsole?.classList.remove('flex');
     }
+
+    if (el.dropdownUserName) el.dropdownUserName.textContent = user.username;
+    if (el.dropdownUserRoleBadge) {
+      el.dropdownUserRoleBadge.textContent = user.role === 'admin' ? 'Superadmin' : 'Active Member';
+      el.dropdownUserRoleBadge.className = user.role === 'admin' 
+        ? 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 font-mono'
+        : 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono';
+    }
+    closeUserProfileDropdown();
   } else {
     el.headerSummaryStats?.classList.add('hidden');
     el.headerSummaryStats?.classList.remove('sm:flex', 'flex');
     el.btnNavAnalytics?.classList.add('hidden');
     el.btnNavAnalytics?.classList.remove('flex');
-    el.btnNavFno?.classList.add('hidden');
-    el.btnNavFno?.classList.remove('flex');
     el.btnOpenAuthModal?.classList.remove('hidden');
     el.userAuthBox?.classList.add('hidden');
     el.userAuthBox?.classList.remove('flex');
+    closeUserProfileDropdown();
     el.btnOpenAddModalDeck?.classList.remove('hidden');
     el.btnOpenAddModalDeck?.classList.add('flex');
     el.btnOpenNotes?.classList.add('hidden');
@@ -2124,6 +2177,38 @@ function updateAuthUI(user) {
   applyGuestPermissions();
   lucide.createIcons();
 }
+
+function toggleUserProfileDropdown() {
+  const dd = document.getElementById('user-profile-dropdown');
+  const arrow = document.getElementById('user-dropdown-arrow');
+  if (!dd) return;
+  const isHidden = dd.classList.contains('hidden');
+  if (isHidden) {
+    dd.classList.remove('hidden');
+    if (arrow) arrow.classList.add('rotate-180');
+  } else {
+    dd.classList.add('hidden');
+    if (arrow) arrow.classList.remove('rotate-180');
+  }
+}
+
+function closeUserProfileDropdown() {
+  const dd = document.getElementById('user-profile-dropdown');
+  const arrow = document.getElementById('user-dropdown-arrow');
+  if (dd) dd.classList.add('hidden');
+  if (arrow) arrow.classList.remove('rotate-180');
+}
+
+window.toggleUserProfileDropdown = toggleUserProfileDropdown;
+window.closeUserProfileDropdown = closeUserProfileDropdown;
+
+// Close User Profile dropdown on click outside
+document.addEventListener('click', (e) => {
+  const box = document.getElementById('user-auth-box');
+  if (box && !box.contains(e.target)) {
+    closeUserProfileDropdown();
+  }
+});
 
 async function loadGuestPermissions() {
   try {
@@ -2319,8 +2404,6 @@ function applyGuestPermissions() {
   if (isGuest && p.navSubpages) {
     el.btnNavAnalytics?.classList.remove('hidden');
     el.btnNavAnalytics?.classList.add('flex');
-    el.btnNavFno?.classList.remove('hidden');
-    el.btnNavFno?.classList.add('flex');
   }
 
   // Resize chart to adapt to full-screen width smoothly
@@ -2663,7 +2746,7 @@ function switchSidebarTab(tab) {
   // Reset tab button states
   [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan, el.tabBtnSsrvol, el.tabBtnVcpscan].forEach(btn => {
     if (!btn) return;
-    btn.classList.remove('bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'bg-purple-600', 'text-white', 'text-black', 'shadow-sm');
+    btn.classList.remove('active', 'bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'bg-purple-600', 'text-white', 'text-black', 'shadow-sm');
     btn.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
   });
 
@@ -2675,7 +2758,7 @@ function switchSidebarTab(tab) {
   });
 
   if (tab === 'screeners') {
-    el.tabBtnScreeners?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+    el.tabBtnScreeners?.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
     el.tabBtnScreeners?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
     el.sidebarScreenersView?.classList.remove('hidden');
     el.sidebarScreenersView?.classList.add('flex');
@@ -2686,7 +2769,7 @@ function switchSidebarTab(tab) {
       return;
     }
 
-    el.tabBtnWatchlists?.classList.add('bg-amber-500', 'text-black', 'shadow-sm');
+    el.tabBtnWatchlists?.classList.add('active', 'bg-amber-500', 'text-black', 'shadow-sm');
     el.tabBtnWatchlists?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
     el.sidebarWatchlistsView?.classList.remove('hidden');
     el.sidebarWatchlistsView?.classList.add('flex');
@@ -2699,7 +2782,7 @@ function switchSidebarTab(tab) {
       return;
     }
 
-    el.tabBtnPricescan?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+    el.tabBtnPricescan?.classList.add('active', 'bg-emerald-600', 'text-white', 'shadow-sm');
     el.tabBtnPricescan?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
     el.sidebarPricescanView?.classList.remove('hidden');
     el.sidebarPricescanView?.classList.add('flex');
@@ -2712,7 +2795,7 @@ function switchSidebarTab(tab) {
       return;
     }
 
-    el.tabBtnSsrvol?.classList.add('bg-amber-500', 'text-black', 'shadow-sm');
+    el.tabBtnSsrvol?.classList.add('active', 'bg-amber-500', 'text-black', 'shadow-sm');
     el.tabBtnSsrvol?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
     el.sidebarSsrvolView?.classList.remove('hidden');
     el.sidebarSsrvolView?.classList.add('flex');
@@ -2725,7 +2808,7 @@ function switchSidebarTab(tab) {
       return;
     }
 
-    el.tabBtnVcpscan?.classList.add('bg-purple-600', 'text-white', 'shadow-sm');
+    el.tabBtnVcpscan?.classList.add('active', 'bg-purple-600', 'text-white', 'shadow-sm');
     el.tabBtnVcpscan?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
     el.sidebarVcpscanView?.classList.remove('hidden');
     el.sidebarVcpscanView?.classList.add('flex');
@@ -2809,6 +2892,20 @@ function renderWatchlistSelector() {
 }
 
 
+function formatWatchlistDate(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return '—';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch (_) {
+    return '—';
+  }
+}
+
 function renderWatchlistStocks() {
   if (!el.watchlistTbody) return;
   el.watchlistTbody.innerHTML = '';
@@ -2839,7 +2936,7 @@ function renderWatchlistStocks() {
   if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
     el.watchlistTbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-16 text-center text-slate-500">
+        <td colspan="7" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <div class="w-10 h-10 rounded-full bg-dark-bg flex items-center justify-center text-slate-600">
               <i data-lucide="star" class="w-5 h-5 text-amber-500/40"></i>
@@ -2881,6 +2978,25 @@ function renderWatchlistStocks() {
       const valA = (typeof quoteA.volume === 'number' && quoteA.volume > 0) ? quoteA.volume : 0;
       const valB = (typeof quoteB.volume === 'number' && quoteB.volume > 0) ? quoteB.volume : 0;
       return isAsc ? valA - valB : valB - valA;
+    } else if (sortField === 'addedAt') {
+      const timeA = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+      const timeB = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+      return isAsc ? timeA - timeB : timeB - timeA;
+    } else if (sortField === 'returnSinceAdded') {
+      const getRet = (stk, q) => {
+        const base = (typeof stk.addedPrice === 'number' && stk.addedPrice > 0) ? stk.addedPrice : null;
+        const cur = (typeof q?.ltp === 'number' && q.ltp > 0) ? q.ltp : null;
+        if (base !== null && cur !== null) {
+          return ((cur - base) / base) * 100;
+        }
+        return null;
+      };
+      const retA = getRet(a, quoteA);
+      const retB = getRet(b, quoteB);
+      if (retA === null && retB === null) return 0;
+      if (retA === null) return 1;
+      if (retB === null) return -1;
+      return isAsc ? retA - retB : retB - retA;
     }
 
     const symA = (a.symbol || '').toUpperCase();
@@ -2898,6 +3014,24 @@ function renderWatchlistStocks() {
     const chgBadge = quote.changePercent !== undefined
       ? (isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20')
       : 'text-slate-500';
+
+    const addedDateStr = stock.addedAt ? formatWatchlistDate(stock.addedAt) : '—';
+    const curLtp = (typeof quote.ltp === 'number' && quote.ltp > 0) ? quote.ltp : null;
+    const basePrice = (typeof stock.addedPrice === 'number' && stock.addedPrice > 0) ? stock.addedPrice : null;
+
+    let retHtml = '<span class="text-slate-500 font-mono text-[11px]">—</span>';
+    if (basePrice !== null && curLtp !== null) {
+      const retPct = ((curLtp - basePrice) / basePrice) * 100;
+      const isProfit = retPct >= 0;
+      const retClass = isProfit 
+        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+      const sign = isProfit ? '+' : '';
+      const tooltip = `Added at ₹${basePrice.toFixed(2)} on ${addedDateStr}`;
+      retHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold ${retClass}" title="${tooltip}">${sign}${retPct.toFixed(2)}%</span>`;
+    } else if (basePrice !== null) {
+      retHtml = `<span class="text-slate-400 font-mono text-[10px]" title="Added at ₹${basePrice}">₹${basePrice.toFixed(2)}</span>`;
+    }
 
     const tr = document.createElement('tr');
     tr.className = `wl-stock-row border-b border-dark-border/40 hover:bg-dark-accent/40 cursor-pointer transition-colors ${isSelected ? 'bg-amber-500/10 border-l-2 border-amber-500' : ''}`;
@@ -2918,6 +3052,8 @@ function renderWatchlistStocks() {
         <span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold ${chgBadge}">${chgStr}</span>
       </td>
       <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">${volStr}</td>
+      <td class="py-2.5 px-2 text-center font-mono text-slate-400 text-[11px] whitespace-nowrap" title="Added on ${addedDateStr}">${addedDateStr}</td>
+      <td class="py-2.5 px-2 text-right whitespace-nowrap">${retHtml}</td>
       <td class="py-2.5 px-1 text-center">
         <button class="btn-remove-wl-stock p-1 rounded hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer" data-symbol="${stock.symbol}" title="Remove from watchlist">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
@@ -2988,6 +3124,9 @@ async function addStockToActiveWatchlist(symbolOrSymbols, name = '') {
       return;
     }
 
+    const curQuote = state.watchlistQuotes[cleanSymbol] || (state.selectedStock?.symbol === cleanSymbol ? state.selectedStock : null) || state.quotes?.[cleanSymbol];
+    const entryPrice = curQuote?.ltp || curQuote?.close || curQuote?.price || null;
+
     try {
       const res = await fetch(`/api/watchlists/${activeWl.id}/stocks`, {
         method: 'POST',
@@ -2995,7 +3134,7 @@ async function addStockToActiveWatchlist(symbolOrSymbols, name = '') {
           'Content-Type': 'application/json',
           ...getAuthHeaders()
         },
-        body: JSON.stringify({ symbol: cleanSymbol, name })
+        body: JSON.stringify({ symbol: cleanSymbol, name, price: entryPrice })
       });
       const data = await res.json();
 
@@ -3360,6 +3499,9 @@ async function addStockToSpecificWatchlist(wlId, symbol, name) {
   const wl = state.watchlists.find(w => w.id === wlId);
   if (!wl) return;
 
+  const curQuote = state.watchlistQuotes[symbol] || (state.selectedStock?.symbol === symbol ? state.selectedStock : null) || state.quotes?.[symbol];
+  const entryPrice = curQuote?.ltp || curQuote?.close || curQuote?.price || null;
+
   try {
     const res = await fetch(`/api/watchlists/${wlId}/stocks`, {
       method: 'POST',
@@ -3367,7 +3509,7 @@ async function addStockToSpecificWatchlist(wlId, symbol, name) {
         'Content-Type': 'application/json',
         ...getAuthHeaders()
       },
-      body: JSON.stringify({ symbol, name })
+      body: JSON.stringify({ symbol, name, price: entryPrice })
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to add stock');
@@ -3392,27 +3534,98 @@ window.closeRenameModal = closeRenameModal;
 window.openAddModal = openAddModal;
 window.closeModal = closeModal;
 
-// Theme handling
+// Theme handling (3 Soothing Modes: Nordic, Warm Paper, Midnight Obsidian)
 function applyTheme(theme) {
+  applyAppTheme(theme);
+}
+
+function applyAppTheme(theme) {
+  if (theme === 'dark') theme = 'obsidian';
+  if (theme === 'light') theme = 'nordic';
+  if (!['nordic', 'warm', 'obsidian'].includes(theme)) theme = 'nordic';
+
   state.theme = theme;
+  localStorage.setItem('sangam_theme', theme);
   localStorage.setItem('theme', theme);
+
   const root = document.documentElement;
-  if (theme === 'dark') {
+  root.setAttribute('data-theme', theme);
+  if (theme === 'obsidian') {
     root.classList.add('dark');
   } else {
     root.classList.remove('dark');
   }
-  if (state.selectedStock) {
+
+  // Update body class for Option 2 themes
+  if (document.body) {
+    document.body.classList.remove('theme-warm', 'theme-obsidian');
+    if (theme === 'warm') document.body.classList.add('theme-warm');
+    else if (theme === 'obsidian') document.body.classList.add('theme-obsidian');
+  }
+
+  // Update theme segmented buttons (Banner buttons)
+  const segBtns = document.querySelectorAll('.theme-seg-btn, .theme-opt-btn');
+  segBtns.forEach(btn => {
+    const isChosen = btn.getAttribute('data-theme') === theme || btn.id === `seg-btn-${theme}`;
+    btn.classList.toggle('active', isChosen);
+  });
+
+  // Update button icon & checkmarks
+  const activeIcon = document.getElementById('theme-active-icon');
+  if (activeIcon) {
+    if (theme === 'nordic') activeIcon.textContent = '🌿';
+    else if (theme === 'warm') activeIcon.textContent = '📜';
+    else activeIcon.textContent = '🌌';
+  }
+
+  const choices = document.querySelectorAll('.theme-choice-btn');
+  choices.forEach(btn => {
+    const check = btn.querySelector('.theme-check-mark');
+    const isChosen = btn.getAttribute('data-choice') === theme;
+    if (check) check.classList.toggle('hidden', !isChosen);
+  });
+
+  // Sync native chart theme
+  if (typeof applyChartTheme === 'function') {
+    if (theme === 'nordic') applyChartTheme('nordic');
+    else if (theme === 'warm') applyChartTheme('warm');
+    else applyChartTheme('obsidian');
+  } else if (state.selectedStock && typeof updateNativeChartTheme === 'function') {
     updateNativeChartTheme();
   }
+
+  // Re-render table if stocks present to update RSI colors
+  if (typeof renderStocksTable === 'function' && state.currentStocks && state.currentStocks.length > 0) {
+    renderStocksTable();
+  }
+
+  const dropdown = document.getElementById('theme-menu-dropdown');
+  if (dropdown) dropdown.classList.add('hidden');
 }
+
+window.applyAppTheme = applyAppTheme;
+window.switchTheme = applyAppTheme;
+
+window.applyAppTheme = applyAppTheme;
+window.toggleThemeDropdown = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const dropdown = document.getElementById('theme-menu-dropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+};
+
+document.addEventListener('click', (e) => {
+  const container = document.getElementById('theme-dropdown-container');
+  if (container && !container.contains(e.target)) {
+    const dropdown = document.getElementById('theme-menu-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+  }
+});
 
 // Setup Event Listeners
 function setupEventListeners() {
-  // Theme toggle
-  el.btnThemeToggle?.addEventListener('click', () => {
-    applyTheme(state.theme === 'dark' ? 'light' : 'dark');
-  });
 
   // Multi-User Auth Modals & Logout
   el.btnOpenAuthModal?.addEventListener('click', () => openAuthModal('login'));
@@ -3476,7 +3689,7 @@ function setupEventListeners() {
   el.categoryFilterBar?.addEventListener('click', e => {
     const btn = e.target.closest('button[data-category]');
     if (!btn) return;
-    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.cat-pill, .cat-btn').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     state.activeCategoryFilter = btn.dataset.category;
     renderScreeners();
@@ -4534,6 +4747,7 @@ function initNativeCharts() {
   function handleCrosshairUpdate(param) {
     if (!param.time) {
       updateDefaultVolumeBadges();
+      if (typeof updateOption1LegendLine === 'function') updateOption1LegendLine();
       return;
     }
 
@@ -4598,6 +4812,8 @@ function initNativeCharts() {
         }
       }
     }
+
+    if (typeof updateOption1LegendLine === 'function') updateOption1LegendLine(param.time);
   }
 
   // Synchronize Crosshairs across Main and RSI Charts
@@ -5945,6 +6161,29 @@ function normalizeCandleDateString(time) {
   return String(time);
 }
 
+// Official NSE / BSE Trading Holidays Guard for Charts
+const NSE_CALENDAR_HOLIDAYS = new Set([
+  '2026-01-15', '2026-01-26', '2026-03-03', '2026-03-26', '2026-03-31',
+  '2026-04-03', '2026-04-14', '2026-05-01', '2026-05-28', '2026-06-26',
+  '2026-09-14', '2026-10-02', '2026-10-20', '2026-11-10', '2026-11-24', '2026-12-25',
+  '2025-01-26', '2025-02-26', '2025-03-14', '2025-03-31', '2025-04-10', '2025-04-14',
+  '2025-04-18', '2025-05-01', '2025-06-07', '2025-08-15', '2025-08-27', '2025-10-02',
+  '2025-10-21', '2025-10-22', '2025-11-05', '2025-12-25'
+]);
+
+function isNSEHolidayDate(timeVal) {
+  if (!timeVal) return false;
+  let dStr = '';
+  if (typeof timeVal === 'string') dStr = timeVal.slice(0, 10);
+  else if (typeof timeVal === 'number') {
+    const ms = timeVal > 1e11 ? timeVal : timeVal * 1000;
+    dStr = new Date(ms).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  } else if (typeof timeVal === 'object' && timeVal.year) {
+    dStr = `${timeVal.year}-${String(timeVal.month).padStart(2, '0')}-${String(timeVal.day).padStart(2, '0')}`;
+  }
+  return Boolean(dStr && NSE_CALENDAR_HOLIDAYS.has(dStr));
+}
+
 function generateFutureRayPoints(lastCandle, gPrice, allCandles, count = 120) {
   if (!lastCandle || lastCandle.time === undefined || lastCandle.time === null) return [];
   const futurePoints = [];
@@ -6784,7 +7023,51 @@ function updateDefaultLegend() {
     if (el.rsiSmaLiveBadge) {
       el.rsiSmaLiveBadge.textContent = state.currentStockData.latestRsiSMA || '--';
     }
+    updateOption1LegendLine();
   }
+}
+
+function updateOption1LegendLine(hoverTime) {
+  const d = state.currentStockData;
+  if (!d) return;
+
+  const targetTime = hoverTime;
+  const findVal = (series) => {
+    if (!series || !series.length) return null;
+    if (targetTime) {
+      const match = series.find(item => item.time === targetTime);
+      if (match && typeof match.value === 'number') return match.value;
+    }
+    return series[series.length - 1]?.value;
+  };
+
+  const e10Val = findVal(d.ema10);
+  const e20Val = findVal(d.ema20);
+  const e50Val = findVal(d.ema50);
+  const e150Val = findVal(d.ema150);
+  const e200Val = findVal(d.ema200);
+
+  let volVal = '--';
+  if (targetTime && d.candles) {
+    const cMatch = d.candles.find(c => c.time === targetTime);
+    if (cMatch && cMatch.volume) volVal = fmt.volume(cMatch.volume);
+  } else if (d.candles && d.candles.length > 0) {
+    volVal = fmt.volume(d.candles[d.candles.length - 1].volume);
+  }
+
+  const elE10 = document.getElementById('legend-ema10');
+  const elE20 = document.getElementById('legend-ema20');
+  const elE50 = document.getElementById('legend-ema50');
+  const elE150 = document.getElementById('legend-ema150');
+  const elE200 = document.getElementById('legend-ema200');
+  const elVol = document.getElementById('legend-volume');
+
+  if (elE10) elE10.textContent = e10Val != null ? e10Val.toFixed(1) : '--';
+  if (elE20) elE20.textContent = e20Val != null ? e20Val.toFixed(1) : '--';
+  if (elE50) elE50.textContent = e50Val != null ? e50Val.toFixed(1) : '--';
+  if (elE150) elE150.textContent = e150Val != null ? e150Val.toFixed(1) : '--';
+  if (elE200) elE200.textContent = e200Val != null ? e200Val.toFixed(1) : '--';
+  if (elVol) elVol.textContent = volVal;
 }
 
 // -------------------------------------------------------------
@@ -6811,7 +7094,11 @@ async function loadStockChart(rawSymbol) {
     }
 
     if (Array.isArray(data.candles)) {
-      data.candles = data.candles.filter(c => !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001)));
+      data.candles = data.candles.filter(c => {
+        if (!c) return false;
+        if ((!state.activeInterval || state.activeInterval === '1d') && isNSEHolidayDate(c.time)) return false;
+        return !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
+      });
     }
 
     state.currentStockData = data;
@@ -6825,6 +7112,31 @@ async function loadStockChart(rawSymbol) {
       else el.chartStockSymbol.textContent = cleanSymbol;
     }
     if (el.chartStockLtp) el.chartStockLtp.textContent = fmt.currency(data.ltp);
+
+    const chartProfileSymbol = document.getElementById('chart-profile-symbol');
+    if (chartProfileSymbol) chartProfileSymbol.textContent = cleanSymbol;
+
+    // Day Range Slider update
+    const elDayLow = document.getElementById('chart-day-low');
+    const elDayHigh = document.getElementById('chart-day-high');
+    const elDayThumb = document.getElementById('chart-day-slider-thumb');
+    const dLow = Number(data.dayLow || (data.low != null ? data.low : 0));
+    const dHigh = Number(data.dayHigh || (data.high != null ? data.high : 0));
+    if (elDayLow && elDayHigh) {
+      if (dLow > 0 && dHigh > 0) {
+        elDayLow.textContent = fmt.currency(dLow);
+        elDayHigh.textContent = fmt.currency(dHigh);
+        if (elDayThumb && dHigh > dLow) {
+          const ltpVal = Number(data.ltp || 0);
+          const pct = Math.max(0, Math.min(100, ((ltpVal - dLow) / (dHigh - dLow)) * 100));
+          elDayThumb.style.left = `${pct}%`;
+        }
+      } else {
+        elDayLow.textContent = '--';
+        elDayHigh.textContent = '--';
+      }
+    }
+
     if (el.chartStockExchange) {
       const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
       el.chartStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
@@ -6833,8 +7145,8 @@ async function loadStockChart(rawSymbol) {
     // Percent change pill
     if (el.chartStockChange) {
       const isBull = (data.changePercent || 0) >= 0;
-      el.chartStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md ${
-        isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+      el.chartStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md font-mono ${
+        isBull ? 'badge-gain-v2' : 'badge-loss-v2'
       }`;
       el.chartStockChange.textContent = fmt.percent(data.changePercent);
     }
@@ -6924,6 +7236,7 @@ async function loadStockChart(rawSymbol) {
     }
     
     updateDefaultVolumeBadges();
+    updateOption1LegendLine();
 
     // Trigger immediate live quote verification for the chart
     pollActiveStockLiveQuote();
@@ -8291,7 +8604,7 @@ function renderScreeners() {
 
   if (filtered.length === 0) {
     el.screenersContainer.innerHTML = `
-      <div class="col-span-full py-8 text-center text-slate-500 text-xs">
+      <div class="col-span-full py-4 text-center text-slate-500 text-xs">
         No screeners found in "${state.activeCategoryFilter}" category.
       </div>
     `;
@@ -8306,83 +8619,41 @@ function renderScreeners() {
     const canEditOrDelete = Boolean(state.isAdmin || (state.user && isCustom));
 
     const catLower = (screener.category || '').toLowerCase();
-    let badgeClass = 'badge-default';
-    if (isCustom || catLower === 'custom') badgeClass = 'bg-purple-500/15 text-purple-300 border-purple-500/30';
-    else if (catLower.includes('intraday')) badgeClass = 'badge-intraday';
-    else if (catLower.includes('breakout')) badgeClass = 'badge-breakout';
-    else if (catLower.includes('swing')) badgeClass = 'badge-swing';
-    else if (catLower.includes('momentum')) badgeClass = 'badge-momentum';
-    else if (catLower.includes('reversal')) badgeClass = 'badge-reversal';
+    let badgeClass = 'text-slate-400 border-slate-700 bg-slate-800/40';
+    if (isCustom || catLower === 'custom') badgeClass = 'text-purple-300 border-purple-500/30 bg-purple-500/15';
+    else if (catLower.includes('intraday')) badgeClass = 'text-amber-300 border-amber-500/30 bg-amber-500/15';
+    else if (catLower.includes('breakout')) badgeClass = 'text-emerald-300 border-emerald-500/30 bg-emerald-500/15';
+    else if (catLower.includes('swing')) badgeClass = 'text-sky-300 border-sky-500/30 bg-sky-500/15';
+    else if (catLower.includes('momentum')) badgeClass = 'text-indigo-300 border-indigo-500/30 bg-indigo-500/15';
+    else if (catLower.includes('reversal')) badgeClass = 'text-rose-300 border-rose-500/30 bg-rose-500/15';
 
     const card = document.createElement('div');
-    card.className = `screener-card p-3 rounded-xl border bg-dark-bg/60 border-dark-border ${isActive ? 'active' : ''} ${isRunning ? 'running' : ''} flex flex-col justify-between gap-2.5`;
+    card.className = `screener-box group ${isActive ? 'active' : ''} ${isRunning ? 'running' : ''}`;
     card.dataset.id = screener.id;
+    card.title = `${screener.name} (${screener.category || 'General'})\n${screener.description || screener.url}\nLast run: ${screener.lastRun ? fmt.time(screener.lastRun) : 'Not run'}`;
 
-    // Screener action buttons (visible for admin on all, or user on their custom screeners)
+    // Screener action buttons (visible on hover for admin on all, or user on custom screeners)
     const actionsHtml = canEditOrDelete ? `
-      <button class="btn-edit-scr text-slate-500 hover:text-slate-200 p-0.5 rounded transition-colors" title="Edit Screener" data-id="${screener.id}">
-        <i data-lucide="edit-3" class="w-3 h-3"></i>
-      </button>
-      <button class="btn-del-scr text-slate-500 hover:text-red-400 p-0.5 rounded transition-colors" title="Delete Screener" data-id="${screener.id}">
-        <i data-lucide="trash-2" class="w-3 h-3"></i>
-      </button>
-    ` : '';
-
-    const customIndicator = isCustom ? `
-      <span class="px-1 py-0.2 rounded text-[9px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">Custom</span>
+      <div class="hidden group-hover:flex items-center gap-0.5 shrink-0">
+        <button class="btn-edit-scr sb-action-btn p-0.5 rounded transition-colors" title="Edit Screener" data-id="${screener.id}">
+          <i data-lucide="edit-2" class="w-2.5 h-2.5"></i>
+        </button>
+        <button class="btn-del-scr sb-action-btn p-0.5 rounded transition-colors" title="Delete Screener" data-id="${screener.id}">
+          <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
+        </button>
+      </div>
     ` : '';
 
     card.innerHTML = `
-      <div>
-        <div class="flex items-center justify-between gap-1.5 mb-1.5">
-          <div class="flex items-center gap-1">
-            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-md border ${badgeClass}">
-              ${screener.category || 'General'}
-            </span>
-            ${customIndicator}
-          </div>
-          
-          <div class="flex items-center gap-1">
-            ${count > 0 ? `
-              <span class="px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                ${count}
-              </span>
-            ` : ''}
-            ${actionsHtml}
-          </div>
-        </div>
-
-        <h4 class="text-xs font-bold text-slate-200 line-clamp-1 group-hover:text-blue-400">
-          ${screener.name}
-        </h4>
-        <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
-          ${screener.description || screener.url}
-        </p>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+        <span class="sc-name" title="${screener.name}">${screener.name}</span>
+        ${isRunning ? `
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" title="Scanning in progress..."></span>
+        ` : actionsHtml}
       </div>
-
-      <div class="flex items-center justify-between gap-2 pt-1 border-t border-dark-border/40">
-        <span class="text-[10px] text-slate-500 font-mono">
-          ${screener.lastRun ? fmt.time(screener.lastRun) : 'Not run'}
-        </span>
-        
-        <button class="btn-run-scr px-2.5 py-1 text-[11px] font-semibold rounded-lg flex items-center gap-1 transition-all ${
-          isRunning 
-            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 pointer-events-none' 
-            : isActive 
-              ? 'bg-blue-600 text-white shadow-sm' 
-              : 'bg-dark-accent hover:bg-blue-600 hover:text-white text-slate-300'
-        }" data-id="${screener.id}">
-          ${isRunning ? `
-            <svg class="animate-spin -ml-0.5 mr-1 h-3 w-3 text-amber-400" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Running...</span>
-          ` : `
-            <i data-lucide="play" class="w-3 h-3"></i>
-            <span>Run</span>
-          `}
-        </button>
+      <div class="sc-meta">
+        <span>${screener.category || 'General'}${isCustom ? ' (C)' : ''}</span>
+        <strong style="color: var(--pos-text);">${count > 0 ? count : '--'}</strong>
       </div>
     `;
 
@@ -8539,29 +8810,114 @@ function renderStocksTable() {
   el.stocksTbody.innerHTML = '';
 
   let list = state.currentStocks.filter(stock => {
+    // 1. Market Cap filters
     if (state.filterMc2000 && stock.mcOver2000Cr !== true) {
       return false;
     }
     if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
       return false;
     }
-    if (!state.searchQuery) return true;
-    const q = state.searchQuery;
-    const sym = (stock.symbol || '').toLowerCase();
-    const name = (stock.name || '').toLowerCase();
-    return sym.includes(q) || name.includes(q);
+
+    // 2. Search query filter
+    if (state.searchQuery) {
+      const q = state.searchQuery;
+      const sym = (stock.symbol || '').toLowerCase();
+      const name = (stock.name || '').toLowerCase();
+      const sector = (stock.sector || '').toLowerCase();
+      if (!sym.includes(q) && !name.includes(q) && !sector.includes(q)) return false;
+    }
+
+    // 3. Recommended Filter Quick Pills (EMAs Aligned)
+    if (state.recFilter && state.recFilter !== 'all') {
+      const close = (typeof stock.close === 'number' && stock.close > 0) ? stock.close : ((typeof stock.price === 'number' && stock.price > 0) ? stock.price : 0);
+      const chg = typeof stock.changePercent === 'number' ? stock.changePercent : parseFloat(stock.changePercent || 0);
+      const isBullStock = chg >= 0;
+
+      // Real EMA values calculation for filter (Strictly real math, no synthetic multipliers)
+      const e10 = (typeof stock.ema10 === 'number') ? stock.ema10 : (stock.emas && typeof stock.emas[10] === 'number' ? stock.emas[10] : null);
+      const e20 = (typeof stock.ema20 === 'number') ? stock.ema20 : (stock.emas && typeof stock.emas[20] === 'number' ? stock.emas[20] : null);
+      const e50 = (typeof stock.ema50 === 'number') ? stock.ema50 : (stock.emas && typeof stock.emas[50] === 'number' ? stock.emas[50] : null);
+      const e150 = (typeof stock.ema150 === 'number') ? stock.ema150 : (stock.emas && typeof stock.emas[150] === 'number' ? stock.emas[150] : null);
+
+      if (state.recFilter === 'emas-aligned') {
+        const hasAllEmas = (e10 != null && e20 != null && e50 != null && e150 != null);
+        const hasAnyEma = (e10 != null || e20 != null || e50 != null || e150 != null);
+
+        // Stocks with no candle/EMA data at all or zero price are excluded from EMAs Aligned
+        if (!hasAnyEma || close <= 0) return false;
+
+        if (hasAllEmas) {
+          // If all 4 EMAs are available, apply strict EMA aligned filter:
+          // Price > 10 EMA AND 10 EMA > 20 EMA AND 20 EMA > 50 EMA AND 50 EMA > 150 EMA
+          const isFullyAligned = (close > e10) && (e10 > e20) && (e20 > e50) && (e50 > e150);
+          if (!isFullyAligned) return false;
+        } else if (e10 != null && e20 != null) {
+          // If all 4 EMAs are not available (e.g. IPOs with <150 bars), ensure available EMAs are strictly aligned
+          if (close <= e10 || e10 <= e20) return false;
+          if (e50 != null && e20 <= e50) return false;
+        } else {
+          return false;
+        }
+      }
+    }
+
+    return true;
   });
 
+  // Sort list
   list.sort((a, b) => {
+    // When EMAs Aligned filter is active:
+    // Place fully aligned stocks first, and stocks with incomplete EMAs (e.g. recent IPOs) at the last of the list
+    if (state.recFilter === 'emas-aligned') {
+      const aHasAll = ((typeof a.ema10 === 'number' || a.emas?.[10] != null) && (typeof a.ema20 === 'number' || a.emas?.[20] != null) && (typeof a.ema50 === 'number' || a.emas?.[50] != null) && (typeof a.ema150 === 'number' || a.emas?.[150] != null));
+      const bHasAll = ((typeof b.ema10 === 'number' || b.emas?.[10] != null) && (typeof b.ema20 === 'number' || b.emas?.[20] != null) && (typeof b.ema50 === 'number' || b.emas?.[50] != null) && (typeof b.ema150 === 'number' || b.emas?.[150] != null));
+      if (aHasAll && !bHasAll) return -1;
+      if (!aHasAll && bHasAll) return 1;
+    }
     let valA = a[state.sortField];
     let valB = b[state.sortField];
+
+    if (state.sortField === 'high52wDist') {
+      const closeA = a.close || a.price || 0;
+      const raw52wA = Number(a.high52w || a.fiftyTwoWeekHigh || 0);
+      const hA = Math.max(closeA, Number(a.dayHigh || 0), raw52wA);
+      valA = hA > 0 ? Math.min(0, ((closeA - hA) / hA) * 100) : -999;
+
+      const closeB = b.close || b.price || 0;
+      const raw52wB = Number(b.high52w || b.fiftyTwoWeekHigh || 0);
+      const hB = Math.max(closeB, Number(b.dayHigh || 0), raw52wB);
+      valB = hB > 0 ? Math.min(0, ((closeB - hB) / hB) * 100) : -999;
+    } else if (state.sortField === 'emaCross') {
+      const crossA = a.emaCross?.daysAgo || 1;
+      const bullA = a.emaCross?.isBullish !== false && (a.changePercent >= 0 || (a.ema10 || 0) >= (a.ema20 || 0));
+      valA = bullA ? crossA : -crossA;
+
+      const crossB = b.emaCross?.daysAgo || 1;
+      const bullB = b.emaCross?.isBullish !== false && (b.changePercent >= 0 || (b.ema10 || 0) >= (b.ema20 || 0));
+      valB = bullB ? crossB : -crossB;
+    } else if (state.sortField === 'volume') {
+      valA = a.volume || 0;
+      valB = b.volume || 0;
+    } else if (state.sortField === 'close') {
+      valA = a.close || a.price || 0;
+      valB = b.close || b.price || 0;
+    } else if (state.sortField === 'changePercent') {
+      valA = typeof a.changePercent === 'number' ? a.changePercent : parseFloat(a.changePercent || 0);
+      valB = typeof b.changePercent === 'number' ? b.changePercent : parseFloat(b.changePercent || 0);
+    } else if (state.sortField === 'rsi') {
+      valA = typeof a.rsi === 'number' ? a.rsi : 0;
+      valB = typeof b.rsi === 'number' ? b.rsi : 0;
+    } else if (state.sortField === 'rvol') {
+      valA = typeof a.rvol === 'number' ? a.rvol : 0;
+      valB = typeof b.rvol === 'number' ? b.rvol : 0;
+    }
 
     if (typeof valA === 'string') {
       return state.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
     }
 
-    valA = valA || 0;
-    valB = valB || 0;
+    valA = valA !== undefined && valA !== null ? valA : 0;
+    valB = valB !== undefined && valB !== null ? valB : 0;
     return state.sortAscending ? valA - valB : valB - valA;
   });
 
@@ -8571,87 +8927,119 @@ function renderStocksTable() {
   if (list.length === 0) {
     el.stocksTbody.innerHTML = `
       <tr>
-        <td colspan="4" class="py-16 text-center text-slate-500">
+        <td colspan="5" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="search-x" class="w-6 h-6 text-slate-600"></i>
             <p class="text-sm font-medium text-slate-400">No matching stocks found</p>
-            <p class="text-xs text-slate-500">Try adjusting your search filter or turning off the Market Cap filter.</p>
+            <p class="text-xs text-slate-500">Try adjusting your search filter or selecting a different filter pill.</p>
           </div>
         </td>
       </tr>
     `;
     lucide.createIcons();
+    applyColumnVisibilityToTable();
     return;
   }
 
-  list.forEach(stock => {
+  list.forEach((stock, idx) => {
     const isSelected = state.selectedStock && state.selectedStock.symbol === stock.symbol;
-    const rawChg = typeof stock.changePercent === 'number' ? stock.changePercent : parseFloat(stock.changePercent);
+    const rawChg = typeof stock.changePercent === 'number' ? stock.changePercent : parseFloat(stock.changePercent || 0);
     const chgVal = isNaN(rawChg) ? 0 : Number(rawChg.toFixed(2));
     const isBull = chgVal >= 0;
     const changeBadge = isBull 
-      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+      : 'bg-rose-500/15 text-rose-400 border border-rose-500/30';
     const closePrice = (typeof stock.close === 'number' && stock.close > 0) ? stock.close : ((typeof stock.price === 'number' && stock.price > 0) ? stock.price : 0);
 
-    const tr = document.createElement('tr');
-    tr.className = `stock-row border-b border-dark-border/40 hover:bg-dark-accent/40 cursor-pointer transition-colors ${isSelected ? 'selected' : ''}`;
-    
+    // Confluence Badge
     let confluenceHtml = '';
     if (stock.matchCount && stock.matchCount > 1) {
       confluenceHtml = `
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] font-bold" title="${(stock.matchingScreeners || []).join(', ')}">
+        <span class="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[8.5px] font-bold" title="${(stock.matchingScreeners || []).join(', ')}">
           <i data-lucide="zap" class="w-2.5 h-2.5"></i>
           ${stock.matchCount}x
         </span>
       `;
     }
 
-    let mcBadgeHtml = '';
-    if (stock.mcOver2000Cr) {
-      mcBadgeHtml = `
-        <span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2,000 Cr (Mid & Large Cap High Liquidity)">
-          &gt;2k
-        </span>
-      `;
-    } else if (stock.mcOver1000Cr) {
-      mcBadgeHtml = `
-        <span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1,000 Cr (Excludes Micro Caps)">
-          &gt;1k
-        </span>
-      `;
-    }
+    // 4-in-1 EMA Matrix [10 20 50 150] (Real values only)
+    const e10 = (typeof stock.ema10 === 'number') ? stock.ema10 : (stock.emas && typeof stock.emas[10] === 'number' ? stock.emas[10] : null);
+    const e20 = (typeof stock.ema20 === 'number') ? stock.ema20 : (stock.emas && typeof stock.emas[20] === 'number' ? stock.emas[20] : null);
+    const e50 = (typeof stock.ema50 === 'number') ? stock.ema50 : (stock.emas && typeof stock.emas[50] === 'number' ? stock.emas[50] : null);
+    const e150 = (typeof stock.ema150 === 'number') ? stock.ema150 : (stock.emas && typeof stock.emas[150] === 'number' ? stock.emas[150] : null);
+
+    const hasE10 = e10 != null && e10 > 0;
+    const hasE20 = e20 != null && e20 > 0;
+    const hasE50 = e50 != null && e50 > 0;
+    const hasE150 = e150 != null && e150 > 0;
+
+    const above10 = hasE10 ? closePrice > e10 : false;
+    const above20 = hasE20 ? closePrice > e20 : false;
+    const above50 = hasE50 ? closePrice > e50 : false;
+    const above150 = hasE150 ? closePrice > e150 : false;
+
+    // Volume Today
+    const todayVol = (typeof stock.volume === 'number' && stock.volume > 0) ? stock.volume : ((typeof stock.vol === 'number' && stock.vol > 0) ? stock.vol : 0);
+    const volFormatted = fmt.volume(todayVol);
+
+    const tr = document.createElement('tr');
+    tr.className = `dense-row stock-row cursor-pointer select-none ${isSelected ? 'selected' : ''}`;
+    tr.dataset.symbol = stock.symbol;
 
     tr.innerHTML = `
-      <td class="py-2.5 px-3">
-        <div class="flex items-center gap-2">
-          <div>
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="font-bold font-mono text-slate-100 text-xs tracking-tight" title="Ticker: ${stock.symbol}">${stock.symbol}</span>
-              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
-              ${getFnoBadgeHtml(stock.symbol)}
-              ${getCircuitBadgeHtml(stock)}
-              ${mcBadgeHtml}
-              ${confluenceHtml}
-            </div>
-            <span class="text-[11px] text-slate-400 block line-clamp-1 max-w-[170px]" title="${stock.name || stock.symbol}">${stock.name || stock.symbol}</span>
+      <!-- 1. Stock Name & Sector -->
+      <td class="col-symbol">
+        <div class="flex flex-col justify-center leading-tight">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="sym-bold" title="Ticker: ${stock.symbol}">${stock.symbol}</span>
+            ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
+            ${getFnoBadgeHtml(stock.symbol)}
+            ${getCircuitBadgeHtml(stock)}
+            ${confluenceHtml}
           </div>
+          <span class="sym-sub block line-clamp-1 max-w-[160px]" title="${stock.name ? stock.name + (stock.sector ? ' • ' + stock.sector : '') : (stock.sector || stock.symbol)}">
+            ${stock.name && stock.name !== stock.symbol ? stock.name : (stock.sector || stock.symbol)}
+          </span>
         </div>
       </td>
-      <td class="py-2.5 px-3 text-right font-mono font-medium text-slate-200" title="Close Price: ${fmt.currency(closePrice)}">
-        ${fmt.currency(closePrice)}
+
+      <!-- 2. Close Price (₹) -->
+      <td class="col-close num" title="Close Price: ${fmt.currency(closePrice)}">
+        <strong>${fmt.currency(closePrice)}</strong>
       </td>
-      <td class="py-2.5 px-3 text-right" title="1-Day Price Change: ${fmt.percent(chgVal)}">
-        <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${changeBadge}">
-          ${fmt.percent(chgVal)}
+
+      <!-- 3. Change % -->
+      <td class="col-chg num" title="1-Day Price Change: ${fmt.percent(chgVal)}">
+        <span class="${isBull ? 'badge-gain' : 'badge-loss'}">
+          ${chgVal > 0 ? '+' : ''}${chgVal.toFixed(2)}%
         </span>
       </td>
-      <td class="py-2.5 px-3 text-right font-mono text-slate-400 text-[11px]" title="Traded Volume: ${fmt.volume(stock.volume)} shares">
-        ${fmt.volume(stock.volume)}
+
+      <!-- 4. Volume Today -->
+      <td class="col-vol num" title="Today's Traded Volume: ${todayVol.toLocaleString('en-IN')} shares">
+        ${volFormatted}
+      </td>
+
+      <!-- 5. 4-in-1 EMA Matrix [10 20 50 150] -->
+      <td class="col-emas" style="text-align: center;">
+        <div class="matrix-box" title="Price vs EMAs [10 20 50 150] (P=Pass/Above, F=Fail/Below, -=Insufficient History)">
+          <span class="m-dot ${hasE10 ? (above10 ? 'm-p' : 'm-f') : 'm-n'}" title="EMA 10: ${hasE10 ? (above10 ? 'Price Above (₹' + e10.toFixed(2) + ')' : 'Price Below (₹' + e10.toFixed(2) + ')') : 'N/A'}">${hasE10 ? (above10 ? 'P' : 'F') : '-'}</span>
+          <span class="m-dot ${hasE20 ? (above20 ? 'm-p' : 'm-f') : 'm-n'}" title="EMA 20: ${hasE20 ? (above20 ? 'Price Above (₹' + e20.toFixed(2) + ')' : 'Price Below (₹' + e20.toFixed(2) + ')') : 'N/A'}">${hasE20 ? (above20 ? 'P' : 'F') : '-'}</span>
+          <span class="m-dot ${hasE50 ? (above50 ? 'm-p' : 'm-f') : 'm-n'}" title="EMA 50: ${hasE50 ? (above50 ? 'Price Above (₹' + e50.toFixed(2) + ')' : 'Price Below (₹' + e50.toFixed(2) + ')') : 'N/A'}">${hasE50 ? (above50 ? 'P' : 'F') : '-'}</span>
+          <span class="m-dot ${hasE150 ? (above150 ? 'm-p' : 'm-f') : 'm-n'}" title="EMA 150: ${hasE150 ? (above150 ? 'Price Above (₹' + e150.toFixed(2) + ')' : 'Price Below (₹' + e150.toFixed(2) + ')') : 'N/A'}">${hasE150 ? (above150 ? 'P' : 'F') : '-'}</span>
+        </div>
+      </td>
+
+      <!-- 6. RSI(14) -->
+      <td class="col-rsi num" title="RSI(14): ${typeof stock.rsi === 'number' ? stock.rsi.toFixed(1) : '--'}">
+        ${typeof stock.rsi === 'number' 
+          ? `<span class="rsi-chip" style="background: ${stock.rsi >= 70 ? (state.theme === 'warm' ? '#F4EDE4' : '#F3E8FF') : stock.rsi >= 60 ? 'var(--pos-bg)' : stock.rsi <= 40 ? 'var(--neg-bg)' : 'var(--neutral-bg)'}; color: ${stock.rsi >= 70 ? (state.theme === 'warm' ? '#7D4E8D' : '#6B21A8') : stock.rsi >= 60 ? 'var(--pos-text)' : stock.rsi <= 40 ? 'var(--neg-text)' : 'var(--neutral-text)'};">${stock.rsi.toFixed(1)}</span>`
+          : `<span class="font-mono text-[10px]" style="color: var(--text-muted);">--</span>`}
       </td>
     `;
 
-    tr.addEventListener('click', () => {
+    tr.addEventListener('click', (e) => {
+      if (e.target.closest('.stock-info-btn')) return;
       selectStock(stock);
     });
 
@@ -8660,7 +9048,212 @@ function renderStocksTable() {
 
   populatePricescanScopeOptions();
   populateVcpscanScopeOptions();
+  applyColumnVisibilityToTable();
   lucide.createIcons();
+}
+
+// -------------------------------------------------------------
+// Watchlist 3-Dot Instant Click Handler
+// -------------------------------------------------------------
+async function handleWatchlistDotClick(e, symbol, wlIndex) {
+  if (e) e.stopPropagation();
+  const dotEl = e?.target;
+  const sym = String(symbol || '').toUpperCase();
+  if (!sym) return;
+
+  if (!state.watchlists || state.watchlists.length <= wlIndex) {
+    showToast(`Watchlist ${wlIndex + 1} does not exist yet. Please create it first.`, 'info');
+    return;
+  }
+
+  const wl = state.watchlists[wlIndex];
+  const isPresent = (wl.stocks || []).some(s => (s.symbol || '').toUpperCase() === sym);
+
+  if (isPresent) {
+    if (dotEl) dotEl.classList.remove('active');
+    await removeStockFromWatchlist(wl.id, sym);
+  } else {
+    if (dotEl) dotEl.classList.add('active');
+    const stockObj = state.currentStocks.find(s => (s.symbol || '').toUpperCase() === sym);
+    const stockName = stockObj?.name || sym;
+    await addStockToSpecificWatchlist(wl.id, sym, stockName);
+  }
+}
+
+// -------------------------------------------------------------
+// Recommended Filter Pills Controller
+// -------------------------------------------------------------
+function setRecommendedFilter(filterKey) {
+  state.recFilter = filterKey || 'all';
+  
+  document.querySelectorAll('#rec-filter-pills-bar .rec-filter-pill, .rec-pill').forEach(btn => {
+    if (btn.dataset.filter === state.recFilter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  renderStocksTable();
+}
+
+// -------------------------------------------------------------
+// Columns Customizer Controller
+// -------------------------------------------------------------
+function openColumnsCustomizerModal() {
+  const modal = document.getElementById('columns-customizer-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    const prefs = state.denseColumns || {};
+    Object.keys(prefs).forEach(k => {
+      const chk = document.getElementById(`col-toggle-${k}`);
+      if (chk) chk.checked = prefs[k] !== false;
+    });
+  }
+}
+
+function closeColumnsCustomizerModal() {
+  const modal = document.getElementById('columns-customizer-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function handleColumnToggle(colKey, isChecked) {
+  if (!state.denseColumns) state.denseColumns = {};
+  state.denseColumns[colKey] = Boolean(isChecked);
+  saveColumnPreferences();
+}
+
+function toggleAllActiveColumns() {
+  const cols = ['close', 'chg', 'vol', 'emas', 'rsi'];
+  const allChecked = cols.every(k => state.denseColumns[k] !== false);
+  const targetState = !allChecked;
+
+  cols.forEach(k => {
+    state.denseColumns[k] = targetState;
+    const chk = document.getElementById(`col-toggle-${k}`);
+    if (chk) chk.checked = targetState;
+  });
+
+  saveColumnPreferences();
+}
+
+function resetDefaultColumns() {
+  state.denseColumns = {
+    symbol: true,
+    close: true,
+    chg: true,
+    vol: true,
+    emas: true,
+    rsi: true
+  };
+
+  Object.keys(state.denseColumns).forEach(k => {
+    const chk = document.getElementById(`col-toggle-${k}`);
+    if (chk) chk.checked = true;
+  });
+
+  saveColumnPreferences();
+  showToast('Table columns reset to default', 'info');
+}
+
+function loadColumnPreferences() {
+  try {
+    const saved = localStorage.getItem('dense_table_columns_prefs');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Clean up legacy keys that were removed
+      delete parsed.sr;
+      delete parsed.wl;
+      delete parsed.cap;
+      delete parsed.gap;
+      delete parsed.ema20;
+      delete parsed.dpivot;
+      delete parsed.wpivot;
+      delete parsed.rvol;
+      delete parsed.emax;
+      delete parsed['52wh'];
+      delete parsed['high52w'];
+      state.denseColumns = { ...state.denseColumns, ...parsed };
+      if (state.denseColumns.vol === undefined) state.denseColumns.vol = true;
+      if (state.denseColumns.emas === undefined) state.denseColumns.emas = true;
+      if (state.denseColumns.rsi === undefined) state.denseColumns.rsi = true;
+    }
+  } catch (e) {}
+  applyColumnVisibilityToTable();
+}
+
+function saveColumnPreferences() {
+  try {
+    localStorage.setItem('dense_table_columns_prefs', JSON.stringify(state.denseColumns));
+  } catch (e) {}
+  applyColumnVisibilityToTable();
+}
+
+function applyColumnVisibilityToTable() {
+  const prefs = state.denseColumns || {};
+  const allColKeys = ['symbol', 'close', 'chg', 'vol', 'emas', 'rsi'];
+  
+  allColKeys.forEach(colKey => {
+    const isVisible = prefs[colKey] !== false;
+    document.querySelectorAll(`.col-${colKey}`).forEach(node => {
+      if (isVisible) {
+        node.style.display = '';
+      } else {
+        node.style.display = 'none';
+      }
+    });
+  });
+}
+
+// -------------------------------------------------------------
+// Live Market Indices Strip Controller
+// -------------------------------------------------------------
+let marketIndicesTimer = null;
+
+function initMarketIndicesStrip() {
+  fetchMarketIndices();
+  if (marketIndicesTimer) clearInterval(marketIndicesTimer);
+  marketIndicesTimer = setInterval(fetchMarketIndices, 12000);
+}
+
+async function fetchMarketIndices() {
+  try {
+    const res = await fetch('/api/market-indices');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.indices) {
+      updateMarketIndicesDisplay(data.indices);
+    }
+  } catch (e) {}
+}
+
+function updateMarketIndicesDisplay(indices) {
+  if (!indices) return;
+  const updateIdx = (id, info) => {
+    if (!info) return;
+    const container = document.getElementById(id);
+    if (!container) return;
+    const ltpEl = container.querySelector('.index-ltp');
+    const chgEl = container.querySelector('.index-chg');
+    if (ltpEl) {
+      ltpEl.textContent = typeof info.price === 'number' ? info.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : info.price;
+    }
+    if (chgEl) {
+      const chg = typeof info.changePercent === 'number' ? info.changePercent : parseFloat(info.changePercent || '0');
+      chgEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+      if (chg >= 0) {
+        chgEl.className = 'index-chg px-1.5 py-0.2 rounded font-semibold text-[10px] bg-emerald-500/15 text-emerald-400';
+      } else {
+        chgEl.className = 'index-chg px-1.5 py-0.2 rounded font-semibold text-[10px] bg-rose-500/15 text-rose-400';
+      }
+    }
+  };
+
+  updateIdx('idx-nifty50', indices.nifty50);
+  updateIdx('idx-niftybank', indices.niftybank);
+  updateIdx('idx-midcap150', indices.midcap150);
+  updateIdx('idx-smallcap250', indices.smallcap250);
+  updateIdx('idx-indiavix', indices.indiavix);
 }
 
 function exportToCsv() {
@@ -11154,6 +11747,17 @@ window.closeChartLightboxModal = closeChartLightboxModal;
 window.handleDeleteCurrentLightboxChart = handleDeleteCurrentLightboxChart;
 window.deleteJournalChart = deleteJournalChart;
 window.refreshJournalBadgeCount = refreshJournalBadgeCount;
+
+// High-Density ScreeningMantis Layout & Columns Window Exports
+window.handleWatchlistDotClick = handleWatchlistDotClick;
+window.setRecommendedFilter = setRecommendedFilter;
+window.openColumnsCustomizerModal = openColumnsCustomizerModal;
+window.closeColumnsCustomizerModal = closeColumnsCustomizerModal;
+window.handleColumnToggle = handleColumnToggle;
+window.toggleAllColumnsInGroup = toggleAllActiveColumns;
+window.toggleAllActiveColumns = toggleAllActiveColumns;
+window.resetDefaultColumns = resetDefaultColumns;
+window.applyColumnVisibilityToTable = applyColumnVisibilityToTable;
 
 // Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', init);

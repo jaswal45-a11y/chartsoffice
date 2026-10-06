@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 1: Market Analytics (Exact Current Button Layout + 3 Soothing Themes)</title>
+  
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ==========================================================================
+       OPTION 1: ANALYTICS (EXACT CURRENT LAYOUT & BUTTON POSITIONS)
+       ========================================================================== */
+    :root {
+      /* Nordic Minimalist */
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --bg-page: #F3F4F6;
+      --bg-card: #FFFFFF;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      
+      --text-main: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+
+      --pos-bg: #E8F7ED;
+      --pos-text: #166534;
+      --pos-border: #BBF7D0;
+      --pos-chart: #10B981;
+
+      --neg-bg: #FEECEB;
+      --neg-text: #991B1B;
+      --neg-border: #FECACA;
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: #FEF9C3;
+      --neutral-text: #854D0E;
+
+      --accent: #059669; /* Emerald/Sage accent for analytics */
+      --accent-subtle: #ECFDF5;
+      --accent-border: #A7F3D0;
+
+      --row-hover: #F8FAFC;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    body.theme-warm {
+      --bg-page: #F7F4EE;
+      --bg-card: #FDFBF7;
+      --bg-surface: #FDFBF7;
+      --bg-subtle: #F2EFE8;
+      --border-color: #E7E0D3;
+      --border-subtle: #EFE9DE;
+      
+      --text-main: #2C2621;
+      --text-secondary: #6E655B;
+      --text-muted: #9B9185;
+
+      --pos-bg: #EAF3EC;
+      --pos-text: #225932;
+      --pos-border: #CFE6D4;
+      --pos-chart: #2D7A46;
+
+      --neg-bg: #F9ECE8;
+      --neg-text: #8E3024;
+      --neg-border: #F6D0C7;
+      --neg-chart: #B93C2A;
+
+      --neutral-bg: #FAF2DD;
+      --neutral-text: #7A571A;
+
+      --accent: #2D7A46;
+      --accent-subtle: #F0F6F1;
+      --accent-border: #C8DEC9;
+
+      --row-hover: #F4EFE6;
+      --shadow-card: 0 1px 3px rgba(44,38,33,0.04);
+    }
+
+    body.theme-obsidian {
+      --bg-page: #0B0E14;
+      --bg-card: #121721;
+      --bg-surface: #121721;
+      --bg-subtle: #18202F;
+      --border-color: #232B3E;
+      --border-subtle: #1C2433;
+      
+      --text-main: #E2E8F0;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --pos-bg: rgba(34, 197, 94, 0.12);
+      --pos-text: #4ADE80;
+      --pos-border: rgba(34, 197, 94, 0.25);
+      --pos-chart: #22C55E;
+
+      --neg-bg: rgba(244, 63, 94, 0.12);
+      --neg-text: #FB7185;
+      --neg-border: rgba(244, 63, 94, 0.25);
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: rgba(234, 179, 8, 0.12);
+      --neutral-text: #FDE047;
+
+      --accent: #34D399;
+      --accent-subtle: rgba(52, 211, 153, 0.12);
+      --accent-border: rgba(52, 211, 153, 0.3);
+
+      --row-hover: #1A2232;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Option Header */
+    .option-banner {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .option-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .opt-tag {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .theme-switcher-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-opt-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .theme-opt-btn.active {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+    }
+
+    /* Top Nav */
+    .app-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .feed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .feed-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pos-chart);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .nav-btn {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-action-tool {
+      padding: 6px 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Live Indices Marquee Strip */
+    .market-strip {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      overflow-x: auto;
+    }
+
+    .index-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .idx-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .idx-name {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .idx-val {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .chg-pill {
+      font-size: 10.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .chg-up {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+    }
+
+    .chg-down {
+      background: var(--neg-bg);
+      color: var(--neg-text);
+    }
+
+    /* Content Area */
+    .analytics-content {
+      flex: 1;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 1920px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sec-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .sec-h2 {
+      font-size: 13.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-main);
+    }
+
+    .sec-desc {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .sec-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .select-dropdown {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .ctrl-btn {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .ctrl-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* 3-Dial Grid */
+    .breadth-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .dial-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dial-val {
+      font-size: 26px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      margin: 2px 0;
+    }
+
+    .dial-circle-svg {
+      width: 58px;
+      height: 58px;
+      transform: rotate(-90deg);
+    }
+
+    /* Indices Ribbon */
+    .indices-scroll-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .idx-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 170px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .idx-card-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .idx-card-price {
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+    }
+
+    /* Sector Breadth Table */
+    .sector-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+    }
+
+    .sector-bar-container {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 200px;
+      background: var(--border-color);
+    }
+
+    .bar-adv { background: var(--pos-chart); }
+    .bar-dec { background: var(--neg-chart); }
+
+    /* Explore Table */
+    .explore-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .explore-table th {
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .explore-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .explore-table th.num, .explore-table td.num {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .explore-table tr:hover {
+      background: var(--row-hover);
+    }
+
+    .badge-gain {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .badge-loss {
+      background: var(--neg-bg);
+      color: var(--neg-text);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .matrix-container {
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .matrix-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 2px;
+      font-size: 8.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+    }
+
+    .dot-pass { background: var(--pos-bg); color: var(--pos-text); border: 1px solid var(--pos-border); }
+    .dot-neutral { background: var(--neutral-bg); color: var(--neutral-text); }
+    .dot-fail { background: var(--neg-bg); color: var(--neg-text); border: 1px solid var(--neg-border); }
+
+    .rsi-badge {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body id="root-body">
+
+  <!-- ==========================================================================
+       TOP OPTION BANNER: CONTROL SWITCHER
+       ========================================================================== -->
+  <div class="option-banner">
+    <div class="option-title">
+      <span class="opt-tag">OPTION 1</span>
+      <span>Market Analytics (Exact Current Layout, Zero Buttons Shifted)</span>
+    </div>
+    <div class="theme-switcher-group">
+      <span style="color: var(--text-muted); font-size: 11px;">Active Palette:</span>
+      <button class="theme-opt-btn active" onclick="switchTheme('nordic')">🌿 Nordic</button>
+      <button class="theme-opt-btn" onclick="switchTheme('warm')">📜 Warm Paper</button>
+      <button class="theme-opt-btn" onclick="switchTheme('obsidian')">🌌 Midnight Obsidian</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       HEADER (EXACT EXISTING BUTTONS)
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">S</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-name">SANGAM</span>
+          <span class="feed-badge">
+            <span class="feed-dot"></span>
+            <span>Live Analytics Hub</span>
+          </span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted);">Peaceful Investing • Market Breadth & Sector Health</p>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs (Exact Position) -->
+    <div class="nav-links">
+      <a class="nav-btn">Home</a>
+      <a href="option1_screener.html" class="nav-btn">Charts</a>
+      <a class="nav-btn active">Analytics</a>
+    </div>
+
+    <!-- Right Actions (Exact Position) -->
+    <div class="header-actions">
+      <button class="btn-action-tool">⚙ Customize</button>
+      <button class="btn-action-tool">Admin / User Login</button>
+      <button class="btn-action-tool" title="Theme Toggle">🌙</button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       LIVE MARKET INDICES STRIP (EXACT EXISTING STRIP)
+       ========================================================================== -->
+  <div class="market-strip">
+    <div class="index-group">
+      <div class="idx-item">
+        <span class="idx-name">NIFTY 50</span>
+        <span class="idx-val">24,850.30</span>
+        <span class="chg-pill chg-up">+0.45%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">BANK NIFTY</span>
+        <span class="idx-val">51,420.80</span>
+        <span class="chg-pill chg-up">+0.62%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">MIDCAP 150</span>
+        <span class="idx-val">18,920.40</span>
+        <span class="chg-pill chg-up">+1.12%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">SMALLCAP 250</span>
+        <span class="idx-val">15,410.80</span>
+        <span class="chg-pill chg-up">+1.65%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">INDIA VIX</span>
+        <span class="idx-val">12.85</span>
+        <span class="chg-pill chg-down">-2.10%</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary);">
+      <span class="feed-dot"></span>
+      <span>NSE LIVE</span>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MAIN ANALYTICS CONTENT
+       ========================================================================== -->
+  <main class="analytics-content">
+
+    <!-- 1. MARKET BREADTH DIAGNOSTICS (EXACT CURRENT LAYOUT) -->
+    <section class="section-card">
+      <div class="section-header-row">
+        <div class="section-title-wrap">
+          <div class="sec-icon-box">📊</div>
+          <div>
+            <h2 class="sec-h2">Market Breadth Diagnostics</h2>
+            <p class="sec-desc">20 SMA & 50 SMA institutional participation analysis across universe & sectors</p>
+          </div>
+        </div>
+
+        <div class="sec-controls">
+          <span style="font-size: 11px; color: var(--text-secondary);">Filter:</span>
+          <select class="select-dropdown">
+            <option>Universe (All Stocks)</option>
+            <option>NIFTY 500</option>
+            <option>NIFTY IT</option>
+          </select>
+          <button class="ctrl-btn">🔄 Refresh</button>
+          <button class="ctrl-btn">▲ Collapse</button>
+        </div>
+      </div>
+
+      <div class="breadth-grid">
+        <!-- 20 SMA -->
+        <div class="dial-card">
+          <div>
+            <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Stocks &gt; 20 SMA</span>
+            <div class="dial-val" style="color: #2563EB;">68.4%</div>
+            <span style="font-size: 10.5px; color: var(--text-muted);">Short-Term Momentum</span>
+          </div>
+          <svg class="dial-circle-svg" viewBox="0 0 36 36">
+            <path stroke="var(--border-color)" stroke-width="3.5" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+            <path stroke="#2563EB" stroke-dasharray="68, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+          </svg>
+        </div>
+
+        <!-- 50 SMA -->
+        <div class="dial-card">
+          <div>
+            <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Stocks &gt; 50 SMA</span>
+            <div class="dial-val" style="color: var(--pos-text);">72.1%</div>
+            <span style="font-size: 10.5px; color: var(--text-muted);">Intermediate Trend Health</span>
+          </div>
+          <svg class="dial-circle-svg" viewBox="0 0 36 36">
+            <path stroke="var(--border-color)" stroke-width="3.5" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+            <path stroke="var(--pos-chart)" stroke-dasharray="72, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+          </svg>
+        </div>
+
+        <!-- Regime Card -->
+        <div class="dial-card" style="flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; width: 100%;">
+            <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Market Regime:</span>
+            <span class="chg-pill chg-up">Healthy Bullish ⚡</span>
+          </div>
+          <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.3;">Strong participation above 20 & 50 SMAs. High probability setups.</p>
+          <div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; font-family: var(--font-mono); border-top: 1px solid var(--border-subtle); padding-top: 4px;">
+            <span>A/D Ratio: <strong style="color: var(--pos-text);">2.95</strong></span>
+            <span>52W H/L: <strong>42 / 8</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. STANDARD & SECTORAL INDICES RIBBON (EXACT POSITION) -->
+    <section class="section-card">
+      <div class="section-header-row">
+        <div class="section-title-wrap">
+          <div class="sec-icon-box">🏛️</div>
+          <div>
+            <h3 class="sec-h2">Standard & Sectoral Indices</h3>
+            <p class="sec-desc">Live Quotes, 20/50 SMA Posture & Filtered Preferences</p>
+          </div>
+        </div>
+
+        <div class="sec-controls">
+          <span style="font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);">Sort:</span>
+          <button class="ctrl-btn active">Change ▾</button>
+          <button class="ctrl-btn">A-Z</button>
+          <button class="ctrl-btn">Price</button>
+          <span style="border-left: 1px solid var(--border-color); height: 14px;"></span>
+          <button class="ctrl-btn active">All</button>
+          <button class="ctrl-btn">Broad Market</button>
+          <button class="ctrl-btn">Sectoral</button>
+          <button class="ctrl-btn">⚙ Customize</button>
+          <button class="ctrl-btn">▲</button>
+        </div>
+      </div>
+
+      <div class="indices-scroll-row">
+        <div class="idx-card">
+          <span class="idx-card-title">NIFTY AUTO</span>
+          <span class="idx-card-price">22,340.50</span>
+          <span class="chg-pill chg-up">+2.15%</span>
+        </div>
+        <div class="idx-card">
+          <span class="idx-card-title">NIFTY IT</span>
+          <span class="idx-card-price">38,120.20</span>
+          <span class="chg-pill chg-up">+1.80%</span>
+        </div>
+        <div class="idx-card">
+          <span class="idx-card-title">NIFTY METAL</span>
+          <span class="idx-card-price">9,410.80</span>
+          <span class="chg-pill chg-up">+1.25%</span>
+        </div>
+        <div class="idx-card">
+          <span class="idx-card-title">NIFTY PHARMA</span>
+          <span class="idx-card-price">19,850.10</span>
+          <span class="chg-pill chg-up">+0.95%</span>
+        </div>
+        <div class="idx-card">
+          <span class="idx-card-title">NIFTY BANK</span>
+          <span class="idx-card-price">51,420.80</span>
+          <span class="chg-pill chg-up">+0.62%</span>
+        </div>
+        <div class="idx-card">
+          <span class="idx-card-title">NIFTY FMCG</span>
+          <span class="idx-card-price">56,120.00</span>
+          <span class="chg-pill chg-down">-0.35%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. EXPLORE UNIVERSE STOCKS TABLE (EXACT PANE) -->
+    <section class="section-card">
+      <div class="section-header-row">
+        <div class="section-title-wrap">
+          <div class="sec-icon-box">🔍</div>
+          <div>
+            <h2 class="sec-h2">Explore Universe Stocks & Technicals</h2>
+            <p class="sec-desc">Comprehensive scanner with RSI badges and EMA alignment matrix</p>
+          </div>
+        </div>
+
+        <div class="sec-controls">
+          <input type="text" placeholder="Search universe..." class="select-dropdown" style="width: 150px;">
+          <button class="ctrl-btn active">1k+ MC</button>
+          <button class="ctrl-btn">2k+ MC</button>
+          <button class="ctrl-btn active">EMAs Aligned</button>
+          <button class="ctrl-btn">Export CSV</button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="explore-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Company Name</th>
+              <th class="num">LTP (₹)</th>
+              <th class="num">Chg %</th>
+              <th class="num">Volume</th>
+              <th style="text-align: center;">EMA Matrix<br><span style="font-size: 8.5px; font-weight: normal;">10 20 50 150</span></th>
+              <th class="num">RSI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>RELIANCE</strong></td>
+              <td style="color: var(--text-secondary);">Reliance Industries Ltd</td>
+              <td class="num"><strong>2,985.40</strong></td>
+              <td class="num"><span class="badge-gain">+1.85%</span></td>
+              <td class="num">6.82M</td>
+              <td style="text-align: center;">
+                <div class="matrix-container">
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge" style="background: var(--pos-bg); color: var(--pos-text);">64.2</span></td>
+            </tr>
+            <tr>
+              <td><strong>TCS</strong></td>
+              <td style="color: var(--text-secondary);">Tata Consultancy Services</td>
+              <td class="num"><strong>4,120.10</strong></td>
+              <td class="num"><span class="badge-gain">+0.92%</span></td>
+              <td class="num">2.14M</td>
+              <td style="text-align: center;">
+                <div class="matrix-container">
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-neutral">N</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge" style="background: var(--neutral-bg); color: var(--neutral-text);">58.7</span></td>
+            </tr>
+            <tr>
+              <td><strong>INFY</strong></td>
+              <td style="color: var(--text-secondary);">Infosys Limited</td>
+              <td class="num"><strong>1,642.30</strong></td>
+              <td class="num"><span class="badge-gain">+2.45%</span></td>
+              <td class="num">5.35M</td>
+              <td style="text-align: center;">
+                <div class="matrix-container">
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge" style="background: #F3E8FF; color: #6B21A8;">71.8</span></td>
+            </tr>
+            <tr>
+              <td><strong>HDFCBANK</strong></td>
+              <td style="color: var(--text-secondary);">HDFC Bank Limited</td>
+              <td class="num"><strong>1,532.80</strong></td>
+              <td class="num"><span class="badge-loss">-0.45%</span></td>
+              <td class="num">8.22M</td>
+              <td style="text-align: center;">
+                <div class="matrix-container">
+                  <span class="matrix-dot dot-fail">F</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                  <span class="matrix-dot dot-pass">P</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge" style="background: var(--neutral-bg); color: var(--neutral-text);">48.3</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function switchTheme(theme) {
+      const b = document.getElementById('root-body');
+      const btns = document.querySelectorAll('.theme-opt-btn');
+      btns.forEach(x => x.classList.remove('active'));
+      b.className = '';
+
+      if (theme === 'nordic') {
+        btns[0].classList.add('active');
+      } else if (theme === 'warm') {
+        b.classList.add('theme-warm');
+        btns[1].classList.add('active');
+      } else if (theme === 'obsidian') {
+        b.classList.add('theme-obsidian');
+        btns[2].classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 1: Screener & Charts (Exact Current Button Layout + 3 Soothing Themes)</title>
+  
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ==========================================================================
+       OPTION 1: PRESERVE EXACT BUTTON & CONTROL POSITIONS
+       Theme CSS Variables (Nordic Light, Warm Paper, Midnight Obsidian)
+       ========================================================================== */
+    :root {
+      /* THEME: Nordic Minimalist (Default) */
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --bg-page: #F3F4F6;
+      --bg-card: #FFFFFF;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      
+      --text-main: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+
+      --pos-bg: #E8F7ED;
+      --pos-text: #166534;
+      --pos-border: #BBF7D0;
+      --pos-chart: #10B981;
+
+      --neg-bg: #FEECEB;
+      --neg-text: #991B1B;
+      --neg-border: #FECACA;
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: #FEF9C3;
+      --neutral-text: #854D0E;
+
+      --accent: #2563EB;
+      --accent-subtle: #EFF6FF;
+      --accent-border: #BFDBFE;
+
+      --ema-10: #059669;
+      --ema-20: #2563EB;
+      --ema-50: #D97706;
+      --ema-150: #7C3AED;
+
+      --row-hover: #F8FAFC;
+      --row-selected: #EEF2F6;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    body.theme-warm {
+      --bg-page: #F7F4EE;
+      --bg-card: #FDFBF7;
+      --bg-surface: #FDFBF7;
+      --bg-subtle: #F2EFE8;
+      --border-color: #E7E0D3;
+      --border-subtle: #EFE9DE;
+      
+      --text-main: #2C2621;
+      --text-secondary: #6E655B;
+      --text-muted: #9B9185;
+
+      --pos-bg: #EAF3EC;
+      --pos-text: #225932;
+      --pos-border: #CFE6D4;
+      --pos-chart: #2D7A46;
+
+      --neg-bg: #F9ECE8;
+      --neg-text: #8E3024;
+      --neg-border: #F6D0C7;
+      --neg-chart: #B93C2A;
+
+      --neutral-bg: #FAF2DD;
+      --neutral-text: #7A571A;
+
+      --accent: #945D3B;
+      --accent-subtle: #F4EDE4;
+      --accent-border: #DEC8B7;
+
+      --ema-10: #2D7A46;
+      --ema-20: #3B6B99;
+      --ema-50: #C0752D;
+      --ema-150: #7D4E8D;
+
+      --row-hover: #F4EFE6;
+      --row-selected: #EDE5D8;
+      --shadow-card: 0 1px 3px rgba(44,38,33,0.04);
+    }
+
+    body.theme-obsidian {
+      --bg-page: #0B0E14;
+      --bg-card: #121721;
+      --bg-surface: #121721;
+      --bg-subtle: #18202F;
+      --border-color: #232B3E;
+      --border-subtle: #1C2433;
+      
+      --text-main: #E2E8F0;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --pos-bg: rgba(34, 197, 94, 0.12);
+      --pos-text: #4ADE80;
+      --pos-border: rgba(34, 197, 94, 0.25);
+      --pos-chart: #22C55E;
+
+      --neg-bg: rgba(244, 63, 94, 0.12);
+      --neg-text: #FB7185;
+      --neg-border: rgba(244, 63, 94, 0.25);
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: rgba(234, 179, 8, 0.12);
+      --neutral-text: #FDE047;
+
+      --accent: #38BDF8;
+      --accent-subtle: rgba(56, 189, 248, 0.12);
+      --accent-border: rgba(56, 189, 248, 0.3);
+
+      --ema-10: #34D399;
+      --ema-20: #60A5FA;
+      --ema-50: #FBBF24;
+      --ema-150: #C084FC;
+
+      --row-hover: #1A2232;
+      --row-selected: #212D42;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Option Banner */
+    .option-banner {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      z-index: 100;
+    }
+
+    .option-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .opt-tag {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .theme-switcher-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-opt-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .theme-opt-btn.active {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+    }
+
+    /* Top Nav */
+    .app-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #10B981, #3B82F6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .feed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .feed-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pos-chart);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .nav-btn {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stats-pill {
+      font-size: 11px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .btn-login {
+      padding: 6px 14px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Live Indices Marquee Strip */
+    .market-strip {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      overflow-x: auto;
+    }
+
+    .index-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .idx-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .idx-name {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .idx-val {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .chg-pill {
+      font-size: 10.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .chg-up {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+    }
+
+    .chg-down {
+      background: var(--neg-bg);
+      color: var(--neg-text);
+    }
+
+    /* Main Container */
+    .main-content {
+      flex: 1;
+      padding: 14px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Screener Command Deck (EXACT CURRENT LAYOUT) */
+    .deck-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .deck-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .deck-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deck-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-main);
+    }
+
+    .cat-pills-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cat-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .cat-btn.active {
+      background: var(--text-main);
+      color: var(--bg-card);
+      border-color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .btn-run-all {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      border: 1px solid var(--pos-border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .screener-box {
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .screener-box:hover {
+      border-color: var(--accent);
+      background: var(--bg-card);
+    }
+
+    .screener-box.active {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .sc-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sc-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* Dual Pane */
+    .workspace-split {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      min-height: 580px;
+    }
+
+    /* Left Pane */
+    .left-sidebar {
+      width: 44%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .tab-header-strip {
+      display: flex;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .sb-tab {
+      flex: 1;
+      padding: 6px;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .sb-tab.active {
+      background: var(--bg-card);
+      color: var(--accent);
+      border-color: var(--border-color);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .control-header-box {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sb-top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .active-sc-badge {
+      font-size: 10.5px;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .sb-actions-cluster {
+      display: flex;
+      gap: 4px;
+    }
+
+    .sb-action-btn {
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .filter-row-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stock-search {
+      flex: 1;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .mc-toggles {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+
+    .rec-filter-strip {
+      display: flex;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .rec-pill {
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .rec-pill.active {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border-color: var(--accent-border);
+      font-weight: 600;
+    }
+
+    /* Table */
+    .table-viewport {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .data-table th.num, .data-table td.num {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .data-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .data-table tr:hover {
+      background: var(--row-hover);
+    }
+
+    .data-table tr.selected {
+      background: var(--row-selected);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .sym-bold {
+      font-weight: 600;
+      font-size: 12.5px;
+    }
+
+    .sym-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .badge-gain {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .badge-loss {
+      background: var(--neg-bg);
+      color: var(--neg-text);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .matrix-box {
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .m-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 2px;
+      font-size: 8.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+    }
+
+    .m-p { background: var(--pos-bg); color: var(--pos-text); border: 1px solid var(--pos-border); }
+    .m-n { background: var(--neutral-bg); color: var(--neutral-text); }
+    .m-f { background: var(--neg-bg); color: var(--neg-text); border: 1px solid var(--neg-border); }
+
+    .rsi-chip {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Right Pane */
+    .right-chart-pane {
+      width: 56%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .chart-top-bar {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stock-title-info {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .stock-sym-header {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stock-ltp-header {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .tf-toolbar {
+      display: flex;
+      gap: 3px;
+    }
+
+    .tf-btn {
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .tf-btn.active {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    .chart-legend-line {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 5px 16px;
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+
+    .chart-view-area {
+      flex: 1;
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .svg-main-chart {
+      width: 100%;
+      height: 62%;
+    }
+
+    .rsi-sub-box {
+      height: 38%;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 6px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rsi-title {
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .svg-rsi-chart {
+      width: 100%;
+      height: calc(100% - 18px);
+    }
+  </style>
+</head>
+<body id="root-body">
+
+  <!-- ==========================================================================
+       TOP OPTION BANNER: CONTROL SWITCHER
+       ========================================================================== -->
+  <div class="option-banner">
+    <div class="option-title">
+      <span class="opt-tag">OPTION 1</span>
+      <span>Exact Current Layout (Zero Buttons Removed or Shifted)</span>
+    </div>
+    <div class="theme-switcher-group">
+      <span style="color: var(--text-muted); font-size: 11px;">Active Palette:</span>
+      <button class="theme-opt-btn active" onclick="switchTheme('nordic')">🌿 Nordic</button>
+      <button class="theme-opt-btn" onclick="switchTheme('warm')">📜 Warm Paper</button>
+      <button class="theme-opt-btn" onclick="switchTheme('obsidian')">🌌 Midnight Obsidian</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       HEADER (EXACT EXISTING BUTTONS)
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">S</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-name">SANGAM</span>
+          <span class="feed-badge">
+            <span class="feed-dot"></span>
+            <span>Dhan HQ Live</span>
+          </span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted);">Peaceful Investing • Multi-Screener & Visualizer</p>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs (Exact Position) -->
+    <div class="nav-links">
+      <a class="nav-btn">Home</a>
+      <a class="nav-btn active">Charts</a>
+      <a href="option1_analytics.html" class="nav-btn">Analytics ↗</a>
+    </div>
+
+    <!-- Right Actions (Exact Position) -->
+    <div class="header-actions">
+      <div class="stats-pill">
+        Screeners: <strong>16</strong> | Stocks: <strong style="color: var(--pos-text);">135</strong>
+      </div>
+      <button class="btn-login">Admin / User Login</button>
+      <button class="sb-action-btn" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       LIVE MARKET INDICES STRIP (EXACT EXISTING STRIP)
+       ========================================================================== -->
+  <div class="market-strip">
+    <div class="index-group">
+      <div class="idx-item">
+        <span class="idx-name">NIFTY 50</span>
+        <span class="idx-val">24,850.30</span>
+        <span class="chg-pill chg-up">+0.45%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">BANK NIFTY</span>
+        <span class="idx-val">51,420.80</span>
+        <span class="chg-pill chg-up">+0.62%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">MIDCAP 150</span>
+        <span class="idx-val">18,920.40</span>
+        <span class="chg-pill chg-up">+1.12%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">SMALLCAP 250</span>
+        <span class="idx-val">15,410.80</span>
+        <span class="chg-pill chg-up">+1.65%</span>
+      </div>
+      <div class="idx-item">
+        <span class="idx-name">INDIA VIX</span>
+        <span class="idx-val">12.85</span>
+        <span class="chg-pill chg-down">-2.10%</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary);">
+      <span class="feed-dot"></span>
+      <span>NSE LIVE</span>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MAIN WORKSPACE
+       ========================================================================== -->
+  <main class="main-content">
+
+    <!-- 1. SCREENER COMMAND DECK (EXACT BUTTONS & GRID) -->
+    <section class="deck-card">
+      <div class="deck-top-row">
+        <div class="deck-title-wrap">
+          <span style="font-size: 14px;">🎛️</span>
+          <span class="deck-title">Screener Command Deck</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Select any screener to run instantly</span>
+        </div>
+
+        <div class="cat-pills-bar">
+          <button class="cat-btn active">All</button>
+          <button class="cat-btn">Intraday</button>
+          <button class="cat-btn">Breakout</button>
+          <button class="cat-btn">Swing</button>
+          <button class="cat-btn">Momentum</button>
+          <button class="cat-btn">Reversal</button>
+          <button class="cat-btn">My Custom</button>
+          <button class="btn-run-all">⚡ Run All</button>
+          <button class="cat-btn">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Screener Cards Grid -->
+      <div class="deck-grid">
+        <div class="screener-box active">
+          <span class="sc-name">EMA 10/20/50 Aligned</span>
+          <div class="sc-meta">
+            <span>Bullish Trend</span>
+            <strong style="color: var(--pos-text);">135</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">Darvas Box Breakout</span>
+          <div class="sc-meta">
+            <span>Breakout</span>
+            <strong>24</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">Minervini Trend VCP</span>
+          <div class="sc-meta">
+            <span>Contraction</span>
+            <strong>18</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">Strong Start RVOL</span>
+          <div class="sc-meta">
+            <span>Volume Spike</span>
+            <strong>42</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">RSI 60+ Super Momentum</span>
+          <div class="sc-meta">
+            <span>Momentum</span>
+            <strong>72</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">52-Week High Pivot</span>
+          <div class="sc-meta">
+            <span>Leader</span>
+            <strong>31</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">Oversold RSI Reversal</span>
+          <div class="sc-meta">
+            <span>Reversal</span>
+            <strong>19</strong>
+          </div>
+        </div>
+        <div class="screener-box">
+          <span class="sc-name">Volume Dry Up Stage 2</span>
+          <div class="sc-meta">
+            <span>Stage 2</span>
+            <strong>15</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapse bar & layout switcher (Exact position) -->
+      <div style="display: flex; justify-content: space-between; align-items: center; pt-2; border-top: 1px solid var(--border-subtle); margin-top: 6px; padding-top: 6px;">
+        <span style="font-size: 11px; color: var(--text-muted);">8 of 16 Screeners Active</span>
+        <button class="sb-action-btn" style="border-radius: 20px; padding: 2px 10px;">▲ Collapse Deck</button>
+        <div style="display: flex; gap: 4px;">
+          <button class="sb-action-btn active">Side-by-Side</button>
+          <button class="sb-action-btn">Stacked</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DUAL PANE WORKSPACE -->
+    <div class="workspace-split">
+      
+      <!-- LEFT PANE: SCREENER (EXACT LAYOUT) -->
+      <section class="left-sidebar">
+        <!-- Sidebar Navigation Tabs -->
+        <div class="tab-header-strip">
+          <button class="sb-tab active">Screeners</button>
+          <button class="sb-tab">Watchlist (14)</button>
+          <button class="sb-tab">Dscan</button>
+          <button class="sb-tab">SS_RVOL</button>
+          <button class="sb-tab">VCPscan</button>
+        </div>
+
+        <!-- Controls Box -->
+        <div class="control-header-box">
+          <div class="sb-top-meta">
+            <div>
+              <span class="active-sc-badge">EMA 10/20/50 Aligned</span>
+              <h3 style="font-size: 13.5px; font-weight: 700; margin-top: 2px;">EMA 10/20/50/150 Bullish Matrix</h3>
+            </div>
+            <div class="sb-actions-cluster">
+              <button class="sb-action-btn" title="Columns">☷ Columns</button>
+              <button class="sb-action-btn" title="Copy">📋 Copy</button>
+              <button class="sb-action-btn" title="Export">📥 CSV</button>
+            </div>
+          </div>
+
+          <!-- Search, Market Cap Toggles -->
+          <div class="filter-row-input">
+            <input type="text" class="stock-search" placeholder="Search stocks in table...">
+            <div class="mc-toggles">
+              <label><input type="checkbox" checked> 1k</label>
+              <span>|</span>
+              <label><input type="checkbox"> 2k</label>
+            </div>
+            <span class="stats-pill">135</span>
+          </div>
+
+          <!-- Filter Pills Strip -->
+          <div class="rec-filter-strip">
+            <button class="rec-pill">All Stocks</button>
+            <button class="rec-pill active">EMAs Aligned</button>
+          </div>
+        </div>
+
+        <!-- Table Viewport -->
+        <div class="table-viewport">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Stock Name</th>
+                <th class="num">Close (₹)</th>
+                <th class="num">Change %</th>
+                <th class="num">Volume</th>
+                <th style="text-align: center;">EMAs<br><span style="font-size: 8.5px; font-weight: normal;">10 20 50 150</span></th>
+                <th class="num">RSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="selected">
+                <td>
+                  <div class="sym-bold">RELIANCE</div>
+                  <div class="sym-sub">Reliance Industries</div>
+                </td>
+                <td class="num"><strong>2,985.40</strong></td>
+                <td class="num"><span class="badge-gain">+1.85%</span></td>
+                <td class="num">6.82M</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box">
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-chip" style="background: var(--pos-bg); color: var(--pos-text);">64.2</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-bold">TCS</div>
+                  <div class="sym-sub">Tata Consultancy</div>
+                </td>
+                <td class="num"><strong>4,120.10</strong></td>
+                <td class="num"><span class="badge-gain">+0.92%</span></td>
+                <td class="num">2.14M</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box">
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-n">N</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-chip" style="background: var(--neutral-bg); color: var(--neutral-text);">58.7</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-bold">INFY</div>
+                  <div class="sym-sub">Infosys Limited</div>
+                </td>
+                <td class="num"><strong>1,642.30</strong></td>
+                <td class="num"><span class="badge-gain">+2.45%</span></td>
+                <td class="num">5.35M</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box">
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-chip" style="background: #F3E8FF; color: #6B21A8;">71.8</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-bold">HDFCBANK</div>
+                  <div class="sym-sub">HDFC Bank Ltd</div>
+                </td>
+                <td class="num"><strong>1,532.80</strong></td>
+                <td class="num"><span class="badge-loss">-0.45%</span></td>
+                <td class="num">8.22M</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box">
+                    <span class="m-dot m-f">F</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-chip" style="background: var(--neutral-bg); color: var(--neutral-text);">48.3</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-bold">BHARTIARTL</div>
+                  <div class="sym-sub">Bharti Airtel</div>
+                </td>
+                <td class="num"><strong>1,348.00</strong></td>
+                <td class="num"><span class="badge-gain">+1.40%</span></td>
+                <td class="num">3.90M</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box">
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-chip" style="background: var(--pos-bg); color: var(--pos-text);">66.5</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-bold">TATAMOTORS</div>
+                  <div class="sym-sub">Tata Motors Passenger</div>
+                </td>
+                <td class="num"><strong>985.60</strong></td>
+                <td class="num"><span class="badge-gain">+3.10%</span></td>
+                <td class="num">9.10M</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box">
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                    <span class="m-dot m-p">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-chip" style="background: #F3E8FF; color: #6B21A8;">73.2</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RIGHT PANE: CHART WORKSPACE (EXACT LAYOUT) -->
+      <section class="right-chart-pane">
+        <div class="chart-top-bar">
+          <div class="stock-title-info">
+            <span class="stock-sym-header">RELIANCE</span>
+            <span class="stock-ltp-header">₹2,985.40</span>
+            <span class="badge-gain">+1.85%</span>
+          </div>
+
+          <div class="tf-toolbar">
+            <button class="tf-btn">1D</button>
+            <button class="tf-btn">5D</button>
+            <button class="tf-btn active">1D (Daily)</button>
+            <button class="tf-btn">1W</button>
+            <button class="tf-btn">1M</button>
+            <button class="tf-btn">Indicators</button>
+          </div>
+        </div>
+
+        <div class="chart-legend-line">
+          <span>EMA 10: <strong style="color: var(--ema-10);">2,954.1</strong></span>
+          <span>EMA 20: <strong style="color: var(--ema-20);">2,921.8</strong></span>
+          <span>EMA 50: <strong style="color: var(--ema-50);">2,870.5</strong></span>
+          <span>EMA 150: <strong style="color: var(--ema-150);">2,740.0</strong></span>
+          <span style="margin-left: auto;">Vol: 6.82M</span>
+        </div>
+
+        <div class="chart-view-area">
+          <!-- Candlestick SVG -->
+          <svg class="svg-main-chart" viewBox="0 0 600 200" preserveAspectRatio="none">
+            <line x1="0" y1="50" x2="600" y2="50" stroke="var(--border-subtle)" stroke-dasharray="3,3" />
+            <line x1="0" y1="100" x2="600" y2="100" stroke="var(--border-subtle)" stroke-dasharray="3,3" />
+            <line x1="0" y1="150" x2="600" y2="150" stroke="var(--border-subtle)" stroke-dasharray="3,3" />
+
+            <!-- Volume bars -->
+            <rect x="50" y="150" width="12" height="40" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="90" y="160" width="12" height="30" fill="var(--neg-chart)" opacity="0.3" />
+            <rect x="130" y="140" width="12" height="50" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="170" y="155" width="12" height="35" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="210" y="165" width="12" height="25" fill="var(--neg-chart)" opacity="0.3" />
+            <rect x="250" y="130" width="12" height="60" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="290" y="145" width="12" height="45" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="330" y="150" width="12" height="40" fill="var(--neg-chart)" opacity="0.3" />
+            <rect x="370" y="135" width="12" height="55" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="410" y="125" width="12" height="65" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="450" y="120" width="12" height="70" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="490" y="110" width="12" height="80" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="530" y="100" width="12" height="90" fill="var(--pos-chart)" opacity="0.3" />
+
+            <!-- Candlesticks -->
+            <!-- C1 -->
+            <line x1="56" y1="120" x2="56" y2="150" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="51" y="125" width="10" height="20" fill="var(--pos-chart)" rx="1"/>
+            <!-- C2 -->
+            <line x1="96" y1="125" x2="96" y2="155" stroke="var(--neg-chart)" stroke-width="1.2"/>
+            <rect x="91" y="130" width="10" height="18" fill="var(--neg-chart)" rx="1"/>
+            <!-- C3 -->
+            <line x1="136" y1="110" x2="136" y2="145" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="131" y="115" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C4 -->
+            <line x1="176" y1="100" x2="176" y2="135" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="171" y="105" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C5 -->
+            <line x1="216" y1="105" x2="216" y2="138" stroke="var(--neg-chart)" stroke-width="1.2"/>
+            <rect x="211" y="110" width="10" height="16" fill="var(--neg-chart)" rx="1"/>
+            <!-- C6 -->
+            <line x1="256" y1="85" x2="256" y2="120" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="251" y="90" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C7 -->
+            <line x1="296" y1="75" x2="296" y2="110" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="291" y="80" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C8 -->
+            <line x1="336" y1="80" x2="336" y2="115" stroke="var(--neg-chart)" stroke-width="1.2"/>
+            <rect x="331" y="85" width="10" height="18" fill="var(--neg-chart)" rx="1"/>
+            <!-- C9 -->
+            <line x1="376" y1="65" x2="376" y2="100" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="371" y="70" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C10 -->
+            <line x1="416" y1="55" x2="416" y2="90" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="411" y="60" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C11 -->
+            <line x1="456" y1="45" x2="456" y2="80" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="451" y="50" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C12 -->
+            <line x1="496" y1="35" x2="496" y2="70" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="491" y="40" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C13 -->
+            <line x1="536" y1="20" x2="536" y2="60" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="531" y="25" width="10" height="26" fill="var(--pos-chart)" rx="1"/>
+
+            <!-- Moving Averages -->
+            <path d="M 50,150 Q 200,135 350,110 T 550,85" fill="none" stroke="var(--ema-150)" stroke-width="1.5" />
+            <path d="M 50,140 Q 200,120 350,90 T 550,60" fill="none" stroke="var(--ema-50)" stroke-width="1.5" />
+            <path d="M 50,130 Q 200,105 350,75 T 550,45" fill="none" stroke="var(--ema-20)" stroke-width="1.8" />
+            <path d="M 50,120 Q 200,90 350,60 T 550,28" fill="none" stroke="var(--ema-10)" stroke-width="2" />
+          </svg>
+
+          <!-- RSI Sub Pane -->
+          <div class="rsi-sub-box">
+            <div class="rsi-title">
+              <span>RSI(14): <strong style="color: var(--pos-text);">64.2</strong> (Bullish)</span>
+              <span>70 / 30 Bands</span>
+            </div>
+            <svg class="svg-rsi-chart" viewBox="0 0 600 70" preserveAspectRatio="none">
+              <rect x="0" y="18" width="600" height="34" fill="var(--bg-subtle)" opacity="0.6"/>
+              <line x1="0" y1="18" x2="600" y2="18" stroke="var(--border-color)" stroke-dasharray="2,2"/>
+              <line x1="0" y1="35" x2="600" y2="35" stroke="var(--border-subtle)" stroke-dasharray="3,3"/>
+              <line x1="0" y1="52" x2="600" y2="52" stroke="var(--border-color)" stroke-dasharray="2,2"/>
+              <path d="M 30,45 C 100,50 180,38 250,42 C 320,46 400,32 480,26 L 550,23" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+              <circle cx="550" cy="23" r="3.5" fill="#8B5CF6" stroke="var(--bg-card)" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    function switchTheme(theme) {
+      const b = document.getElementById('root-body');
+      const btns = document.querySelectorAll('.theme-opt-btn');
+      btns.forEach(x => x.classList.remove('active'));
+      b.className = '';
+
+      if (theme === 'nordic') {
+        btns[0].classList.add('active');
+      } else if (theme === 'warm') {
+        b.classList.add('theme-warm');
+        btns[1].classList.add('active');
+      } else if (theme === 'obsidian') {
+        b.classList.add('theme-obsidian');
+        btns[2].classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

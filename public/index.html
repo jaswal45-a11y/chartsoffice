@@ -1,19 +1,31 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="nordic">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sangam_charts - Chartink Multi-Screener Runner & Visualizer</title>
   
+  <script>
+    (function() {
+      var saved = localStorage.getItem('sangam_theme') || localStorage.getItem('theme') || 'nordic';
+      document.documentElement.setAttribute('data-theme', saved);
+      if (saved === 'obsidian') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/favicon.png">
 
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -26,7 +38,7 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace']
           },
           colors: {
@@ -51,139 +63,173 @@
   </script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=3.2.0">
+  <link rel="stylesheet" href="style.css?v=3.7.0">
 </head>
-<body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white transition-colors duration-200">
+<body id="root-body" class="min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white transition-colors duration-200">
 
   <!-- Top Navigation Bar -->
-  <header class="border-b border-dark-border bg-dark-card/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-6 py-3">
-    <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-4">
-      
-      <!-- Brand & Stats -->
-      <a href="/" class="flex items-center gap-3 group cursor-pointer" title="Back to Sangam Home Gateway">
-        <img src="/favicon.png" alt="Sangam Logo" class="w-10 h-10 rounded-full object-cover ring-2 ring-blue-500/40 group-hover:ring-teal-400/80 transition-all shadow-lg shadow-blue-500/20">
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 group-hover:from-teal-300 group-hover:to-cyan-200 bg-clip-text text-transparent transition-all">
-              SANGAM
-            </h1>
-            <span id="data-feed-badge" class="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full flex items-center gap-1 transition-all" title="Broker Feed Connection Status">
-              <span id="data-feed-dot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span id="data-feed-label">Backup</span>
-            </span>
-          </div>
-          <p class="text-xs text-slate-400">Peaceful Investing • Multi-Screener & Visualizer</p>
-        </div>
+  <header class="app-header sticky top-0 z-40">
+    <div class="brand-section">
+      <a href="/" class="flex items-center gap-2 group cursor-pointer" title="Sangam Gateway" style="text-decoration: none;">
+        <img src="/favicon.png" alt="Sangam Logo" class="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/40 shadow-sm group-hover:scale-105 transition-transform">
       </a>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <a href="/" class="brand-name" style="text-decoration: none;">SANGAM</a>
+          <span id="data-feed-badge" class="feed-badge">
+            <span id="data-feed-dot" class="feed-dot"></span>
+            <span id="data-feed-label">Dhan HQ Live</span>
+          </span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Peaceful Investing • Multi-Screener & Visualizer</p>
+      </div>
+    </div>
 
-      <!-- Main Navigation Tabs (Link to dedicated Analytics & FnO Tabs - Only Visible After Login) -->
-      <div class="flex items-center p-1 bg-dark-bg/80 border border-dark-border rounded-xl text-xs shadow-inner gap-1">
-        <a href="/" class="px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-teal-300 cursor-pointer" title="Return to Sangam Home Gateway">
-          <i data-lucide="home" class="w-3.5 h-3.5 text-teal-400"></i>
-          <span>Home</span>
-        </a>
-        <a href="/screener" class="px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 bg-blue-600 text-white shadow-sm cursor-pointer" title="Chartink Multi-Screener Scanner & Multi-Pane TV Visualizer">
-          <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
-          <span>Charts</span>
-        </a>
-        <a id="btn-nav-analytics" href="/analytics" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-1.5 rounded-lg font-bold transition-all items-center gap-1.5 text-slate-400 hover:text-white cursor-pointer" title="Open Market Breadth Diagnostics (20/50 SMA), Sector Rankings & Indices in a New Tab">
-          <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-400"></i>
-          <span>Analytics</span>
-          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-emerald-500/20 text-emerald-300 font-semibold uppercase tracking-wider">New Tab ↗</span>
-        </a>
-        <a id="btn-nav-fno" href="/fno" target="_blank" rel="noopener noreferrer" class="hidden px-3 py-1.5 rounded-lg font-bold transition-all items-center gap-1.5 text-slate-400 hover:text-purple-300 cursor-pointer" title="Open Professional Institutional F&O & Equity Stock Screener in a New Tab">
-          <i data-lucide="crosshair" class="w-3.5 h-3.5 text-purple-400"></i>
-          <span>F&O</span>
-          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-purple-500/20 text-purple-300 font-semibold uppercase tracking-wider">New Tab ↗</span>
-        </a>
+    <!-- Main Navigation Tabs (Option 1 Layout) -->
+    <div class="nav-links">
+      <a href="/" class="nav-btn">Home</a>
+      <a href="/screener" class="nav-btn active">Charts</a>
+      <a id="btn-nav-analytics" href="/analytics" target="_blank" rel="noopener noreferrer" class="nav-btn">Analytics ↗</a>
+      <a id="btn-nav-fno" href="/fno" target="_blank" rel="noopener noreferrer" class="nav-btn hidden">F&O ↗</a>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="header-actions">
+      <!-- Hidden compatibility stats elements -->
+      <div id="header-summary-stats" class="hidden" style="display: none !important;">
+        <strong id="stat-total-screeners">0</strong>
+        <strong id="stat-total-stocks">0</strong>
       </div>
 
-      <!-- Quick Metrics & Global Actions -->
-      <div class="flex items-center flex-wrap gap-2 sm:gap-3">
-        
-        <!-- Summary Stats Pills (Visible only to Registered/Logged-in Users) -->
-        <div id="header-summary-stats" class="hidden items-center gap-3 px-3 py-1.5 rounded-lg bg-dark-bg/60 border border-dark-border text-xs">
-          <div class="flex items-center gap-1.5">
-            <span class="text-slate-400">Screeners:</span>
-            <span id="stat-total-screeners" class="font-semibold text-slate-200">0</span>
-          </div>
-          <span class="text-slate-600">|</span>
-          <div class="flex items-center gap-1.5">
-            <span class="text-slate-400">Stocks Found:</span>
-            <span id="stat-total-stocks" class="font-semibold text-emerald-400">0</span>
+      <!-- Preserved Launcher Tools -->
+      <button id="btn-open-notes" class="sb-action-btn" title="Open Sticky Notes">
+        <i data-lucide="sticky-note" class="w-3.5 h-3.5" style="color: #F59E0B;"></i>
+        <span>Notes</span>
+      </button>
+
+      <button id="btn-open-mf-deals" class="sb-action-btn relative" title="Mutual Fund Bulk & Block Deals">
+        <i data-lucide="layers" class="w-3.5 h-3.5" style="color: #10B981;"></i>
+        <span>MF Deals</span>
+        <span id="mf-deals-unread-badge" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 animate-ping"></span>
+      </button>
+
+      <!-- User Auth Button (Logged Out) -->
+      <button id="btn-open-auth-modal" onclick="openAuthModal('login')" class="btn-login">
+        Admin / User Login
+      </button>
+
+      <!-- User Auth Box (Logged In) -->
+      <div id="user-auth-box" class="hidden items-center gap-1.5">
+        <button id="btn-admin-console" onclick="openAdminConsole()" class="sb-action-btn font-bold text-amber-500" title="Admin Console">
+          <span>Admin Console</span>
+        </button>
+
+        <!-- User Profile Dropdown Trigger (Left to Change Pwd Icon) -->
+        <div class="relative" id="user-profile-menu-wrapper">
+          <button id="btn-user-profile-menu" onclick="toggleUserProfileDropdown(event)" class="stats-pill flex items-center gap-1.5 font-semibold cursor-pointer hover:border-slate-400 transition-colors" title="User Menu">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500" id="user-badge-icon"></i>
+            <span><strong id="user-badge-name">User</strong> <span id="user-badge-role" style="font-size: 10px; opacity: 0.7;">(User)</span></span>
+            <i data-lucide="chevron-down" class="w-3 h-3 transition-transform duration-200" id="user-dropdown-arrow"></i>
+          </button>
+
+          <!-- User Menu Dropdown: Journal & Update CKTs Inside -->
+          <div id="user-profile-dropdown" class="hidden absolute right-0 top-full mt-1.5 w-52 dropdown-menu-card z-50 p-2 shadow-xl border rounded-xl flex flex-col gap-1">
+            <div class="px-2 py-1.5 border-b border-dark-border/40 text-xs">
+              <div class="font-bold text-slate-200" id="dropdown-user-name">User</div>
+              <span id="dropdown-user-role-badge" class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">Active Member</span>
+            </div>
+            
+            <!-- Visual Trading Journal Button -->
+            <button id="btn-open-chart-journal" onclick="openChartJournalModal(); closeUserProfileDropdown();" class="w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-500/15 flex items-center justify-between transition-colors cursor-pointer text-left">
+              <span class="flex items-center gap-2">
+                <i data-lucide="camera" class="w-3.5 h-3.5" style="color: #818CF8;"></i>
+                <span>Journal</span>
+              </span>
+              <span id="journal-count-badge" class="hidden px-1.5 py-0.2 text-[9px] rounded-full font-bold" style="background: rgba(99,102,241,0.2); color: #818CF8;">0</span>
+            </button>
+
+            <!-- Update NSE Circuit Limits Button -->
+            <button id="btn-open-circuit-modal" onclick="openCircuitModal(); closeUserProfileDropdown();" class="w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-500/15 flex items-center gap-2 transition-colors cursor-pointer text-left">
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5" style="color: #F43F5E;"></i>
+              <span>Update CKTs</span>
+            </button>
           </div>
         </div>
 
-
-        <!-- Notes Sticky Window Launcher Tile (Visible only to Registered Users) -->
-        <button id="btn-open-notes" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Open Sticky Notes & Scratchpad (Synchronized across all tabs)">
-          <i data-lucide="sticky-note" class="w-4 h-4 text-amber-400"></i>
-          <span>Notes</span>
+        <button id="btn-open-change-password-modal" onclick="openChangePasswordModal()" class="sb-action-btn" title="Password">
+          <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
         </button>
-
-        <!-- Chart Journal Launcher Button (Visible only to Registered Users) -->
-        <button id="btn-open-chart-journal" onclick="openChartJournalModal()" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Open Visual Trading Journal (Saved Chart Screenshots & Trade Setups)">
-          <i data-lucide="camera" class="w-4 h-4 text-indigo-400"></i>
-          <span>Journal</span>
-          <span id="journal-count-badge" class="hidden px-1.5 py-0.2 text-[10px] rounded-full bg-indigo-500/30 text-indigo-200 font-bold">0</span>
-        </button>
-
-        <!-- Mutual Fund Bulk & Block Deals Launcher Tile (Visible only to Registered Users) -->
-        <button id="btn-open-mf-deals" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer relative" title="Mutual Fund Bulk & Block Deals (Live Accord Feed)">
-          <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
-          <span>MF Deals</span>
-          <span id="mf-deals-unread-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-dark-bg animate-ping"></span>
-        </button>
-
-        <!-- Update CKTs (Price Bands Complete List) Launcher Button (Visible only to Registered Users) -->
-        <button id="btn-open-circuit-modal" onclick="openCircuitModal()" class="hidden items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 rounded-lg shadow-sm active:scale-95 transition-all cursor-pointer" title="Update & Inspect NSE Circuit Limits (2% & 5% Price Bands)">
-          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
-          <span>Update CKTs</span>
-        </button>
-
-        <!-- User Auth Button (Visible when Logged Out) -->
-        <button id="btn-open-auth-modal" onclick="openAuthModal('login')" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 rounded-lg shadow-sm transition-all cursor-pointer">
-          <i data-lucide="user" class="w-3.5 h-3.5"></i>
-          <span>Login / Register</span>
-        </button>
-
-        <!-- User Logged In Badge & Logout (Visible when logged in) -->
-        <div id="user-auth-box" class="hidden items-center gap-2">
-          <!-- Serious Admin Console Button (Visible strictly to Admin) -->
-          <button id="btn-admin-console" onclick="openAdminConsole()" class="hidden items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 text-amber-300 border border-amber-500/40 rounded-lg shadow-lg shadow-amber-950/30 active:scale-95 transition-all cursor-pointer" title="Open Master Admin Console & User Management Dashboard">
-            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
-            <span>Admin Console</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-          </button>
-
-          <div class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5">
-            <i data-lucide="user-check" class="w-3.5 h-3.5" id="user-badge-icon"></i>
-            <span><strong id="user-badge-name" class="text-white">User</strong> <span id="user-badge-role" class="text-slate-400 text-[10px] font-normal">(User)</span></span>
-          </div>
-
-          <!-- Change Password Button (Visible for Authenticated User) -->
-          <button id="btn-open-change-password-modal" onclick="openChangePasswordModal()" class="px-2.5 py-1.5 rounded-lg bg-dark-bg hover:bg-sky-500/20 text-slate-300 hover:text-sky-300 border border-dark-border hover:border-sky-500/40 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer" title="Change Account Password">
-            <i data-lucide="key-round" class="w-3.5 h-3.5 text-sky-400"></i>
-            <span>Password</span>
-          </button>
-
-          <button id="btn-logout" onclick="handleLogout()" title="Log out" class="px-2.5 py-1.5 rounded-lg bg-dark-bg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-dark-border hover:border-rose-500/30 text-xs font-medium transition-all flex items-center gap-1 cursor-pointer">
-            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-            <span>Logout</span>
-          </button>
-        </div>
-
-        <!-- Theme Toggle -->
-        <button id="btn-theme-toggle" title="Toggle Theme" class="p-2 rounded-lg bg-dark-bg border border-dark-border text-slate-400 hover:text-white hover:bg-dark-accent transition-colors">
-          <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
+        <button id="btn-logout" onclick="handleLogout()" class="sb-action-btn" title="Logout">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
         </button>
       </div>
 
+      <!-- Theme / Palette Selector Dropdown (Right to Logout Icon) -->
+      <div class="relative" id="theme-dropdown-container">
+        <button id="btn-theme-toggle" onclick="toggleThemeDropdown(event)" class="sb-action-btn" title="Theme Palette">
+          <i data-lucide="sun" id="theme-icon" class="w-3.5 h-3.5"></i>
+          <span id="theme-active-icon" class="text-xs">🌿</span>
+        </button>
+
+        <div id="theme-menu-dropdown" class="hidden absolute right-0 top-full mt-1.5 w-48 dropdown-menu-card z-50 p-1.5 shadow-xl border rounded-xl flex flex-col gap-1">
+          <div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Select Palette</div>
+          <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="nordic" onclick="applyAppTheme('nordic')">
+            <span class="flex items-center gap-2"><span>🌿</span><span>Nordic Clean</span></span>
+            <span class="theme-check-mark text-emerald-500 font-bold">✓</span>
+          </button>
+          <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="warm" onclick="applyAppTheme('warm')">
+            <span class="flex items-center gap-2"><span>📜</span><span>Warm Paper</span></span>
+            <span class="theme-check-mark text-emerald-500 font-bold hidden">✓</span>
+          </button>
+          <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="obsidian" onclick="applyAppTheme('obsidian')">
+            <span class="flex items-center gap-2"><span>🌌</span><span>Midnight Obsidian</span></span>
+            <span class="theme-check-mark text-emerald-500 font-bold hidden">✓</span>
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 
+  <!-- ==========================================================================
+       LIVE MARKET INDICES STRIP (OPTION 1 LAYOUT)
+       ========================================================================== -->
+  <div id="market-indices-strip" class="market-strip">
+    <div class="index-group">
+      <div id="idx-nifty50" class="idx-item">
+        <span class="idx-name">NIFTY 50</span>
+        <strong class="idx-val index-ltp">24,850.30</strong>
+        <span class="chg-pill chg-up index-chg">+0.45%</span>
+      </div>
+      <div id="idx-niftybank" class="idx-item">
+        <span class="idx-name">BANK NIFTY</span>
+        <strong class="idx-val index-ltp">51,420.80</strong>
+        <span class="chg-pill chg-up index-chg">+0.62%</span>
+      </div>
+      <div id="idx-midcap150" class="idx-item">
+        <span class="idx-name">MIDCAP 150</span>
+        <strong class="idx-val index-ltp">18,920.40</strong>
+        <span class="chg-pill chg-up index-chg">+1.12%</span>
+      </div>
+      <div id="idx-smallcap250" class="idx-item">
+        <span class="idx-name">SMALLCAP 250</span>
+        <strong class="idx-val index-ltp">15,410.80</strong>
+        <span class="chg-pill chg-up index-chg">+1.65%</span>
+      </div>
+      <div id="idx-indiavix" class="idx-item">
+        <span class="idx-name">INDIA VIX</span>
+        <strong class="idx-val index-ltp">12.85</strong>
+        <span class="chg-pill chg-down index-chg">-2.10%</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary);">
+      <span id="market-status-dot" class="feed-dot"></span>
+      <span id="market-status-text">NSE LIVE</span>
+    </div>
+  </div>
+
+
   <!-- Main Workspace -->
-  <main class="flex-1 max-w-[1920px] w-full mx-auto p-4 lg:p-6 flex flex-col gap-5">
+  <main class="main-content max-w-[1920px] w-full mx-auto">
     
     <!-- Guest Announcement & Call-to-Action Banner (Visible for unauthenticated visitors when enabled) -->
     <div id="guest-announcement-banner" class="hidden items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/60 border border-blue-500/30 text-xs shadow-lg animate-in fade-in duration-200">
@@ -203,193 +249,158 @@
       </div>
     </div>
 
-    <!-- Screener Deck: 10-15 Screeners visible in a single dashboard (Collapsible Pull-down Deck) -->
-    <section id="screener-command-deck" class="bg-dark-card border border-dark-border rounded-2xl shadow-xl relative transition-all duration-300">
+    <!-- Screener Deck: 10-15 Screeners visible in a single dashboard (Option 1 Command Deck) -->
+    <section id="screener-command-deck" class="deck-card">
       
       <!-- Collapsible Deck Content -->
-      <div id="deck-collapsible-body" class="p-4 lg:p-5 transition-all duration-300 overflow-hidden">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-dark-border/60">
-          <div>
-            <div class="flex items-center gap-2">
-              <i data-lucide="sliders" class="w-4 h-4 text-blue-400"></i>
-              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Screener Command Deck</h2>
-              <span class="text-xs text-slate-500">Select any screener button to run & inspect instantly</span>
-            </div>
+      <div id="deck-collapsible-body">
+        <div class="deck-top-row">
+          <div class="deck-title-wrap">
+            <span style="font-size: 14px;">🎛️</span>
+            <span class="deck-title">Screener Command Deck</span>
+            <span style="font-size: 11px; color: var(--text-muted);">Select any screener to run instantly</span>
           </div>
 
-          <!-- Category Filter Tabs -->
-          <div class="flex items-center gap-1.5 text-xs overflow-x-auto pb-0.5" id="category-filter-bar">
-            <button data-category="all" class="cat-pill active px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="View all 10+ built-in and custom scanner pipelines">All</button>
-            <button data-category="Intraday" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Intraday Scanners: Opening Range Breakout (ORB), Volume Spikes & Momentum">Intraday</button>
-            <button data-category="Breakout" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Breakout Scanners: 52-Week High Breakouts & Multi-Month Resistance Levels">Breakout</button>
-            <button data-category="Swing" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Swing Trading: Multi-day trend setups, EMA pullbacks & Stage-2 bases">Swing</button>
-            <button data-category="Momentum" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Momentum Scanners: High relative strength leaders & volume surges">Momentum</button>
-            <button data-category="Reversal" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="Reversal Scanners: Oversold RSI bounces & bottom-fishing support reversals">Reversal</button>
-            <button data-category="Custom" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer" title="My Custom Scanners: User-defined Chartink queries created in this workspace">My Custom</button>
-            <button id="btn-open-add-modal-deck" onclick="openAddModal()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 transition-all flex items-center gap-1 cursor-pointer ml-1" title="Add New Custom or System Screener">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-              <span>Add Screener</span>
-            </button>
+          <!-- Category Filter Tabs (Option 1 Pills) -->
+          <div class="cat-pills-bar" id="category-filter-bar">
+            <button data-category="all" class="cat-btn active">All</button>
+            <button data-category="Intraday" class="cat-btn">Intraday</button>
+            <button data-category="Breakout" class="cat-btn">Breakout</button>
+            <button data-category="Swing" class="cat-btn">Swing</button>
+            <button data-category="Momentum" class="cat-btn">Momentum</button>
+            <button data-category="Reversal" class="cat-btn">Reversal</button>
+            <button data-category="Custom" class="cat-btn">My Custom</button>
+            <button id="btn-run-all" onclick="runAllScreeners()" class="btn-run-all">⚡ Run All</button>
+            <button id="btn-open-add-modal-deck" onclick="openAddModal()" class="cat-btn" title="Add New Screener">+ Add</button>
           </div>
         </div>
 
-        <!-- Screener Buttons Grid -->
-        <div id="screeners-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          <!-- Dynamically populated screener cards / buttons -->
+        <!-- Screener Buttons Grid (Option 1 Deck Grid) -->
+        <div id="screeners-container" class="deck-grid">
+          <!-- Dynamically populated screener cards -->
         </div>
       </div>
 
-      <!-- Center Pull-down / Collapse Arrow Handle & Layout Switcher -->
-      <div class="flex items-center justify-between -mb-3 relative z-20 px-2">
-        <div class="w-24 hidden sm:block"></div>
-
+      <!-- Option 1 Clean Deck Footer: Status Summary, Collapse Pill, & Layout Switcher -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); margin-top: 8px; padding-top: 8px;">
+        <span id="deck-status-summary" style="font-size: 11px; color: var(--text-muted);">8 of 16 Screeners Active</span>
+        
         <!-- Center: Collapse Command Deck -->
-        <button id="btn-toggle-deck" onclick="toggleScreenerDeck()" class="group flex items-center gap-2 px-4 py-1.5 rounded-full bg-dark-card hover:bg-slate-800 text-slate-300 hover:text-white border border-dark-border hover:border-blue-500/50 shadow-lg text-xs font-semibold cursor-pointer transition-all active:scale-95" title="Toggle Screener Command Deck to enhance chart visibility">
-          <i data-lucide="chevron-up" id="deck-toggle-icon" class="w-4 h-4 text-blue-400 group-hover:-translate-y-0.5 transition-transform"></i>
-          <span id="deck-toggle-label">Collapse</span>
-          <span id="deck-collapsed-active-badge" class="hidden text-[10px] px-2 py-0.2 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 font-mono font-medium"></span>
+        <button id="btn-toggle-deck" onclick="toggleScreenerDeck()" class="sb-action-btn" style="border-radius: 20px; padding: 2px 14px;" title="Toggle Screener Deck">
+          <i data-lucide="chevron-up" id="deck-toggle-icon" class="w-3.5 h-3.5"></i>
+          <span id="deck-toggle-label">▲ Collapse Deck</span>
+          <span id="deck-collapsed-active-badge" class="hidden text-[10px] px-2 py-0.2 rounded-full font-mono"></span>
         </button>
 
-        <!-- Right: Layout Switcher (Side-by-Side Horizontal vs Stacked Vertical) -->
-        <div class="flex items-center bg-dark-card/90 backdrop-blur-md border border-dark-border rounded-full p-0.5 shadow-lg gap-0.5 text-xs">
-          <button id="btn-layout-horizontal" onclick="switchWorkspaceLayout('horizontal')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 bg-blue-600 text-white shadow-sm transition-all cursor-pointer" title="Side-by-Side Horizontal Split (Drag middle splitter to resize width)">
-            <i data-lucide="columns" class="w-3.5 h-3.5"></i>
-            <span class="hidden md:inline">Side-by-Side</span>
+        <!-- Right: Layout Switcher (Side-by-Side vs Stacked) -->
+        <div style="display: flex; gap: 4px;">
+          <button id="btn-layout-horizontal" onclick="switchWorkspaceLayout('horizontal')" class="sb-action-btn active" title="Side-by-Side Horizontal Split">
+            Side-by-Side
           </button>
-          <button id="btn-layout-vertical" onclick="switchWorkspaceLayout('vertical')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 text-slate-400 hover:text-white transition-all cursor-pointer" title="Stacked Vertical Layout (Top: Screener 100% Width, Bottom: Chart 100% Width)">
-            <i data-lucide="rows" class="w-3.5 h-3.5"></i>
-            <span class="hidden md:inline">Stacked</span>
+          <button id="btn-layout-vertical" onclick="switchWorkspaceLayout('vertical')" class="sb-action-btn" title="Stacked Vertical Layout">
+            Stacked
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Content Workspace: Dual Pane (Flexible Horizontal / Vertical) -->
-    <section id="workspace-container" class="flex flex-col lg:flex-row gap-0 flex-1 min-h-[680px] w-full items-stretch transition-all duration-150">
+    <!-- Content Workspace: Dual Pane (Option 1 Workspace Split) -->
+    <section id="workspace-container" class="workspace-split flex-col lg:flex-row flex-1 min-h-[680px] w-full items-stretch transition-all duration-150">
       
-      <!-- LEFT PANE: Tabbed Sidebar (Screeners & 5 Watchlists) -->
-      <div id="sidebar-pane" class="w-full lg:w-[42%] flex-shrink-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden min-h-[500px]">
+      <!-- LEFT PANE: Option 1 Left Sidebar (Screeners & 5 Watchlists) -->
+      <div id="sidebar-pane" class="left-sidebar w-full lg:w-[44%] flex-shrink-0 flex flex-col min-h-[500px]">
         
-        <!-- Sidebar Navigation Tabs -->
-        <div class="flex items-center border-b border-dark-border bg-dark-card/90 p-2 gap-1.5">
-          <button id="tab-btn-screeners" onclick="switchSidebarTab('screeners')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-blue-600 text-white shadow-sm cursor-pointer" title="Chartink Multi-Screeners">
-            <i data-lucide="sliders" class="w-3.5 h-3.5 shrink-0"></i>
-            <span class="truncate">Screeners</span>
+        <!-- Sidebar Navigation Tabs (Option 1 Tab Header Strip) -->
+        <div class="tab-header-strip">
+          <button id="tab-btn-screeners" onclick="switchSidebarTab('screeners')" class="sb-tab active" title="Chartink Multi-Screeners">Screeners</button>
+          <button id="tab-btn-watchlists" onclick="switchSidebarTab('watchlists')" class="sb-tab" title="User Custom Watchlists">
+            <span id="tab-watchlists-label">Watchlist (14)</span>
           </button>
-          <button id="tab-btn-watchlists" onclick="switchSidebarTab('watchlists')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="User Custom Watchlists">
-            <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
-            <span id="tab-watchlists-label">W(0)</span>
-          </button>
-          <button id="tab-btn-pricescan" onclick="switchSidebarTab('pricescan')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="DarvasScan (Price between Darvas Green Line and EMA 10 or 20)">
-            <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
-            <span>Dscan</span>
-          </button>
-          <button id="tab-btn-ssrvol" onclick="switchSidebarTab('ssrvol')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Strong Start RVOL Dashboard">
-            <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
-            <span>SS_RVOL</span>
-          </button>
-          <button id="tab-btn-vcpscan" onclick="switchSidebarTab('vcpscan')" class="flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 bg-dark-bg text-slate-400 hover:text-white border border-dark-border cursor-pointer" title="Minervini Volatility Contraction Pattern (VCP) Scanner">
-            <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-400 shrink-0"></i>
-            <span>VCPscan</span>
-          </button>
+          <button id="tab-btn-pricescan" onclick="switchSidebarTab('pricescan')" class="sb-tab" title="DarvasScan (Price between Darvas Green Line and EMA 10 or 20)">Dscan</button>
+          <button id="tab-btn-ssrvol" onclick="switchSidebarTab('ssrvol')" class="sb-tab" title="Strong Start RVOL Dashboard">SS_RVOL</button>
+          <button id="tab-btn-vcpscan" onclick="switchSidebarTab('vcpscan')" class="sb-tab" title="Minervini Volatility Contraction Pattern (VCP) Scanner">VCPscan</button>
         </div>
 
-        <!-- 1. SCREENERS VIEW -->
-        <div id="sidebar-screeners-view" class="flex flex-col flex-1">
-          <!-- Table Header & Controls -->
-          <div class="p-4 border-b border-dark-border bg-dark-card/50 flex flex-col gap-3">
-            <div class="flex items-start justify-between gap-3">
+        <!-- 1. SCREENERS VIEW (Option 1 Layout) -->
+        <div id="sidebar-screeners-view" class="flex flex-col flex-1" style="overflow: hidden;">
+          <!-- Controls Box (Option 1 Control Header Box) -->
+          <div class="control-header-box">
+            <div class="sb-top-meta">
               <div>
                 <div class="flex items-center gap-2">
-                  <span id="active-screener-badge" class="px-2 py-0.5 text-[11px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">
-                    No Screener Selected
-                  </span>
-                  <span id="last-updated-time" class="text-[11px] text-slate-500"></span>
+                  <span id="active-screener-badge" class="active-sc-badge">EMA 10/20/50 Aligned</span>
+                  <span id="last-updated-time" style="font-size: 10.5px; color: var(--text-muted);" class="font-mono"></span>
                 </div>
-                <h3 id="active-screener-title" class="text-base font-bold text-slate-100 mt-1">
-                  Select or Run a Screener
+                <h3 id="active-screener-title" style="font-size: 13.5px; font-weight: 700; margin-top: 3px; color: var(--text-main);">
+                  EMA 10/20/50/150 Bullish Matrix
                 </h3>
-                <p id="active-screener-desc" class="text-xs text-slate-400 mt-0.5 line-clamp-1">
-                  Click any of the buttons above to fetch real-time matching stocks.
-                </p>
+                <p id="active-screener-desc" class="hidden"></p>
               </div>
 
-              <!-- Actions: Copy Symbols & Export CSV -->
-              <div class="flex items-center gap-1.5">
-                <button id="btn-copy-stocks" title="Copy Stock Symbols (Ready for TradingView / Dhan / Chartink)" class="p-2 rounded-lg bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors cursor-pointer flex items-center justify-center">
-                  <i data-lucide="copy" class="w-4 h-4"></i>
+              <!-- Actions: Columns, Copy Symbols & Export CSV -->
+              <div class="sb-actions-cluster">
+                <button id="btn-columns-customizer" onclick="openColumnsCustomizerModal()" class="sb-action-btn" title="Customize Columns">
+                  ☷ Columns
                 </button>
-                <button id="btn-export-csv" title="Export Results to CSV" class="p-2 rounded-lg bg-dark-bg border border-dark-border text-slate-400 hover:text-white hover:bg-dark-accent transition-colors cursor-pointer flex items-center justify-center">
-                  <i data-lucide="download" class="w-4 h-4"></i>
+                <button id="btn-copy-stocks" title="Copy Stock Symbols" class="sb-action-btn">
+                  📋 Copy
+                </button>
+                <button id="btn-export-csv" title="Export Results to CSV" class="sb-action-btn">
+                  📥 CSV
                 </button>
               </div>
             </div>
 
             <!-- Search filter input, Market Cap Toggle & count -->
-            <div class="flex items-center flex-wrap gap-2">
-              <div class="relative flex-1 min-w-[140px]">
-                <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                <input type="text" id="stock-search-input" placeholder="Search stocks..." 
-                  class="w-full pl-9 pr-3 py-2 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-              </div>
+            <div class="filter-row-input">
+              <input type="text" id="stock-search-input" class="stock-search" placeholder="Search stocks in table...">
 
-              <!-- Market Cap 1k & 2k Toggles (Compact Space-saving UI) -->
-              <div class="flex items-center gap-1.5 px-2.5 py-1.5 bg-dark-bg border border-dark-border rounded-xl">
-                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc1000" title="Filter stocks with Market Cap > ₹1,000 Cr (Excludes Micro Caps)">
-                  <input type="checkbox" id="chk-mc1000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
-                  <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">1k</span>
+              <!-- Market Cap 1k & 2k Toggles (Option 1 Compact UI) -->
+              <div class="mc-toggles">
+                <label class="flex items-center gap-1 cursor-pointer select-none" id="lbl-mc1000" title="Market Cap > ₹1,000 Cr">
+                  <input type="checkbox" id="chk-mc1000" class="cursor-pointer">
+                  <span>1k</span>
                 </label>
-                <span class="text-slate-600 text-[10px] select-none">|</span>
-                <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-mc2000" title="Filter stocks with Market Cap > ₹2,000 Cr (Mid & Large Cap High Liquidity)">
-                  <input type="checkbox" id="chk-mc2000" class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
-                  <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
+                <span style="opacity: 0.4;">|</span>
+                <label class="flex items-center gap-1 cursor-pointer select-none" id="lbl-mc2000" title="Market Cap > ₹2,000 Cr">
+                  <input type="checkbox" id="chk-mc2000" class="cursor-pointer">
+                  <span>2k</span>
                 </label>
               </div>
 
-              <div class="px-2.5 py-2 text-xs font-mono text-slate-400 bg-dark-bg rounded-xl border border-dark-border" title="Total matching stocks currently visible in table">
-                <span id="visible-stocks-count">0</span>
-              </div>
+              <span class="stats-pill font-bold" id="visible-stocks-count" title="Matching stocks count">0</span>
+            </div>
+
+            <!-- Quick Filter Pills -->
+            <div class="rec-filter-strip">
+              <button data-filter="all" class="rec-pill active" onclick="setRecommendedFilter('all')">All Stocks</button>
+              <button data-filter="emas-aligned" class="rec-pill" onclick="setRecommendedFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
             </div>
           </div>
 
-          <!-- Screener Table Container -->
-          <div class="flex-1 overflow-y-auto max-h-[560px] divide-y divide-dark-border/50" id="screener-stocks-table-container">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead class="bg-dark-bg/80 sticky top-0 z-10 text-slate-400 font-semibold uppercase tracking-wider text-[10px] border-b border-dark-border">
+          <!-- Screener Table Container (Option 1 Viewport) -->
+          <div class="table-viewport flex-1" id="screener-stocks-table-container">
+            <table class="data-table" id="dense-screener-table">
+              <thead>
                 <tr>
-                  <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200" data-sort="symbol" title="Stock Trading Symbol & Legal Entity Name (Click to sort)">
-                    <div class="flex items-center gap-1">Stock <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="cursor-pointer" data-sort="symbol" title="Stock Name (Sort)">Stock Name</th>
+                  <th class="num cursor-pointer" data-sort="close" title="Close Price (Sort)">Close (₹)</th>
+                  <th class="num cursor-pointer" data-sort="changePercent" title="Change % (Sort)">Change %</th>
+                  <th class="num cursor-pointer" data-sort="volume" title="Volume (Sort)">Volume</th>
+                  <th style="text-align: center;" class="col-emas">
+                    EMAs<br><span style="font-size: 8.5px; font-weight: normal; color: var(--text-muted);">10 20 50 150</span>
                   </th>
-                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="close" title="Last Traded Price (LTP) in INR ₹ (Click to sort)">
-                    <div class="flex items-center justify-end gap-1">Close (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
-                  </th>
-                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="changePercent" title="1-Day Percentage Price Change from Previous Close (Click to sort)">
-                    <div class="flex items-center justify-end gap-1">% Change <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
-                  </th>
-                  <th class="py-2.5 px-3 text-right cursor-pointer hover:text-slate-200" data-sort="volume" title="Total Shares Traded Today in Session (Click to sort)">
-                    <div class="flex items-center justify-end gap-1">Volume <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
-                  </th>
+                  <th class="num cursor-pointer col-rsi" data-sort="rsi" title="RSI (Sort)">RSI</th>
                 </tr>
               </thead>
-              <tbody id="stocks-tbody" class="divide-y divide-dark-border/30">
-                <!-- Empty state default -->
-                <tr>
-                  <td colspan="4" class="py-16 text-center text-slate-500">
-                    <div class="flex flex-col items-center justify-center gap-2">
-                      <div class="w-12 h-12 rounded-full bg-dark-bg flex items-center justify-center text-slate-600">
-                        <i data-lucide="filter" class="w-6 h-6"></i>
-                      </div>
-                      <p class="text-sm font-medium text-slate-400">No screener results loaded yet</p>
-                      <p class="text-xs text-slate-500 max-w-xs">Click any screener button above to run scan conditions and load live stocks.</p>
-                    </div>
-                  </td>
-                </tr>
+              <tbody id="stocks-tbody">
+                <!-- Dynamically populated by app.js -->
               </tbody>
             </table>
           </div>
 
           <!-- Screener Footer -->
-          <div class="p-3 border-t border-dark-border bg-dark-card/50 text-[11px] text-slate-500 flex items-center justify-between">
+          <div style="padding: 6px 12px; border-top: 1px solid var(--border-color); background: var(--bg-subtle); font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
             <span>Tip: Click any stock row to inspect chart</span>
             <span class="font-mono" id="results-footer-meta"></span>
           </div>
@@ -849,226 +860,166 @@
         <div id="splitter-handle" class="w-1 h-10 bg-slate-600 group-hover:bg-blue-400 group-active:bg-blue-300 rounded-full transition-colors"></div>
       </div>
 
-      <!-- RIGHT PANE: ScreeningMantis-Style Native Technical Chart -->
-      <div id="chart-pane" class="flex-1 min-w-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden min-h-[480px]">
+      <!-- RIGHT PANE: Option 1 Right Chart Workspace -->
+      <div id="chart-pane" class="right-chart-pane flex-1 min-w-0 flex flex-col min-h-[480px]">
         
-        <!-- Stock Details & Indicator Metrics Header -->
-        <div class="p-4 border-b border-dark-border bg-dark-card/60 flex flex-col gap-3">
-          
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <!-- Stock Symbol & Price Info -->
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-sm">
-                <span id="chart-symbol-avatar">REL</span>
-              </div>
-              <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <!-- Editable Stock Symbol Input Field with Predictive Search (Adaptive Dynamic Width) -->
-                  <div class="relative flex items-center" id="manual-search-wrapper">
-                    <div class="relative flex items-center group">
-                      <input 
-                        type="text" 
-                        id="manual-stock-input" 
-                        value="RELIANCE" 
-                        placeholder="TYPE STOCK..." 
-                        autocomplete="off"
-                        spellcheck="false"
-                        class="min-w-[120px] max-w-[320px] w-auto px-3 py-1 pr-8 text-base font-bold font-mono text-white bg-dark-bg border border-dark-border rounded-lg uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all hover:border-slate-500"
-                        title="Type any stock name or symbol (e.g. TATA, INFY, HDFC)"
-                      >
-                      <span id="chart-stock-symbol" class="hidden">RELIANCE</span>
-                      <button id="btn-manual-stock-search" class="absolute right-1.5 p-1 text-slate-400 hover:text-blue-400 focus:outline-none transition-colors" title="Load Stock Chart (Enter)">
-                        <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                      </button>
-                    </div>
-
-                    <!-- Predictive Autocomplete Dropdown List -->
-                    <div id="stock-autocomplete-dropdown" class="hidden absolute left-0 top-full mt-1.5 w-72 sm:w-80 max-h-72 overflow-y-auto bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl z-50 divide-y divide-dark-border/40">
-                    </div>
-                  </div>
-
-                  <span id="chart-stock-ltp" class="text-base font-bold font-mono text-slate-100">₹0.00</span>
-                  <span id="chart-stock-change" class="px-2 py-0.5 text-xs font-semibold rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    +0.00%
-                  </span>
-                  <span id="chart-stock-exchange" class="flex items-center gap-1"></span>
-                </div>
-                <p id="chart-stock-name" class="text-xs text-slate-400 mt-0.5">Reliance Industries Limited</p>
-              </div>
-            </div>
-
-            <!-- Chart Header Actions: External Links & Maximize -->
-            <div class="flex items-center gap-2">
-              <button onclick="toggleDashboardChartMaximize()" id="btn-dashboard-chart-maximize" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors cursor-pointer" title="Toggle Fullscreen Maximize Chart">
-                <i data-lucide="maximize" class="w-4 h-4"></i>
+        <!-- Stock Details & Timeframe Top Bar (Option 1 Chart Top Bar) -->
+        <div class="chart-top-bar">
+          <div class="stock-title-info">
+            <!-- Stock Symbol & Search Input -->
+            <div class="relative flex items-center" id="manual-search-wrapper">
+              <input 
+                type="text" 
+                id="manual-stock-input" 
+                value="RELIANCE" 
+                placeholder="STOCK..." 
+                autocomplete="off"
+                spellcheck="false"
+                class="stock-sym-header font-mono uppercase bg-transparent border-0 p-0 focus:outline-none cursor-pointer"
+                style="min-width: 100px; max-width: 220px;"
+                title="Type any stock name or symbol (e.g. TATA, INFY, HDFC)"
+              >
+              <span id="chart-stock-symbol" class="hidden">RELIANCE</span>
+              <span id="chart-symbol-avatar" class="hidden">REL</span>
+              <button id="btn-manual-stock-search" class="sb-action-btn p-1 ml-1" title="Load Stock Chart (Enter)">
+                <i data-lucide="search" class="w-3.5 h-3.5"></i>
               </button>
-              <a id="link-tradingview" href="https://in.tradingview.com" target="_blank" rel="noopener noreferrer" 
-                 title="Open on TradingView" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-blue-400 hover:bg-dark-accent transition-colors">
-                <i data-lucide="external-link" class="w-4 h-4"></i>
-              </a>
-              <a id="link-chartink" href="https://chartink.com" target="_blank" rel="noopener noreferrer" 
-                 title="Open on Chartink" class="p-2 rounded-xl bg-dark-bg border border-dark-border text-slate-400 hover:text-amber-400 hover:bg-dark-accent transition-colors">
-                <i data-lucide="maximize-2" class="w-4 h-4"></i>
-              </a>
+              
+              <!-- Predictive Autocomplete Dropdown List -->
+              <div id="stock-autocomplete-dropdown" class="hidden absolute left-0 top-full mt-1.5 w-72 sm:w-80 max-h-72 overflow-y-auto dropdown-menu-card z-50"></div>
             </div>
-          </div>
 
-          <!-- Metric Pills: 52WH & ATH & Watchlist Dropdown -->
-          <div class="flex items-center flex-wrap gap-2 text-[11px] font-mono pt-1">
-            <span class="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5" id="pill-52w" title="52-Week High price & distance from high">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-              <span>52WH: <strong class="text-white font-mono" id="val-52w-high">--</strong></span>
+            <span id="chart-stock-ltp" class="stock-ltp-header">₹0.00</span>
+            <span id="chart-stock-change" class="badge-gain">+0.00%</span>
+            <span id="chart-stock-name" class="sym-sub hidden sm:inline" style="margin-left: 4px;">Reliance Industries Limited</span>
+            <span id="chart-stock-exchange" class="hidden"></span>
+
+            <!-- Metric Pills: 52WH & ATH -->
+            <span class="stats-pill" id="pill-52w" title="52-Week High price & distance from high" style="font-size: 10.5px; padding: 2px 7px;">
+              52WH: <strong id="val-52w-high">--</strong>
             </span>
-            <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25 font-semibold flex items-center gap-1.5" id="pill-ath" title="All-Time High price & distance from ATH">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span>ATH: <strong class="text-amber-200 font-mono" id="val-ath">--</strong></span>
+            <span class="stats-pill" id="pill-ath" title="All-Time High price & distance from ATH" style="font-size: 10.5px; padding: 2px 7px;">
+              ATH: <strong id="val-ath">--</strong>
             </span>
 
-            <!-- Add to Watchlist Dropdown Button (Placed right along with ATH label) -->
+            <!-- Add to Watchlist Dropdown Button -->
             <div class="relative" id="chart-watchlist-wrapper">
-              <button id="btn-chart-watchlist-toggle" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 shadow-sm transition-all cursor-pointer select-none flex items-center gap-1.5 font-sans font-semibold text-[11px]" title="Add / Remove current stock from watchlists">
-                <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+              <button id="btn-chart-watchlist-toggle" class="sb-action-btn" title="Add / Remove current stock from watchlists">
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-current" style="color: #F59E0B;"></i>
                 <span>Watchlist</span>
               </button>
 
               <!-- Watchlists Checklist Dropdown Menu -->
-              <div id="chart-watchlist-menu" class="hidden absolute left-0 top-full mt-1.5 w-64 bg-dark-card/95 backdrop-blur-md border border-dark-border rounded-xl shadow-2xl z-50 p-2.5 divide-y divide-dark-border/40">
+              <div id="chart-watchlist-menu" class="hidden absolute left-0 top-full mt-1.5 w-64 dropdown-menu-card z-50 p-2.5">
                 <div class="px-1 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                   <span>Save to Watchlist</span>
-                  <span class="text-[10px] text-amber-400/80 font-mono font-normal">Max 50/list</span>
+                  <span class="text-[10px] font-mono font-normal">Max 50/list</span>
                 </div>
-                <div id="chart-watchlist-checklist" class="py-1.5 flex flex-col gap-1 max-h-52 overflow-y-auto">
-                  <!-- Dynamic watchlist checkboxes populated by app.js -->
-                </div>
+                <div id="chart-watchlist-checklist" class="py-1.5 flex flex-col gap-1 max-h-52 overflow-y-auto"></div>
               </div>
             </div>
           </div>
 
         </div>
 
-        <!-- Chart Controls Toolbar (Ultra-Dense Space-Optimized Single Row) -->
-        <div class="px-3 py-1.5 border-b border-dark-border bg-dark-card/40 flex items-center justify-between gap-2 text-xs overflow-x-auto select-none">
-          
-          <!-- Left: Timeframe & Range Selectors -->
-          <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- Timeframes: 5, 15, 1H, D, W -->
-            <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 font-medium text-slate-400 text-[11px] gap-0.5">
-              <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="5m" title="5 Minutes timeframe (5m per candle)">5</button>
-              <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="15m" title="15 Minutes timeframe (15m per candle)">15</button>
-              <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="60m" title="1 Hour timeframe (60m per candle)">1H</button>
-              <button class="timeframe-btn active px-2 py-0.5 rounded-md bg-blue-600 text-white font-semibold shadow transition-colors cursor-pointer" data-interval="1d" title="Daily timeframe (1 day per candle)">D</button>
-              <button class="timeframe-btn px-2 py-0.5 rounded-md hover:text-white transition-colors cursor-pointer" data-interval="1wk" title="Weekly timeframe (1 week per candle)">W</button>
-            </div>
+        <!-- Chart Sub-bar: Timeframes & External Links (Replaces Old EMA Legend Line) -->
+        <div class="chart-timeframe-subbar" id="chart-timeframe-subbar">
+          <div class="tf-toolbar flex items-center gap-1">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mr-1 select-none hidden sm:inline">TF:</span>
+            <button class="tf-btn timeframe-btn" data-interval="5m" title="5 Minutes">5</button>
+            <button class="tf-btn timeframe-btn" data-interval="15m" title="15 Minutes">15</button>
+            <button class="tf-btn timeframe-btn" data-interval="60m" title="1 Hour">1H</button>
+            <button class="tf-btn timeframe-btn active" data-interval="1d" title="Daily (1D)">1D</button>
 
-            <!-- Range: 3M, 6M (Default), 1Y -->
-            <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 font-medium text-slate-400 text-[11px]">
-              <button class="range-btn px-2 py-0.5 rounded-md hover:text-white transition-colors" data-range="3mo" title="Show last 3 months">3M</button>
-              <button class="range-btn active px-2 py-0.5 rounded-md bg-indigo-600 text-white font-semibold shadow transition-colors" data-range="6mo" title="Show last 6 months (Default)">6M</button>
-              <button class="range-btn px-2 py-0.5 rounded-md hover:text-white transition-colors" data-range="1y" title="Show last 12 months">1Y</button>
-            </div>
+            <span style="opacity: 0.3; margin: 0 4px;">|</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mr-1 select-none hidden sm:inline">Range:</span>
+            <button class="tf-btn range-btn" data-range="3mo" title="3 Months">3M</button>
+            <button class="tf-btn range-btn active" data-range="6mo" title="6 Months (Default)">6M</button>
+            <button class="tf-btn range-btn" data-range="1y" title="1 Year">1Y</button>
           </div>
 
-          <span id="chart-indicators-divider" class="text-slate-700 select-none flex-shrink-0">|</span>
+          <!-- Chart External Links & Fullscreen Maximize -->
+          <div class="flex items-center gap-1.5 ml-auto">
+            <button onclick="toggleDashboardChartMaximize()" id="btn-dashboard-chart-maximize" class="sb-action-btn" title="Toggle Fullscreen Maximize Chart">
+              ⛶
+            </button>
+            <a id="link-tradingview" href="https://in.tradingview.com" target="_blank" rel="noopener noreferrer" 
+               title="Open on TradingView" class="sb-action-btn">
+              TV ↗
+            </a>
+            <a id="link-chartink" href="https://chartink.com" target="_blank" rel="noopener noreferrer" 
+               title="Open on Chartink" class="sb-action-btn">
+              CI ↗
+            </a>
+          </div>
 
-          <!-- Middle: Compact Overlays & Technical Indicators Checkboxes -->
-          <div id="chart-indicators-toolbar" class="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap sm:flex-nowrap">
-            <label class="flex items-center gap-1 cursor-pointer hover:text-sky-300 transition-colors" title="10-period Exponential Moving Average">
-              <input type="checkbox" id="chk-ema10" checked class="rounded border-slate-700 text-sky-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>10</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-blue-300 transition-colors" title="20-period Exponential Moving Average">
-              <input type="checkbox" id="chk-ema20" checked class="rounded border-slate-700 text-blue-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>20</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-amber-300 transition-colors" title="50-period Exponential Moving Average">
-              <input type="checkbox" id="chk-ema50" checked class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>50</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-purple-300 transition-colors" title="150-period Exponential Moving Average">
-              <input type="checkbox" id="chk-ema150" checked class="rounded border-slate-700 text-purple-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>150</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-rose-300 transition-colors" title="200-period Exponential Moving Average">
-              <input type="checkbox" id="chk-ema200" checked class="rounded border-slate-700 text-rose-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>200</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-yellow-300 transition-colors" title="Volume Weighted Average Price">
-              <input type="checkbox" id="chk-vwap" checked class="rounded border-slate-700 text-yellow-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>VWAP</span>
-            </label>
-            <div class="flex items-center gap-1">
-              <label class="flex items-center gap-1 cursor-pointer hover:text-cyan-300 transition-colors" title="Pivot Points (P, R1, S1)">
-                <input type="checkbox" id="chk-pivots" checked class="rounded border-slate-700 text-cyan-400 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-                <span>Pivots</span>
-              </label>
-              <select id="select-pivot-type" class="px-1 py-0.2 text-[9px] font-semibold bg-dark-bg border border-dark-border rounded text-slate-300 focus:outline-none cursor-pointer" title="Select Pivot Points formula">
-                <option value="Traditional (Auto)">Traditional (Auto)</option>
-                <option value="Standard (D)">Standard (D)</option>
-                <option value="Weekly (W)">Weekly (W)</option>
-                <option value="Monthly (M)">Monthly (M)</option>
-                <option value="Fibonacci (D)">Fibonacci (D)</option>
-                <option value="Camarilla (D)">Camarilla (D)</option>
-              </select>
-            </div>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-emerald-300 transition-colors" title="Nicolas Darvas 5-bar High/Low Box">
-              <input type="checkbox" id="chk-darvas" checked class="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
+          <!-- Compatibility hidden elements for old EMA legend line -->
+          <div style="display:none;" id="chart-top-legend-line">
+            <span id="legend-ema10">--</span>
+            <span id="legend-ema20">--</span>
+            <span id="legend-ema50">--</span>
+            <span id="legend-ema150">--</span>
+            <span id="legend-ema200">--</span>
+            <span id="legend-volume">--</span>
+          </div>
+        </div>
+
+        <!-- Chart Controls Toolbar (Pruned: Darvas, Ray, Save, Measure, Settings, Shift) -->
+        <div style="padding: 4px 14px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-size: 11px; flex-wrap: wrap; gap: 6px;">
+          
+          <div id="chart-indicators-toolbar" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--text-secondary);">
+            <!-- Visible: Darvas Box -->
+            <label class="flex items-center gap-1 cursor-pointer" title="Darvas Box">
+              <input type="checkbox" id="chk-darvas" checked class="cursor-pointer">
               <span>Darvas</span>
             </label>
-            <label class="flex items-center gap-1 cursor-pointer hover:text-indigo-300 transition-colors" title="Relative Strength Index (14) + 14-SMA">
-              <input type="checkbox" id="chk-rsi" checked class="rounded border-slate-700 text-indigo-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-              <span>RSI</span>
-            </label>
-            <div class="flex items-center gap-1">
-              <span class="text-[10px] text-slate-400 font-semibold flex items-center gap-1"><i data-lucide="bar-chart-2" class="w-3 h-3 text-teal-400"></i> Vol:</span>
-              <select id="select-vol-mode" onchange="setVolumeOverlayMode(this.value)" class="px-1.5 py-0.5 text-[9px] font-semibold bg-dark-bg border border-dark-border rounded text-teal-300 focus:outline-none cursor-pointer" title="Switch volume overlay on price chart">
+
+            <!-- Visible: Global Date Ray -->
+            <div style="display: inline-flex; align-items: center; gap: 4px;">
+              <label id="label-global-date-ray" class="flex items-center gap-1 cursor-pointer" title="Global Date Ray">
+                <input type="checkbox" id="chk-global-date-ray" onchange="handleToggleGlobalDateRay(this.checked)" class="cursor-pointer">
+                <span>Ray</span>
+              </label>
+              <input type="color" id="global-ray-color-picker" value="#06b6d4" onchange="handleGlobalRayColorChange(this.value)" style="width: 14px; height: 14px; border: 0; padding: 0; cursor: pointer;">
+            </div>
+
+            <!-- Hidden indicators: Still active and configurable via Settings Modal -->
+            <div style="display: none;" id="hidden-indicator-controls">
+              <input type="checkbox" id="chk-ema10" checked>
+              <input type="checkbox" id="chk-ema20" checked>
+              <input type="checkbox" id="chk-ema50" checked>
+              <input type="checkbox" id="chk-ema150" checked>
+              <input type="checkbox" id="chk-ema200" checked>
+              <input type="checkbox" id="chk-vwap" checked>
+              <input type="checkbox" id="chk-pivots" checked>
+              <select id="select-pivot-type">
+                <option value="Traditional (Auto)">Traditional (Auto)</option>
+              </select>
+              <input type="checkbox" id="chk-rsi" checked>
+              <select id="select-vol-mode" onchange="setVolumeOverlayMode(this.value)">
                 <option value="volintel" selected>Vol Intel</option>
-                <option value="simple">Simple Vol</option>
-                <option value="off">Off</option>
               </select>
             </div>
-
-            <!-- Special Universal Horizontal Ray Tool (Checkbox Toggle & Custom Color) -->
-            <div class="flex items-center gap-1.5 bg-dark-bg/80 border border-dark-border hover:border-cyan-500/50 px-2 py-0.5 rounded-lg shadow-sm transition-colors">
-              <label id="label-global-date-ray" class="flex items-center gap-1 cursor-pointer hover:text-cyan-300 transition-colors text-slate-300 select-none" title="Universal Date Ray: Check to activate, then click any candle/date to anchor a plain horizontal reference ray starting from that candle towards the right across ALL stock charts">
-                <input type="checkbox" id="chk-global-date-ray" onchange="handleToggleGlobalDateRay(this.checked)" class="rounded border-slate-700 text-cyan-500 focus:ring-0 bg-dark-bg cursor-pointer w-3 h-3">
-                <span class="text-[10px] font-semibold text-cyan-400 flex items-center gap-0.5"><i data-lucide="crosshair" class="w-3 h-3 text-cyan-400"></i> Global Ray</span>
-              </label>
-              <input type="color" id="global-ray-color-picker" value="#06b6d4" onchange="handleGlobalRayColorChange(this.value)" class="w-3.5 h-3.5 rounded cursor-pointer border-0 bg-transparent p-0" title="Custom Global Ray Line Color">
-            </div>
           </div>
 
-          <!-- Right: Save Chart, Measure Tool, Line Customizer, Toolbar Next/Prev Capsule & Watchlist Action -->
-          <div class="flex items-center gap-1.5 flex-shrink-0">
-            <!-- Save Chart Screenshot to Journal Button -->
-            <button id="btn-save-chart-screenshot" onclick="openSaveChartModal()" class="p-1 px-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm" title="📸 Save Chart: Capture visual chart screenshot and save to Trading Journal">
+          <!-- Right: Action Buttons (Screenshot, Measure, Line Settings, Stock Prev/Next) -->
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button id="btn-save-chart-screenshot" onclick="openSaveChartModal()" class="sb-action-btn" title="Save Chart Screenshot">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i>
-              <span class="text-[10px] hidden sm:inline">Save Chart</span>
+              <span class="hidden sm:inline">Save</span>
             </button>
-
-            <!-- Measure Tool Button (Ruler Icon) -->
-            <button id="btn-measure-tool" onclick="toggleMeasureTool()" class="p-1 px-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm" title="Measure Tool (or Shift+Drag): Measure % gain/drop, price difference, and bar count between any two points on chart">
+            <button id="btn-measure-tool" onclick="toggleMeasureTool()" class="sb-action-btn" title="Measure Gain/Loss %">
               <i data-lucide="ruler" class="w-3.5 h-3.5"></i>
-              <span class="text-[10px] hidden sm:inline">Measure</span>
+              <span class="hidden sm:inline">Measure</span>
             </button>
-
-            <!-- Line Thickness & Color Settings Button (Sliders icon) -->
-            <button id="btn-open-line-settings" onclick="openLineSettingsModal()" class="p-1 px-1.5 rounded-lg bg-blue-600/15 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 hover:border-blue-500 text-xs font-semibold flex items-center justify-center transition-all cursor-pointer shadow-sm" title="Customize chart line thickness, themes, colors, and styles">
+            <button id="btn-open-line-settings" onclick="openLineSettingsModal()" class="sb-action-btn" title="Line Settings & Styles">
               <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
             </button>
-
-            <!-- Stock Quick-Navigation Segmented Capsule -->
-            <div class="flex items-center bg-dark-bg border border-dark-border rounded-lg p-0.5 text-slate-400">
-              <button id="btn-nav-prev-stock" class="p-0.5 px-1 rounded hover:bg-dark-card hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Previous stock (Up Arrow / K)">
-                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
-              </button>
-              <span class="text-slate-600 text-[10px] select-none">|</span>
-              <button id="btn-nav-next-stock" class="p-0.5 px-1 rounded hover:bg-dark-card hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Next stock (Down Arrow / J)">
-                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-              </button>
+            <div style="display: flex; gap: 2px;">
+              <button id="btn-nav-prev-stock" class="sb-action-btn p-1" title="Previous Stock (Up Arrow / K)">‹</button>
+              <button id="btn-nav-next-stock" class="sb-action-btn p-1" title="Next Stock (Down Arrow / J)">›</button>
             </div>
-
           </div>
-
         </div>
 
         <!-- Native Canvas Chart Container (Price + Bottom Volume Overlay & Sub-Pane for RSI) -->
@@ -3370,5 +3321,105 @@
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->
   <script src="mf_deals.js?v=1.3.0"></script>
+
+  <!-- Columns Customizer Modal -->
+  <div id="columns-customizer-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-3">
+    <div class="bg-dark-card border border-dark-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+      <div class="p-4 border-b border-dark-border flex items-center justify-between bg-dark-bg/70">
+        <div class="flex items-center gap-2">
+          <i data-lucide="columns-3" class="w-4 h-4 text-emerald-400"></i>
+          <h3 class="text-sm font-bold text-white">Customize Table Columns</h3>
+        </div>
+        <button onclick="closeColumnsCustomizerModal()" class="p-1.5 rounded-lg bg-dark-bg text-slate-400 hover:text-white transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar text-xs">
+        <div class="p-3 bg-dark-bg/60 border border-dark-border rounded-xl">
+          <div class="flex items-center justify-between pb-2 border-b border-dark-border/40 mb-2">
+            <span class="font-bold text-emerald-400 uppercase tracking-wider text-[11px]">ACTIVE SCREENER COLUMNS</span>
+            <button onclick="toggleAllActiveColumns()" class="text-[10px] text-slate-400 hover:text-white cursor-pointer">Toggle All</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-symbol" checked disabled class="rounded text-emerald-500 opacity-60">
+              <span>Stock Name (Required)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-close" checked onchange="handleColumnToggle('close', this.checked)" class="rounded text-emerald-500">
+              <span>Close (₹)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-chg" checked onchange="handleColumnToggle('chg', this.checked)" class="rounded text-emerald-500">
+              <span>Change %</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-vol" checked onchange="handleColumnToggle('vol', this.checked)" class="rounded text-emerald-500">
+              <span>Volume</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-emas" checked onchange="handleColumnToggle('emas', this.checked)" class="rounded text-emerald-500">
+              <span>EMAs Matrix [10 20 50 150]</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-rsi" checked onchange="handleColumnToggle('rsi', this.checked)" class="rounded text-emerald-500">
+              <span>RSI (14)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="p-3 border-t border-dark-border flex items-center justify-between bg-dark-bg/70">
+        <button onclick="resetDefaultColumns()" class="px-3 py-1.5 rounded-lg bg-dark-card border border-dark-border text-slate-400 hover:text-white text-xs font-semibold cursor-pointer">Reset Defaults</button>
+        <button onclick="closeColumnsCustomizerModal()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow cursor-pointer">Done</button>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Compatibility hidden elements for app.js -->
+  <div id="app-compatibility-hidden" style="display:none;">
+    <span id="floating-avwap-label"></span>
+    <span id="header-slots-badge"></span>
+    <span id="modal-slots-badge"></span>
+    <span id="pricescan-results-count"></span>
+    <span id="pricescan-status-badge"></span>
+    <span id="pill-ema10"></span>
+    <span id="pill-ema20"></span>
+    <span id="pill-ema50"></span>
+    <span id="pill-ema150"></span>
+    <span id="pill-vwap"></span>
+    <span id="pill-pivots"></span>
+    <span id="pill-darvas"></span>
+    <span id="pill-rsi"></span>
+    <div id="chart-ohlcv-legend"></div>
+    <div id="tv_volume_container"></div>
+    <div id="tv_volume_chart"></div>
+    <span id="vi-vol-badge"></span>
+    <span id="vi-sma-badge"></span>
+    <input type="checkbox" id="chk-vol">
+    <input type="checkbox" id="chk-vol-avg">
+    <input type="checkbox" id="chk-vol-intel">
+    <input type="color" id="color-ema10">
+    <input type="color" id="color-ema20">
+    <input type="color" id="color-ema50">
+    <input type="color" id="color-ema150">
+    <input type="color" id="color-ema200">
+    <input type="color" id="color-vol-avg">
+    <input type="color" id="color-vwap">
+    <input type="color" id="color-darvas-top">
+    <input type="color" id="color-darvas-bottom">
+    <input type="color" id="color-rsi">
+    <input type="color" id="color-rsi-sma">
+    <select id="select-chart-theme"></select>
+    <div id="tv_chart_container"></div>
+    <span id="chart-profile-symbol"></span>
+    <span id="chart-day-low"></span>
+    <span id="chart-day-high"></span>
+    <div id="chart-day-slider-thumb"></div>
+    <span id="admin-kpi-uptime"></span>
+    <span id="admin-kpi-sessions"></span>
+    <div id="global-app-tooltip"></div>
+  </div>
+
 </body>
 </html>

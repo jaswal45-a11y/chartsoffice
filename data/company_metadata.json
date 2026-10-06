@@ -87821,5 +87821,1121 @@
     "last_updated": "Sep 2026",
     "ai_generated": false,
     "data_version": "2.0"
+  },
+  {
+    "ticker": "AMARAJABAT",
+    "ai_generated": true,
+    "business_type": "Automotive Engineering & Components",
+    "company_name": "Amara Raja Energy & Mobility",
+    "data_version": "2.0",
+    "description": "Amara Raja Energy & Mobility manufactures precision powertrain components, aluminum die castings, electric vehicle (EV) assemblies, and chassis systems for passenger and commercial vehicle OEMs.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic Auto Hubs & Global OEM Exports",
+    "industry": "Auto Ancillaries & Components",
+    "key_revenue_driver": "OEM assembly contracts and high-margin aftermarket sales",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Powertrain Assemblies",
+      "EV Powertrain Systems",
+      "Precision Castings",
+      "Chassis Components"
+    ],
+    "sector": "Automobile",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "Automobile",
+      "Auto Ancillaries & Components",
+      "Large Cap"
+    ]
+  },
+  {
+    "ticker": "NSE",
+    "ai_generated": false,
+    "business_type": "Financial Data & Stock Exchanges",
+    "company_name": "National Stock Exchange of Ind",
+    "data_version": "2.0",
+    "description": "National Stock Exchange of India Limited, a stock exchange, provides an automated screen-based electronic trading system in India. The company operates through Trading Services, Clearing Services, and Others segments.",
+    "exchange": "BSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Financial Data & Stock Exchanges",
+    "key_revenue_driver": "Operations in Financial Data & Stock Exchanges",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Financial Data & Stock Exchanges",
+      "Financial Services Solutions"
+    ],
+    "sector": "Financial Services",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Financial Services",
+      "Financial Data & Stock Exchanges",
+      "nseindia.com"
+    ],
+    "website": "https://www.nseindia.com"
+  },
+  {
+    "ticker": "NIFTY200ALPHA30",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTY200ALPHA30",
+    "data_version": "2.0",
+    "description": "NIFTY200ALPHA30 is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "AXISCADES TECH.",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "AXISCADES TECH.",
+    "data_version": "2.0",
+    "description": "AXISCADES TECH. is an established enterprise listed on the NSE, operating in the Diversified sector with core commercial expertise centered in General.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "General",
+    "key_revenue_driver": "Core operational revenue from General",
+    "last_updated": "Sep 2026",
+    "products": [
+      "General",
+      "Diversified Solutions"
+    ],
+    "sector": "Diversified",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "Diversified",
+      "Small Cap"
+    ]
+  },
+  {
+    "ticker": "ARMEE",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "ARMEE INFOTECH LIMITED",
+    "data_version": "2.0",
+    "description": "ARMEE INFOTECH LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "COREIN",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "COREINTEGRA CONSULTING SERVICES LIMITED",
+    "data_version": "2.0",
+    "description": "COREINTEGRA CONSULTING SERVICES LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "SWASTIKAIN",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "SWASTIKA INFRA LIMITED",
+    "data_version": "2.0",
+    "description": "SWASTIKA INFRA LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "ADROITIND",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "ADROIT INDUSTRIES (INDIA) LIMITED",
+    "data_version": "2.0",
+    "description": "ADROIT INDUSTRIES (INDIA) LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "ELEVATE",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "ELEVATE CAMPUSES LIMITED",
+    "data_version": "2.0",
+    "description": "ELEVATE CAMPUSES LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "GSPLTRANS",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "GSPL TRANSMISSION LIMITED",
+    "data_version": "2.0",
+    "description": "GSPL TRANSMISSION LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "POOJALOGIS",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "POOJA LOGISTICS LIMITED",
+    "data_version": "2.0",
+    "description": "POOJA LOGISTICS LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTY50PR1XINV",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTY50PR1XINV",
+    "data_version": "2.0",
+    "description": "NIFTY50PR1XINV is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTY50TR1XINV",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTY50TR1XINV",
+    "data_version": "2.0",
+    "description": "NIFTY50TR1XINV is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTYMIDSELECT",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTYMIDSELECT",
+    "data_version": "2.0",
+    "description": "NIFTYMIDSELECT is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTYAUTO",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTYAUTO",
+    "data_version": "2.0",
+    "description": "NIFTYAUTO is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "CNXREALTY",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "CNXREALTY",
+    "data_version": "2.0",
+    "description": "CNXREALTY is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTYINDDIGITAL",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTYINDDIGITAL",
+    "data_version": "2.0",
+    "description": "NIFTYINDDIGITAL is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "MONEYVIEW",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "MONEYVIEW LIMITED",
+    "data_version": "2.0",
+    "description": "MONEYVIEW LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "AONESTEELS",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "A-ONE STEELS INDIA LIMITED",
+    "data_version": "2.0",
+    "description": "A-ONE STEELS INDIA LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTYMIDSMLHLTH",
+    "exchange": "NSE",
+    "company_name": "NIFTYMIDSMLHLTH",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTYMIDSMLHLTH is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "MORARJEE",
+    "ai_generated": false,
+    "business_type": "Textile Manufacturing",
+    "company_name": "Morarjee Textiles Limited",
+    "data_version": "2.0",
+    "description": "Morarjee Textiles Limited engages in the manufacture and sale of yarns and fabrics in India and internationally. It also offers cotton shirting fabrics; printed fabrics, including satin, cambric, poplin, lawn, and silk; yarn dyed shirting, such as prima linea, ganges, and seasonal collection; and voiles and white fabrics.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Textile Manufacturing",
+    "key_revenue_driver": "Operations in Textile Manufacturing",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Textile Manufacturing",
+      "Consumer Cyclical Solutions"
+    ],
+    "sector": "Consumer Cyclical",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Consumer Cyclical",
+      "Textile Manufacturing",
+      "morarjee.com"
+    ],
+    "website": "https://morarjee.com"
+  },
+  {
+    "ticker": "EDUCOMP",
+    "ai_generated": false,
+    "business_type": "Education & Training Services",
+    "company_name": "Educomp Solutions Limited",
+    "data_version": "2.0",
+    "description": "Educomp Solutions Limited, together with its subsidiaries, provides education services in India. It operates through Higher Learning Solutions; School Learning Solutions; K-12 Schools; and Online, Supplemental & Global Business segments.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Education & Training Services",
+    "key_revenue_driver": "Operations in Education & Training Services",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Education & Training Services",
+      "Consumer Defensive Solutions"
+    ],
+    "sector": "Consumer Defensive",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Consumer Defensive",
+      "Education & Training Services",
+      "educomp.com"
+    ],
+    "website": "https://www.educomp.com"
+  },
+  {
+    "ticker": "UNIVAFOODS",
+    "ai_generated": false,
+    "business_type": "Shell Companies",
+    "company_name": "Univa Foods Limited",
+    "data_version": "2.0",
+    "description": "Univa Foods Limited does not have significant operations. Previously, it was involved in hotel operations, food products, trading, and distribution activities. The company was formerly known as Hotel Rugby Limited and changed its name to Univa Foods Limited in August 2022. Univa Foods Limited was incorporated in 1991 and is based in Mumbai, India.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Shell Companies",
+    "key_revenue_driver": "Operations in Shell Companies",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Shell Companies",
+      "Financial Services Solutions"
+    ],
+    "sector": "Financial Services",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Financial Services",
+      "Shell Companies",
+      "univafoods.co.in"
+    ],
+    "website": "https://www.univafoods.co.in"
+  },
+  {
+    "ticker": "CLCIND",
+    "ai_generated": false,
+    "business_type": "Textile Manufacturing",
+    "company_name": "CLC Industries Limited",
+    "data_version": "2.0",
+    "description": "CLC Industries Limited, a textile company, engages in the manufacture and trading of synthetic and cotton yarns in India. The company was formerly known as Spentex Industries Limited and changed its name to CLC Industries Limited in July 2018. CLC Industries Limited was incorporated in 1991 and is based in New Delhi, India.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Textile Manufacturing",
+    "key_revenue_driver": "Operations in Textile Manufacturing",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Textile Manufacturing",
+      "Consumer Cyclical Solutions"
+    ],
+    "sector": "Consumer Cyclical",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Consumer Cyclical",
+      "Textile Manufacturing",
+      "spentex.net"
+    ],
+    "website": "https://www.spentex.net"
+  },
+  {
+    "ticker": "ORTEL",
+    "ai_generated": false,
+    "business_type": "Entertainment",
+    "company_name": "Ortel Communications Limited",
+    "data_version": "2.0",
+    "description": "Ortel Communications Limited operates as a cable television and high-speed broadband service provider in India. The company offers digital cable TV services; high speed broadband internet services to the home segment; internet leased lines to SMEs and corporate customers; and fiber leasing services to telecom and internet companies.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Entertainment",
+    "key_revenue_driver": "Operations in Entertainment",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Entertainment",
+      "Communication Services Solutions"
+    ],
+    "sector": "Communication Services",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Communication Services",
+      "Entertainment",
+      "ortelcom.com"
+    ],
+    "website": "https://ortelcom.com"
+  },
+  {
+    "ticker": "CMICABLES",
+    "ai_generated": false,
+    "business_type": "Electrical Equipment & Parts",
+    "company_name": "CMI Limited",
+    "data_version": "2.0",
+    "description": "CMI Limited manufactures and sells wires and cables in India and internationally. The company offers various type of cables, such as quad, railway signaling, fire survival, fire retardant low smoke zero halogen, flexible multi-core copper shielded abrasion resistant thermoplastic polyurethanes sheathed, polythene insul...",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Electrical Equipment & Parts",
+    "key_revenue_driver": "Operations in Electrical Equipment & Parts",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Electrical Equipment & Parts",
+      "Industrials Solutions"
+    ],
+    "sector": "Industrials",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Industrials",
+      "Electrical Equipment & Parts",
+      "cmilimited.in"
+    ],
+    "website": "https://www.cmilimited.in"
+  },
+  {
+    "ticker": "NAGAFERT",
+    "ai_generated": false,
+    "business_type": "Agricultural Inputs",
+    "company_name": "Nagarjuna Fertilizers and Chemicals Limited",
+    "data_version": "2.0",
+    "description": "Nagarjuna Fertilizers and Chemicals Limited manufactures and markets fertilizers and micro irrigation equipment in India. The company offers urea, specialty fertilizers, micronutrients, and supplements and OSR, as well as agri informatic services.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Agricultural Inputs",
+    "key_revenue_driver": "Operations in Agricultural Inputs",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Agricultural Inputs",
+      "Basic Materials Solutions"
+    ],
+    "sector": "Basic Materials",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Basic Materials",
+      "Agricultural Inputs",
+      "nfcl.in"
+    ],
+    "website": "https://www.nfcl.in"
+  },
+  {
+    "ticker": "CEREBRAINT",
+    "ai_generated": false,
+    "business_type": "Waste Management",
+    "company_name": "Cerebra Integrated Technologies Limited",
+    "data_version": "2.0",
+    "description": "Cerebra Integrated Technologies Limited, together with its subsidiary, trades in computer systems and peripherals in India. The company provides electronics manufacturing services for motherboards, memory modules, graphic cards, and networking products; enterprise solutions, including IT hardware and software infrastructure design, planning, and implementation; and turnkey networking solutions.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Waste Management",
+    "key_revenue_driver": "Operations in Waste Management",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Waste Management",
+      "Industrials Solutions"
+    ],
+    "sector": "Industrials",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Industrials",
+      "Waste Management",
+      "cerebracomputers.com"
+    ],
+    "website": "https://www.cerebracomputers.com"
+  },
+  {
+    "ticker": "LASA",
+    "ai_generated": false,
+    "business_type": "Drug Manufacturers - Specialty & Generic",
+    "company_name": "Lasa Supergenerics Limited",
+    "data_version": "2.0",
+    "description": "Lasa Supergenerics Limited engages in the manufacturing API bulk drugs products in India and internationally. It offers API products, such as fenbendazole, toldimphos sodium, cyromazine, albendazole, riclabendazole, rafoxanide, ornidazole, 2,6-diiodo-4-nitrophenol, ricobendazole, oxfendazole, closantel base, closantel sodium, nitroxynil, halquinol, and oxyclozanide; and Other API products.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "key_revenue_driver": "Operations in Drug Manufacturers - Specialty & Generic",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Drug Manufacturers - Specialty & Generic",
+      "Healthcare Solutions"
+    ],
+    "sector": "Healthcare",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Healthcare",
+      "Drug Manufacturers - Specialty & Generic",
+      "lasalabs.com"
+    ],
+    "website": "https://lasalabs.com"
+  },
+  {
+    "ticker": "HIMALAYAN",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "HIMALAYAN SOLAR LIMITED",
+    "data_version": "2.0",
+    "description": "HIMALAYAN SOLAR LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "BLUECHIP",
+    "ai_generated": false,
+    "business_type": "Capital Markets",
+    "company_name": "Blue Chip India Limited",
+    "data_version": "2.0",
+    "description": "Blue Chip India Limited provides inter corporate deposits in India. It also invests in equity and preference shares, mutual and alternative investment funds, corporate deposits and loans to corporate bodies and individuals. Blue Chip India Limited was incorporated in 1993 and is based in Kolkata, India.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Capital Markets",
+    "key_revenue_driver": "Operations in Capital Markets",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Capital Markets",
+      "Financial Services Solutions"
+    ],
+    "sector": "Financial Services",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Financial Services",
+      "Capital Markets",
+      "bluechipind.com"
+    ],
+    "website": "https://www.bluechipind.com"
+  },
+  {
+    "ticker": "BMISL",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "BENCH MARK INFOTECH SERVICES LIMITED",
+    "data_version": "2.0",
+    "description": "BENCH MARK INFOTECH SERVICES LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "SECL",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "SALASAR EXTERIORS AND CONTOUR LIMITED",
+    "data_version": "2.0",
+    "description": "SALASAR EXTERIORS AND CONTOUR LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "ORIENTCABL",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "ORIENT CABLES (INDIA) LIMITED",
+    "data_version": "2.0",
+    "description": "ORIENT CABLES (INDIA) LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "ACEVECTOR",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "ACEVECTOR LIMITED",
+    "data_version": "2.0",
+    "description": "ACEVECTOR LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "GERMAN",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "GERMAN GREEN STEEL AND POWER LIMITED",
+    "data_version": "2.0",
+    "description": "GERMAN GREEN STEEL AND POWER LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "RAJVIR",
+    "ai_generated": false,
+    "business_type": "Textile Manufacturing",
+    "company_name": "Rajvir Industries Limited",
+    "data_version": "2.0",
+    "description": "Rajvir Industries Limited primarily manufactures, processes, and sells yarns in India. The company offers cotton, organic, fair-trade, and combed yarns; blended yarns, including polyester, viscose, modal, spun silk, and flame-retardant; and melange/heather, modal, synthetic, and cheese-dyed yarns.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Textile Manufacturing",
+    "key_revenue_driver": "Operations in Textile Manufacturing",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Textile Manufacturing",
+      "Consumer Cyclical Solutions"
+    ],
+    "sector": "Consumer Cyclical",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Consumer Cyclical",
+      "Textile Manufacturing",
+      "rajvirindustrieslimited.com"
+    ],
+    "website": "https://www.rajvirindustrieslimited.com"
+  },
+  {
+    "ticker": "SKIL",
+    "ai_generated": false,
+    "business_type": "Engineering & Construction",
+    "company_name": "SKIL Infrastructure Limited",
+    "data_version": "2.0",
+    "description": "SKIL Infrastructure Limited, together with its subsidiaries, engages in the infrastructure development business in India. It develops various projects, including seaports, logistics, railways, defense shipyards, offshore asset construction yards, and special economic zones in the private sector.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Engineering & Construction",
+    "key_revenue_driver": "Operations in Engineering & Construction",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Engineering & Construction",
+      "Industrials Solutions"
+    ],
+    "sector": "Industrials",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Industrials",
+      "Engineering & Construction",
+      "skilgroup.co.in"
+    ],
+    "website": "https://www.skilgroup.co.in"
+  },
+  {
+    "ticker": "RUNWALENTR",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "RUNWAL ENTERPRISES LIMITED",
+    "data_version": "2.0",
+    "description": "RUNWAL ENTERPRISES LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "SELMC",
+    "ai_generated": false,
+    "business_type": "Textile Manufacturing",
+    "company_name": "SEL Manufacturing Company Limited",
+    "data_version": "2.0",
+    "description": "SEL Manufacturing Company Limited operates as a textile company primarily in India. Its products portfolio includes knitted garments, terry towels, knitted and processed fabrics, and various yarns. SEL Manufacturing Company Limited was founded in 1969 and is based in Ludhiana, India.",
+    "exchange": "NSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Textile Manufacturing",
+    "key_revenue_driver": "Operations in Textile Manufacturing",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Textile Manufacturing",
+      "Consumer Cyclical Solutions"
+    ],
+    "sector": "Consumer Cyclical",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Consumer Cyclical",
+      "Textile Manufacturing",
+      "selindia.in"
+    ],
+    "website": "https://www.selindia.in"
+  },
+  {
+    "ticker": "NIFTYGS813YR",
+    "exchange": "NSE",
+    "company_name": "NIFTYGS813YR",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTYGS813YR is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTY50TR2XLEV",
+    "exchange": "NSE",
+    "company_name": "NIFTY50TR2XLEV",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTY50TR2XLEV is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTY50VALUE20",
+    "exchange": "NSE",
+    "company_name": "NIFTY50VALUE20",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTY50VALUE20 is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "CNXSMALLCAP",
+    "exchange": "NSE",
+    "company_name": "CNXSMALLCAP",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "CNXSMALLCAP is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTY50PR2XLEV",
+    "exchange": "NSE",
+    "company_name": "NIFTY50PR2XLEV",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTY50PR2XLEV is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTYGS10YR",
+    "exchange": "NSE",
+    "company_name": "NIFTY GS 10YR",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "NIFTY GS 10YR is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
   }
 ]

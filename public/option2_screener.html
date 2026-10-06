@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 2: Screener & Charts (Ergonomically Rearranged for Superior Lookup)</title>
+  
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ==========================================================================
+       OPTION 2: ERGONOMICALLY REARRANGED FOR SUPERIOR LOOKUP & SCANNING
+       3 Soothing Themes: Nordic Minimalist, Warm Paper, Midnight Obsidian
+       ========================================================================== */
+    :root {
+      /* Nordic Minimalist */
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --bg-page: #F1F4F8;
+      --bg-card: #FFFFFF;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      
+      --text-main: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+
+      --pos-bg: #E8F7ED;
+      --pos-text: #166534;
+      --pos-border: #BBF7D0;
+      --pos-chart: #10B981;
+
+      --neg-bg: #FEECEB;
+      --neg-text: #991B1B;
+      --neg-border: #FECACA;
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: #FEF9C3;
+      --neutral-text: #854D0E;
+
+      --accent: #2563EB;
+      --accent-subtle: #EFF6FF;
+      --accent-border: #BFDBFE;
+
+      --ema-10: #059669;
+      --ema-20: #2563EB;
+      --ema-50: #D97706;
+      --ema-150: #7C3AED;
+
+      --row-hover: #F8FAFC;
+      --row-selected: #EEF2F6;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+      --shadow-float: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -2px rgba(0,0,0,0.03);
+    }
+
+    body.theme-warm {
+      --bg-page: #F7F4EE;
+      --bg-card: #FDFBF7;
+      --bg-surface: #FDFBF7;
+      --bg-subtle: #F2EFE8;
+      --border-color: #E7E0D3;
+      --border-subtle: #EFE9DE;
+      
+      --text-main: #2C2621;
+      --text-secondary: #6E655B;
+      --text-muted: #9B9185;
+
+      --pos-bg: #EAF3EC;
+      --pos-text: #225932;
+      --pos-border: #CFE6D4;
+      --pos-chart: #2D7A46;
+
+      --neg-bg: #F9ECE8;
+      --neg-text: #8E3024;
+      --neg-border: #F6D0C7;
+      --neg-chart: #B93C2A;
+
+      --neutral-bg: #FAF2DD;
+      --neutral-text: #7A571A;
+
+      --accent: #945D3B;
+      --accent-subtle: #F4EDE4;
+      --accent-border: #DEC8B7;
+
+      --ema-10: #2D7A46;
+      --ema-20: #3B6B99;
+      --ema-50: #C0752D;
+      --ema-150: #7D4E8D;
+
+      --row-hover: #F4EFE6;
+      --row-selected: #EDE5D8;
+      --shadow-card: 0 1px 3px rgba(44,38,33,0.04);
+      --shadow-float: 0 10px 15px -3px rgba(44,38,33,0.08);
+    }
+
+    body.theme-obsidian {
+      --bg-page: #0B0E14;
+      --bg-card: #121721;
+      --bg-surface: #121721;
+      --bg-subtle: #18202F;
+      --border-color: #232B3E;
+      --border-subtle: #1C2433;
+      
+      --text-main: #E2E8F0;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --pos-bg: rgba(34, 197, 94, 0.12);
+      --pos-text: #4ADE80;
+      --pos-border: rgba(34, 197, 94, 0.25);
+      --pos-chart: #22C55E;
+
+      --neg-bg: rgba(244, 63, 94, 0.12);
+      --neg-text: #FB7185;
+      --neg-border: rgba(244, 63, 94, 0.25);
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: rgba(234, 179, 8, 0.12);
+      --neutral-text: #FDE047;
+
+      --accent: #38BDF8;
+      --accent-subtle: rgba(56, 189, 248, 0.12);
+      --accent-border: rgba(56, 189, 248, 0.3);
+
+      --ema-10: #34D399;
+      --ema-20: #60A5FA;
+      --ema-50: #FBBF24;
+      --ema-150: #C084FC;
+
+      --row-hover: #1A2232;
+      --row-selected: #212D42;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-float: 0 10px 15px -3px rgba(0,0,0,0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Option Header */
+    .option-banner {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      z-index: 100;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .option-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .opt-tag-v2 {
+      background: linear-gradient(135deg, #10B981, #2563EB);
+      color: #FFFFFF;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+    }
+
+    .theme-segmented-ctrl {
+      display: flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      border-radius: 8px;
+      gap: 2px;
+    }
+
+    .theme-seg-btn {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .theme-seg-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* Redesigned Top Header */
+    .app-header-v2 {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .header-left-cluster {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-diamond {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #059669, #2563EB);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .brand-title-wrap h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+
+    .brand-title-wrap span {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .nav-pill-group {
+      display: flex;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      gap: 2px;
+    }
+
+    .nav-pill {
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-pill.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* Center Power Search Bar */
+    .header-center-search {
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+
+    .global-search-input {
+      width: 100%;
+      padding: 7px 36px 7px 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      font-size: 12.5px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    .global-search-input:focus {
+      border-color: var(--accent);
+      background: var(--bg-card);
+      box-shadow: 0 0 0 2px var(--accent-subtle);
+    }
+
+    .search-icon-left {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .search-kbd-shortcut {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Header Right Cluster */
+    .header-right-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feed-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--pos-bg);
+      border: 1px solid var(--pos-border);
+      color: var(--pos-text);
+      font-weight: 600;
+    }
+
+    .feed-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pos-chart);
+    }
+
+    .user-account-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .user-avatar-mini {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--accent-subtle);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    /* Live Market Marquee */
+    .market-strip-v2 {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+    }
+
+    .marquee-indices {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    .idx-ticker-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .idx-ticker-box strong {
+      color: var(--text-main);
+    }
+
+    .badge-chg-pos {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 10.5px;
+    }
+
+    .badge-chg-neg {
+      background: var(--neg-bg);
+      color: var(--neg-text);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 10.5px;
+    }
+
+    /* Main Content Area */
+    .app-workspace-v2 {
+      flex: 1;
+      padding: 14px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Screener Command Deck - REARRANGED EXECUTIVE BAR */
+    .deck-section-v2 {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .deck-toolbar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+    }
+
+    .deck-category-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cat-pill-v2 {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cat-pill-v2.active {
+      background: var(--text-main);
+      color: var(--bg-card);
+      border-color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .cat-badge-num {
+      font-size: 10.5px;
+      background: var(--border-color);
+      color: var(--text-main);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+    }
+
+    .cat-pill-v2.active .cat-badge-num {
+      background: rgba(255,255,255,0.25);
+      color: #FFFFFF;
+    }
+
+    .deck-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-run-all-v2 {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      border: 1px solid var(--pos-border);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-run-all-v2:hover {
+      background: var(--pos-chart);
+      color: white;
+    }
+
+    .btn-add-screener {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-collapse-chevron {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    /* Grid of Screener Buttons */
+    .screeners-grid-v2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 10px;
+    }
+
+    .screener-card-v2 {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+    }
+
+    .screener-card-v2:hover {
+      border-color: var(--accent);
+      background: var(--bg-card);
+      box-shadow: var(--shadow-card);
+    }
+
+    .screener-card-v2.active {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+      box-shadow: 0 0 0 1.5px var(--accent);
+    }
+
+    .sc-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sc-title-v2 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sc-count-badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--pos-text);
+      background: var(--pos-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .sc-category-tag {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    /* Dual Pane Workspace */
+    .dual-pane-v2 {
+      display: flex;
+      gap: 14px;
+      flex: 1;
+      min-height: 600px;
+    }
+
+    /* Left Screener Pane */
+    .left-screener-pane-v2 {
+      width: 44%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .sidebar-navigation-strip {
+      display: flex;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px;
+      gap: 6px;
+    }
+
+    .sb-nav-tab-v2 {
+      flex: 1;
+      padding: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .sb-nav-tab-v2.active {
+      background: var(--bg-card);
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    /* UNIFIED POWER LOOKUP BAR */
+    .power-lookup-toolbar {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--bg-card);
+    }
+
+    .lookup-tier-1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-search-input {
+      flex: 1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .liquidity-toggle-group {
+      display: flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+
+    .liq-btn {
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+    }
+
+    .liq-btn.active {
+      background: var(--bg-card);
+      color: var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .lookup-tier-2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .signals-filter-pills {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .sig-pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .sig-pill.active {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border-color: var(--accent-border);
+      font-weight: 600;
+    }
+
+    .utility-actions-cluster {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .util-icon-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .match-count-pill {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Screener Table */
+    .table-scroll-v2 {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .v2-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .v2-data-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+      z-index: 10;
+    }
+
+    .v2-data-table th.num, .v2-data-table td.num {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v2-data-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .v2-data-table tr:hover {
+      background: var(--row-hover);
+      cursor: pointer;
+    }
+
+    .v2-data-table tr.selected {
+      background: var(--row-selected);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .sym-col-main {
+      font-weight: 700;
+      font-size: 12.5px;
+      color: var(--text-main);
+    }
+
+    .sym-col-sec {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .badge-gain-v2 {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .badge-loss-v2 {
+      background: var(--neg-bg);
+      color: var(--neg-text);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .matrix-box-v2 {
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .m-dot-v2 {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+    }
+
+    .m-dot-v2.pass { background: var(--pos-bg); color: var(--pos-text); border: 1px solid var(--pos-border); }
+    .m-dot-v2.neutral { background: var(--neutral-bg); color: var(--neutral-text); }
+    .m-dot-v2.fail { background: var(--neg-bg); color: var(--neg-text); border: 1px solid var(--neg-border); }
+
+    .rsi-badge-v2 {
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Right Chart Pane */
+    .right-chart-pane-v2 {
+      width: 56%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .chart-banner-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .chart-stock-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .active-symbol-h2 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    .active-price-h2 {
+      font-size: 18px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    /* Range Bar Mini Slider */
+    .day-range-slider-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      background: var(--bg-subtle);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .slider-track {
+      width: 60px;
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 2px;
+      position: relative;
+    }
+
+    .slider-thumb {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: absolute;
+      left: 70%;
+      top: -2px;
+    }
+
+    /* Chart Command Strip */
+    .chart-controls-strip {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .tf-segmented {
+      display: flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+
+    .tf-seg-item {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .tf-seg-item.active {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .indicators-toggle-chips {
+      display: flex;
+      gap: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .ind-chip {
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 10.5px;
+      cursor: pointer;
+    }
+
+    .ind-chip.active {
+      border-color: var(--accent-border);
+      background: var(--accent-subtle);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Chart Area */
+    .chart-drawing-box {
+      flex: 1;
+      padding: 10px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .svg-main-v2 {
+      width: 100%;
+      height: 62%;
+    }
+
+    .rsi-sub-v2 {
+      height: 38%;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 6px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rsi-header-v2 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .svg-rsi-v2 {
+      width: 100%;
+      height: calc(100% - 18px);
+    }
+  </style>
+</head>
+<body id="root-body">
+
+  <!-- ==========================================================================
+       OPTION BANNER
+       ========================================================================== -->
+  <div class="option-banner">
+    <div class="option-title">
+      <span class="opt-tag-v2">OPTION 2</span>
+      <span>Ergonomically Rearranged for Faster Lookup & Minimal Eye Travel</span>
+    </div>
+    <div class="theme-segmented-ctrl">
+      <button class="theme-seg-btn active" onclick="switchTheme('nordic')">🌿 Nordic</button>
+      <button class="theme-seg-btn" onclick="switchTheme('warm')">📜 Warm Paper</button>
+      <button class="theme-seg-btn" onclick="switchTheme('obsidian')">🌌 Midnight Obsidian</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       REDESIGNED APP HEADER (UNIFIED GLOBAL LOOKUP)
+       ========================================================================== -->
+  <header class="app-header-v2">
+    <!-- Brand + Nav -->
+    <div class="header-left-cluster">
+      <a class="brand-logo-badge" href="/">
+        <div class="logo-diamond">▲</div>
+        <div class="brand-title-wrap">
+          <h1>SANGAM PRO</h1>
+          <span>Peaceful Investing</span>
+        </div>
+      </a>
+
+      <nav class="nav-pill-group">
+        <a class="nav-pill" href="/">Home</a>
+        <a class="nav-pill active" href="option2_screener.html">Charts</a>
+        <a class="nav-pill" href="option2_analytics.html">Analytics ↗</a>
+      </nav>
+    </div>
+
+    <!-- Center Quick Search Bar (Direct High-Speed Lookup) -->
+    <div class="header-center-search">
+      <span class="search-icon-left">🔍</span>
+      <input type="text" class="global-search-input" placeholder="Quick Search Stock (e.g. RELIANCE, TCS, INFY)..." value="RELIANCE">
+      <span class="search-kbd-shortcut">Ctrl K</span>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="header-right-cluster">
+      <div class="feed-status-pill">
+        <span class="feed-pulse-dot"></span>
+        <span>Dhan Live</span>
+      </div>
+
+      <button class="user-account-btn">
+        <div class="user-avatar-mini">👤</div>
+        <span>Parita</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       LIVE MARKET STRIP
+       ========================================================================== -->
+  <div class="market-strip-v2">
+    <div class="marquee-indices">
+      <div class="idx-ticker-box">
+        <span>NIFTY 50:</span>
+        <strong>24,850.30</strong>
+        <span class="badge-chg-pos">+0.45%</span>
+      </div>
+      <div class="idx-ticker-box">
+        <span>BANK NIFTY:</span>
+        <strong>51,420.80</strong>
+        <span class="badge-chg-pos">+0.62%</span>
+      </div>
+      <div class="idx-ticker-box">
+        <span>MIDCAP 150:</span>
+        <strong>18,920.40</strong>
+        <span class="badge-chg-pos">+1.12%</span>
+      </div>
+      <div class="idx-ticker-box">
+        <span>SMALLCAP 250:</span>
+        <strong>15,410.80</strong>
+        <span class="badge-chg-pos">+1.65%</span>
+      </div>
+      <div class="idx-ticker-box">
+        <span>INDIA VIX:</span>
+        <strong>12.85</strong>
+        <span class="badge-chg-neg">-2.10%</span>
+      </div>
+    </div>
+    <div style="font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+      <span class="feed-pulse-dot"></span>
+      <span>NSE Market Open</span>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MAIN WORKSPACE
+       ========================================================================== -->
+  <main class="app-workspace-v2">
+
+    <!-- 1. SCREENER COMMAND DECK (ERGONOMIC CONTROL STRIP) -->
+    <section class="deck-section-v2">
+      <div class="deck-toolbar-header">
+        <!-- Category Filter Pills with counts -->
+        <div class="deck-category-pills">
+          <button class="cat-pill-v2 active">
+            <span>⭐ All Screeners</span>
+            <span class="cat-badge-num">18</span>
+          </button>
+          <button class="cat-pill-v2">
+            <span>🚀 Breakout</span>
+            <span class="cat-badge-num">5</span>
+          </button>
+          <button class="cat-pill-v2">
+            <span>📈 Swing Trend</span>
+            <span class="cat-badge-num">4</span>
+          </button>
+          <button class="cat-pill-v2">
+            <span>⚡ Momentum</span>
+            <span class="cat-badge-num">6</span>
+          </button>
+          <button class="cat-pill-v2">
+            <span>🔄 Reversal</span>
+            <span class="cat-badge-num">3</span>
+          </button>
+          <button class="cat-pill-v2">
+            <span>🛠️ Custom</span>
+            <span class="cat-badge-num">2</span>
+          </button>
+        </div>
+
+        <!-- Action Cluster (Run All prominent on right) -->
+        <div class="deck-actions-right">
+          <button class="btn-run-all-v2">⚡ Run All Screeners</button>
+          <button class="btn-add-screener">+ Add Screener</button>
+          <button class="btn-collapse-chevron" title="Collapse Deck">▲</button>
+        </div>
+      </div>
+
+      <!-- Compact Screeners Grid with elevated hierarchy -->
+      <div class="screeners-grid-v2">
+        <div class="screener-card-v2 active">
+          <div class="sc-header-row">
+            <span class="sc-title-v2">EMA 10/20/50 Aligned</span>
+            <span class="sc-count-badge">135</span>
+          </div>
+          <span class="sc-category-tag">Bullish Trend Template</span>
+        </div>
+
+        <div class="screener-card-v2">
+          <div class="sc-header-row">
+            <span class="sc-title-v2">Darvas Box Breakout</span>
+            <span class="sc-count-badge">24</span>
+          </div>
+          <span class="sc-category-tag">Stage 2 Consolidation</span>
+        </div>
+
+        <div class="screener-card-v2">
+          <div class="sc-header-row">
+            <span class="sc-title-v2">Minervini Trend VCP</span>
+            <span class="sc-count-badge">18</span>
+          </div>
+          <span class="sc-category-tag">Volatility Contraction</span>
+        </div>
+
+        <div class="screener-card-v2">
+          <div class="sc-header-row">
+            <span class="sc-title-v2">Strong Start RVOL</span>
+            <span class="sc-count-badge">42</span>
+          </div>
+          <span class="sc-category-tag">Volume Surge Leader</span>
+        </div>
+
+        <div class="screener-card-v2">
+          <div class="sc-header-row">
+            <span class="sc-title-v2">RSI 60+ Super Momentum</span>
+            <span class="sc-count-badge">72</span>
+          </div>
+          <span class="sc-category-tag">High Relative Strength</span>
+        </div>
+
+        <div class="screener-card-v2">
+          <div class="sc-header-row">
+            <span class="sc-title-v2">52-Week High Pivot</span>
+            <span class="sc-count-badge">31</span>
+          </div>
+          <span class="sc-category-tag">All-Time High Base</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DUAL PANE WORKSPACE -->
+    <div class="dual-pane-v2">
+
+      <!-- LEFT PANE: HIGH DENSITY SCREENER -->
+      <section class="left-screener-pane-v2">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar-navigation-strip">
+          <button class="sb-nav-tab-v2 active">Screeners</button>
+          <button class="sb-nav-tab-v2">★ Watchlist (14)</button>
+          <button class="sb-nav-tab-v2">DarvasScan</button>
+          <button class="sb-nav-tab-v2">SS_RVOL</button>
+          <button class="sb-nav-tab-v2">VCPscan</button>
+        </div>
+
+        <!-- UNIFIED POWER LOOKUP BAR -->
+        <div class="power-lookup-toolbar">
+          <!-- Tier 1: Search + Liquidity Toggles -->
+          <div class="lookup-tier-1">
+            <input type="text" class="table-search-input" placeholder="Instant filter symbols...">
+            <div class="liquidity-toggle-group">
+              <button class="liq-btn">All</button>
+              <button class="liq-btn active">1k+ Cr</button>
+              <button class="liq-btn">2k+ Cr</button>
+            </div>
+          </div>
+
+          <!-- Tier 2: Signal Pills + Utility Actions -->
+          <div class="lookup-tier-2">
+            <div class="signals-filter-pills">
+              <button class="sig-pill">All</button>
+              <button class="sig-pill active">EMAs Aligned ⚡</button>
+              <button class="sig-pill">RVOL &gt; 2x</button>
+              <button class="sig-pill">RSI &gt; 60</button>
+            </div>
+
+            <div class="utility-actions-cluster">
+              <span class="match-count-pill">135 Stocks</span>
+              <button class="util-icon-btn" title="Customize Columns">⚙ Col</button>
+              <button class="util-icon-btn" title="Copy Symbols">📋 Copy</button>
+              <button class="util-icon-btn" title="Export CSV">📥 CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- High-Density Screener Table -->
+        <div class="table-scroll-v2">
+          <table class="v2-data-table">
+            <thead>
+              <tr>
+                <th style="width: 140px;">Stock ▲</th>
+                <th class="num">LTP (₹)</th>
+                <th class="num">Chg % ▾</th>
+                <th class="num">Volume</th>
+                <th style="text-align: center;">EMA Matrix<br><span style="font-size: 8.5px; font-weight: normal;">10 20 50 150</span></th>
+                <th class="num">RSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="selected">
+                <td>
+                  <div class="sym-col-main">RELIANCE</div>
+                  <div class="sym-col-sec">Oil & Gas • Nifty 50</div>
+                </td>
+                <td class="num"><strong>2,985.40</strong></td>
+                <td class="num"><span class="badge-gain-v2">+1.85%</span></td>
+                <td class="num">6.82M (1.8x)</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box-v2">
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-badge-v2" style="background: var(--pos-bg); color: var(--pos-text);">64.2</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-col-main">TCS</div>
+                  <div class="sym-col-sec">IT Services • Nifty 50</div>
+                </td>
+                <td class="num"><strong>4,120.10</strong></td>
+                <td class="num"><span class="badge-gain-v2">+0.92%</span></td>
+                <td class="num">2.14M (1.1x)</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box-v2">
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 neutral">N</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-badge-v2" style="background: var(--neutral-bg); color: var(--neutral-text);">58.7</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-col-main">INFY</div>
+                  <div class="sym-col-sec">IT Services • Nifty 50</div>
+                </td>
+                <td class="num"><strong>1,642.30</strong></td>
+                <td class="num"><span class="badge-gain-v2">+2.45%</span></td>
+                <td class="num">5.35M (2.4x)</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box-v2">
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-badge-v2" style="background: #F3E8FF; color: #6B21A8;">71.8</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-col-main">HDFCBANK</div>
+                  <div class="sym-col-sec">Private Banking</div>
+                </td>
+                <td class="num"><strong>1,532.80</strong></td>
+                <td class="num"><span class="badge-loss-v2">-0.45%</span></td>
+                <td class="num">8.22M (0.9x)</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box-v2">
+                    <span class="m-dot-v2 fail">F</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-badge-v2" style="background: var(--neutral-bg); color: var(--neutral-text);">48.3</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-col-main">BHARTIARTL</div>
+                  <div class="sym-col-sec">Telecom Leader</div>
+                </td>
+                <td class="num"><strong>1,348.00</strong></td>
+                <td class="num"><span class="badge-gain-v2">+1.40%</span></td>
+                <td class="num">3.90M (1.5x)</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box-v2">
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-badge-v2" style="background: var(--pos-bg); color: var(--pos-text);">66.5</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="sym-col-main">TATAMOTORS</div>
+                  <div class="sym-col-sec">Automobile • EV</div>
+                </td>
+                <td class="num"><strong>985.60</strong></td>
+                <td class="num"><span class="badge-gain-v2">+3.10%</span></td>
+                <td class="num">9.10M (3.1x)</td>
+                <td style="text-align: center;">
+                  <div class="matrix-box-v2">
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                    <span class="m-dot-v2 pass">P</span>
+                  </div>
+                </td>
+                <td class="num"><span class="rsi-badge-v2" style="background: #F3E8FF; color: #6B21A8;">73.2</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RIGHT PANE: ACTIVE CHART WORKSPACE -->
+      <section class="right-chart-pane-v2">
+        <!-- Stock Details Header -->
+        <div class="chart-banner-header">
+          <div class="chart-stock-profile">
+            <h2 class="active-symbol-h2">RELIANCE</h2>
+            <span class="active-price-h2">₹2,985.40</span>
+            <span class="badge-gain-v2">+₹54.20 (+1.85%)</span>
+          </div>
+
+          <!-- Day Range Slider Mini -->
+          <div class="day-range-slider-box">
+            <span>L: 2,935</span>
+            <div class="slider-track">
+              <div class="slider-thumb"></div>
+            </div>
+            <span>H: 2,994</span>
+            <span style="color: var(--text-muted); margin-left: 6px;">52W: 2,220 - 3,024</span>
+          </div>
+        </div>
+
+        <!-- Integrated Command Strip -->
+        <div class="chart-controls-strip">
+          <!-- Timeframes -->
+          <div class="tf-segmented">
+            <button class="tf-seg-item">1D</button>
+            <button class="tf-seg-item">5D</button>
+            <button class="tf-seg-item active">Daily</button>
+            <button class="tf-seg-item">Weekly</button>
+            <button class="tf-seg-item">Monthly</button>
+          </div>
+
+          <!-- Indicators Quick Chips -->
+          <div class="indicators-toggle-chips">
+            <button class="ind-chip active">EMAs [10 20 50 150] ✓</button>
+            <button class="ind-chip active">Vol (6.8M) ✓</button>
+            <button class="ind-chip active">RSI(14): 64.2 ✓</button>
+          </div>
+        </div>
+
+        <!-- Chart Canvas -->
+        <div class="chart-drawing-box">
+          <svg class="svg-main-v2" viewBox="0 0 600 200" preserveAspectRatio="none">
+            <line x1="0" y1="50" x2="600" y2="50" stroke="var(--border-subtle)" stroke-dasharray="3,3" />
+            <line x1="0" y1="100" x2="600" y2="100" stroke="var(--border-subtle)" stroke-dasharray="3,3" />
+            <line x1="0" y1="150" x2="600" y2="150" stroke="var(--border-subtle)" stroke-dasharray="3,3" />
+
+            <!-- Volume bars -->
+            <rect x="50" y="150" width="12" height="40" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="90" y="160" width="12" height="30" fill="var(--neg-chart)" opacity="0.3" />
+            <rect x="130" y="140" width="12" height="50" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="170" y="155" width="12" height="35" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="210" y="165" width="12" height="25" fill="var(--neg-chart)" opacity="0.3" />
+            <rect x="250" y="130" width="12" height="60" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="290" y="145" width="12" height="45" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="330" y="150" width="12" height="40" fill="var(--neg-chart)" opacity="0.3" />
+            <rect x="370" y="135" width="12" height="55" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="410" y="125" width="12" height="65" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="450" y="120" width="12" height="70" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="490" y="110" width="12" height="80" fill="var(--pos-chart)" opacity="0.3" />
+            <rect x="530" y="100" width="12" height="90" fill="var(--pos-chart)" opacity="0.3" />
+
+            <!-- Candlesticks -->
+            <!-- C1 -->
+            <line x1="56" y1="120" x2="56" y2="150" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="51" y="125" width="10" height="20" fill="var(--pos-chart)" rx="1"/>
+            <!-- C2 -->
+            <line x1="96" y1="125" x2="96" y2="155" stroke="var(--neg-chart)" stroke-width="1.2"/>
+            <rect x="91" y="130" width="10" height="18" fill="var(--neg-chart)" rx="1"/>
+            <!-- C3 -->
+            <line x1="136" y1="110" x2="136" y2="145" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="131" y="115" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C4 -->
+            <line x1="176" y1="100" x2="176" y2="135" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="171" y="105" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C5 -->
+            <line x1="216" y1="105" x2="216" y2="138" stroke="var(--neg-chart)" stroke-width="1.2"/>
+            <rect x="211" y="110" width="10" height="16" fill="var(--neg-chart)" rx="1"/>
+            <!-- C6 -->
+            <line x1="256" y1="85" x2="256" y2="120" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="251" y="90" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C7 -->
+            <line x1="296" y1="75" x2="296" y2="110" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="291" y="80" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C8 -->
+            <line x1="336" y1="80" x2="336" y2="115" stroke="var(--neg-chart)" stroke-width="1.2"/>
+            <rect x="331" y="85" width="10" height="18" fill="var(--neg-chart)" rx="1"/>
+            <!-- C9 -->
+            <line x1="376" y1="65" x2="376" y2="100" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="371" y="70" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C10 -->
+            <line x1="416" y1="55" x2="416" y2="90" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="411" y="60" width="10" height="22" fill="var(--pos-chart)" rx="1"/>
+            <!-- C11 -->
+            <line x1="456" y1="45" x2="456" y2="80" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="451" y="50" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C12 -->
+            <line x1="496" y1="35" x2="496" y2="70" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="491" y="40" width="10" height="24" fill="var(--pos-chart)" rx="1"/>
+            <!-- C13 -->
+            <line x1="536" y1="20" x2="536" y2="60" stroke="var(--pos-chart)" stroke-width="1.2"/>
+            <rect x="531" y="25" width="10" height="26" fill="var(--pos-chart)" rx="1"/>
+
+            <!-- Moving Averages -->
+            <path d="M 50,150 Q 200,135 350,110 T 550,85" fill="none" stroke="var(--ema-150)" stroke-width="1.5" />
+            <path d="M 50,140 Q 200,120 350,90 T 550,60" fill="none" stroke="var(--ema-50)" stroke-width="1.5" />
+            <path d="M 50,130 Q 200,105 350,75 T 550,45" fill="none" stroke="var(--ema-20)" stroke-width="1.8" />
+            <path d="M 50,120 Q 200,90 350,60 T 550,28" fill="none" stroke="var(--ema-10)" stroke-width="2" />
+          </svg>
+
+          <!-- RSI Sub-pane -->
+          <div class="rsi-sub-v2">
+            <div class="rsi-header-v2">
+              <span>RSI(14): <strong style="color: var(--pos-text);">64.2</strong> (Bullish Momentum Zone)</span>
+              <span>Bands: 70 / 50 / 30</span>
+            </div>
+            <svg class="svg-rsi-v2" viewBox="0 0 600 70" preserveAspectRatio="none">
+              <rect x="0" y="18" width="600" height="34" fill="var(--bg-subtle)" opacity="0.6"/>
+              <line x1="0" y1="18" x2="600" y2="18" stroke="var(--border-color)" stroke-dasharray="2,2"/>
+              <line x1="0" y1="35" x2="600" y2="35" stroke="var(--border-subtle)" stroke-dasharray="3,3"/>
+              <line x1="0" y1="52" x2="600" y2="52" stroke="var(--border-color)" stroke-dasharray="2,2"/>
+              <path d="M 30,45 C 100,50 180,38 250,42 C 320,46 400,32 480,26 L 550,23" fill="none" stroke="#8B5CF6" stroke-width="2"/>
+              <circle cx="550" cy="23" r="3.5" fill="#8B5CF6" stroke="var(--bg-card)" stroke-width="1.5"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    function switchTheme(theme) {
+      const b = document.getElementById('root-body');
+      const btns = document.querySelectorAll('.theme-seg-btn');
+      btns.forEach(x => x.classList.remove('active'));
+      b.className = '';
+
+      if (theme === 'nordic') {
+        btns[0].classList.add('active');
+      } else if (theme === 'warm') {
+        b.classList.add('theme-warm');
+        btns[1].classList.add('active');
+      } else if (theme === 'obsidian') {
+        b.classList.add('theme-obsidian');
+        btns[2].classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

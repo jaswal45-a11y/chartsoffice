@@ -261,7 +261,7 @@
       <tbody>
         <tr>
           <td><span class="short-code">Navbar</span></td>
-          <td>Logo, Tabs (Charts, Analytics, F&O), Dhan status, Theme toggle</td>
+          <td>Logo, Tabs (Charts, Analytics), Dhan status, Theme toggle</td>
           <td>Top global navigation header across all pages.</td>
         </tr>
         <tr>
@@ -433,115 +433,7 @@
       <strong>Example Instructions:</strong> "In <strong>Breadth Matrix</strong>, add 200 SMA dial" • "In <strong>Sectoral Breadth</strong>, sort by Advances by default" • "In <strong>Sub-Sectors Grid</strong>, show 3 columns".
     </div>
 
-    <div class="footer">Sangam_charts Cheatsheet • Page 2 of 3</div>
-  </div>
-
-  <!-- ============================================================== -->
-  <!-- PAGE 3: INSTITUTIONAL F&O & EQUITY SCREENER (fno.html)          -->
-  <!-- ============================================================== -->
-  <div class="page">
-    <div class="header-banner" style="background: linear-gradient(135deg, #581c87 0%, #0f172a 100%);">
-      <div>
-        <h1>Sangam_charts - UI Reference Cheatsheet</h1>
-        <div class="subtitle">Quick short-names guide for instructing AI prompt edits & UI customization</div>
-      </div>
-      <div class="page-title-badge" style="background: #9333ea;">PAGE 3 : F&O & EQUITY TERMINAL</div>
-    </div>
-
-    <div class="section-title">
-      <span>1. Visual Layout Map</span>
-      <span class="tag">F&O & Equity Screener (/fno)</span>
-    </div>
-    
-    <div class="diagram-box">┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│ 1. NAVBAR (Logo, F&O [Active], Notes, User Status, Theme Toggle)                        │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│ 2. F&O CONTROLS BAR                                                                     │
-│ • Universal Search Box  • Columns ⚙ Dropdown  • Refresh Button  • Feed Status Badge    │
-│ • Live Quotes Badge (30s) • Custom Universe Button • Export CSV Button                  │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│ 3. F&O FILTER RIBBON (Progressive Parameter Filters)                                    │
-│ • Market Cap Dropdown (>1k, >2k, >5k) • Sector Multi-Select Dropdown with Search        │
-│ • Technical Toggles (Price > 20/50/200 EMA, RSI Range, Darvas Breakout)                 │
-│ • F&O Build-Up Toggles (Long Buildup, Short Buildup, Long Unwinding, Short Covering)   │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│ 4. F&O MASTER TABLE (Institutional Multi-Column Resizable Grid)                         │
-│ ┌──────────────────────┬──────────────────────────────────────────────────────────────┐ │
-│ │ STICKY COLUMNS       │ SCROLLABLE & RESIZABLE DATA COLUMNS                          │ │
-│ │ • Stock Symbol       │ • LTP, % Chg, Volume, OI, OI % Chg, Build-Up Tag             │ │
-│ │ • Company Name       │ • PCR, Max Pain, EMA Postures (20/50/200), RSI, 52W High     │ │
-│ └──────────────────────┴──────────────────────────────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│ 5. TABLE FOOTER (Visible Stock Count, Live Quote Refresh Timestamp, Status)             │
-└─────────────────────────────────────────────────────────────────────────────────────────┘</div>
-
-    <div class="section-title">
-      <span>2. Short Names Glossary</span>
-      <span class="tag">F&O Terminal Components & Modals</span>
-    </div>
-
-    <table class="ref-table">
-      <thead>
-        <tr>
-          <th style="width: 25%;">Short Name</th>
-          <th style="width: 35%;">UI Elements Included</th>
-          <th style="width: 40%;">Description & Usage</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="short-code">F&O Controls</span></td>
-          <td>Search input, Columns menu, Refresh, Dhan feed status, Export CSV</td>
-          <td>Top controls toolbar directly above the filter ribbon.</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">Columns Menu</span></td>
-          <td>Dropdown checklist with checkboxes to show/hide table columns</td>
-          <td>Opened via "Columns ⚙" button in F&O Controls.</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">Custom Universe</span></td>
-          <td>Modal for pasting custom stock symbols or picking presets</td>
-          <td>Opened via "Custom Universe" button (e.g. F&O 212 list, Nifty 50).</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">F&O Filter Ribbon</span></td>
-          <td>Market Cap dropdown, Sector multi-select, Build-up toggles, EMA filters</td>
-          <td>Horizontal parameter bar for screening stocks and contracts.</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">F&O Table</span></td>
-          <td>Master resizable data grid with live prices, OI, PCR, and indicators</td>
-          <td>Main comprehensive data table in the F&O terminal.</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">Sticky Columns</span></td>
-          <td>First columns (Stock Symbol, Company Name) locked during scroll</td>
-          <td>Fixed left columns that stay in place during horizontal scrolling.</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">Column Resizers</span></td>
-          <td>Draggable vertical dividers on table header edges</td>
-          <td>Drag left/right to adjust individual column widths (double-click to reset).</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">Build-Up Badge</span></td>
-          <td>Tags: Long Buildup, Short Buildup, Long Unwinding, Short Covering</td>
-          <td>Visual indicator pill showing institutional futures positioning.</td>
-        </tr>
-        <tr>
-          <td><span class="short-code">F&O Footer</span></td>
-          <td>Filtered count label, pagination info, live data timestamp</td>
-          <td>Bottom summary bar beneath the F&O table.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="badge-tip">
-      <strong>Example Instructions:</strong> "In <strong>F&O Table</strong>, add PCR column" • "In <strong>F&O Filter Ribbon</strong>, default Market Cap to >2k" • "In <strong>Columns Menu</strong>, add Darvas status".
-    </div>
-
-    <div class="footer">Sangam_charts Cheatsheet • Page 3 of 3</div>
+    <div class="footer">Sangam_charts Cheatsheet • Page 2 of 2</div>
   </div>
 
   <script>

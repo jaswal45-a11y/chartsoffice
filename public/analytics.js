@@ -41,6 +41,29 @@ function getFnoBadgeHtml(stockOrSymbol, extraClass = '') {
   return `<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono ${extraClass}" title="F&O Contract Available">F&O</span>`;
 }
 
+// Official NSE / BSE Trading Holidays Guard
+const NSE_CALENDAR_HOLIDAYS = new Set([
+  '2026-01-15', '2026-01-26', '2026-03-03', '2026-03-26', '2026-03-31',
+  '2026-04-03', '2026-04-14', '2026-05-01', '2026-05-28', '2026-06-26',
+  '2026-09-14', '2026-10-02', '2026-10-20', '2026-11-10', '2026-11-24', '2026-12-25',
+  '2025-01-26', '2025-02-26', '2025-03-14', '2025-03-31', '2025-04-10', '2025-04-14',
+  '2025-04-18', '2025-05-01', '2025-06-07', '2025-08-15', '2025-08-27', '2025-10-02',
+  '2025-10-21', '2025-10-22', '2025-11-05', '2025-12-25'
+]);
+
+function isNSEHolidayDate(timeVal) {
+  if (!timeVal) return false;
+  let dStr = '';
+  if (typeof timeVal === 'string') dStr = timeVal.slice(0, 10);
+  else if (typeof timeVal === 'number') {
+    const ms = timeVal > 1e11 ? timeVal : timeVal * 1000;
+    dStr = new Date(ms).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  } else if (typeof timeVal === 'object' && timeVal.year) {
+    dStr = `${timeVal.year}-${String(timeVal.month).padStart(2, '0')}-${String(timeVal.day).padStart(2, '0')}`;
+  }
+  return Boolean(dStr && NSE_CALENDAR_HOLIDAYS.has(dStr));
+}
+
 let circuitBandsMap = {};
 let circuitStats = null;
 let selectedCircuitFile = null;
@@ -102,27 +125,33 @@ function computeStockEmaCross(stock, fastP = '10', slowP = '20') {
   const fastPeriod = parseInt(fastP, 10) || 10;
   const slowPeriod = parseInt(slowP, 10) || 20;
 
-  let fastVal = (stock.emas && stock.emas[fastPeriod]);
-  if (fastVal === undefined || isNaN(fastVal)) {
-    if (fastPeriod === 5) fastVal = stock.ema10 ? stock.ema10 * 1.006 : stock.ltp;
-    else if (fastPeriod === 9) fastVal = stock.ema10 ? stock.ema10 * 1.001 : stock.ltp;
-    else if (fastPeriod === 10) fastVal = stock.ema10 || stock.ltp;
-    else if (fastPeriod === 20) fastVal = stock.ema20 || stock.ltp;
-    else if (fastPeriod === 50) fastVal = stock.ema50 || stock.ltp * 0.97;
-    else fastVal = stock.ltp;
+  let fastVal = (stock.emas && stock.emas[fastPeriod] !== undefined) 
+    ? stock.emas[fastPeriod] 
+    : (stock['ema' + fastPeriod] !== undefined ? stock['ema' + fastPeriod] : null);
+
+  let slowVal = (stock.emas && stock.emas[slowPeriod] !== undefined) 
+    ? stock.emas[slowPeriod] 
+    : (stock['ema' + slowPeriod] !== undefined ? stock['ema' + slowPeriod] : null);
+
+  let isBullish = (fastVal != null && slowVal != null) 
+    ? (Number(fastVal) >= Number(slowVal)) 
+    : ((stock.changePercent || 0) >= 0);
+
+  if (fastPeriod === 10 && slowPeriod === 20 && stock.emaCross && typeof stock.emaCross.daysAgo === 'number') {
+    const isBull = stock.emaCross.isBullish !== undefined ? Boolean(stock.emaCross.isBullish) : (stock.emaCross.direction === 'bullish');
+    const days = Math.max(1, stock.emaCross.daysAgo);
+    return {
+      direction: isBull ? 'bullish' : 'bearish',
+      daysAgo: days,
+      label: isBull ? `+${days}d` : `-${days}d`,
+      isBullish: isBull,
+      fastVal: Number(Number(fastVal).toFixed(2)),
+      slowVal: Number(Number(slowVal).toFixed(2)),
+      fastPeriod,
+      slowPeriod
+    };
   }
 
-  let slowVal = (stock.emas && stock.emas[slowPeriod]);
-  if (slowVal === undefined || isNaN(slowVal)) {
-    if (slowPeriod === 20) slowVal = stock.ema20 || stock.ltp;
-    else if (slowPeriod === 50) slowVal = stock.ema50 || stock.ltp * 0.97;
-    else if (slowPeriod === 100) slowVal = stock.ema50 ? stock.ema50 * 0.98 : stock.ltp * 0.95;
-    else if (slowPeriod === 150) slowVal = stock.ema150 || stock.ltp * 0.93;
-    else if (slowPeriod === 200) slowVal = stock.ema150 ? stock.ema150 * 0.97 : stock.ltp * 0.90;
-    else slowVal = stock.ltp * 0.95;
-  }
-
-  const isBullish = Number(fastVal) >= Number(slowVal);
   const sym = stock.symbol || 'STK';
   const symHash = sym.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 
@@ -153,7 +182,7 @@ function computeStockEmaCross(stock, fastP = '10', slowP = '20') {
 }
 
 const state = {
-  theme: localStorage.getItem('theme') || 'dark',
+  theme: localStorage.getItem('sangam_theme') || localStorage.getItem('theme') || 'nordic',
   token: localStorage.getItem('authToken') || localStorage.getItem('adminToken') || null,
   user: null,
   isAdmin: false,
@@ -411,13 +440,10 @@ function updateAuthUI(user) {
   const authGuard = document.getElementById('analytics-auth-guard');
   const authContent = document.getElementById('analytics-authenticated-content');
 
-  const btnNavFno = document.getElementById('btn-nav-fno');
   const btnOpenNotes = document.getElementById('btn-open-notes');
   const btnMfDeals = document.getElementById('btn-open-mf-deals');
 
   if (user) {
-    btnNavFno?.classList.remove('hidden');
-    btnNavFno?.classList.add('flex');
     btnOpenNotes?.classList.remove('hidden');
     btnOpenNotes?.classList.add('flex');
     if (window.SangamNotes?.refreshAuth) {
@@ -437,6 +463,17 @@ function updateAuthUI(user) {
       userRole.className = user.role === 'admin' ? 'text-emerald-400 text-[10px] font-bold' : 'text-slate-400 text-[10px] font-normal';
     }
 
+    const ddUserName = document.getElementById('dropdown-user-name');
+    const ddUserRole = document.getElementById('dropdown-user-role-badge');
+    if (ddUserName) ddUserName.textContent = user.username;
+    if (ddUserRole) {
+      ddUserRole.textContent = user.role === 'admin' ? 'Superadmin' : 'Active Member';
+      ddUserRole.className = user.role === 'admin' 
+        ? 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 font-mono'
+        : 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono';
+    }
+    closeUserProfileDropdown();
+
     if (user.role === 'admin') {
       btnAdminConsole?.classList.remove('hidden');
       btnAdminConsole?.classList.add('flex');
@@ -451,8 +488,6 @@ function updateAuthUI(user) {
     authContent?.classList.add('flex');
     loadAnalyticsData();
   } else {
-    btnNavFno?.classList.add('hidden');
-    btnNavFno?.classList.remove('flex');
     btnOpenNotes?.classList.add('hidden');
     btnOpenNotes?.classList.remove('flex');
     if (window.SangamNotes && typeof window.SangamNotes.close === 'function') {
@@ -468,6 +503,9 @@ function updateAuthUI(user) {
     userBox?.classList.remove('flex');
     btnAdminConsole?.classList.add('hidden');
     btnAdminConsole?.classList.remove('flex');
+    closeUserProfileDropdown();
+    closeCircuitModal();
+    closeChangePasswordModal();
 
     authGuard?.classList.remove('hidden');
     authGuard?.classList.add('flex');
@@ -476,6 +514,229 @@ function updateAuthUI(user) {
   }
 
   lucide.createIcons();
+}
+
+// -------------------------------------------------------------
+// User Profile Dropdown Controller
+// -------------------------------------------------------------
+function toggleUserProfileDropdown() {
+  const dd = document.getElementById('user-profile-dropdown');
+  const arrow = document.getElementById('user-dropdown-arrow');
+  if (!dd) return;
+  const isHidden = dd.classList.contains('hidden');
+  if (isHidden) {
+    dd.classList.remove('hidden');
+    if (arrow) arrow.classList.add('rotate-180');
+  } else {
+    dd.classList.add('hidden');
+    if (arrow) arrow.classList.remove('rotate-180');
+  }
+}
+
+function closeUserProfileDropdown() {
+  const dd = document.getElementById('user-profile-dropdown');
+  const arrow = document.getElementById('user-dropdown-arrow');
+  if (dd) dd.classList.add('hidden');
+  if (arrow) arrow.classList.remove('rotate-180');
+}
+
+// Close User Profile dropdown on click outside
+document.addEventListener('click', (e) => {
+  const box = document.getElementById('user-auth-box');
+  if (box && !box.contains(e.target)) {
+    closeUserProfileDropdown();
+  }
+});
+
+// -------------------------------------------------------------
+// Live Market Indices Strip Controller
+// -------------------------------------------------------------
+let marketIndicesTimer = null;
+
+function initMarketIndicesStrip() {
+  fetchMarketIndices();
+  if (marketIndicesTimer) clearInterval(marketIndicesTimer);
+  marketIndicesTimer = setInterval(fetchMarketIndices, 12000);
+}
+
+async function fetchMarketIndices() {
+  try {
+    const res = await fetch('/api/market-indices');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.indices) {
+      updateMarketIndicesDisplay(data.indices);
+    }
+  } catch (e) {}
+}
+
+function updateMarketIndicesDisplay(indices) {
+  if (!indices) return;
+  const updateIdx = (id, info) => {
+    if (!info) return;
+    const container = document.getElementById(id);
+    if (!container) return;
+    const ltpEl = container.querySelector('.index-ltp');
+    const chgEl = container.querySelector('.index-chg');
+    if (ltpEl) {
+      ltpEl.textContent = typeof info.price === 'number' ? info.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : info.price;
+    }
+    if (chgEl) {
+      const chg = typeof info.changePercent === 'number' ? info.changePercent : parseFloat(info.changePercent || '0');
+      chgEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
+      if (chg >= 0) {
+        chgEl.className = 'index-chg px-1.5 py-0.2 rounded font-semibold text-[10px] bg-emerald-500/15 text-emerald-400';
+      } else {
+        chgEl.className = 'index-chg px-1.5 py-0.2 rounded font-semibold text-[10px] bg-rose-500/15 text-rose-400';
+      }
+    }
+  };
+
+  updateIdx('idx-nifty50', indices.nifty50);
+  updateIdx('idx-niftybank', indices.niftybank);
+  updateIdx('idx-midcap150', indices.midcap150);
+  updateIdx('idx-smallcap250', indices.smallcap250);
+  updateIdx('idx-indiavix', indices.indiavix);
+}
+
+// -------------------------------------------------------------
+// Change Password Modal Controller
+// -------------------------------------------------------------
+function openChangePasswordModal() {
+  if (!state.user) {
+    showToast('Please log in to change your password', 'info');
+    openAuthModal('login');
+    return;
+  }
+  const modal = document.getElementById('change-password-modal');
+  if (!modal) return;
+  const errBanner = document.getElementById('change-password-error-banner');
+  const succBanner = document.getElementById('change-password-success-banner');
+  if (errBanner) { errBanner.className = 'hidden'; errBanner.textContent = ''; }
+  if (succBanner) { succBanner.className = 'hidden'; succBanner.textContent = ''; }
+
+  const cp = document.getElementById('current-password-input');
+  const np = document.getElementById('new-password-input');
+  const cnp = document.getElementById('confirm-password-input');
+  if (cp) { cp.value = ''; cp.type = 'password'; }
+  if (np) { np.value = ''; np.type = 'password'; }
+  if (cnp) { cnp.value = ''; cnp.type = 'password'; }
+
+  // Reset eye icons
+  ['icon-current-pw', 'icon-new-pw', 'icon-confirm-pw'].forEach(id => {
+    const icon = document.getElementById(id);
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  });
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
+  if (cp) cp.focus();
+}
+
+function closeChangePasswordModal() {
+  const modal = document.getElementById('change-password-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+function togglePasswordVisibility(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon = document.getElementById(iconId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.setAttribute('data-lucide', 'eye-off');
+  } else {
+    input.type = 'password';
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+async function handleChangePasswordSubmit(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const errBanner = document.getElementById('change-password-error-banner');
+  const succBanner = document.getElementById('change-password-success-banner');
+  if (errBanner) { errBanner.className = 'hidden'; errBanner.textContent = ''; }
+  if (succBanner) { succBanner.className = 'hidden'; succBanner.textContent = ''; }
+
+  const currentPassword = (document.getElementById('current-password-input')?.value || '').trim();
+  const newPassword = (document.getElementById('new-password-input')?.value || '').trim();
+  const confirmPassword = (document.getElementById('confirm-password-input')?.value || '').trim();
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'Please fill in all password fields.';
+    }
+    return;
+  }
+
+  if (newPassword.length < 4) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'New password must be at least 4 characters long.';
+    }
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = 'New password and confirm password do not match!';
+    }
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit-change-password');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Updating...</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/auth/change-password', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      if (errBanner) {
+        errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+        errBanner.textContent = data.error || 'Failed to update password.';
+      }
+      return;
+    }
+
+    if (succBanner) {
+      succBanner.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-medium text-xs';
+      succBanner.textContent = 'Password changed successfully!';
+    }
+    showToast('Password updated successfully!', 'success');
+    setTimeout(() => {
+      closeChangePasswordModal();
+    }, 1200);
+  } catch (err) {
+    if (errBanner) {
+      errBanner.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 font-medium text-xs';
+      errBanner.textContent = err.message || 'Error updating password';
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Update Password</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
 }
 
 async function loadWatchlists() {
@@ -4772,10 +5033,36 @@ async function loadStockChart(rawSymbol) {
     }
 
     if (Array.isArray(data.candles)) {
-      data.candles = data.candles.filter(c => !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001)));
+      data.candles = data.candles.filter(c => {
+        if (!c) return false;
+        if ((!state.activeInterval || state.activeInterval === '1d') && isNSEHolidayDate(c.time)) return false;
+        return !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
+      });
     }
 
     state.currentStockData = data;
+
+    // Direct synchronization: Ensure Explore table row and in-memory universe match chart modal 100%
+    const expTarget = (state.exploreStocks || []).find(s => (s.symbol || '').toUpperCase() === cleanSymbol);
+    if (expTarget && data) {
+      if (typeof data.latestRSI === 'number') expTarget.rsi = Number(data.latestRSI.toFixed(1));
+      if (typeof data.latestEMA10 === 'number') expTarget.ema10 = Number(data.latestEMA10.toFixed(2));
+      if (typeof data.latestEMA20 === 'number') expTarget.ema20 = Number(data.latestEMA20.toFixed(2));
+      if (typeof data.latestEMA50 === 'number') expTarget.ema50 = Number(data.latestEMA50.toFixed(2));
+      if (typeof data.latestEMA150 === 'number') expTarget.ema150 = Number(data.latestEMA150.toFixed(2));
+      if (typeof data.latestEMA200 === 'number') expTarget.ema200 = Number(data.latestEMA200.toFixed(2));
+      if (data.ltp) {
+        expTarget.ltp = data.ltp;
+        expTarget.price = data.ltp;
+      }
+      expTarget.aboveEma10 = expTarget.ema10 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema10) : null;
+      expTarget.aboveEma20 = expTarget.ema20 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema20) : null;
+      expTarget.aboveEma50 = expTarget.ema50 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema50) : null;
+      expTarget.aboveEma150 = expTarget.ema150 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema150) : null;
+      if (typeof updateExploreTableRowDirectly === 'function') {
+        updateExploreTableRowDirectly(cleanSymbol, expTarget);
+      }
+    }
 
     const elAvatar = document.getElementById('chart-symbol-avatar');
     const elManualInput = document.getElementById('manual-stock-input');
@@ -5368,25 +5655,87 @@ document.getElementById('analytics-sector-filter-bar')?.addEventListener('click'
   renderSubSectorsGrid();
 });
 
-// Theme Toggle
+// Theme handling (3 Soothing Modes: Nordic, Warm Paper, Midnight Obsidian)
 function applyTheme(theme) {
-  state.theme = theme;
-  localStorage.setItem('theme', theme);
-  const icon = document.getElementById('theme-icon');
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark');
-    if (icon) icon.setAttribute('data-lucide', 'sun');
-  } else {
-    document.documentElement.classList.remove('dark');
-    if (icon) icon.setAttribute('data-lucide', 'moon');
-  }
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  applyAppTheme(theme);
 }
 
-document.getElementById('btn-theme-toggle')?.addEventListener('click', () => {
-  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+function applyAppTheme(theme) {
+  if (theme === 'dark') theme = 'obsidian';
+  if (theme === 'light') theme = 'nordic';
+  if (!['nordic', 'warm', 'obsidian'].includes(theme)) theme = 'nordic';
+
+  state.theme = theme;
+  localStorage.setItem('sangam_theme', theme);
+  localStorage.setItem('theme', theme);
+
+  const root = document.documentElement;
+  root.setAttribute('data-theme', theme);
+  if (theme === 'obsidian') {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+
+  // Update body class for Option 2 themes
+  if (document.body) {
+    document.body.classList.remove('theme-warm', 'theme-obsidian');
+    if (theme === 'warm') document.body.classList.add('theme-warm');
+    else if (theme === 'obsidian') document.body.classList.add('theme-obsidian');
+  }
+
+  // Update theme segmented buttons (Banner buttons)
+  const segBtns = document.querySelectorAll('.theme-seg-btn, .theme-opt-btn');
+  segBtns.forEach(btn => {
+    const isChosen = btn.getAttribute('data-theme') === theme || btn.id === `seg-btn-${theme}`;
+    btn.classList.toggle('active', isChosen);
+  });
+
+  // Update button icon & checkmarks
+  const activeIcon = document.getElementById('theme-active-icon');
+  if (activeIcon) {
+    if (theme === 'nordic') activeIcon.textContent = '🌿';
+    else if (theme === 'warm') activeIcon.textContent = '📜';
+    else activeIcon.textContent = '🌌';
+  }
+
+  const choices = document.querySelectorAll('.theme-choice-btn');
+  choices.forEach(btn => {
+    const check = btn.querySelector('.theme-check-mark');
+    const isChosen = btn.getAttribute('data-choice') === theme;
+    if (check) check.classList.toggle('hidden', !isChosen);
+  });
+
+  // Sync native chart theme
+  if (typeof applyChartTheme === 'function') {
+    if (theme === 'nordic') applyChartTheme('light');
+    else if (theme === 'warm') applyChartTheme('paper');
+    else applyChartTheme('dark');
+  }
+
+  const dropdown = document.getElementById('theme-menu-dropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+}
+
+window.applyAppTheme = applyAppTheme;
+window.switchTheme = applyAppTheme;
+
+window.applyAppTheme = applyAppTheme;
+window.toggleThemeDropdown = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const dropdown = document.getElementById('theme-menu-dropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+};
+
+document.addEventListener('click', (e) => {
+  const container = document.getElementById('theme-dropdown-container');
+  if (container && !container.contains(e.target)) {
+    const dropdown = document.getElementById('theme-menu-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+  }
 });
 
 // Auth form listeners
@@ -6392,20 +6741,11 @@ async function syncAllExploreChunksProgressively(stocks, totalChunks = 11) {
                 if (target.fiftyTwoWeekHigh && target.fiftyTwoWeekHigh > 0) {
                   target.pctFrom52wHigh = Number((((target.ltp - target.fiftyTwoWeekHigh) / target.fiftyTwoWeekHigh) * 100).toFixed(2));
                 }
-                // Recompute EMAs with live LTP
-                const emaOffset = (target.ema20Distance !== undefined ? target.ema20Distance : target.changePercent * 0.8) / 100;
-                target.ema20 = Number((target.ltp / (1 + emaOffset)).toFixed(2));
-                target.ema5 = Number((target.ema20 * (1 + (target.changePercent > 0 ? 0.012 : -0.012))).toFixed(2));
-                target.ema9 = Number((target.ema20 * (1 + (target.changePercent > 0 ? 0.007 : -0.007))).toFixed(2));
-                target.ema10 = Number((target.ema20 * (1 + (target.changePercent > 0 ? 0.006 : -0.006))).toFixed(2));
-                target.ema50 = Number((target.ema20 * 0.97).toFixed(2));
-                target.ema100 = Number((target.ema20 * 0.95).toFixed(2));
-                target.ema150 = Number((target.ema20 * 0.93).toFixed(2));
-                target.ema200 = Number((target.ema20 * 0.90).toFixed(2));
-                target.aboveEma10 = target.ltp >= target.ema10;
-                target.aboveEma20 = target.ltp >= target.ema20;
-                target.aboveEma50 = target.ltp >= target.ema50;
-                target.aboveEma150 = target.ltp >= target.ema150;
+                // Update aboveEma status with live LTP using real EMAs (Never fabricate synthetic EMAs)
+                target.aboveEma10 = (typeof target.ema10 === 'number') ? (target.ltp >= target.ema10) : null;
+                target.aboveEma20 = (typeof target.ema20 === 'number') ? (target.ltp >= target.ema20) : null;
+                target.aboveEma50 = (typeof target.ema50 === 'number') ? (target.ltp >= target.ema50) : null;
+                target.aboveEma150 = (typeof target.ema150 === 'number') ? (target.ltp >= target.ema150) : null;
               }
             });
           }
@@ -6485,6 +6825,37 @@ function handleExploreSearch(query) {
   state.exploreFilters.search = (query || '').toLowerCase().trim();
   state.explorePage = 1;
   applyExploreFilters();
+}
+
+function updateExploreEmasAlignedPillUI() {
+  const pill = document.getElementById('btn-explore-emas-aligned');
+  if (!pill) return;
+  const isAligned = (state.exploreFilters.emaPosture === 'emas_aligned' || state.exploreFilters.emaPosture === 'aligned');
+  if (isAligned) {
+    pill.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 border border-amber-400 cursor-pointer flex items-center gap-1 select-none';
+    const icon = pill.querySelector('i');
+    if (icon) icon.className = 'w-3 h-3 text-slate-950';
+  } else {
+    pill.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-dark-card text-amber-400 hover:text-amber-300 border border-amber-500/30 hover:border-amber-400 shadow-sm cursor-pointer flex items-center gap-1 select-none';
+    const icon = pill.querySelector('i');
+    if (icon) icon.className = 'w-3 h-3 text-amber-400';
+  }
+}
+
+function toggleExploreEmasAlignedPill() {
+  const isCurrentlyActive = (state.exploreFilters.emaPosture === 'emas_aligned' || state.exploreFilters.emaPosture === 'aligned');
+  const selEmaPosture = document.getElementById('select-filter-ema-posture');
+
+  if (isCurrentlyActive) {
+    state.exploreFilters.emaPosture = 'all';
+    if (selEmaPosture) selEmaPosture.value = 'all';
+  } else {
+    state.exploreFilters.emaPosture = 'emas_aligned';
+    if (selEmaPosture) selEmaPosture.value = 'emas_aligned';
+  }
+
+  updateExploreEmasAlignedPillUI();
+  handleExploreFilterChange();
 }
 
 // -------------------------------------------------------------
@@ -6796,7 +7167,7 @@ function handleExploreFilterChange() {
 
   if (lblRsi) lblRsi.textContent = state.exploreFilters.rsiMin !== null ? `> ${state.exploreFilters.rsiMin}` : 'All';
   if (lblRvol) lblRvol.textContent = state.exploreFilters.rvolMult === 'all' ? 'All' : `>${state.exploreFilters.rvolMult}x (${state.exploreFilters.rvolPeriod.toUpperCase()})`;
-  if (lblEma) lblEma.textContent = state.exploreFilters.emaPosture === 'all' ? 'All' : 'Active';
+  if (lblEma) lblEma.textContent = state.exploreFilters.emaPosture === 'all' ? 'All' : (state.exploreFilters.emaPosture === 'emas_aligned' ? 'Aligned ⚡' : 'Active');
   if (lblCross) {
     const crossLabel = (state.exploreFilters.crossDir === 'all' && state.exploreFilters.crossDays === 'all')
       ? `${state.exploreFilters.emaFast}/${state.exploreFilters.emaSlow}`
@@ -6811,6 +7182,8 @@ function handleExploreFilterChange() {
     }
   }
   if (lblPivot) lblPivot.textContent = (state.exploreFilters.dailyPivot === 'all' && state.exploreFilters.weeklyPivot === 'all') ? 'All' : 'Filtered';
+
+  updateExploreEmasAlignedPillUI();
 
   // Update dynamic column headers
   const thCross = document.getElementById('th-explore-ema-cross');
@@ -6908,6 +7281,7 @@ function resetExploreFilters() {
   if (thCross) thCross.textContent = 'EMA Cross (10/20) ⇅';
 
   closeExploreGainDatePicker();
+  updateExploreEmasAlignedPillUI();
   applyExploreFilters();
 }
 
@@ -6954,18 +7328,48 @@ function applyExploreFilters() {
 
   // 5. EMA Traffic Lights Posture (10, 20, 50, 150)
   if (f.emaPosture && f.emaPosture !== 'all') {
-    if (f.emaPosture === 'all_green') list = list.filter(s => s.aboveEma10 && s.aboveEma20 && s.aboveEma50 && s.aboveEma150);
+    if (f.emaPosture === 'emas_aligned' || f.emaPosture === 'aligned') {
+      list = list.filter(s => {
+        const ltp = Number(s.ltp || s.close || s.price || 0);
+        const e10 = (typeof s.ema10 === 'number') ? s.ema10 : (s.emas && typeof s.emas['10'] === 'number' ? s.emas['10'] : (s.emas && typeof s.emas[10] === 'number' ? s.emas[10] : null));
+        const e20 = (typeof s.ema20 === 'number') ? s.ema20 : (s.emas && typeof s.emas['20'] === 'number' ? s.emas['20'] : (s.emas && typeof s.emas[20] === 'number' ? s.emas[20] : null));
+        const e50 = (typeof s.ema50 === 'number') ? s.ema50 : (s.emas && typeof s.emas['50'] === 'number' ? s.emas['50'] : (s.emas && typeof s.emas[50] === 'number' ? s.emas[50] : null));
+        const e150 = (typeof s.ema150 === 'number') ? s.ema150 : (s.emas && typeof s.emas['150'] === 'number' ? s.emas['150'] : (s.emas && typeof s.emas[150] === 'number' ? s.emas[150] : null));
+
+        const hasAllEmas = (e10 !== null && e20 !== null && e50 !== null && e150 !== null);
+        const hasAnyEma = (e10 !== null || e20 !== null || e50 !== null || e150 !== null);
+
+        // If stock has no price or no EMA data at all, exclude it from EMAs Aligned
+        if (!hasAnyEma || ltp <= 0) return false;
+
+        if (hasAllEmas) {
+          // Strict simultaneous bullish alignment: Price > 10 > 20 > 50 > 150
+          return (ltp > e10 && e10 > e20 && e20 > e50 && e50 > e150);
+        }
+        // If all 4 EMAs are not available (e.g. recent IPOs), ensure available EMAs are strictly aligned:
+        if (e10 !== null && e20 !== null) {
+          if (ltp <= e10 || e10 <= e20) return false;
+          if (e50 !== null && e20 <= e50) return false;
+          return true;
+        }
+        return false;
+      });
+    } else if (f.emaPosture === 'all_green') list = list.filter(s => s.aboveEma10 && s.aboveEma20 && s.aboveEma50 && s.aboveEma150);
     else if (f.emaPosture === 'gt50') list = list.filter(s => s.aboveEma50);
     else if (f.emaPosture === 'gt150') list = list.filter(s => s.aboveEma150);
     else if (f.emaPosture === 'gt20_50') list = list.filter(s => s.aboveEma20 && s.aboveEma50);
     else if (f.emaPosture === 'below_all') list = list.filter(s => !s.aboveEma10 && !s.aboveEma20 && !s.aboveEma50 && !s.aboveEma150);
   }
 
-  // Precompute dynamic EMA cross for all candidate stocks
+  // Precompute dynamic EMA cross & accurate 52W High for all candidate stocks
   const fastP = f.emaFast || '10';
   const slowP = f.emaSlow || '20';
   list.forEach(s => {
     s._currentCross = computeStockEmaCross(s, fastP, slowP);
+    const raw52w = Number(s.high52w || s.fiftyTwoWeekHigh || s.high_52w || 0);
+    const valid52w = Math.max(Number(s.ltp || s.close || 0), Number(s.dayHigh || 0), raw52w);
+    s.pctFrom52wHigh = valid52w > 0 ? Math.min(0, Number((((Number(s.ltp || 0) - valid52w) / valid52w) * 100).toFixed(1))) : 0;
+    s.high52w = valid52w;
   });
 
   // 6. Dynamic EMA Cross Lookback
@@ -6979,10 +7383,10 @@ function applyExploreFilters() {
 
   // 7. % From 52-Week High & Lookback Gains
   if (f.dist52wh && f.dist52wh !== 'all') {
-    if (f.dist52wh === 'at_high') list = list.filter(s => s.pctFrom52wHigh >= -0.5);
-    else if (f.dist52wh === 'within_2') list = list.filter(s => s.pctFrom52wHigh >= -2.0);
-    else if (f.dist52wh === 'within_5') list = list.filter(s => s.pctFrom52wHigh >= -5.0);
-    else if (f.dist52wh === 'within_10') list = list.filter(s => s.pctFrom52wHigh >= -10.0);
+    if (f.dist52wh === 'at_high') list = list.filter(s => (s.pctFrom52wHigh || 0) >= -0.5);
+    else if (f.dist52wh === 'within_2') list = list.filter(s => (s.pctFrom52wHigh || 0) >= -2.0);
+    else if (f.dist52wh === 'within_5') list = list.filter(s => (s.pctFrom52wHigh || 0) >= -5.0);
+    else if (f.dist52wh === 'within_10') list = list.filter(s => (s.pctFrom52wHigh || 0) >= -10.0);
     else if (f.dist52wh === 'gain_gt_0') list = list.filter(s => (s._customGain || 0) > 0);
     else if (f.dist52wh === 'gain_gt_5') list = list.filter(s => (s._customGain || 0) >= 5);
     else if (f.dist52wh === 'gain_gt_10') list = list.filter(s => (s._customGain || 0) >= 10);
@@ -7004,13 +7408,37 @@ function applyExploreFilters() {
   }
 
   // 10. Sorting
+  const isEmaAlignedFilter = (f.emaPosture === 'emas_aligned' || f.emaPosture === 'aligned');
+  if (isEmaAlignedFilter) {
+    list.forEach(s => {
+      const e10 = (typeof s.ema10 === 'number') ? s.ema10 : (s.emas && typeof s.emas['10'] === 'number' ? s.emas['10'] : (s.emas && typeof s.emas[10] === 'number' ? s.emas[10] : null));
+      const e20 = (typeof s.ema20 === 'number') ? s.ema20 : (s.emas && typeof s.emas['20'] === 'number' ? s.emas['20'] : (s.emas && typeof s.emas[20] === 'number' ? s.emas[20] : null));
+      const e50 = (typeof s.ema50 === 'number') ? s.ema50 : (s.emas && typeof s.emas['50'] === 'number' ? s.emas['50'] : (s.emas && typeof s.emas[50] === 'number' ? s.emas[50] : null));
+      const e150 = (typeof s.ema150 === 'number') ? s.ema150 : (s.emas && typeof s.emas['150'] === 'number' ? s.emas['150'] : (s.emas && typeof s.emas[150] === 'number' ? s.emas[150] : null));
+      s._emaIncomplete = (e10 === null || e20 === null || e50 === null || e150 === null);
+    });
+  }
+
   list.sort((a, b) => {
+    if (isEmaAlignedFilter) {
+      if (a._emaIncomplete !== b._emaIncomplete) {
+        return a._emaIncomplete ? 1 : -1;
+      }
+    }
     let vA = a[state.exploreSortField];
     let vB = b[state.exploreSortField];
 
     if (state.exploreSortField === 'crossDaysAgo') {
-      vA = a._currentCross ? a._currentCross.daysAgo : 999;
-      vB = b._currentCross ? b._currentCross.daysAgo : 999;
+      const isBullA = a._currentCross ? a._currentCross.isBullish : true;
+      const daysA = a._currentCross ? a._currentCross.daysAgo : 999;
+      vA = isBullA ? daysA : -daysA;
+
+      const isBullB = b._currentCross ? b._currentCross.isBullish : true;
+      const daysB = b._currentCross ? b._currentCross.daysAgo : 999;
+      vB = isBullB ? daysB : -daysB;
+    } else if (state.exploreSortField === 'pctFrom52wHigh') {
+      vA = typeof a.pctFrom52wHigh === 'number' ? a.pctFrom52wHigh : -999;
+      vB = typeof b.pctFrom52wHigh === 'number' ? b.pctFrom52wHigh : -999;
     } else if (state.exploreSortField === 'customGain' || state.exploreSortField === 'gain20d') {
       vA = a._customGain !== undefined ? a._customGain : (a.gains ? a.gains.d20 : 0);
       vB = b._customGain !== undefined ? b._customGain : (b.gains ? b.gains.d20 : 0);
@@ -7107,7 +7535,9 @@ function renderExploreTable() {
 
   pageStocks.forEach((stk, idx) => {
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-dark-accent/40 transition-colors group';
+    tr.className = 'dense-row stock-row cursor-pointer select-none';
+    tr.id = `explore-row-${stk.symbol.toUpperCase()}`;
+    tr.dataset.symbol = stk.symbol.toUpperCase();
 
     const rowNum = startIdx + idx + 1;
     const isPos = (stk.changePercent || 0) >= 0;
@@ -7115,36 +7545,79 @@ function renderExploreTable() {
     const chgSign = isPos ? '+' : '';
 
     // Cap Badge Styling (LC, MC, SC, MIC)
-    let capBadgeClass = 'bg-slate-800 text-slate-400 border-slate-700';
-    if (stk.capCategory === 'large') capBadgeClass = 'bg-blue-500/15 text-blue-400 border-blue-500/30';
-    else if (stk.capCategory === 'mid') capBadgeClass = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-    else if (stk.capCategory === 'small') capBadgeClass = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-    else if (stk.capCategory === 'micro') capBadgeClass = 'bg-slate-800 text-slate-400 border-slate-700';
+    let capBadgeHtml = '<span class="cap-badge cap-badge-large">LC</span>';
+    if (stk.capCategory === 'large') capBadgeHtml = '<span class="cap-badge cap-badge-large" title="Large Cap">LC</span>';
+    else if (stk.capCategory === 'mid') capBadgeHtml = '<span class="cap-badge cap-badge-mid" title="Mid Cap">MC</span>';
+    else if (stk.capCategory === 'small') capBadgeHtml = '<span class="cap-badge cap-badge-sc" title="Small Cap">SC</span>';
+    else if (stk.capCategory === 'micro') capBadgeHtml = '<span class="cap-badge cap-badge-mic" title="Micro Cap">MIC</span>';
 
-    // RSI Tag Color
+    // RSI Tag Color (Momentum-based: High RSI = Bullish Green, Low RSI = Bearish Red)
     let rsiColor = 'text-slate-300';
-    if (stk.rsi >= 70) rsiColor = 'text-rose-400 font-bold';
-    else if (stk.rsi >= 60) rsiColor = 'text-emerald-400 font-bold';
-    else if (stk.rsi <= 30) rsiColor = 'text-amber-400 font-bold';
+    let rsiDotBg = 'bg-slate-400';
+    if (stk.rsi >= 70) { 
+      rsiColor = 'text-emerald-400 font-bold'; 
+      rsiDotBg = 'bg-emerald-400'; 
+    } else if (stk.rsi >= 60) { 
+      rsiColor = 'text-teal-300 font-semibold'; 
+      rsiDotBg = 'bg-teal-400'; 
+    } else if (stk.rsi <= 40) { 
+      rsiColor = 'text-rose-400 font-bold'; 
+      rsiDotBg = 'bg-rose-400'; 
+    } else if (stk.rsi <= 45) { 
+      rsiColor = 'text-amber-400 font-medium'; 
+      rsiDotBg = 'bg-amber-400'; 
+    }
 
     // RVOL Display
     const currentRvol = stk.rvols ? stk.rvols[state.exploreFilters.rvolPeriod || 'd20'] : stk.rvol;
     const isHighRvol = (currentRvol || 1) >= 1.5;
 
-    // EMA Dots (10, 20, 50, 150)
-    const dot10 = stk.aboveEma10 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="10 EMA: Price > ₹' + stk.ema10 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="10 EMA: Price < ₹' + stk.ema10 + '"></span>';
-    const dot20 = stk.aboveEma20 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="20 EMA: Price > ₹' + stk.ema20 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="20 EMA: Price < ₹' + stk.ema20 + '"></span>';
-    const dot50 = stk.aboveEma50 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="50 EMA: Price > ₹' + stk.ema50 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="50 EMA: Price < ₹' + stk.ema50 + '"></span>';
-    const dot150 = stk.aboveEma150 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" title="150 EMA: Price > ₹' + stk.ema150 + '"></span>' : '<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" title="150 EMA: Price < ₹' + stk.ema150 + '"></span>';
+    // 4-in-1 EMA Matrix [10 20 50 150] (Screener pane aligned logic)
+    const curPrice = Number(stk.ltp || stk.close || stk.price || 0);
+    const e10 = (typeof stk.ema10 === 'number') ? stk.ema10 : (stk.emas && typeof stk.emas['10'] === 'number' ? stk.emas['10'] : (stk.emas && typeof stk.emas[10] === 'number' ? stk.emas[10] : null));
+    const e20 = (typeof stk.ema20 === 'number') ? stk.ema20 : (stk.emas && typeof stk.emas['20'] === 'number' ? stk.emas['20'] : (stk.emas && typeof stk.emas[20] === 'number' ? stk.emas[20] : null));
+    const e50 = (typeof stk.ema50 === 'number') ? stk.ema50 : (stk.emas && typeof stk.emas['50'] === 'number' ? stk.emas['50'] : (stk.emas && typeof stk.emas[50] === 'number' ? stk.emas[50] : null));
+    const e150 = (typeof stk.ema150 === 'number') ? stk.ema150 : (stk.emas && typeof stk.emas['150'] === 'number' ? stk.emas['150'] : (stk.emas && typeof stk.emas[150] === 'number' ? stk.emas[150] : null));
+
+    const hasE10 = e10 != null && e10 > 0;
+    const hasE20 = e20 != null && e20 > 0;
+    const hasE50 = e50 != null && e50 > 0;
+    const hasE150 = e150 != null && e150 > 0;
+
+    const b10 = hasE10 ? (curPrice > e10 ? 'above' : 'below') : (stk.aboveEma10 !== null && stk.aboveEma10 !== undefined ? (stk.aboveEma10 ? 'above' : 'below') : 'na');
+    const b20 = hasE20 ? (curPrice > e20 ? 'above' : 'below') : (stk.aboveEma20 !== null && stk.aboveEma20 !== undefined ? (stk.aboveEma20 ? 'above' : 'below') : 'na');
+    const b50 = hasE50 ? (curPrice > e50 ? 'above' : 'below') : (stk.aboveEma50 !== null && stk.aboveEma50 !== undefined ? (stk.aboveEma50 ? 'above' : 'below') : 'na');
+    const b150 = hasE150 ? (curPrice > e150 ? 'above' : 'below') : (stk.aboveEma150 !== null && stk.aboveEma150 !== undefined ? (stk.aboveEma150 ? 'above' : 'below') : 'na');
+
+    const emaBoxesHtml = `
+      <div class="ema-matrix-container" title="Price vs EMAs [10 20 50 150] (Green = Above EMA, Red = Below EMA, Gray = Insufficient History)">
+        <span class="ema-box ${b10}" title="EMA 10: ${hasE10 ? (curPrice > e10 ? 'Price Above (₹' + e10.toFixed(2) + ')' : 'Price Below (₹' + e10.toFixed(2) + ')') : (b10 === 'na' ? 'N/A' : (b10 === 'above' ? 'Above' : 'Below'))}">10</span>
+        <span class="ema-box ${b20}" title="EMA 20: ${hasE20 ? (curPrice > e20 ? 'Price Above (₹' + e20.toFixed(2) + ')' : 'Price Below (₹' + e20.toFixed(2) + ')') : (b20 === 'na' ? 'N/A' : (b20 === 'above' ? 'Above' : 'Below'))}">20</span>
+        <span class="ema-box ${b50}" title="EMA 50: ${hasE50 ? (curPrice > e50 ? 'Price Above (₹' + e50.toFixed(2) + ')' : 'Price Below (₹' + e50.toFixed(2) + ')') : (b50 === 'na' ? 'N/A' : (b50 === 'above' ? 'Above' : 'Below'))}">50</span>
+        <span class="ema-box ${b150}" title="EMA 150: ${hasE150 ? (curPrice > e150 ? 'Price Above (₹' + e150.toFixed(2) + ')' : 'Price Below (₹' + e150.toFixed(2) + ')') : (b150 === 'na' ? 'N/A' : (b150 === 'above' ? 'Above' : 'Below'))}">150</span>
+      </div>
+    `;
 
     // Dynamic Fast/Slow EMA Crossover & Days Elapsed Tag
     const cross = stk._currentCross || computeStockEmaCross(stk, state.exploreFilters.emaFast, state.exploreFilters.emaSlow);
     const isBullCross = cross.isBullish;
-    const crossClass = isBullCross ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25' : 'text-rose-400 bg-rose-500/10 border-rose-500/25';
-    const crossLabel = `${isBullCross ? '🟢 Bull' : '🔴 Bear'} (${cross.daysAgo}d ago)`;
+    const crossClass = isBullCross 
+      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+      : 'bg-rose-500/15 text-rose-400 border border-rose-500/30';
+    const crossLabel = `${isBullCross ? '+' : '-'}${cross.daysAgo}d`;
+    const crossTitle = isBullCross 
+      ? `Bullish: Fast EMA (${cross.fastPeriod}) crossed above Slow EMA (${cross.slowPeriod}) ${cross.daysAgo} days ago` 
+      : `Bearish: Fast EMA (${cross.fastPeriod}) crossed below Slow EMA (${cross.slowPeriod}) from up ${cross.daysAgo} days ago`;
 
-    // % From 52WH
-    const pct52whFormatted = stk.pctFrom52wHigh >= -0.5 ? '<span class="text-emerald-400 font-bold">🚀 52WH</span>' : `<span class="${stk.pctFrom52wHigh >= -5 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}">${stk.pctFrom52wHigh}%</span>`;
+    // % From 52WH (Accurate, strictly <= 0%)
+    const raw52w = Number(stk.high52w || stk.fiftyTwoWeekHigh || stk.high_52w || 0);
+    const valid52w = Math.max(Number(stk.ltp || stk.close || 0), Number(stk.dayHigh || 0), raw52w);
+    const dist52w = valid52w > 0 ? Math.min(0, Number((((Number(stk.ltp || 0) - valid52w) / valid52w) * 100).toFixed(1))) : 0;
+    stk.pctFrom52wHigh = dist52w;
+    stk.high52w = valid52w;
+    const pct52whFormatted = dist52w >= -1.0 
+      ? '<span class="text-emerald-400 font-bold font-mono">0.0% (52WH)</span>' 
+      : `<span class="font-mono ${dist52w >= -5.0 ? 'text-emerald-400 font-semibold' : (dist52w >= -12.0 ? 'text-teal-300' : 'text-slate-400')}">${dist52w.toFixed(1)}%</span>`;
 
     // Custom Reference Date Gain
     const customGain = stk._customGain !== undefined ? stk._customGain : (stk.gains?.d20 || 0);
@@ -7166,48 +7639,51 @@ function renderExploreTable() {
     else if (stk.weeklyPivot?.regime === 'below_s1') wPivotClass = 'bg-rose-500/15 text-rose-300 border-rose-500/30';
 
     tr.innerHTML = `
-      <td class="py-2.5 px-3 text-center text-slate-500 font-bold">${rowNum}</td>
-      <td class="py-2.5 px-3">
-        <div class="flex items-center gap-2">
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span class="font-bold text-white group-hover:text-emerald-400 transition-colors cursor-pointer" onclick="openStockChartModal('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}', state.exploreFilteredStocks)">${stk.symbol}</span>
-              ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
-              ${getFnoBadgeHtml(stk.symbol)}
-              ${getCircuitBadgeHtml(stk)}
-            </div>
-            <span class="text-[10px] text-slate-400 font-sans line-clamp-1 max-w-[150px]">${stk.name || stk.symbol}</span>
-          </div>
+      <td class="text-center text-slate-500 font-mono text-[10px]">${rowNum}</td>
+      <td>
+        <div class="flex items-center gap-1.5 leading-tight">
+          <span class="font-bold font-mono text-slate-100 text-[11px] hover:text-emerald-400 transition-colors cursor-pointer" onclick="openStockChartModal('${stk.symbol}', '${(stk.name || stk.symbol).replace(/'/g, "\\'")}', state.exploreFilteredStocks)">${stk.symbol}</span>
+          ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stk.symbol, stk.name) : ''}
+          ${getFnoBadgeHtml(stk.symbol)}
+          ${getCircuitBadgeHtml(stk)}
         </div>
+        <span class="text-[9.5px] text-slate-400 block line-clamp-1 max-w-[140px]">${stk.name || stk.symbol}</span>
       </td>
-      <td class="py-2.5 px-3 text-center">
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${capBadgeClass}">${stk.capLabel || (stk.capCategory === 'micro' ? 'MIC' : stk.capCategory === 'mid' ? 'MC' : stk.capCategory === 'small' ? 'SC' : 'LC')}</span>
-      </td>
-      <td class="py-2.5 px-3 text-right font-bold text-slate-100">${fmt.currency(stk.ltp)}</td>
-      <td class="py-2.5 px-3 text-right">
-        <span class="px-2 py-0.5 rounded text-[11px] font-bold border ${chgClass}">
+      <td class="text-center">${capBadgeHtml}</td>
+      <td class="text-right font-mono font-medium text-slate-200">${fmt.currency(stk.ltp)}</td>
+      <td class="text-right">
+        <span class="px-1.5 py-0.2 rounded text-[10.5px] font-mono font-bold border ${chgClass}">
           ${chgSign}${Number(stk.changePercent || 0).toFixed(2)}%
         </span>
       </td>
-      <td class="py-2.5 px-3 text-center ${rsiColor}">${stk.rsi}</td>
-      <td class="py-2.5 px-3 text-right font-semibold ${isHighRvol ? 'text-amber-400 font-bold' : 'text-slate-300'}">
+      <td class="text-center font-mono text-[10.5px] col-explore-rsi">
+        ${typeof stk.rsi === 'number' ? `
+          <span class="inline-flex items-center gap-1">
+            <span class="${rsiColor}">${stk.rsi.toFixed(1)}</span>
+            <span class="w-1.5 h-1.5 rounded-full ${rsiDotBg}"></span>
+          </span>
+        ` : `
+          <span class="text-slate-500 font-mono text-[10px]" title="Calculating in background (or click row to view chart)">--</span>
+        `}
+      </td>
+      <td class="text-right font-mono text-[10.5px] ${isHighRvol ? 'text-amber-400 font-bold' : 'text-slate-300'}">
         ${currentRvol}x
       </td>
-      <td class="py-2.5 px-3 text-center">
-        <div class="flex items-center justify-center gap-1.5">
-          ${dot10} ${dot20} ${dot50} ${dot150}
-        </div>
+      <td class="text-center col-explore-emas">
+        ${emaBoxesHtml}
       </td>
-      <td class="py-2.5 px-3 text-center">
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${crossClass}">${crossLabel}</span>
+      <td class="text-center font-mono text-[9.5px] font-bold">
+        <span class="px-1.5 py-0.5 rounded ${crossClass}" title="${crossTitle}">
+          ${crossLabel}
+        </span>
       </td>
-      <td class="py-2.5 px-3 text-right">${pct52whFormatted}</td>
-      <td class="py-2.5 px-3 text-right ${customGainClass}">${customGainSign}${customGain}%</td>
-      <td class="py-2.5 px-3 text-center">
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${dPivotClass}">${stk.dailyPivot?.label || '--'}</span>
+      <td class="text-right font-mono text-[10.5px]" title="52W High: ₹${valid52w.toFixed(2)} | Distance: ${dist52w.toFixed(1)}%">${pct52whFormatted}</td>
+      <td class="text-right font-mono text-[10.5px] ${customGainClass}">${customGainSign}${customGain}%</td>
+      <td class="text-center">
+        <span class="px-1 py-0.2 rounded text-[9.5px] font-bold border ${dPivotClass}">${stk.dailyPivot?.label || '--'}</span>
       </td>
-      <td class="py-2.5 px-3 text-center">
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${wPivotClass}">${stk.weeklyPivot?.label || '--'}</span>
+      <td class="text-center">
+        <span class="px-1 py-0.2 rounded text-[9.5px] font-bold border ${wPivotClass}">${stk.weeklyPivot?.label || '--'}</span>
       </td>
     `;
 
@@ -7215,6 +7691,102 @@ function renderExploreTable() {
   });
 
   lucide.createIcons();
+
+  // Seamless self-hydration: Calculate real RSI & EMAs for visible uncomputed stocks on this page
+  fetchTechnicalsForVisibleStocks(pageStocks);
+}
+
+function updateExploreTableRowDirectly(symbol, stk) {
+  if (!symbol || !stk) return;
+  const symUpper = symbol.toUpperCase();
+  const tr = document.getElementById('explore-row-' + symUpper);
+  if (!tr) return;
+
+  const rsiTd = tr.querySelector('.col-explore-rsi');
+  if (rsiTd) {
+    if (typeof stk.rsi === 'number') {
+      let rsiColor = 'text-slate-300';
+      let rsiDotBg = 'bg-slate-400';
+      if (stk.rsi >= 70) { rsiColor = 'text-emerald-400 font-bold'; rsiDotBg = 'bg-emerald-400'; }
+      else if (stk.rsi >= 60) { rsiColor = 'text-teal-300 font-semibold'; rsiDotBg = 'bg-teal-400'; }
+      else if (stk.rsi <= 40) { rsiColor = 'text-rose-400 font-bold'; rsiDotBg = 'bg-rose-400'; }
+      else if (stk.rsi <= 45) { rsiColor = 'text-amber-400 font-medium'; rsiDotBg = 'bg-amber-400'; }
+
+      rsiTd.innerHTML = `
+        <span class="inline-flex items-center gap-1">
+          <span class="${rsiColor}">${stk.rsi.toFixed(1)}</span>
+          <span class="w-1.5 h-1.5 rounded-full ${rsiDotBg}"></span>
+        </span>
+      `;
+    } else {
+      rsiTd.innerHTML = `<span class="text-slate-500 font-mono text-[10px]" title="Calculating in background (or click row to view chart)">--</span>`;
+    }
+  }
+
+  const emaTd = tr.querySelector('.col-explore-emas');
+  if (emaTd) {
+    const curPrice = Number(stk.ltp || stk.close || stk.price || 0);
+    const e10 = (typeof stk.ema10 === 'number') ? stk.ema10 : (stk.emas && typeof stk.emas['10'] === 'number' ? stk.emas['10'] : null);
+    const e20 = (typeof stk.ema20 === 'number') ? stk.ema20 : (stk.emas && typeof stk.emas['20'] === 'number' ? stk.emas['20'] : null);
+    const e50 = (typeof stk.ema50 === 'number') ? stk.ema50 : (stk.emas && typeof stk.emas['50'] === 'number' ? stk.emas['50'] : null);
+    const e150 = (typeof stk.ema150 === 'number') ? stk.ema150 : (stk.emas && typeof stk.emas['150'] === 'number' ? stk.emas['150'] : null);
+
+    const hasE10 = e10 != null && e10 > 0;
+    const hasE20 = e20 != null && e20 > 0;
+    const hasE50 = e50 != null && e50 > 0;
+    const hasE150 = e150 != null && e150 > 0;
+
+    const b10 = hasE10 ? (curPrice > e10 ? 'above' : 'below') : (stk.aboveEma10 !== null && stk.aboveEma10 !== undefined ? (stk.aboveEma10 ? 'above' : 'below') : 'na');
+    const b20 = hasE20 ? (curPrice > e20 ? 'above' : 'below') : (stk.aboveEma20 !== null && stk.aboveEma20 !== undefined ? (stk.aboveEma20 ? 'above' : 'below') : 'na');
+    const b50 = hasE50 ? (curPrice > e50 ? 'above' : 'below') : (stk.aboveEma50 !== null && stk.aboveEma50 !== undefined ? (stk.aboveEma50 ? 'above' : 'below') : 'na');
+    const b150 = hasE150 ? (curPrice > e150 ? 'above' : 'below') : (stk.aboveEma150 !== null && stk.aboveEma150 !== undefined ? (stk.aboveEma150 ? 'above' : 'below') : 'na');
+
+    emaTd.innerHTML = `
+      <div class="ema-matrix-container" title="Price vs EMAs [10 20 50 150] (Green = Above EMA, Red = Below EMA, Gray = Insufficient History)">
+        <span class="ema-box ${b10}" title="EMA 10: ${hasE10 ? (curPrice > e10 ? 'Price Above (₹' + e10.toFixed(2) + ')' : 'Price Below (₹' + e10.toFixed(2) + ')') : (b10 === 'na' ? 'N/A' : (b10 === 'above' ? 'Above' : 'Below'))}">10</span>
+        <span class="ema-box ${b20}" title="EMA 20: ${hasE20 ? (curPrice > e20 ? 'Price Above (₹' + e20.toFixed(2) + ')' : 'Price Below (₹' + e20.toFixed(2) + ')') : (b20 === 'na' ? 'N/A' : (b20 === 'above' ? 'Above' : 'Below'))}">20</span>
+        <span class="ema-box ${b50}" title="EMA 50: ${hasE50 ? (curPrice > e50 ? 'Price Above (₹' + e50.toFixed(2) + ')' : 'Price Below (₹' + e50.toFixed(2) + ')') : (b50 === 'na' ? 'N/A' : (b50 === 'above' ? 'Above' : 'Below'))}">50</span>
+        <span class="ema-box ${b150}" title="EMA 150: ${hasE150 ? (curPrice > e150 ? 'Price Above (₹' + e150.toFixed(2) + ')' : 'Price Below (₹' + e150.toFixed(2) + ')') : (b150 === 'na' ? 'N/A' : (b150 === 'above' ? 'Above' : 'Below'))}">150</span>
+      </div>
+    `;
+  }
+}
+
+let visibleTechnicalsTimer = null;
+function fetchTechnicalsForVisibleStocks(stocks) {
+  if (!Array.isArray(stocks) || stocks.length === 0) return;
+  if (visibleTechnicalsTimer) clearTimeout(visibleTechnicalsTimer);
+  visibleTechnicalsTimer = setTimeout(async () => {
+    const uncomputed = stocks.filter(s => s && (s.rsi == null || s.ema10 == null));
+    if (uncomputed.length === 0) return;
+    const targetBatch = uncomputed.slice(0, 25).map(s => s.symbol.toUpperCase());
+    try {
+      const res = await fetch(`/api/analytics/ensure-technicals?symbols=${targetBatch.join(',')}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.technicals) {
+          Object.keys(data.technicals).forEach(sym => {
+            const tech = data.technicals[sym];
+            const stk = (state.exploreStocks || []).find(s => (s.symbol || '').toUpperCase() === sym);
+            if (stk && tech) {
+              if (typeof tech.rsi === 'number') stk.rsi = tech.rsi;
+              if (typeof tech.ema10 === 'number') stk.ema10 = tech.ema10;
+              if (typeof tech.ema20 === 'number') stk.ema20 = tech.ema20;
+              if (typeof tech.ema50 === 'number') stk.ema50 = tech.ema50;
+              if (typeof tech.ema150 === 'number') stk.ema150 = tech.ema150;
+              if (typeof tech.ema200 === 'number') stk.ema200 = tech.ema200;
+              if (tech.ltp) stk.ltp = tech.ltp;
+              stk.aboveEma10 = stk.ema10 != null && stk.ltp != null ? (stk.ltp >= stk.ema10) : null;
+              stk.aboveEma20 = stk.ema20 != null && stk.ltp != null ? (stk.ltp >= stk.ema20) : null;
+              stk.aboveEma50 = stk.ema50 != null && stk.ltp != null ? (stk.ltp >= stk.ema50) : null;
+              stk.aboveEma150 = stk.ema150 != null && stk.ltp != null ? (stk.ltp >= stk.ema150) : null;
+              updateExploreTableRowDirectly(sym, stk);
+            }
+          });
+        }
+      }
+    } catch (_) {}
+  }, 400);
 }
 
 function handleExploreSort(field) {
@@ -7544,6 +8116,7 @@ window.loadExploreData = loadExploreData;
 window.handleExploreSegmentChange = handleExploreSegmentChange;
 window.handleExploreSearch = handleExploreSearch;
 window.handleExploreFilterChange = handleExploreFilterChange;
+window.toggleExploreEmasAlignedPill = toggleExploreEmasAlignedPill;
 window.resetExploreFilters = resetExploreFilters;
 window.handleExploreSort = handleExploreSort;
 window.handleExplorePageChange = handleExplorePageChange;
@@ -7563,6 +8136,15 @@ window.submitCircuitData = submitCircuitData;
 window.loadCircuitStats = loadCircuitStats;
 window.getCircuitBadgeHtml = getCircuitBadgeHtml;
 
+// Header Dropdown, Market Strip & Password Window Globals
+window.toggleUserProfileDropdown = toggleUserProfileDropdown;
+window.closeUserProfileDropdown = closeUserProfileDropdown;
+window.initMarketIndicesStrip = initMarketIndicesStrip;
+window.openChangePasswordModal = openChangePasswordModal;
+window.closeChangePasswordModal = closeChangePasswordModal;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.handleChangePasswordSubmit = handleChangePasswordSubmit;
+
 // Close Gain Date Popover on Click Outside
 document.addEventListener('click', (e) => {
   const popover = document.getElementById('popover-explore-gain-date');
@@ -7579,6 +8161,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   applyTheme(state.theme);
   loadSavedIndicatorPreferences();
   initAnalyticsSectionCollapses();
+  initMarketIndicesStrip();
   loadExploreData();
   await loadCircuitStats();
   await checkAuthStatus();

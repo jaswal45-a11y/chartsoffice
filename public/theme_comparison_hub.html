@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Screener Pro — Option 1 vs Option 2 Comparison Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0F172A;
+      --card: #1E293B;
+      --border: #334155;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent: #38BDF8;
+      --accent-subtle: rgba(56, 189, 248, 0.12);
+      --green: #4ADE80;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Master Switcher Bar */
+    .master-header {
+      background: #0B0F19;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .master-branding {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #10B981, #38BDF8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: white;
+    }
+
+    .master-title h1 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .master-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .control-groups {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .segmented-box {
+      display: flex;
+      background: #182234;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .seg-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .seg-btn:hover {
+      color: var(--text);
+    }
+
+    .seg-btn.active {
+      background: var(--accent);
+      color: #0F172A;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      font-weight: 700;
+    }
+
+    .page-seg-btn.active {
+      background: var(--green);
+      color: #0F172A;
+      font-weight: 700;
+    }
+
+    /* Comparison Quick Summary */
+    .summary-strip {
+      background: #141C2B;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .summary-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .open-link-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 11.5px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* Interactive Frame */
+    .preview-frame-container {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 105px);
+      background: #000;
+      position: relative;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MASTER HEADER -->
+  <header class="master-header">
+    <div class="master-branding">
+      <div class="logo-badge">▲</div>
+      <div class="master-title">
+        <h1>Interactive Comparison Hub</h1>
+        <p>Test Option 1 vs Option 2 across both pages in all 3 soothing themes</p>
+      </div>
+    </div>
+
+    <div class="control-groups">
+      <!-- Layout Option Switcher -->
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Layout Option</span>
+        <div class="segmented-box">
+          <button class="seg-btn active" id="btn-opt1" onclick="selectOption(1)">
+            <span>📌 Option 1</span>
+            <span style="font-size: 10px; opacity: 0.8;">(Zero Shift)</span>
+          </button>
+          <button class="seg-btn" id="btn-opt2" onclick="selectOption(2)">
+            <span>⚡ Option 2</span>
+            <span style="font-size: 10px; opacity: 0.8;">(Rearranged for Lookup)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Page Switcher -->
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Website Page</span>
+        <div class="segmented-box">
+          <button class="seg-btn page-seg-btn active" id="btn-page-screener" onclick="selectPage('screener')">
+            <span>📈 Screener & Charts</span>
+          </button>
+          <button class="seg-btn page-seg-btn" id="btn-page-analytics" onclick="selectPage('analytics')">
+            <span>📊 Market Analytics</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SUMMARY STRIP -->
+  <div class="summary-strip">
+    <div class="summary-feature" id="summary-text">
+      <strong>📌 Option 1:</strong> Exact current layout with zero button shifts. Features all 3 selectable soothing themes.
+    </div>
+    <a id="btn-open-direct" class="open-link-btn" href="/option1_screener.html" target="_blank">
+      Open In Dedicated New Tab ↗
+    </a>
+  </div>
+
+  <!-- INTERACTIVE PREVIEW IFRAME -->
+  <div class="preview-frame-container">
+    <iframe id="preview-iframe" src="/option1_screener.html"></iframe>
+  </div>
+
+  <script>
+    let currentOption = 1;
+    let currentPage = 'screener';
+
+    function updatePreview() {
+      const iframe = document.getElementById('preview-iframe');
+      const directLink = document.getElementById('btn-open-direct');
+      const summaryText = document.getElementById('summary-text');
+
+      let targetUrl = '';
+      if (currentOption === 1 && currentPage === 'screener') {
+        targetUrl = '/option1_screener.html';
+        summaryText.innerHTML = '<strong>📌 Option 1 (Charts & Screener):</strong> Keeps every button, tab, search box, and grid in its exact current position. Upgrades to soothing, low-fatigue colors with 1-click theme switching.';
+      } else if (currentOption === 1 && currentPage === 'analytics') {
+        targetUrl = '/option1_analytics.html';
+        summaryText.innerHTML = '<strong>📌 Option 1 (Market Analytics):</strong> Exact current Analytics page layout (Breadth dials, Indices ribbon, Sector list, Explore table) in the soothing theme system with 3 selectable modes.';
+      } else if (currentOption === 2 && currentPage === 'screener') {
+        targetUrl = '/option2_screener.html';
+        summaryText.innerHTML = '<strong>⚡ Option 2 (Charts & Screener):</strong> Ergonomically rearranged for rapid lookup. Features a Global Search bar (Ctrl+K), Unified Power Toolbar (Search + 1k/2k MC + Signals), and an integrated chart command strip.';
+      } else if (currentOption === 2 && currentPage === 'analytics') {
+        targetUrl = '/option2_analytics.html';
+        summaryText.innerHTML = '<strong>⚡ Option 2 (Market Analytics):</strong> High-speed scanning layout. Features a 1-click Jump-to Navigation Ribbon at the top, unified sort/filter toolbars, and instant universe explore table.';
+      }
+
+      iframe.src = targetUrl;
+      directLink.href = targetUrl;
+    }
+
+    function selectOption(opt) {
+      currentOption = opt;
+      document.getElementById('btn-opt1').classList.toggle('active', opt === 1);
+      document.getElementById('btn-opt2').classList.toggle('active', opt === 2);
+      updatePreview();
+    }
+
+    function selectPage(pg) {
+      currentPage = pg;
+      document.getElementById('btn-page-screener').classList.toggle('active', pg === 'screener');
+      document.getElementById('btn-page-analytics').classList.toggle('active', pg === 'analytics');
+      updatePreview();
+    }
+  </script>
+</body>
+</html>

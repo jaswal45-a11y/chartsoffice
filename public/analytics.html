@@ -1,10 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="nordic">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Market Breadth & Sector Analytics | Sangam_charts</title>
   
+  <script>
+    (function() {
+      var saved = localStorage.getItem('sangam_theme') || localStorage.getItem('theme') || 'nordic';
+      document.documentElement.setAttribute('data-theme', saved);
+      if (saved === 'obsidian') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
@@ -23,7 +35,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -31,7 +43,7 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace']
           },
           colors: {
@@ -49,9 +61,26 @@
     }
   </script>
 
-  <link rel="stylesheet" href="style.css?v=3.2.0">
+  <link rel="stylesheet" href="style.css?v=3.7.0">
 </head>
-<body class="bg-dark-bg text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white transition-colors duration-200">
+<body id="root-body" class="min-h-screen flex flex-col antialiased selection:bg-emerald-600 selection:text-white transition-colors duration-200">
+
+  <!-- ==========================================================================
+       TOP OPTION BANNER: CONTROL SWITCHER (OPTION 1)
+       ========================================================================== -->
+  <div class="option-banner">
+    <div class="option-title">
+      <span class="opt-tag">OPTION 1</span>
+      <span class="hidden sm:inline">Market Analytics (Exact Current Layout, Zero Buttons Shifted)</span>
+    </div>
+    <div class="theme-switcher-group">
+      <span style="color: var(--text-muted); font-size: 11px;" class="hidden sm:inline">Active Palette:</span>
+      <button class="theme-opt-btn active" id="seg-btn-nordic" data-theme="nordic" onclick="applyAppTheme('nordic')">🌿 Nordic</button>
+      <button class="theme-opt-btn" id="seg-btn-warm" data-theme="warm" onclick="applyAppTheme('warm')">📜 Warm Paper</button>
+      <button class="theme-opt-btn" id="seg-btn-obsidian" data-theme="obsidian" onclick="applyAppTheme('obsidian')">🌌 Midnight Obsidian</button>
+    </div>
+  </div>
+
 
   <!-- Top Navigation Bar -->
   <header class="border-b border-dark-border bg-dark-card/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-6 py-3">
@@ -149,6 +178,44 @@
 
     </div>
   </header>
+
+  <!-- ==========================================================================
+       LIVE MARKET INDICES STRIP (EXACT EXISTING STRIP)
+       ========================================================================== -->
+  <div id="market-indices-strip" class="market-strip">
+    <div class="index-group">
+      <div id="idx-nifty50" class="idx-item">
+        <span class="idx-name">NIFTY 50:</span>
+        <strong class="idx-val index-ltp">24,850.30</strong>
+        <span class="chg-pill chg-up index-chg">+0.45%</span>
+      </div>
+      <div id="idx-niftybank" class="idx-item">
+        <span class="idx-name">BANK NIFTY:</span>
+        <strong class="idx-val index-ltp">51,420.80</strong>
+        <span class="chg-pill chg-up index-chg">+0.62%</span>
+      </div>
+      <div id="idx-midcap150" class="idx-item">
+        <span class="idx-name">MIDCAP 150:</span>
+        <strong class="idx-val index-ltp">18,920.40</strong>
+        <span class="chg-pill chg-up index-chg">+1.12%</span>
+      </div>
+      <div id="idx-smallcap250" class="idx-item">
+        <span class="idx-name">SMALLCAP 250:</span>
+        <strong class="idx-val index-ltp">15,410.80</strong>
+        <span class="chg-pill chg-up index-chg">+1.65%</span>
+      </div>
+      <div id="idx-indiavix" class="idx-item">
+        <span class="idx-name">INDIA VIX:</span>
+        <strong class="idx-val index-ltp">12.85</strong>
+        <span class="chg-pill chg-down index-chg">-2.10%</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary);">
+      <span id="market-status-dot" class="feed-dot"></span>
+      <span id="market-status-text">NSE Market Live</span>
+    </div>
+  </div>
+
 
   <!-- Main Analytics Workspace -->
   <main class="flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
@@ -2432,5 +2499,56 @@
   <script src="analytics.js?v=2.7.3"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
+
+  <!-- Compatibility hidden elements for analytics.js -->
+  <div id="analytics-compatibility-hidden" style="display:none;">
+    <button id="btn-open-mf-deals"></button>
+    <span id="dropdown-user-name"></span>
+    <span id="dropdown-user-role-badge"></span>
+    <div id="user-profile-dropdown"></div>
+    <span id="user-dropdown-arrow"></span>
+    <div id="change-password-modal"></div>
+    <div id="change-password-error-banner"></div>
+    <div id="change-password-success-banner"></div>
+    <input type="password" id="current-password-input">
+    <input type="password" id="new-password-input">
+    <input type="password" id="confirm-password-input">
+    <button id="btn-submit-change-password"></button>
+    <select id="select-chart-theme"></select>
+    <select id="select-vol-mode"></select>
+    <select id="select-pivot-type"></select>
+    <input type="checkbox" id="setting-toggle-vol">
+    <input type="checkbox" id="setting-toggle-vol-avg">
+    <span id="vi-vol-badge"></span>
+    <span id="vi-sma-badge"></span>
+    <div id="tv_chart_container"></div>
+    <button id="btn-chart-maximize"></button>
+    <div id="chart-ohlcv-legend"></div>
+    <a id="link-tradingview"></a>
+    <a id="link-chartink"></a>
+    <button id="btn-close-chart-modal"></button>
+    <span id="theme-active-icon"></span>
+    <div id="theme-menu-dropdown"></div>
+    <div id="theme-dropdown-container"></div>
+    <span id="admin-kpi-uptime"></span>
+    <span id="admin-kpi-sessions"></span>
+    <button id="btn-explore-emas-aligned"></button>
+    <span id="circuit-stat-total"></span>
+    <span id="circuit-stat-band2"></span>
+    <span id="circuit-stat-band5"></span>
+    <span id="circuit-stat-updated"></span>
+    <div id="circuit-modal"></div>
+    <div id="circuit-upload-status"></div>
+    <button id="circuit-tab-upload"></button>
+    <button id="circuit-tab-paste"></button>
+    <div id="circuit-view-upload"></div>
+    <div id="circuit-view-paste"></div>
+    <div id="circuit-file-preview"></div>
+    <span id="circuit-selected-filename"></span>
+    <input type="file" id="circuit-file-input">
+    <button id="btn-submit-circuit-upload"></button>
+    <textarea id="circuit-paste-textarea"></textarea>
+  </div>
+
 </body>
 </html>

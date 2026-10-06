@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 2: Market Analytics (Ergonomically Rearranged for High-Speed Scanning)</title>
+  
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ==========================================================================
+       OPTION 2: ANALYTICS (REARRANGED WITH JUMP-TO RIBBON & UNIFIED TOOLBARS)
+       ========================================================================== */
+    :root {
+      /* Nordic Minimalist */
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --bg-page: #F1F4F8;
+      --bg-card: #FFFFFF;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      
+      --text-main: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+
+      --pos-bg: #E8F7ED;
+      --pos-text: #166534;
+      --pos-border: #BBF7D0;
+      --pos-chart: #10B981;
+
+      --neg-bg: #FEECEB;
+      --neg-text: #991B1B;
+      --neg-border: #FECACA;
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: #FEF9C3;
+      --neutral-text: #854D0E;
+
+      --accent: #059669;
+      --accent-subtle: #ECFDF5;
+      --accent-border: #A7F3D0;
+
+      --row-hover: #F8FAFC;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    body.theme-warm {
+      --bg-page: #F7F4EE;
+      --bg-card: #FDFBF7;
+      --bg-surface: #FDFBF7;
+      --bg-subtle: #F2EFE8;
+      --border-color: #E7E0D3;
+      --border-subtle: #EFE9DE;
+      
+      --text-main: #2C2621;
+      --text-secondary: #6E655B;
+      --text-muted: #9B9185;
+
+      --pos-bg: #EAF3EC;
+      --pos-text: #225932;
+      --pos-border: #CFE6D4;
+      --pos-chart: #2D7A46;
+
+      --neg-bg: #F9ECE8;
+      --neg-text: #8E3024;
+      --neg-border: #F6D0C7;
+      --neg-chart: #B93C2A;
+
+      --neutral-bg: #FAF2DD;
+      --neutral-text: #7A571A;
+
+      --accent: #2D7A46;
+      --accent-subtle: #F0F6F1;
+      --accent-border: #C8DEC9;
+
+      --row-hover: #F4EFE6;
+      --shadow-card: 0 1px 3px rgba(44,38,33,0.04);
+    }
+
+    body.theme-obsidian {
+      --bg-page: #0B0E14;
+      --bg-card: #121721;
+      --bg-surface: #121721;
+      --bg-subtle: #18202F;
+      --border-color: #232B3E;
+      --border-subtle: #1C2433;
+      
+      --text-main: #E2E8F0;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --pos-bg: rgba(34, 197, 94, 0.12);
+      --pos-text: #4ADE80;
+      --pos-border: rgba(34, 197, 94, 0.25);
+      --pos-chart: #22C55E;
+
+      --neg-bg: rgba(244, 63, 94, 0.12);
+      --neg-text: #FB7185;
+      --neg-border: rgba(244, 63, 94, 0.25);
+      --neg-chart: #F43F5E;
+
+      --neutral-bg: rgba(234, 179, 8, 0.12);
+      --neutral-text: #FDE047;
+
+      --accent: #34D399;
+      --accent-subtle: rgba(52, 211, 153, 0.12);
+      --accent-border: rgba(52, 211, 153, 0.3);
+
+      --row-hover: #1A2232;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Option Header */
+    .option-banner {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .option-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    .opt-tag-v2 {
+      background: linear-gradient(135deg, #059669, #10B981);
+      color: #FFFFFF;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .theme-segmented-ctrl {
+      display: flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      border-radius: 8px;
+      gap: 2px;
+    }
+
+    .theme-seg-btn {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .theme-seg-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* Header */
+    .app-header-v2 {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-diamond {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #059669, #10B981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .nav-pill-group {
+      display: flex;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      gap: 2px;
+    }
+
+    .nav-pill {
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+    }
+
+    .nav-pill.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* QUICK JUMP NAVIGATION RIBBON */
+    .jump-ribbon {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      font-size: 11.5px;
+    }
+
+    .jump-chip {
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .jump-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .jump-chip.active {
+      background: var(--accent-subtle);
+      color: var(--accent);
+      border-color: var(--accent-border);
+    }
+
+    /* Main Area */
+    .analytics-v2-main {
+      flex: 1;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 1920px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .section-v2-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sec-v2-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .sec-v2-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sec-v2-title h2 {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+
+    /* Unified Toolbar */
+    .unified-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sort-segmented {
+      display: flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+
+    .sort-seg-btn {
+      padding: 3px 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .sort-seg-btn.active {
+      background: var(--bg-card);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    /* 3-Dial Grid */
+    .breadth-v2-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .dial-v2-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dial-v2-num {
+      font-size: 28px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    /* Indices Ribbon */
+    .indices-grid-v2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 10px;
+    }
+
+    .idx-card-v2 {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .idx-v2-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .idx-v2-price {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+    }
+
+    /* Explore Table */
+    .explore-table-v2 {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .explore-table-v2 th {
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .explore-table-v2 td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .explore-table-v2 th.num, .explore-table-v2 td.num {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .explore-table-v2 tr:hover {
+      background: var(--row-hover);
+    }
+
+    .badge-gain-v2 {
+      background: var(--pos-bg);
+      color: var(--pos-text);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .matrix-box-v2 {
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .m-dot-v2 {
+      width: 13px;
+      height: 13px;
+      border-radius: 2px;
+      font-size: 8.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+    }
+
+    .m-dot-v2.pass { background: var(--pos-bg); color: var(--pos-text); border: 1px solid var(--pos-border); }
+    .m-dot-v2.neutral { background: var(--neutral-bg); color: var(--neutral-text); }
+    .m-dot-v2.fail { background: var(--neg-bg); color: var(--neg-text); border: 1px solid var(--neg-border); }
+
+    .rsi-badge-v2 {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body id="root-body">
+
+  <!-- ==========================================================================
+       TOP OPTION BANNER
+       ========================================================================== -->
+  <div class="option-banner">
+    <div class="option-title">
+      <span class="opt-tag-v2">OPTION 2</span>
+      <span>Market Analytics (Rearranged with Jump-To Ribbon & Unified Toolbars)</span>
+    </div>
+    <div class="theme-segmented-ctrl">
+      <button class="theme-seg-btn active" onclick="switchTheme('nordic')">🌿 Nordic</button>
+      <button class="theme-seg-btn" onclick="switchTheme('warm')">📜 Warm Paper</button>
+      <button class="theme-seg-btn" onclick="switchTheme('obsidian')">🌌 Midnight Obsidian</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       APP HEADER
+       ========================================================================== -->
+  <header class="app-header-v2">
+    <div class="header-brand-wrap">
+      <div class="brand-diamond">▲</div>
+      <div>
+        <h1 style="font-size: 16px; font-weight: 800; color: var(--text-main); line-height: 1.1;">SANGAM ANALYTICS</h1>
+        <span style="font-size: 11px; color: var(--text-muted);">Institutional Market Breadth & Sector Health</span>
+      </div>
+    </div>
+
+    <nav class="nav-pill-group">
+      <a class="nav-pill" href="/">Home</a>
+      <a class="nav-pill" href="option2_screener.html">Charts</a>
+      <a class="nav-pill active" href="option2_analytics.html">Analytics</a>
+    </nav>
+
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <button class="jump-chip">⚙ Customize Pinned</button>
+      <button class="jump-chip" style="background: var(--accent-subtle); color: var(--accent); border-color: var(--accent-border);">👤 Parita</button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       ERGONOMIC JUMP-TO NAVIGATION RIBBON
+       ========================================================================== -->
+  <nav class="jump-ribbon">
+    <span style="color: var(--text-muted); font-size: 11px; font-weight: 600;">JUMP TO:</span>
+    <a class="jump-chip active" href="#section-breadth">📊 Breadth Diagnostics</a>
+    <a class="jump-chip" href="#section-indices">🏛️ Sectoral Indices</a>
+    <a class="jump-chip" href="#section-explore">🔍 Explore Universe (RSI & EMAs)</a>
+    <a class="jump-chip" href="#section-fii">💼 FII / DII Institutional Flows</a>
+  </nav>
+
+  <!-- ==========================================================================
+       ANALYTICS CONTENT
+       ========================================================================== -->
+  <main class="analytics-v2-main">
+
+    <!-- 1. MARKET BREADTH DIAGNOSTICS -->
+    <section class="section-v2-card" id="section-breadth">
+      <div class="sec-v2-header">
+        <div class="sec-v2-title">
+          <span>📊</span>
+          <div>
+            <h2>Market Breadth Diagnostics</h2>
+            <p style="font-size: 11.5px; color: var(--text-secondary);">Institutional moving average participation across NSE Universe</p>
+          </div>
+        </div>
+
+        <div class="unified-toolbar">
+          <select style="padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-subtle); font-size: 12px; color: var(--text-main);">
+            <option>Universe (All Stocks)</option>
+            <option>NIFTY 500</option>
+            <option>NIFTY IT</option>
+          </select>
+          <button class="jump-chip">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <div class="breadth-v2-grid">
+        <div class="dial-v2-card">
+          <div>
+            <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: 600;">Stocks &gt; 20 SMA</span>
+            <div class="dial-v2-num" style="color: #2563EB;">68.4%</div>
+            <span style="font-size: 11px; color: var(--text-muted);">Short-Term Institutional Push</span>
+          </div>
+          <svg style="width: 58px; height: 58px; transform: rotate(-90deg);" viewBox="0 0 36 36">
+            <path stroke="var(--border-color)" stroke-width="3.5" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+            <path stroke="#2563EB" stroke-dasharray="68, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+          </svg>
+        </div>
+
+        <div class="dial-v2-card">
+          <div>
+            <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: 600;">Stocks &gt; 50 SMA</span>
+            <div class="dial-v2-num" style="color: var(--pos-text);">72.1%</div>
+            <span style="font-size: 11px; color: var(--text-muted);">Intermediate Trend Health</span>
+          </div>
+          <svg style="width: 58px; height: 58px; transform: rotate(-90deg);" viewBox="0 0 36 36">
+            <path stroke="var(--border-color)" stroke-width="3.5" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+            <path stroke="var(--pos-chart)" stroke-dasharray="72, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.08 a 15.9 15.9 0 0 1 0 31.8 a 15.9 15.9 0 0 1 0 -31.8"/>
+          </svg>
+        </div>
+
+        <div class="dial-v2-card" style="flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; width: 100%;">
+            <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: 600;">Market Regime:</span>
+            <span class="badge-gain-v2">Healthy Bullish ⚡</span>
+          </div>
+          <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.3;">Broad accumulation above intermediate moving averages.</p>
+          <div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; font-family: var(--font-mono); border-top: 1px solid var(--border-subtle); padding-top: 4px;">
+            <span>A/D Ratio: <strong style="color: var(--pos-text);">2.95</strong></span>
+            <span>52W Highs/Lows: <strong>42 / 8</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SECTORAL INDICES (GRID LAYOUT FOR RAPID COMPARISON) -->
+    <section class="section-v2-card" id="section-indices">
+      <div class="sec-v2-header">
+        <div class="sec-v2-title">
+          <span>🏛️</span>
+          <div>
+            <h2>Standard & Sectoral Indices</h2>
+            <p style="font-size: 11.5px; color: var(--text-secondary);">Relative performance & momentum rankings</p>
+          </div>
+        </div>
+
+        <div class="unified-toolbar">
+          <div class="sort-segmented">
+            <button class="sort-seg-btn active">% Change ▾</button>
+            <button class="sort-seg-btn">A-Z</button>
+            <button class="sort-seg-btn">Price</button>
+          </div>
+          <button class="jump-chip active">All</button>
+          <button class="jump-chip">Broad</button>
+          <button class="jump-chip">Sectoral</button>
+        </div>
+      </div>
+
+      <div class="indices-grid-v2">
+        <div class="idx-card-v2">
+          <div class="idx-v2-header">
+            <span>NIFTY AUTO</span>
+            <span class="badge-gain-v2">+2.15%</span>
+          </div>
+          <div class="idx-v2-price">22,340.50</div>
+        </div>
+        <div class="idx-card-v2">
+          <div class="idx-v2-header">
+            <span>NIFTY IT</span>
+            <span class="badge-gain-v2">+1.80%</span>
+          </div>
+          <div class="idx-v2-price">38,120.20</div>
+        </div>
+        <div class="idx-card-v2">
+          <div class="idx-v2-header">
+            <span>NIFTY METAL</span>
+            <span class="badge-gain-v2">+1.25%</span>
+          </div>
+          <div class="idx-v2-price">9,410.80</div>
+        </div>
+        <div class="idx-card-v2">
+          <div class="idx-v2-header">
+            <span>NIFTY PHARMA</span>
+            <span class="badge-gain-v2">+0.95%</span>
+          </div>
+          <div class="idx-v2-price">19,850.10</div>
+        </div>
+        <div class="idx-card-v2">
+          <div class="idx-v2-header">
+            <span>NIFTY BANK</span>
+            <span class="badge-gain-v2">+0.62%</span>
+          </div>
+          <div class="idx-v2-price">51,420.80</div>
+        </div>
+        <div class="idx-card-v2">
+          <div class="idx-v2-header">
+            <span>NIFTY FMCG</span>
+            <span style="background: var(--neg-bg); color: var(--neg-text); padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 11px;">-0.35%</span>
+          </div>
+          <div class="idx-v2-price">56,120.00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. EXPLORE UNIVERSE STOCKS -->
+    <section class="section-v2-card" id="section-explore">
+      <div class="sec-v2-header">
+        <div class="sec-v2-title">
+          <span>🔍</span>
+          <div>
+            <h2>Explore Universe Stocks & Technicals</h2>
+            <p style="font-size: 11.5px; color: var(--text-secondary);">Instant multi-factor technical analysis</p>
+          </div>
+        </div>
+
+        <div class="unified-toolbar">
+          <input type="text" placeholder="Instant search symbol or sector..." style="padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-subtle); font-size: 12px; color: var(--text-main); width: 220px;">
+          <button class="jump-chip active">1k+ MC</button>
+          <button class="jump-chip">2k+ MC</button>
+          <button class="jump-chip active">EMAs Aligned ⚡</button>
+          <button class="jump-chip">📥 CSV</button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="explore-table-v2">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Sector</th>
+              <th class="num">LTP (₹)</th>
+              <th class="num">Chg %</th>
+              <th class="num">Volume</th>
+              <th style="text-align: center;">EMA Matrix<br><span style="font-size: 8.5px; font-weight: normal;">10 20 50 150</span></th>
+              <th class="num">RSI(14)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>RELIANCE</strong></td>
+              <td style="color: var(--text-muted);">Energy & Retail</td>
+              <td class="num"><strong>2,985.40</strong></td>
+              <td class="num"><span class="badge-gain-v2">+1.85%</span></td>
+              <td class="num">6.82M</td>
+              <td style="text-align: center;">
+                <div class="matrix-box-v2">
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge-v2" style="background: var(--pos-bg); color: var(--pos-text);">64.2</span></td>
+            </tr>
+            <tr>
+              <td><strong>TCS</strong></td>
+              <td style="color: var(--text-muted);">IT Services</td>
+              <td class="num"><strong>4,120.10</strong></td>
+              <td class="num"><span class="badge-gain-v2">+0.92%</span></td>
+              <td class="num">2.14M</td>
+              <td style="text-align: center;">
+                <div class="matrix-box-v2">
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 neutral">N</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge-v2" style="background: var(--neutral-bg); color: var(--neutral-text);">58.7</span></td>
+            </tr>
+            <tr>
+              <td><strong>INFY</strong></td>
+              <td style="color: var(--text-muted);">IT Services</td>
+              <td class="num"><strong>1,642.30</strong></td>
+              <td class="num"><span class="badge-gain-v2">+2.45%</span></td>
+              <td class="num">5.35M</td>
+              <td style="text-align: center;">
+                <div class="matrix-box-v2">
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                  <span class="m-dot-v2 pass">P</span>
+                </div>
+              </td>
+              <td class="num"><span class="rsi-badge-v2" style="background: #F3E8FF; color: #6B21A8;">71.8</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function switchTheme(theme) {
+      const b = document.getElementById('root-body');
+      const btns = document.querySelectorAll('.theme-seg-btn');
+      btns.forEach(x => x.classList.remove('active'));
+      b.className = '';
+
+      if (theme === 'nordic') {
+        btns[0].classList.add('active');
+      } else if (theme === 'warm') {
+        b.classList.add('theme-warm');
+        btns[1].classList.add('active');
+      } else if (theme === 'obsidian') {
+        b.classList.add('theme-obsidian');
+        btns[2].classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
