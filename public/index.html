@@ -308,7 +308,7 @@
     <section id="workspace-container" class="workspace-split flex-col lg:flex-row flex-1 min-h-[680px] w-full items-stretch transition-all duration-150">
       
       <!-- LEFT PANE: Option 1 Left Sidebar (Screeners & 5 Watchlists) -->
-      <div id="sidebar-pane" class="left-sidebar w-full lg:w-[44%] flex-shrink-0 flex flex-col min-h-[500px]">
+      <div id="sidebar-pane" class="left-sidebar w-full lg:w-[44%] flex-shrink-0 flex flex-col min-h-[500px] max-h-[820px]">
         
         <!-- Sidebar Navigation Tabs (Option 1 Tab Header Strip) -->
         <div class="tab-header-strip">
@@ -322,7 +322,7 @@
         </div>
 
         <!-- 1. SCREENERS VIEW (Option 1 Layout) -->
-        <div id="sidebar-screeners-view" class="flex flex-col flex-1" style="overflow: hidden;">
+        <div id="sidebar-screeners-view" class="flex flex-col flex-1 min-h-0" style="overflow: hidden;">
           <!-- Controls Box (Option 1 Control Header Box) -->
           <div class="control-header-box">
             <div class="sb-top-meta">
@@ -379,7 +379,7 @@
           </div>
 
           <!-- Screener Table Container (Option 1 Viewport) -->
-          <div class="table-viewport flex-1" id="screener-stocks-table-container">
+          <div class="table-viewport flex-1 overflow-y-auto max-h-[580px]" id="screener-stocks-table-container">
             <table class="data-table" id="dense-screener-table">
               <thead>
                 <tr>

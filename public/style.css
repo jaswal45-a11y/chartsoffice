@@ -2113,6 +2113,7 @@ input[type="text"]:focus, select:focus, textarea:focus {
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  max-height: 820px;
 }
 
 .tab-header-strip {
@@ -2263,9 +2264,14 @@ input[type="text"]:focus, select:focus, textarea:focus {
 }
 
 /* Data Table Rows & Cells */
-.table-viewport {
+.table-viewport,
+#screener-stocks-table-container {
   flex: 1;
+  max-height: 580px;
   overflow-y: auto;
+  overflow-x: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {

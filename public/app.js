@@ -4941,7 +4941,9 @@ function handleResize() {
 
   if (pricePane && el.tvMainChart) {
     const pRect = pricePane.getBoundingClientRect();
-    const h = Math.round(Math.max(80, pRect.height));
+    const savedChartH = parseInt(localStorage.getItem('sangam_chart_height') || '0', 10);
+    const maxAllowedH = savedChartH >= 300 ? Math.min(1000, savedChartH) : 850;
+    const h = Math.round(Math.max(80, Math.min(maxAllowedH, pRect.height)));
     state.charts.main.applyOptions({
       width: commonWidth,
       height: h
@@ -5046,7 +5048,7 @@ function switchWorkspaceLayout(mode) {
     }
 
     container.className = 'flex flex-col lg:flex-row gap-0 flex-1 min-h-[680px] w-full items-stretch transition-all duration-150';
-    sidebar.className = 'w-full lg:w-[42%] flex-shrink-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden min-h-[500px]';
+    sidebar.className = 'w-full lg:w-[42%] flex-shrink-0 flex flex-col bg-dark-card border border-dark-border rounded-2xl shadow-xl overflow-hidden min-h-[500px] max-h-[820px]';
     sidebar.style.height = '';
 
     const savedW = localStorage.getItem('sangam_sidebar_width');
