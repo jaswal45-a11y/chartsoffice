@@ -1521,6 +1521,48 @@ body {
   display: inline-block;
 }
 
+.indices-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.indices-refresh-btn:hover {
+  background: var(--bg-surface) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+.indices-refresh-btn:active {
+  transform: scale(0.95);
+}
+
+.indices-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.idx-item.flash-update {
+  animation: flash-pulse 0.7s ease;
+}
+
+@keyframes flash-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
 /* ==========================================================================
    GLOBAL TAILWIND COLOR HARMONIZATION ACROSS 3 THEMES
    ========================================================================== */

@@ -197,31 +197,36 @@
     <div class="index-group">
       <div id="idx-nifty50" class="idx-item">
         <span class="idx-name">NIFTY 50</span>
-        <strong class="idx-val index-ltp">24,850.30</strong>
-        <span class="chg-pill chg-up index-chg">+0.45%</span>
+        <strong class="idx-val index-ltp">22,231.80</strong>
+        <span class="chg-pill chg-down index-chg">-1.64%</span>
       </div>
       <div id="idx-niftybank" class="idx-item">
         <span class="idx-name">BANK NIFTY</span>
-        <strong class="idx-val index-ltp">51,420.80</strong>
-        <span class="chg-pill chg-up index-chg">+0.62%</span>
+        <strong class="idx-val index-ltp">54,515.05</strong>
+        <span class="chg-pill chg-down index-chg">-0.98%</span>
       </div>
       <div id="idx-midcap150" class="idx-item">
         <span class="idx-name">MIDCAP 150</span>
-        <strong class="idx-val index-ltp">18,920.40</strong>
-        <span class="chg-pill chg-up index-chg">+1.12%</span>
+        <strong class="idx-val index-ltp">21,311.50</strong>
+        <span class="chg-pill chg-down index-chg">-2.41%</span>
       </div>
       <div id="idx-smallcap250" class="idx-item">
         <span class="idx-name">SMALLCAP 250</span>
-        <strong class="idx-val index-ltp">15,410.80</strong>
-        <span class="chg-pill chg-up index-chg">+1.65%</span>
+        <strong class="idx-val index-ltp">17,488.30</strong>
+        <span class="chg-pill chg-down index-chg">-2.40%</span>
       </div>
       <div id="idx-indiavix" class="idx-item">
         <span class="idx-name">INDIA VIX</span>
-        <strong class="idx-val index-ltp">12.85</strong>
-        <span class="chg-pill chg-down index-chg">-2.10%</span>
+        <strong class="idx-val index-ltp">15.31</strong>
+        <span class="chg-pill chg-up index-chg">+10.26%</span>
       </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary);">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary);">
+      <button id="btn-refresh-indices" onclick="refreshMarketIndices(event)" class="indices-refresh-btn" title="Refresh Live Market Indices">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="icon-refresh-indices"></i>
+        <span>Refresh</span>
+      </button>
+      <span style="opacity: 0.3;">|</span>
       <span id="market-status-dot" class="feed-dot"></span>
       <span id="market-status-text">NSE LIVE</span>
     </div>

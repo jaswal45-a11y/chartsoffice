@@ -852,11 +852,11 @@
   },
   "TIMEX": {
     "dates": [],
-    "lastUpdated": 1791433567898
+    "lastUpdated": 1791485553493
   },
   "GRAUWEIL": {
     "dates": [],
-    "lastUpdated": 1791433636559
+    "lastUpdated": 1791485593338
   },
   "ICICIAMC": {
     "dates": [
@@ -2315,7 +2315,7 @@
   },
   "KENNAMET": {
     "dates": [],
-    "lastUpdated": 1791448631958
+    "lastUpdated": 1791485549508
   },
   "KINGFA": {
     "dates": [
@@ -2517,7 +2517,7 @@
   },
   "NOVARTIND": {
     "dates": [],
-    "lastUpdated": 1791448636308
+    "lastUpdated": 1791485585535
   },
   "VINDHYATEL": {
     "dates": [
@@ -3690,7 +3690,7 @@
       "2026-05-29",
       "2026-07-15"
     ],
-    "lastUpdated": 1791231137351
+    "lastUpdated": 1791448670796
   },
   "DIACABS": {
     "dates": [
@@ -3889,7 +3889,7 @@
   },
   "HEG": {
     "dates": [],
-    "lastUpdated": 1791433625629
+    "lastUpdated": 1791485585524
   },
   "LOTUSDEV": {
     "dates": [
@@ -4068,7 +4068,7 @@
   },
   "KPL": {
     "dates": [],
-    "lastUpdated": 1791433518500
+    "lastUpdated": 1791485527525
   },
   "ZOMATO": {
     "dates": [],
@@ -4160,25 +4160,25 @@
   },
   "NIFTY500MOMENTM50": {
     "dates": [],
-    "lastUpdated": 1791448604634
+    "lastUpdated": 1791485634730
   },
   "NIFTYM150MOMNTM50": {
     "dates": [],
-    "lastUpdated": 1791448604167
+    "lastUpdated": 1791485634328
   },
   "NIFTYALPHA50": {
     "dates": [],
-    "lastUpdated": 1791448605281
+    "lastUpdated": 1791485634318
   },
   "CNXENERGY": {
     "dates": [],
-    "lastUpdated": 1791448628545
+    "lastUpdated": 1791485499617
   },
   "VAML": {
     "dates": [
       "2026-07-30"
     ],
-    "lastUpdated": 1791396425947
+    "lastUpdated": 1791482943222
   },
   "TMCV": {
     "dates": [
@@ -4206,7 +4206,7 @@
   },
   "NIFTY200MOMENTM30": {
     "dates": [],
-    "lastUpdated": 1791448628609
+    "lastUpdated": 1791485499250
   },
   "NIFTYMIDCAP150": {
     "dates": [],
@@ -4230,7 +4230,7 @@
   },
   "NIFTYALPHALOWVOL": {
     "dates": [],
-    "lastUpdated": 1791448638993
+    "lastUpdated": 1791485502683
   },
   "LTM": {
     "dates": [
@@ -4244,7 +4244,7 @@
     "dates": [
       "2026-08-03"
     ],
-    "lastUpdated": 1791396434995
+    "lastUpdated": 1791482957360
   },
   "LLOYDSME": {
     "dates": [
@@ -4265,11 +4265,11 @@
     "dates": [
       "2026-08-20"
     ],
-    "lastUpdated": 1791396441390
+    "lastUpdated": 1791482923486
   },
   "NIFTY100LOWVOL30": {
     "dates": [],
-    "lastUpdated": 1791448661967
+    "lastUpdated": 1791485504628
   },
   "IDBI": {
     "dates": [
@@ -4333,7 +4333,7 @@
   },
   "BENARAS": {
     "dates": [],
-    "lastUpdated": 1790971017163
+    "lastUpdated": 1791483657969
   },
   "^CNXIT": {
     "dates": [],
@@ -4365,7 +4365,7 @@
   },
   "ELANTAS": {
     "dates": [],
-    "lastUpdated": 1791433544901
+    "lastUpdated": 1791485544053
   },
   "MOLBIO": {
     "dates": [
@@ -4394,7 +4394,7 @@
     "dates": [
       "2026-08-17"
     ],
-    "lastUpdated": 1791396446815
+    "lastUpdated": 1791482925444
   },
   "VHL": {
     "dates": [
@@ -4481,11 +4481,11 @@
   },
   "SIKA": {
     "dates": [],
-    "lastUpdated": 1791433526781
+    "lastUpdated": 1791485530403
   },
   "WPIL": {
     "dates": [],
-    "lastUpdated": 1791433636105
+    "lastUpdated": 1791485593388
   },
   "SKFINDUS": {
     "dates": [
@@ -4503,11 +4503,11 @@
   },
   "NIRLON": {
     "dates": [],
-    "lastUpdated": 1791433579529
+    "lastUpdated": 1791485558261
   },
   "ELPROINTL": {
     "dates": [],
-    "lastUpdated": 1791433641632
+    "lastUpdated": 1791485597086
   },
   "MPIMANIPAL": {
     "dates": [
@@ -4593,11 +4593,13 @@
   },
   "KMCSHIL": {
     "dates": [],
-    "lastUpdated": 1791433651433
+    "lastUpdated": 1791485609779
   },
   "GLASSWALL": {
-    "dates": [],
-    "lastUpdated": 1791115881872
+    "dates": [
+      "2026-10-06"
+    ],
+    "lastUpdated": 1791481031199
   },
   "CYIENT": {
     "dates": [
@@ -4741,7 +4743,7 @@
   },
   "KIRLFER": {
     "dates": [],
-    "lastUpdated": 1791433560662
+    "lastUpdated": 1791485551423
   },
   "EPACKPEB": {
     "dates": [
@@ -4775,7 +4777,7 @@
   },
   "KOVAI": {
     "dates": [],
-    "lastUpdated": 1791433568007
+    "lastUpdated": 1791485553459
   },
   "INDORAMA": {
     "dates": [
@@ -5369,7 +5371,7 @@
   },
   "KLBRENG-B": {
     "dates": [],
-    "lastUpdated": 1791433644369
+    "lastUpdated": 1791485599238
   },
   "RITES": {
     "dates": [
@@ -5547,7 +5549,7 @@
   },
   "HAWKINCOOK": {
     "dates": [],
-    "lastUpdated": 1791433518498
+    "lastUpdated": 1791485527541
   },
   "STYLEBAAZA": {
     "dates": [
@@ -5563,7 +5565,7 @@
       "2026-04-28",
       "2026-07-23"
     ],
-    "lastUpdated": 1791116006669
+    "lastUpdated": 1791481042192
   },
   "ELECTCAST": {
     "dates": [
@@ -5800,7 +5802,7 @@
   },
   "DRAGARWQ": {
     "dates": [],
-    "lastUpdated": 1791433513912
+    "lastUpdated": 1791485525440
   },
   "TRAVELFOOD": {
     "dates": [
@@ -6019,7 +6021,7 @@
     "dates": [
       "2026-09-15"
     ],
-    "lastUpdated": 1791228940607
+    "lastUpdated": 1791481031126
   },
   "PNGSREVA": {
     "dates": [
@@ -6091,7 +6093,7 @@
   },
   "ULTRAMAR": {
     "dates": [],
-    "lastUpdated": 1791433538268
+    "lastUpdated": 1791485538304
   },
   "LXCHEM": {
     "dates": [
@@ -6130,11 +6132,11 @@
   },
   "GYFTR": {
     "dates": [],
-    "lastUpdated": 1791228950901
+    "lastUpdated": 1791483660609
   },
   "SEIL": {
     "dates": [],
-    "lastUpdated": 1791433641270
+    "lastUpdated": 1791485596747
   },
   "SMCGLOBAL": {
     "dates": [
@@ -6170,15 +6172,15 @@
   },
   "GNRL": {
     "dates": [],
-    "lastUpdated": 1791228951244
+    "lastUpdated": 1791483660033
   },
   "BLIL": {
     "dates": [],
-    "lastUpdated": 1791229015050
+    "lastUpdated": 1791483654937
   },
   "GRANDOAK": {
     "dates": [],
-    "lastUpdated": 1791433670897
+    "lastUpdated": 1791485633467
   },
   "SYNCOMF": {
     "dates": [
@@ -6376,7 +6378,7 @@
   },
   "CNXINFRA": {
     "dates": [],
-    "lastUpdated": 1791433499706
+    "lastUpdated": 1791485518019
   },
   "ABSLLIQUID": {
     "dates": [],
@@ -6444,7 +6446,7 @@
   },
   "BAGMANE": {
     "dates": [],
-    "lastUpdated": 1791433510613
+    "lastUpdated": 1791485523540
   },
   "AIAENG": {
     "dates": [
@@ -6667,11 +6669,11 @@
   },
   "COCKERILL": {
     "dates": [],
-    "lastUpdated": 1791433517920
+    "lastUpdated": 1791485527662
   },
   "BENGALASM": {
     "dates": [],
-    "lastUpdated": 1791433518154
+    "lastUpdated": 1791485527405
   },
   "ATLANTAELE": {
     "dates": [
@@ -6692,7 +6694,7 @@
   },
   "DHOOTTRANS": {
     "dates": [],
-    "lastUpdated": 1791433518213
+    "lastUpdated": 1791485527599
   },
   "KPRMILL": {
     "dates": [
@@ -6839,11 +6841,11 @@
   },
   "3BBLACKBIO": {
     "dates": [],
-    "lastUpdated": 1791261018759
+    "lastUpdated": 1791483664949
   },
   "FRONTSP": {
     "dates": [],
-    "lastUpdated": 1791433682564
+    "lastUpdated": 1791485635752
   },
   "KSHINTL": {
     "dates": [
@@ -6905,7 +6907,7 @@
     "dates": [
       "2026-09-10"
     ],
-    "lastUpdated": 1791228950904
+    "lastUpdated": 1791481033433
   },
   "VIDYAWIRES": {
     "dates": [
@@ -6946,7 +6948,7 @@
   },
   "KOTIC": {
     "dates": [],
-    "lastUpdated": 1791433687905
+    "lastUpdated": 1791485638157
   },
   "ARDEE": {
     "dates": [
@@ -6966,13 +6968,13 @@
   },
   "WELSPLSOL": {
     "dates": [],
-    "lastUpdated": 1791433636181
+    "lastUpdated": 1791485593413
   },
   "AGL": {
     "dates": [
       "2026-08-14"
     ],
-    "lastUpdated": 1791229016882
+    "lastUpdated": 1791481033410
   },
   "KWIL": {
     "dates": [
@@ -7121,11 +7123,11 @@
   },
   "DISAQ": {
     "dates": [],
-    "lastUpdated": 1791433538167
+    "lastUpdated": 1791485538028
   },
   "NIFTY100ESGSECLDR": {
     "dates": [],
-    "lastUpdated": 1791433532434
+    "lastUpdated": 1791485532861
   },
   "DEEPAKFERT": {
     "dates": [
@@ -7197,7 +7199,7 @@
   },
   "NIFTYGS10YRCLN": {
     "dates": [],
-    "lastUpdated": 1791433630867
+    "lastUpdated": 1791485588059
   },
   "ACI": {
     "dates": [
@@ -7847,23 +7849,23 @@
   },
   "NEAGI": {
     "dates": [],
-    "lastUpdated": 1791433531317
+    "lastUpdated": 1791485532357
   },
   "NIFTYGS15YRPLUS": {
     "dates": [],
-    "lastUpdated": 1791344849626
+    "lastUpdated": 1791485532805
   },
   "TAALTECH": {
     "dates": [],
-    "lastUpdated": 1791433537951
+    "lastUpdated": 1791485537884
   },
   "INDPRUD": {
     "dates": [],
-    "lastUpdated": 1791433538123
+    "lastUpdated": 1791485538024
   },
   "ELITECON": {
     "dates": [],
-    "lastUpdated": 1791433541406
+    "lastUpdated": 1791485541158
   },
   "VOGL": {
     "dates": [
@@ -7873,15 +7875,15 @@
   },
   "NITTAGELA": {
     "dates": [],
-    "lastUpdated": 1791433541753
+    "lastUpdated": 1791485541124
   },
   "VELJAN": {
     "dates": [],
-    "lastUpdated": 1791433545285
+    "lastUpdated": 1791485544064
   },
   "INTERISE": {
     "dates": [],
-    "lastUpdated": 1791433551464
+    "lastUpdated": 1791485546146
   },
   "ABLBL": {
     "dates": [
@@ -8124,7 +8126,7 @@
   },
   "UPHOT": {
     "dates": [],
-    "lastUpdated": 1791433560657
+    "lastUpdated": 1791485551469
   },
   "NESCO": {
     "dates": [
@@ -8202,7 +8204,7 @@
   },
   "RIIT": {
     "dates": [],
-    "lastUpdated": 1791433574956
+    "lastUpdated": 1791485555047
   },
   "INDIASHLTR": {
     "dates": [
@@ -8224,11 +8226,11 @@
   },
   "KAMAHOLD": {
     "dates": [],
-    "lastUpdated": 1791433568055
+    "lastUpdated": 1791485553470
   },
   "CITIUSINVT": {
     "dates": [],
-    "lastUpdated": 1791433574993
+    "lastUpdated": 1791485554912
   },
   "SFL": {
     "dates": [
@@ -8360,7 +8362,7 @@
   },
   "HEROMOTORS": {
     "dates": [],
-    "lastUpdated": 1791433578622
+    "lastUpdated": 1791485558299
   },
   "CELLECOR": {
     "dates": [],
@@ -8592,47 +8594,47 @@
   },
   "CASHIETF": {
     "dates": [],
-    "lastUpdated": 1791433584127
+    "lastUpdated": 1791485560354
   },
   "LIQGRWBEES": {
     "dates": [],
-    "lastUpdated": 1791433584148
+    "lastUpdated": 1791485560317
   },
   "SBILIQETF": {
     "dates": [],
-    "lastUpdated": 1791433584170
+    "lastUpdated": 1791485560490
   },
   "SSRETAIL": {
     "dates": [],
-    "lastUpdated": 1791433584166
+    "lastUpdated": 1791485560413
   },
   "ELIQUID": {
     "dates": [],
-    "lastUpdated": 1791433590631
+    "lastUpdated": 1791485562732
   },
   "ADROITIND": {
     "dates": [],
-    "lastUpdated": 1791433590440
+    "lastUpdated": 1791485562411
   },
   "LIQUIDBETA": {
     "dates": [],
-    "lastUpdated": 1791433590763
+    "lastUpdated": 1791485562415
   },
   "GSPLTRANS": {
     "dates": [],
-    "lastUpdated": 1791433596124
+    "lastUpdated": 1791485565413
   },
   "NITYAS": {
     "dates": [],
-    "lastUpdated": 1791433596291
+    "lastUpdated": 1791485565481
   },
   "SRIT": {
     "dates": [],
-    "lastUpdated": 1791433602623
+    "lastUpdated": 1791485569252
   },
   "SWASTIKAIN": {
     "dates": [],
-    "lastUpdated": 1791433603000
+    "lastUpdated": 1791485569846
   },
   "QUINTEGRA": {
     "dates": [
@@ -8644,55 +8646,55 @@
   },
   "VNL": {
     "dates": [],
-    "lastUpdated": 1791433603346
+    "lastUpdated": 1791485569135
   },
   "SHAHINVEST": {
     "dates": [],
-    "lastUpdated": 1791433603500
+    "lastUpdated": 1791485569370
   },
   "AONESTEELS": {
     "dates": [],
-    "lastUpdated": 1791433608220
+    "lastUpdated": 1791485574041
   },
   "RUNWALENTR": {
     "dates": [],
-    "lastUpdated": 1791433608206
+    "lastUpdated": 1791485573978
   },
   "ACEVECTOR": {
     "dates": [],
-    "lastUpdated": 1791433608858
+    "lastUpdated": 1791485574143
   },
   "ORIENTCABL": {
     "dates": [],
-    "lastUpdated": 1791433609054
+    "lastUpdated": 1791485573880
   },
   "JAYKAYPP": {
     "dates": [],
-    "lastUpdated": 1791433615256
+    "lastUpdated": 1791485576757
   },
   "INSURADD": {
     "dates": [],
-    "lastUpdated": 1791433620674
+    "lastUpdated": 1791485579650
   },
   "ELEVATE": {
     "dates": [],
-    "lastUpdated": 1791433619269
+    "lastUpdated": 1791485580065
   },
   "MONEYVIEW": {
     "dates": [],
-    "lastUpdated": 1791433619278
+    "lastUpdated": 1791485580062
   },
   "GERMAN": {
     "dates": [],
-    "lastUpdated": 1791433619385
+    "lastUpdated": 1791485580060
   },
   "VARMORA": {
     "dates": [],
-    "lastUpdated": 1791433620189
+    "lastUpdated": 1791485580250
   },
   "ARMEE": {
     "dates": [],
-    "lastUpdated": 1791433621196
+    "lastUpdated": 1791485580176
   },
   "PRASOLCHEM": {
     "dates": [
@@ -8709,7 +8711,7 @@
   },
   "JENBURPH": {
     "dates": [],
-    "lastUpdated": 1791433626270
+    "lastUpdated": 1791485585669
   },
   "KANOHAR": {
     "dates": [
@@ -8719,7 +8721,7 @@
   },
   "TEMPSENS": {
     "dates": [],
-    "lastUpdated": 1791433628921
+    "lastUpdated": 1791485587530
   },
   "LCCPROJECT": {
     "dates": [
@@ -8729,19 +8731,19 @@
   },
   "DECNGOLD": {
     "dates": [],
-    "lastUpdated": 1791433629379
+    "lastUpdated": 1791485587672
   },
   "ANZEN": {
     "dates": [],
-    "lastUpdated": 1791433632772
+    "lastUpdated": 1791485589452
   },
   "GOODYEAR": {
     "dates": [],
-    "lastUpdated": 1791433636386
+    "lastUpdated": 1791485593559
   },
   "CAPINVIT": {
     "dates": [],
-    "lastUpdated": 1791433639170
+    "lastUpdated": 1791485594637
   },
   "STEAMHOUSE": {
     "dates": [
@@ -8751,7 +8753,7 @@
   },
   "ASHIKAG": {
     "dates": [],
-    "lastUpdated": 1791433641353
+    "lastUpdated": 1791485596767
   },
   "CIGNITITEC": {
     "dates": [
@@ -8768,23 +8770,23 @@
   },
   "TECHNVISN": {
     "dates": [],
-    "lastUpdated": 1791433644474
+    "lastUpdated": 1791485599459
   },
   "ALUFLUOR": {
     "dates": [],
-    "lastUpdated": 1791433644410
+    "lastUpdated": 1791485599318
   },
   "ROADSTAR": {
     "dates": [],
-    "lastUpdated": 1791433649343
+    "lastUpdated": 1791485601797
   },
   "FREDUN": {
     "dates": [],
-    "lastUpdated": 1791433651162
+    "lastUpdated": 1791485609294
   },
   "SHUKRAPHAR": {
     "dates": [],
-    "lastUpdated": 1791433651908
+    "lastUpdated": 1791485609329
   },
   "MVELECTRO": {
     "dates": [
@@ -8794,47 +8796,47 @@
   },
   "BLUECLOUDS": {
     "dates": [],
-    "lastUpdated": 1791433661814
+    "lastUpdated": 1791485628768
   },
   "ELCIDIN": {
     "dates": [],
-    "lastUpdated": 1791433664099
+    "lastUpdated": 1791485628678
   },
   "PREMCO": {
     "dates": [],
-    "lastUpdated": 1791433666912
+    "lastUpdated": 1791485630758
   },
   "SURYALA": {
     "dates": [],
-    "lastUpdated": 1791433666338
+    "lastUpdated": 1791485630777
   },
   "BNAGROCHEM": {
     "dates": [],
-    "lastUpdated": 1791433667538
+    "lastUpdated": 1791485630838
   },
   "TANAA": {
     "dates": [],
-    "lastUpdated": 1791433670671
+    "lastUpdated": 1791485633525
   },
   "BLEL": {
     "dates": [],
-    "lastUpdated": 1791433670611
+    "lastUpdated": 1791485633461
   },
   "DAICHI": {
     "dates": [],
-    "lastUpdated": 1791433683347
+    "lastUpdated": 1791485635590
   },
   "INDOKEM": {
     "dates": [],
-    "lastUpdated": 1791433683537
+    "lastUpdated": 1791485635595
   },
   "MMWL": {
     "dates": [],
-    "lastUpdated": 1791433683623
+    "lastUpdated": 1791485635990
   },
   "EQUAL50": {
     "dates": [],
-    "lastUpdated": 1791433688703
+    "lastUpdated": 1791485638230
   },
   "MON100": {
     "dates": [],
@@ -8884,7 +8886,7 @@
   },
   "PANORAMA": {
     "dates": [],
-    "lastUpdated": 1791433694121
+    "lastUpdated": 1791485638121
   },
   "SURYODAY": {
     "dates": [
@@ -8916,7 +8918,7 @@
   },
   "MIIL": {
     "dates": [],
-    "lastUpdated": 1791433700610
+    "lastUpdated": 1791485638166
   },
   "ITAXIS": {
     "dates": [],
@@ -8999,5 +9001,90 @@
       "2026-08-11"
     ],
     "lastUpdated": 1791433713988
+  },
+  "BHARATBOND-APR30": {
+    "dates": [],
+    "lastUpdated": 1791485551854
+  },
+  "INVPRECQ": {
+    "dates": [],
+    "lastUpdated": 1791483655389
+  },
+  "FERMENTA": {
+    "dates": [
+      "2026-08-11"
+    ],
+    "lastUpdated": 1791481033384
+  },
+  "TGVSL": {
+    "dates": [],
+    "lastUpdated": 1791483657505
+  },
+  "BPLPHARMA": {
+    "dates": [],
+    "lastUpdated": 1791483661060
+  },
+  "ANDREWYU": {
+    "dates": [],
+    "lastUpdated": 1791483660009
+  },
+  "NIFTYBETA": {
+    "dates": [],
+    "lastUpdated": 1791481037021
+  },
+  "IDFNIFTYET": {
+    "dates": [],
+    "lastUpdated": 1791481037530
+  },
+  "CAPITALSFB": {
+    "dates": [
+      "2026-01-29",
+      "2026-04-29",
+      "2026-07-23"
+    ],
+    "lastUpdated": 1791481037026
+  },
+  "NETF": {
+    "dates": [],
+    "lastUpdated": 1791481042187
+  },
+  "QNIFTY": {
+    "dates": [],
+    "lastUpdated": 1791481042354
+  },
+  "SYSTANGO": {
+    "dates": [],
+    "lastUpdated": 1791483661056
+  },
+  "UNIENTER": {
+    "dates": [
+      "2026-02-06",
+      "2026-05-27",
+      "2026-08-12"
+    ],
+    "lastUpdated": 1791483661475
+  },
+  "UGROCAP": {
+    "dates": [
+      "2026-02-07",
+      "2026-08-04"
+    ],
+    "lastUpdated": 1791483664329
+  },
+  "NIFTYETF": {
+    "dates": [],
+    "lastUpdated": 1791483665816
+  },
+  "DEN": {
+    "dates": [
+      "2026-01-14",
+      "2026-04-14",
+      "2026-07-14"
+    ],
+    "lastUpdated": 1791483665820
+  },
+  "INDIAVIX": {
+    "dates": [],
+    "lastUpdated": 1791485562657
   }
 }

@@ -559,18 +559,45 @@ function initMarketIndicesStrip() {
   marketIndicesTimer = setInterval(fetchMarketIndices, 12000);
 }
 
-async function fetchMarketIndices() {
+async function fetchMarketIndices(isManual = false) {
   try {
-    const res = await fetch('/api/market-indices');
+    const url = isManual ? `/api/market-indices?refresh=true&t=${Date.now()}` : '/api/market-indices';
+    const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
     if (data.success && data.indices) {
-      updateMarketIndicesDisplay(data.indices);
+      updateMarketIndicesDisplay(data.indices, isManual);
     }
   } catch (e) {}
 }
 
-function updateMarketIndicesDisplay(indices) {
+async function refreshMarketIndices(e) {
+  if (e) e.preventDefault();
+  const icon = document.getElementById('icon-refresh-indices');
+  const btn = document.getElementById('btn-refresh-indices');
+  if (icon) icon.classList.add('animate-spin');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`/api/market-indices?refresh=true&t=${Date.now()}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.success && data.indices) {
+      updateMarketIndicesDisplay(data.indices, true);
+      showToast('Market indices updated', 'success');
+    }
+  } catch (err) {
+    showToast('Failed to refresh indices: ' + err.message, 'error');
+  } finally {
+    setTimeout(() => {
+      if (icon) icon.classList.remove('animate-spin');
+      if (btn) btn.disabled = false;
+    }, 450);
+  }
+}
+window.refreshMarketIndices = refreshMarketIndices;
+
+function updateMarketIndicesDisplay(indices, animate = false) {
   if (!indices) return;
   const updateIdx = (id, info) => {
     if (!info) return;
@@ -585,10 +612,16 @@ function updateMarketIndicesDisplay(indices) {
       const chg = typeof info.changePercent === 'number' ? info.changePercent : parseFloat(info.changePercent || '0');
       chgEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
       if (chg >= 0) {
-        chgEl.className = 'index-chg px-1.5 py-0.2 rounded font-semibold text-[10px] bg-emerald-500/15 text-emerald-400';
+        chgEl.className = 'chg-pill chg-up index-chg';
       } else {
-        chgEl.className = 'index-chg px-1.5 py-0.2 rounded font-semibold text-[10px] bg-rose-500/15 text-rose-400';
+        chgEl.className = 'chg-pill chg-down index-chg';
       }
+    }
+    if (animate) {
+      container.classList.remove('flash-update');
+      void container.offsetWidth; // trigger reflow
+      container.classList.add('flash-update');
+      setTimeout(() => container.classList.remove('flash-update'), 750);
     }
   };
 
