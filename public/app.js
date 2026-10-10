@@ -122,7 +122,7 @@ const state = {
   selectedStock: null,
   currentStockData: null,
   activeInterval: '1d', // '1d' or '1wk'
-  activeRange: '6mo', // '3mo', '6mo' (Default), '1y'
+  activeRange: '2y', // '3mo', '6mo', '1y', '2y' (Default 2 Years)
   filterMc1000: false, // Filter stocks with Market Cap > 1000 Cr
   filterMc2000: false, // Filter stocks with Market Cap > 2000 Cr
   searchQuery: '',
@@ -824,6 +824,24 @@ const CHART_THEME_CONFIGS = {
     border: '#e7e0d3',
     candleUp: '#2d7a46',
     candleDown: '#b93c2a'
+  },
+  'matcha': {
+    name: 'Sage & Matcha Zen',
+    bg: '#F7FAF7',
+    text: '#1A251D',
+    grid: 'rgba(46, 125, 90, 0.05)',
+    border: '#D5DDD5',
+    candleUp: '#2E7D5A',
+    candleDown: '#D34545'
+  },
+  'sandstone': {
+    name: 'Sandstone & Cashmere',
+    bg: '#FCF9F6',
+    text: '#29221D',
+    grid: 'rgba(180, 101, 51, 0.05)',
+    border: '#E4DBD2',
+    candleUp: '#357C52',
+    candleDown: '#C2453C'
   },
   'high-contrast': {
     name: 'High Contrast',
@@ -2936,7 +2954,7 @@ function renderWatchlistStocks() {
   if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
     el.watchlistTbody.innerHTML = `
       <tr>
-        <td colspan="7" class="py-16 text-center text-slate-500">
+        <td colspan="5" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <div class="w-10 h-10 rounded-full bg-dark-bg flex items-center justify-center text-slate-600">
               <i data-lucide="star" class="w-5 h-5 text-amber-500/40"></i>
@@ -2978,25 +2996,6 @@ function renderWatchlistStocks() {
       const valA = (typeof quoteA.volume === 'number' && quoteA.volume > 0) ? quoteA.volume : 0;
       const valB = (typeof quoteB.volume === 'number' && quoteB.volume > 0) ? quoteB.volume : 0;
       return isAsc ? valA - valB : valB - valA;
-    } else if (sortField === 'addedAt') {
-      const timeA = a.addedAt ? new Date(a.addedAt).getTime() : 0;
-      const timeB = b.addedAt ? new Date(b.addedAt).getTime() : 0;
-      return isAsc ? timeA - timeB : timeB - timeA;
-    } else if (sortField === 'returnSinceAdded') {
-      const getRet = (stk, q) => {
-        const base = (typeof stk.addedPrice === 'number' && stk.addedPrice > 0) ? stk.addedPrice : null;
-        const cur = (typeof q?.ltp === 'number' && q.ltp > 0) ? q.ltp : null;
-        if (base !== null && cur !== null) {
-          return ((cur - base) / base) * 100;
-        }
-        return null;
-      };
-      const retA = getRet(a, quoteA);
-      const retB = getRet(b, quoteB);
-      if (retA === null && retB === null) return 0;
-      if (retA === null) return 1;
-      if (retB === null) return -1;
-      return isAsc ? retA - retB : retB - retA;
     }
 
     const symA = (a.symbol || '').toUpperCase();
@@ -3014,24 +3013,6 @@ function renderWatchlistStocks() {
     const chgBadge = quote.changePercent !== undefined
       ? (isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20')
       : 'text-slate-500';
-
-    const addedDateStr = stock.addedAt ? formatWatchlistDate(stock.addedAt) : '—';
-    const curLtp = (typeof quote.ltp === 'number' && quote.ltp > 0) ? quote.ltp : null;
-    const basePrice = (typeof stock.addedPrice === 'number' && stock.addedPrice > 0) ? stock.addedPrice : null;
-
-    let retHtml = '<span class="text-slate-500 font-mono text-[11px]">—</span>';
-    if (basePrice !== null && curLtp !== null) {
-      const retPct = ((curLtp - basePrice) / basePrice) * 100;
-      const isProfit = retPct >= 0;
-      const retClass = isProfit 
-        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
-      const sign = isProfit ? '+' : '';
-      const tooltip = `Added at ₹${basePrice.toFixed(2)} on ${addedDateStr}`;
-      retHtml = `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold ${retClass}" title="${tooltip}">${sign}${retPct.toFixed(2)}%</span>`;
-    } else if (basePrice !== null) {
-      retHtml = `<span class="text-slate-400 font-mono text-[10px]" title="Added at ₹${basePrice}">₹${basePrice.toFixed(2)}</span>`;
-    }
 
     const tr = document.createElement('tr');
     tr.className = `wl-stock-row border-b border-dark-border/40 hover:bg-dark-accent/40 cursor-pointer transition-colors ${isSelected ? 'bg-amber-500/10 border-l-2 border-amber-500' : ''}`;
@@ -3052,8 +3033,6 @@ function renderWatchlistStocks() {
         <span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold ${chgBadge}">${chgStr}</span>
       </td>
       <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">${volStr}</td>
-      <td class="py-2.5 px-2 text-center font-mono text-slate-400 text-[11px] whitespace-nowrap" title="Added on ${addedDateStr}">${addedDateStr}</td>
-      <td class="py-2.5 px-2 text-right whitespace-nowrap">${retHtml}</td>
       <td class="py-2.5 px-1 text-center">
         <button class="btn-remove-wl-stock p-1 rounded hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer" data-symbol="${stock.symbol}" title="Remove from watchlist">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
@@ -3542,7 +3521,7 @@ function applyTheme(theme) {
 function applyAppTheme(theme) {
   if (theme === 'dark') theme = 'obsidian';
   if (theme === 'light') theme = 'nordic';
-  if (!['nordic', 'warm', 'obsidian'].includes(theme)) theme = 'nordic';
+  if (!['nordic', 'warm', 'obsidian', 'matcha', 'sandstone'].includes(theme)) theme = 'nordic';
 
   state.theme = theme;
   localStorage.setItem('sangam_theme', theme);
@@ -3558,9 +3537,11 @@ function applyAppTheme(theme) {
 
   // Update body class for Option 2 themes
   if (document.body) {
-    document.body.classList.remove('theme-warm', 'theme-obsidian');
+    document.body.classList.remove('theme-warm', 'theme-obsidian', 'theme-matcha', 'theme-sandstone');
     if (theme === 'warm') document.body.classList.add('theme-warm');
     else if (theme === 'obsidian') document.body.classList.add('theme-obsidian');
+    else if (theme === 'matcha') document.body.classList.add('theme-matcha');
+    else if (theme === 'sandstone') document.body.classList.add('theme-sandstone');
   }
 
   // Update theme segmented buttons (Banner buttons)
@@ -3574,7 +3555,9 @@ function applyAppTheme(theme) {
   const activeIcon = document.getElementById('theme-active-icon');
   if (activeIcon) {
     if (theme === 'nordic') activeIcon.textContent = '🌿';
+    else if (theme === 'matcha') activeIcon.textContent = '🍵';
     else if (theme === 'warm') activeIcon.textContent = '📜';
+    else if (theme === 'sandstone') activeIcon.textContent = '🏜️';
     else activeIcon.textContent = '🌌';
   }
 
@@ -3587,9 +3570,11 @@ function applyAppTheme(theme) {
 
   // Sync native chart theme
   if (typeof applyChartTheme === 'function') {
-    if (theme === 'nordic') applyChartTheme('nordic');
-    else if (theme === 'warm') applyChartTheme('warm');
-    else applyChartTheme('obsidian');
+    if (['nordic', 'warm', 'obsidian', 'matcha', 'sandstone'].includes(theme)) {
+      applyChartTheme(theme);
+    } else {
+      applyChartTheme('obsidian');
+    }
   } else if (state.selectedStock && typeof updateNativeChartTheme === 'function') {
     updateNativeChartTheme();
   }
@@ -4974,17 +4959,19 @@ function applyActiveRangeZoom() {
   const is60m = state.activeInterval === '60m' || state.activeInterval === '1h';
 
   if (is5m) {
-    barCount = state.activeRange === '3mo' ? 75 : (state.activeRange === '6mo' ? 225 : 375);
+    barCount = state.activeRange === '3mo' ? 75 : (state.activeRange === '6mo' ? 225 : (state.activeRange === '1y' ? 375 : 500));
   } else if (is15m) {
-    barCount = state.activeRange === '3mo' ? 50 : (state.activeRange === '6mo' ? 125 : 250);
+    barCount = state.activeRange === '3mo' ? 50 : (state.activeRange === '6mo' ? 125 : (state.activeRange === '1y' ? 250 : 375));
   } else if (is60m) {
-    barCount = state.activeRange === '3mo' ? 40 : (state.activeRange === '6mo' ? 100 : 200);
+    barCount = state.activeRange === '3mo' ? 40 : (state.activeRange === '6mo' ? 100 : (state.activeRange === '1y' ? 200 : 300));
   } else if (state.activeRange === '3mo') {
     barCount = isWeekly ? 13 : 65;
   } else if (state.activeRange === '6mo') {
     barCount = isWeekly ? 26 : 130;
-  } else { // 1y / 12M
+  } else if (state.activeRange === '1y') {
     barCount = isWeekly ? 52 : 250;
+  } else { // 2y / Default (2 Years)
+    barCount = isWeekly ? 104 : 500;
   }
 
   const fromIndex = Math.max(0, totalCandles - barCount);
@@ -9218,8 +9205,27 @@ function initMarketIndicesStrip() {
   marketIndicesTimer = setInterval(fetchMarketIndices, 12000);
 }
 
+async function fetchAndRenderEodSyncStatus() {
+  try {
+    const res = await fetch(`/api/system/eod-status?t=${Date.now()}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const elText = document.getElementById('eod-sync-text');
+    const elContainer = document.getElementById('eod-sync-badge-container');
+    if (data.success && elText) {
+      const timeStr = data.lastSyncTimeIST || '4:30 PM';
+      elText.textContent = `EOD Synced: ${timeStr}`;
+      if (elContainer) {
+        elContainer.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST)`;
+      }
+    }
+  } catch (_) {}
+}
+window.fetchAndRenderEodSyncStatus = fetchAndRenderEodSyncStatus;
+
 async function fetchMarketIndices(isManual = false) {
   try {
+    fetchAndRenderEodSyncStatus();
     const url = isManual ? `/api/market-indices?refresh=true&t=${Date.now()}` : '/api/market-indices';
     const res = await fetch(url);
     if (!res.ok) return;
@@ -9238,6 +9244,7 @@ async function refreshMarketIndices(e) {
   if (btn) btn.disabled = true;
 
   try {
+    fetchAndRenderEodSyncStatus();
     const res = await fetch(`/api/market-indices?refresh=true&t=${Date.now()}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
@@ -9357,7 +9364,7 @@ function exportWatchlistToCsv() {
   }
 
   const wlName = activeWl.name || 'Watchlist';
-  const headers = ['Sr', 'Symbol', 'Name', 'LTP (INR)', 'Change (%)', 'Volume', 'Added At'];
+  const headers = ['Sr', 'Symbol', 'Name', 'LTP (INR)', 'Change (%)', 'Volume'];
   const rows = activeWl.stocks.map((s, idx) => {
     const q = state.watchlistQuotes[s.symbol] || {};
     return [
@@ -9366,8 +9373,7 @@ function exportWatchlistToCsv() {
       `"${(s.name || s.symbol || '').replace(/"/g, '""')}"`,
       q.ltp != null ? q.ltp : '',
       q.changePercent != null ? q.changePercent : '',
-      q.volume != null ? q.volume : '',
-      `"${s.addedAt || ''}"`
+      q.volume != null ? q.volume : ''
     ];
   });
 

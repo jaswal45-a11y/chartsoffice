@@ -559,8 +559,27 @@ function initMarketIndicesStrip() {
   marketIndicesTimer = setInterval(fetchMarketIndices, 12000);
 }
 
+async function fetchAndRenderEodSyncStatus() {
+  try {
+    const res = await fetch(`/api/system/eod-status?t=${Date.now()}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const elText = document.getElementById('eod-sync-text');
+    const elContainer = document.getElementById('eod-sync-badge-container');
+    if (data.success && elText) {
+      const timeStr = data.lastSyncTimeIST || '4:30 PM';
+      elText.textContent = `EOD Synced: ${timeStr}`;
+      if (elContainer) {
+        elContainer.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST)`;
+      }
+    }
+  } catch (_) {}
+}
+window.fetchAndRenderEodSyncStatus = fetchAndRenderEodSyncStatus;
+
 async function fetchMarketIndices(isManual = false) {
   try {
+    fetchAndRenderEodSyncStatus();
     const url = isManual ? `/api/market-indices?refresh=true&t=${Date.now()}` : '/api/market-indices';
     const res = await fetch(url);
     if (!res.ok) return;
@@ -579,6 +598,7 @@ async function refreshMarketIndices(e) {
   if (btn) btn.disabled = true;
 
   try {
+    fetchAndRenderEodSyncStatus();
     const res = await fetch(`/api/market-indices?refresh=true&t=${Date.now()}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
@@ -5696,7 +5716,7 @@ function applyTheme(theme) {
 function applyAppTheme(theme) {
   if (theme === 'dark') theme = 'obsidian';
   if (theme === 'light') theme = 'nordic';
-  if (!['nordic', 'warm', 'obsidian'].includes(theme)) theme = 'nordic';
+  if (!['nordic', 'warm', 'obsidian', 'matcha', 'sandstone'].includes(theme)) theme = 'nordic';
 
   state.theme = theme;
   localStorage.setItem('sangam_theme', theme);
@@ -5712,9 +5732,11 @@ function applyAppTheme(theme) {
 
   // Update body class for Option 2 themes
   if (document.body) {
-    document.body.classList.remove('theme-warm', 'theme-obsidian');
+    document.body.classList.remove('theme-warm', 'theme-obsidian', 'theme-matcha', 'theme-sandstone');
     if (theme === 'warm') document.body.classList.add('theme-warm');
     else if (theme === 'obsidian') document.body.classList.add('theme-obsidian');
+    else if (theme === 'matcha') document.body.classList.add('theme-matcha');
+    else if (theme === 'sandstone') document.body.classList.add('theme-sandstone');
   }
 
   // Update theme segmented buttons (Banner buttons)
@@ -5728,7 +5750,9 @@ function applyAppTheme(theme) {
   const activeIcon = document.getElementById('theme-active-icon');
   if (activeIcon) {
     if (theme === 'nordic') activeIcon.textContent = '🌿';
+    else if (theme === 'matcha') activeIcon.textContent = '🍵';
     else if (theme === 'warm') activeIcon.textContent = '📜';
+    else if (theme === 'sandstone') activeIcon.textContent = '🏜️';
     else activeIcon.textContent = '🌌';
   }
 
@@ -5743,6 +5767,8 @@ function applyAppTheme(theme) {
   if (typeof applyChartTheme === 'function') {
     if (theme === 'nordic') applyChartTheme('light');
     else if (theme === 'warm') applyChartTheme('paper');
+    else if (theme === 'matcha') applyChartTheme('light');
+    else if (theme === 'sandstone') applyChartTheme('paper');
     else applyChartTheme('dark');
   }
 

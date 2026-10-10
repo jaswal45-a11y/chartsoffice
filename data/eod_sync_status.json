@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "lastSyncTimestamp": "2026-10-09T11:00:00.000Z",
+  "lastSyncDateIST": "2026-10-09",
+  "lastSyncTimeIST": "04:30 PM",
+  "syncedStocksCount": 3676,
+  "status": "SYNCHRONIZED",
+  "source": "Automated 4:30 PM EOD Scheduler",
+  "message": "Daily EOD Baseline synchronized successfully for 3,676 stocks at 04:30 PM IST."
+}

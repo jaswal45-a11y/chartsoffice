@@ -141,8 +141,308 @@ html.dark:not([data-theme="nordic"]):not([data-theme="warm"]) .bg-dark-accent {
 }
 
 html[data-theme="obsidian"] .border-dark-border,
-html.dark:not([data-theme="nordic"]):not([data-theme="warm"]) .border-dark-border {
+html.dark:not([data-theme="nordic"]):not([data-theme="warm"]):not([data-theme="matcha"]):not([data-theme="sandstone"]) .border-dark-border {
   border-color: #232B3E !important;
+}
+
+/* -------------------------------------------------------------
+   THEME 4: SAGE & MATCHA ZEN (Organic Calming Light)
+   ------------------------------------------------------------- */
+html[data-theme="matcha"] body {
+  background-color: #EDF1ED;
+  color: #1A251D;
+}
+html[data-theme="matcha"] .bg-dark-bg {
+  background-color: #EDF1ED !important;
+}
+html[data-theme="matcha"] .bg-dark-card {
+  background-color: #F7FAF7 !important;
+  box-shadow: 0 1px 3px 0 rgba(26, 37, 29, 0.04);
+}
+html[data-theme="matcha"] .bg-dark-accent {
+  background-color: #E2E9E2 !important;
+}
+html[data-theme="matcha"] .border-dark-border {
+  border-color: #D5DDD5 !important;
+}
+html[data-theme="matcha"] .text-white,
+html[data-theme="matcha"] .text-slate-100 {
+  color: #1A251D !important;
+}
+html[data-theme="matcha"] .text-slate-200 {
+  color: #2D3D30 !important;
+}
+html[data-theme="matcha"] .text-slate-300 {
+  color: #3E5142 !important;
+}
+html[data-theme="matcha"] .text-slate-400 {
+  color: #526354 !important;
+}
+html[data-theme="matcha"] .text-slate-500 {
+  color: #7A8D7C !important;
+}
+html[data-theme="matcha"] input[type="text"],
+html[data-theme="matcha"] input[type="search"],
+html[data-theme="matcha"] input[type="password"],
+html[data-theme="matcha"] select,
+html[data-theme="matcha"] textarea {
+  background-color: #F7FAF7 !important;
+  color: #1A251D !important;
+  border-color: #D5DDD5 !important;
+}
+html[data-theme="matcha"] input::placeholder {
+  color: #7A8D7C !important;
+}
+html[data-theme="matcha"] #stock-autocomplete-dropdown,
+html[data-theme="matcha"] #chart-watchlist-menu,
+html[data-theme="matcha"] .dropdown-menu-card {
+  background-color: #F7FAF7 !important;
+  border-color: #D5DDD5 !important;
+  box-shadow: 0 10px 25px -5px rgba(26, 37, 29, 0.08);
+}
+html[data-theme="matcha"] .screener-card {
+  background-color: #F7FAF7 !important;
+  border-color: #D5DDD5 !important;
+}
+html[data-theme="matcha"] .screener-card:hover {
+  background-color: #EEF5EE !important;
+  border-color: #2E7D5A !important;
+  box-shadow: 0 4px 12px rgba(46, 125, 90, 0.08) !important;
+}
+html[data-theme="matcha"] .screener-card.active {
+  background-color: #E3F3EB !important;
+  border-color: #2E7D5A !important;
+  box-shadow: 0 0 0 1px #2E7D5A, 0 4px 12px rgba(46, 125, 90, 0.12) !important;
+}
+html[data-theme="matcha"] .cat-pill {
+  color: #526354;
+}
+html[data-theme="matcha"] .cat-pill:hover {
+  color: #1A251D;
+  background-color: #E2E9E2;
+}
+html[data-theme="matcha"] .cat-pill.active {
+  color: #1A251D;
+  background-color: #E2E9E2;
+  border-color: #CAD5CA;
+  font-weight: 700;
+}
+html[data-theme="matcha"] .stock-row {
+  border-color: #E1E8E1 !important;
+}
+html[data-theme="matcha"] .stock-row:hover {
+  background-color: #EEF5EE !important;
+}
+html[data-theme="matcha"] .stock-row.selected {
+  background-color: #E2EFE2 !important;
+  border-left: 3px solid #2E7D5A !important;
+}
+html[data-theme="matcha"] #pill-52w {
+  background-color: #E6EDE6 !important;
+  border-color: #D5DDD5 !important;
+  color: #1A251D !important;
+}
+html[data-theme="matcha"] .pane-resizer {
+  background-color: #D5DDD5 !important;
+  border-color: #CAD5CA !important;
+}
+html[data-theme="matcha"] .ema-box.above {
+  background-color: #E3F3EB !important;
+  color: #1F6E4A !important;
+  border: 1px solid #BEE3D0 !important;
+}
+html[data-theme="matcha"] .ema-box.below {
+  background-color: #FCEBEB !important;
+  color: #B33E3E !important;
+  border: 1px solid #F7D2D2 !important;
+}
+html[data-theme="matcha"] .ema-box.na {
+  background-color: #E6EDE6 !important;
+  color: #7A8D7C !important;
+  border: 1px solid #D5DDD5 !important;
+}
+html[data-theme="matcha"] .rec-filter-pill {
+  background-color: #E6EDE6;
+  border: 1px solid #D5DDD5;
+  color: #526354;
+}
+html[data-theme="matcha"] .rec-filter-pill:hover {
+  background-color: #E2E9E2;
+  color: #1A251D;
+}
+html[data-theme="matcha"] .rec-filter-pill.active {
+  background-color: #E3F3EB !important;
+  color: #1F6E4A !important;
+  border-color: #BEE3D0 !important;
+}
+html[data-theme="matcha"] #screener-stocks-table-container {
+  background-color: #F7FAF7 !important;
+  box-shadow: 0 1px 3px rgba(26, 37, 29, 0.04);
+}
+html[data-theme="matcha"] #market-indices-strip {
+  background-color: #F7FAF7 !important;
+  border-color: #D5DDD5 !important;
+  color: #1A251D !important;
+}
+html[data-theme="matcha"] #market-indices-strip .text-white {
+  color: #1A251D !important;
+}
+html[data-theme="matcha"] #market-indices-strip .text-slate-400 {
+  color: #526354 !important;
+}
+html[data-theme="matcha"] #theme-menu-dropdown {
+  background-color: #F7FAF7 !important;
+  border-color: #D5DDD5 !important;
+}
+
+/* -------------------------------------------------------------
+   THEME 5: SANDSTONE & CASHMERE (Warm Luxury Editorial)
+   ------------------------------------------------------------- */
+html[data-theme="sandstone"] body {
+  background-color: #F5EFEB;
+  color: #29221D;
+}
+html[data-theme="sandstone"] .bg-dark-bg {
+  background-color: #F5EFEB !important;
+}
+html[data-theme="sandstone"] .bg-dark-card {
+  background-color: #FCF9F6 !important;
+  box-shadow: 0 1px 3px 0 rgba(41, 34, 29, 0.04);
+}
+html[data-theme="sandstone"] .bg-dark-accent {
+  background-color: #EFE6DD !important;
+}
+html[data-theme="sandstone"] .border-dark-border {
+  border-color: #E4DBD2 !important;
+}
+html[data-theme="sandstone"] .text-white,
+html[data-theme="sandstone"] .text-slate-100 {
+  color: #29221D !important;
+}
+html[data-theme="sandstone"] .text-slate-200 {
+  color: #423831 !important;
+}
+html[data-theme="sandstone"] .text-slate-300 {
+  color: #554A42 !important;
+}
+html[data-theme="sandstone"] .text-slate-400 {
+  color: #6E6259 !important;
+}
+html[data-theme="sandstone"] .text-slate-500 {
+  color: #96897E !important;
+}
+html[data-theme="sandstone"] input[type="text"],
+html[data-theme="sandstone"] input[type="search"],
+html[data-theme="sandstone"] input[type="password"],
+html[data-theme="sandstone"] select,
+html[data-theme="sandstone"] textarea {
+  background-color: #FCF9F6 !important;
+  color: #29221D !important;
+  border-color: #E4DBD2 !important;
+}
+html[data-theme="sandstone"] input::placeholder {
+  color: #96897E !important;
+}
+html[data-theme="sandstone"] #stock-autocomplete-dropdown,
+html[data-theme="sandstone"] #chart-watchlist-menu,
+html[data-theme="sandstone"] .dropdown-menu-card {
+  background-color: #FCF9F6 !important;
+  border-color: #E4DBD2 !important;
+  box-shadow: 0 10px 25px -5px rgba(41, 34, 29, 0.08);
+}
+html[data-theme="sandstone"] .screener-card {
+  background-color: #FCF9F6 !important;
+  border-color: #E4DBD2 !important;
+}
+html[data-theme="sandstone"] .screener-card:hover {
+  background-color: #F0E7DF !important;
+  border-color: #B46533 !important;
+  box-shadow: 0 4px 12px rgba(180, 101, 51, 0.08) !important;
+}
+html[data-theme="sandstone"] .screener-card.active {
+  background-color: #F7ECE4 !important;
+  border-color: #B46533 !important;
+  box-shadow: 0 0 0 1px #B46533, 0 4px 12px rgba(180, 101, 51, 0.12) !important;
+}
+html[data-theme="sandstone"] .cat-pill {
+  color: #6E6259;
+}
+html[data-theme="sandstone"] .cat-pill:hover {
+  color: #29221D;
+  background-color: #EFE6DD;
+}
+html[data-theme="sandstone"] .cat-pill.active {
+  color: #29221D;
+  background-color: #EFE6DD;
+  border-color: #D8CCC0;
+  font-weight: 700;
+}
+html[data-theme="sandstone"] .stock-row {
+  border-color: #ECE4DC !important;
+}
+html[data-theme="sandstone"] .stock-row:hover {
+  background-color: #F0E7DF !important;
+}
+html[data-theme="sandstone"] .stock-row.selected {
+  background-color: #E8DDD3 !important;
+  border-left: 3px solid #B46533 !important;
+}
+html[data-theme="sandstone"] #pill-52w {
+  background-color: #EFE6DD !important;
+  border-color: #E4DBD2 !important;
+  color: #29221D !important;
+}
+html[data-theme="sandstone"] .pane-resizer {
+  background-color: #E4DBD2 !important;
+  border-color: #D8CCC0 !important;
+}
+html[data-theme="sandstone"] .ema-box.above {
+  background-color: #E4EDE6 !important;
+  color: #2C6B46 !important;
+  border: 1px solid #C6DEC9 !important;
+}
+html[data-theme="sandstone"] .ema-box.below {
+  background-color: #FAE8E6 !important;
+  color: #A83E36 !important;
+  border: 1px solid #F5CAC7 !important;
+}
+html[data-theme="sandstone"] .ema-box.na {
+  background-color: #EFE6DD !important;
+  color: #96897E !important;
+  border: 1px solid #E4DBD2 !important;
+}
+html[data-theme="sandstone"] .rec-filter-pill {
+  background-color: #EFE6DD;
+  border: 1px solid #E4DBD2;
+  color: #6E6259;
+}
+html[data-theme="sandstone"] .rec-filter-pill:hover {
+  background-color: #EAE0D6;
+  color: #29221D;
+}
+html[data-theme="sandstone"] .rec-filter-pill.active {
+  background-color: #E4EDE6 !important;
+  color: #2C6B46 !important;
+  border-color: #C6DEC9 !important;
+}
+html[data-theme="sandstone"] #screener-stocks-table-container {
+  background-color: #FCF9F6 !important;
+  box-shadow: 0 1px 3px rgba(41, 34, 29, 0.04);
+}
+html[data-theme="sandstone"] #market-indices-strip {
+  background-color: #FCF9F6 !important;
+  border-color: #E4DBD2 !important;
+  color: #29221D !important;
+}
+html[data-theme="sandstone"] #market-indices-strip .text-white {
+  color: #29221D !important;
+}
+html[data-theme="sandstone"] #market-indices-strip .text-slate-400 {
+  color: #6E6259 !important;
+}
+html[data-theme="sandstone"] #theme-menu-dropdown {
+  background-color: #FCF9F6 !important;
+  border-color: #E4DBD2 !important;
 }
 
 /* Input & Select Controls for all 3 themes */
@@ -1382,6 +1682,92 @@ html.dark:not([data-theme="nordic"]):not([data-theme="warm"]) body {
   --row-selected: #212D42;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-float: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-matcha,
+html[data-theme="matcha"],
+html[data-theme="matcha"] body {
+  /* THEME 4: SAGE & MATCHA ZEN (Organic Calming Light) */
+  --bg-page: #EDF1ED;
+  --bg-card: #F7FAF7;
+  --bg-surface: #F7FAF7;
+  --bg-subtle: #E6EDE6;
+  --border-color: #D5DDD5;
+  --border-subtle: #E1E8E1;
+
+  --text-main: #1A251D;
+  --text-secondary: #526354;
+  --text-muted: #7A8D7C;
+
+  --pos-bg: #E3F3EB;
+  --pos-text: #1F6E4A;
+  --pos-border: #BEE3D0;
+  --pos-chart: #2E7D5A;
+
+  --neg-bg: #FCEBEB;
+  --neg-text: #B33E3E;
+  --neg-border: #F7D2D2;
+  --neg-chart: #D34545;
+
+  --neutral-bg: #F8F4DF;
+  --neutral-text: #7B681C;
+
+  --accent: #2E7D5A;
+  --accent-subtle: #E3F3EB;
+  --accent-border: #BEE3D0;
+
+  --ema-10: #1F6E4A;
+  --ema-20: #2E7D5A;
+  --ema-50: #C2802B;
+  --ema-150: #6B4E8C;
+
+  --row-hover: #EEF5EE;
+  --row-selected: #E2EFE2;
+  --shadow-card: 0 1px 3px rgba(26, 37, 29, 0.04);
+  --shadow-float: 0 10px 15px -3px rgba(26, 37, 29, 0.08);
+}
+
+body.theme-sandstone,
+html[data-theme="sandstone"],
+html[data-theme="sandstone"] body {
+  /* THEME 5: SANDSTONE & CASHMERE (Warm Luxury Editorial) */
+  --bg-page: #F5EFEB;
+  --bg-card: #FCF9F6;
+  --bg-surface: #FCF9F6;
+  --bg-subtle: #EFE6DD;
+  --border-color: #E4DBD2;
+  --border-subtle: #ECE4DC;
+
+  --text-main: #29221D;
+  --text-secondary: #6E6259;
+  --text-muted: #96897E;
+
+  --pos-bg: #E4EDE6;
+  --pos-text: #2C6B46;
+  --pos-border: #C6DEC9;
+  --pos-chart: #357C52;
+
+  --neg-bg: #FAE8E6;
+  --neg-text: #A83E36;
+  --neg-border: #F5CAC7;
+  --neg-chart: #C2453C;
+
+  --neutral-bg: #FAF1DF;
+  --neutral-text: #7C5E20;
+
+  --accent: #B46533;
+  --accent-subtle: #F7ECE4;
+  --accent-border: #E8D0C0;
+
+  --ema-10: #2C6B46;
+  --ema-20: #386F9A;
+  --ema-50: #B46533;
+  --ema-150: #784E88;
+
+  --row-hover: #F0E7DF;
+  --row-selected: #E8DDD3;
+  --shadow-card: 0 1px 3px rgba(41, 34, 29, 0.04);
+  --shadow-float: 0 10px 15px -3px rgba(41, 34, 29, 0.08);
 }
 
 /* Base Body Styling */

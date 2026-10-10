@@ -169,10 +169,37 @@
           </div>
         </div>
 
-        <!-- Theme Toggle Button -->
-        <button id="btn-theme-toggle" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-amber-400 transition-colors cursor-pointer" title="Toggle Light/Dark Theme">
-          <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
-        </button>
+        <!-- Theme / Palette Selector Dropdown -->
+        <div class="relative" id="theme-dropdown-container">
+          <button id="btn-theme-toggle" onclick="toggleThemeDropdown(event)" class="p-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-1.5" title="Theme Palette">
+            <i data-lucide="sun" id="theme-icon" class="w-3.5 h-3.5"></i>
+            <span id="theme-active-icon" class="text-xs">🌿</span>
+          </button>
+
+          <div id="theme-menu-dropdown" class="hidden absolute right-0 top-full mt-1.5 w-48 dropdown-menu-card z-50 p-1.5 shadow-xl border rounded-xl flex flex-col gap-1">
+            <div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Select Palette</div>
+            <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="nordic" onclick="applyAppTheme('nordic')">
+              <span class="flex items-center gap-2"><span>🌿</span><span>Nordic Clean</span></span>
+              <span class="theme-check-mark text-emerald-500 font-bold">✓</span>
+            </button>
+            <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="matcha" onclick="applyAppTheme('matcha')">
+              <span class="flex items-center gap-2"><span>🍵</span><span>Sage & Matcha Zen</span></span>
+              <span class="theme-check-mark text-emerald-500 font-bold hidden">✓</span>
+            </button>
+            <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="warm" onclick="applyAppTheme('warm')">
+              <span class="flex items-center gap-2"><span>📜</span><span>Warm Paper</span></span>
+              <span class="theme-check-mark text-emerald-500 font-bold hidden">✓</span>
+            </button>
+            <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="sandstone" onclick="applyAppTheme('sandstone')">
+              <span class="flex items-center gap-2"><span>🏜️</span><span>Sandstone & Cashmere</span></span>
+              <span class="theme-check-mark text-emerald-500 font-bold hidden">✓</span>
+            </button>
+            <button type="button" class="theme-choice-btn w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-left flex items-center justify-between hover:bg-slate-500/15 cursor-pointer transition-colors" data-choice="obsidian" onclick="applyAppTheme('obsidian')">
+              <span class="flex items-center gap-2"><span>🌌</span><span>Midnight Obsidian</span></span>
+              <span class="theme-check-mark text-emerald-500 font-bold hidden">✓</span>
+            </button>
+          </div>
+        </div>
 
       </div>
 
@@ -218,6 +245,11 @@
       <span style="opacity: 0.3;">|</span>
       <span id="market-status-dot" class="feed-dot"></span>
       <span id="market-status-text">NSE Market Live</span>
+      <span style="opacity: 0.3;">|</span>
+      <div id="eod-sync-badge-container" class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold cursor-help" title="Daily End-Of-Day Baseline Calculation Status">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="eod-sync-text">EOD Synced: 4:30 PM</span>
+      </div>
     </div>
   </div>
 
