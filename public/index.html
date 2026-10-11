@@ -475,6 +475,15 @@
               <span id="wl-capacity-label">0 of 500 stocks filled</span>
               <span id="wl-slots-left" class="text-amber-400 font-semibold">500 slots free</span>
             </div>
+
+            <!-- Watchlist Quick Filter Pills (All Stocks / EMAs Aligned) -->
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-dark-border/40">
+              <div class="rec-filter-strip" id="wl-filter-pills-bar">
+                <button data-wlfilter="all" class="rec-pill active" onclick="setWatchlistFilter('all')">All Stocks</button>
+                <button data-wlfilter="emas-aligned" class="rec-pill" onclick="setWatchlistFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
+              </div>
+              <span id="wl-visible-count" class="text-[10px] text-amber-400/90 font-mono font-semibold" title="Visible Stocks in Watchlist"></span>
+            </div>
           </div>
 
           <!-- Watchlist Stocks Table Container -->
@@ -893,6 +902,8 @@
                 placeholder="STOCK..." 
                 autocomplete="off"
                 spellcheck="false"
+                onclick="this.select()"
+                onfocus="this.select()"
                 class="stock-sym-header font-mono uppercase bg-transparent border-0 p-0 focus:outline-none cursor-pointer"
                 style="min-width: 100px; max-width: 220px;"
                 title="Type any stock name or symbol (e.g. TATA, INFY, HDFC)"
@@ -953,9 +964,9 @@
             <span style="opacity: 0.3; margin: 0 4px;">|</span>
             <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mr-1 select-none hidden sm:inline">Range:</span>
             <button class="tf-btn range-btn" data-range="3mo" title="3 Months">3M</button>
-            <button class="tf-btn range-btn" data-range="6mo" title="6 Months">6M</button>
+            <button class="tf-btn range-btn active" data-range="6mo" title="6 Months (Default)">6M</button>
             <button class="tf-btn range-btn" data-range="1y" title="1 Year">1Y</button>
-            <button class="tf-btn range-btn active" data-range="2y" title="2 Years (Default)">2Y</button>
+            <button class="tf-btn range-btn" data-range="2y" title="2 Years">2Y</button>
           </div>
 
           <!-- Chart External Links & Fullscreen Maximize -->

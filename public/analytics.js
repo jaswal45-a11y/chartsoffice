@@ -314,7 +314,7 @@ const state = {
   },
   chartTheme: localStorage.getItem('chart_theme') || 'dark',
   activeInterval: '1d',
-  activeRange: '1y',
+  activeRange: '6mo',
   volOverlayMode: 'volintel',
   toggles: {
     ema10: true,
@@ -566,12 +566,16 @@ async function fetchAndRenderEodSyncStatus() {
     const data = await res.json();
     const elText = document.getElementById('eod-sync-text');
     const elContainer = document.getElementById('eod-sync-badge-container');
-    if (data.success && elText) {
+    const elExploreText = document.getElementById('explore-eod-sync-text');
+    const elExploreBadge = document.getElementById('explore-eod-sync-badge');
+
+    if (data.success) {
       const timeStr = data.lastSyncTimeIST || '4:30 PM';
-      elText.textContent = `EOD Synced: ${timeStr}`;
-      if (elContainer) {
-        elContainer.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST)`;
-      }
+      const tooltipMsg = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} universe stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST)`;
+      if (elText) elText.textContent = `EOD Synced: ${timeStr}`;
+      if (elContainer) elContainer.title = tooltipMsg;
+      if (elExploreText) elExploreText.textContent = `EOD Baseline: ${timeStr}`;
+      if (elExploreBadge) elExploreBadge.title = tooltipMsg;
     }
   } catch (_) {}
 }
@@ -4535,10 +4539,17 @@ function setupPredictiveSearch() {
     }, 120);
   });
 
+  // Focus event: show suggestions if input already has text & auto-select all text
   input.addEventListener('focus', () => {
+    try { input.select(); } catch (err) {}
     if (input.value.trim().length >= 1) {
       fetchSuggestions(input.value);
     }
+  });
+
+  // Click event: always select the entire stock text so user can immediately type to replace it
+  input.addEventListener('click', () => {
+    try { input.select(); } catch (err) {}
   });
 
   input.addEventListener('keydown', (e) => {
@@ -7372,7 +7383,7 @@ function applyExploreFilters() {
 
   // 3. Custom RSI Filter: strictly RSI > user input value
   if (f.rsiMin !== null && !isNaN(f.rsiMin)) {
-    list = list.filter(s => typeof s.rsi === 'number' && s.rsi > f.rsiMin);
+    list = list.filter(s => typeof s.rsi === 'number' && s.rsi !== 50 && s.rsi !== 50.0 && s.rsi > f.rsiMin);
   }
 
   // 4. RVOL Lookback & Multiplier
@@ -7816,7 +7827,7 @@ function fetchTechnicalsForVisibleStocks(stocks) {
   if (!Array.isArray(stocks) || stocks.length === 0) return;
   if (visibleTechnicalsTimer) clearTimeout(visibleTechnicalsTimer);
   visibleTechnicalsTimer = setTimeout(async () => {
-    const uncomputed = stocks.filter(s => s && (s.rsi == null || s.ema10 == null));
+    const uncomputed = stocks.filter(s => s && (s.rsi == null || s.rsi === 50 || s.rsi === 50.0 || s.ema10 == null));
     if (uncomputed.length === 0) return;
     const targetBatch = uncomputed.slice(0, 25).map(s => s.symbol.toUpperCase());
     try {

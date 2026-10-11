@@ -122,7 +122,7 @@ const state = {
   selectedStock: null,
   currentStockData: null,
   activeInterval: '1d', // '1d' or '1wk'
-  activeRange: '2y', // '3mo', '6mo', '1y', '2y' (Default 2 Years)
+  activeRange: '6mo', // '3mo', '6mo', '1y', '2y' (Default 6 Months)
   filterMc1000: false, // Filter stocks with Market Cap > 1000 Cr
   filterMc2000: false, // Filter stocks with Market Cap > 2000 Cr
   searchQuery: '',
@@ -300,6 +300,7 @@ const state = {
     emas: true
   },
   recFilter: 'all',
+  watchlistFilter: 'all',
 
   globalDateRay: {
     active: false,
@@ -2924,6 +2925,65 @@ function formatWatchlistDate(isoStr) {
   }
 }
 
+function isStockEmaAligned(stock, quote = null) {
+  if (!stock) return false;
+  const q = quote || state.watchlistQuotes?.[stock.symbol] || {};
+  const u = (Array.isArray(state.universeStocks) ? state.universeStocks.find(s => s && s.symbol === stock.symbol) : null) || {};
+  
+  const close = (typeof q.ltp === 'number' && q.ltp > 0) ? q.ltp 
+    : ((typeof stock.close === 'number' && stock.close > 0) ? stock.close 
+    : ((typeof stock.price === 'number' && stock.price > 0) ? stock.price 
+    : ((typeof u.close === 'number' && u.close > 0) ? u.close : 0)));
+  
+  if (close <= 0) return false;
+
+  const e10 = (typeof q.ema10 === 'number') ? q.ema10 
+    : ((typeof stock.ema10 === 'number') ? stock.ema10 
+    : (stock.emas && typeof stock.emas[10] === 'number' ? stock.emas[10] 
+    : ((typeof u.ema10 === 'number') ? u.ema10 : null)));
+
+  const e20 = (typeof q.ema20 === 'number') ? q.ema20 
+    : ((typeof stock.ema20 === 'number') ? stock.ema20 
+    : (stock.emas && typeof stock.emas[20] === 'number' ? stock.emas[20] 
+    : ((typeof u.ema20 === 'number') ? u.ema20 : null)));
+
+  const e50 = (typeof q.ema50 === 'number') ? q.ema50 
+    : ((typeof stock.ema50 === 'number') ? stock.ema50 
+    : (stock.emas && typeof stock.emas[50] === 'number' ? stock.emas[50] 
+    : ((typeof u.ema50 === 'number') ? u.ema50 : null)));
+
+  const e150 = (typeof q.ema150 === 'number') ? q.ema150 
+    : ((typeof stock.ema150 === 'number') ? stock.ema150 
+    : (stock.emas && typeof stock.emas[150] === 'number' ? stock.emas[150] 
+    : ((typeof u.ema150 === 'number') ? u.ema150 : null)));
+
+  const hasAllEmas = (e10 != null && e20 != null && e50 != null && e150 != null);
+  const hasAnyEma = (e10 != null || e20 != null || e50 != null || e150 != null);
+
+  if (!hasAnyEma) return false;
+
+  if (hasAllEmas) {
+    return (close > e10) && (e10 > e20) && (e20 > e50) && (e50 > e150);
+  } else if (e10 != null && e20 != null) {
+    if (close <= e10 || e10 <= e20) return false;
+    if (e50 != null && e20 <= e50) return false;
+    return true;
+  }
+  return false;
+}
+
+function setWatchlistFilter(filterKey) {
+  state.watchlistFilter = filterKey || 'all';
+  document.querySelectorAll('#wl-filter-pills-bar .rec-pill').forEach(btn => {
+    if (btn.dataset.wlfilter === state.watchlistFilter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  renderWatchlistStocks();
+}
+
 function renderWatchlistStocks() {
   if (!el.watchlistTbody) return;
   el.watchlistTbody.innerHTML = '';
@@ -2965,12 +3025,48 @@ function renderWatchlistStocks() {
         </td>
       </tr>
     `;
+    const wlVisibleCountEl = document.getElementById('wl-visible-count');
+    if (wlVisibleCountEl) wlVisibleCountEl.textContent = '0 stocks';
+    lucide.createIcons();
+    return;
+  }
+
+  // Filter stocks according to active watchlist filter (e.g. EMAs Aligned)
+  let stocksToRender = [...activeWl.stocks];
+  if (state.watchlistFilter === 'emas-aligned') {
+    stocksToRender = stocksToRender.filter(stock => isStockEmaAligned(stock, state.watchlistQuotes[stock.symbol]));
+  }
+
+  // Update visible count badge
+  const wlVisibleCountEl = document.getElementById('wl-visible-count');
+  if (wlVisibleCountEl) {
+    if (state.watchlistFilter && state.watchlistFilter !== 'all') {
+      wlVisibleCountEl.textContent = `${stocksToRender.length} / ${activeWl.stocks.length}`;
+      wlVisibleCountEl.title = `Showing ${stocksToRender.length} of ${activeWl.stocks.length} stocks matching EMAs Aligned`;
+    } else {
+      wlVisibleCountEl.textContent = `${activeWl.stocks.length} stocks`;
+      wlVisibleCountEl.title = `Total stocks in watchlist: ${activeWl.stocks.length}`;
+    }
+  }
+
+  if (stocksToRender.length === 0) {
+    el.watchlistTbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="py-12 text-center text-slate-500">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <i data-lucide="filter" class="w-6 h-6 text-slate-600"></i>
+            <p class="text-xs font-semibold text-slate-300">No stocks match "${state.watchlistFilter === 'emas-aligned' ? 'EMAs Aligned' : state.watchlistFilter}"</p>
+            <button type="button" onclick="setWatchlistFilter('all')" class="text-[11px] text-amber-400 hover:underline cursor-pointer">Show all ${activeWl.stocks.length} stocks</button>
+          </div>
+        </td>
+      </tr>
+    `;
     lucide.createIcons();
     return;
   }
 
   // Clone and sort stocks
-  const sortedStocks = [...activeWl.stocks];
+  const sortedStocks = [...stocksToRender];
 
   sortedStocks.sort((a, b) => {
     const quoteA = state.watchlistQuotes[a.symbol] || {};
@@ -3697,6 +3793,8 @@ function setupEventListeners() {
 
   // Dynamic Adaptive Input Width on Manual Stock Input
   el.manualStockInput?.addEventListener('input', adjustStockInputWidth);
+  el.manualStockInput?.addEventListener('focus', function() { try { this.select(); } catch(e){} });
+  el.manualStockInput?.addEventListener('click', function() { try { this.select(); } catch(e){} });
 
   // Global Keyboard Arrow Navigation (↑ / ↓)
   setupKeyboardNavigation();
@@ -3735,6 +3833,8 @@ function setupEventListeners() {
   }
 
   // Stock Search Filter
+  el.stockSearchInput?.addEventListener('focus', function() { try { this.select(); } catch(e){} });
+  el.stockSearchInput?.addEventListener('click', function() { try { this.select(); } catch(e){} });
   el.stockSearchInput?.addEventListener('input', e => {
     state.searchQuery = e.target.value.toLowerCase().trim();
     renderStocksTable();
@@ -5540,11 +5640,17 @@ function setupPredictiveSearch() {
     }, 120);
   });
 
-  // Focus event: show suggestions if input already has text
+  // Focus event: show suggestions if input already has text & auto-select all text
   input.addEventListener('focus', () => {
+    try { input.select(); } catch (err) {}
     if (input.value.trim().length >= 1) {
       fetchSuggestions(input.value);
     }
+  });
+
+  // Click event: always select the entire stock text so user can immediately type to replace it
+  input.addEventListener('click', () => {
+    try { input.select(); } catch (err) {}
   });
 
   // Keyboard navigation
@@ -5754,11 +5860,17 @@ function setupWatchlistPredictiveSearch() {
     }, 120);
   });
 
-  // Focus event: show suggestions if input already has text
+  // Focus event: show suggestions if input already has text & select all
   input.addEventListener('focus', () => {
+    try { input.select(); } catch (err) {}
     if (input.value.trim().length >= 1) {
       fetchSuggestions(input.value);
     }
+  });
+
+  // Click event: select all text on click
+  input.addEventListener('click', () => {
+    try { input.select(); } catch (err) {}
   });
 
   // Keyboard navigation
@@ -6753,9 +6865,14 @@ function adjustStockInputWidth() {
 
 function handleCopyStocks() {
   let list = [];
+  let filterContext = '';
   if (state.activeSidebarTab === 'watchlists') {
     const activeWl = getActiveWatchlist();
-    list = activeWl ? activeWl.stocks || [] : [];
+    list = activeWl ? [...(activeWl.stocks || [])] : [];
+    if (state.watchlistFilter === 'emas-aligned') {
+      list = list.filter(stock => isStockEmaAligned(stock, state.watchlistQuotes[stock.symbol]));
+      filterContext = ' (EMAs Aligned)';
+    }
   } else if (state.activeSidebarTab === 'pricescan') {
     list = (state.pricescanResults || []).filter(stock => {
       if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
@@ -6766,16 +6883,27 @@ function handleCopyStocks() {
     list = (state.currentStocks || []).filter(stock => {
       if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
       if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
-      if (!state.searchQuery) return true;
-      const q = state.searchQuery;
-      const sym = (stock.symbol || '').toLowerCase();
-      const name = (stock.name || '').toLowerCase();
-      return sym.includes(q) || name.includes(q);
+      if (state.searchQuery) {
+        const q = state.searchQuery.toLowerCase();
+        const sym = (stock.symbol || '').toLowerCase();
+        const name = (stock.name || '').toLowerCase();
+        const sector = (stock.sector || '').toLowerCase();
+        if (!sym.includes(q) && !name.includes(q) && !sector.includes(q)) return false;
+      }
+      if (state.recFilter && state.recFilter !== 'all') {
+        if (state.recFilter === 'emas-aligned') {
+          return isStockEmaAligned(stock);
+        }
+      }
+      return true;
     });
+    if (state.recFilter && state.recFilter !== 'all') {
+      filterContext = ` (${state.recFilter.toUpperCase()})`;
+    }
   }
 
   if (!list || list.length === 0) {
-    showToast('No stocks available to copy', 'error');
+    showToast('No stocks available to copy matching current filter', 'error');
     return;
   }
 
@@ -6783,7 +6911,7 @@ function handleCopyStocks() {
   const textToCopy = symbols.join(', ');
 
   const copySuccess = () => {
-    showToast(`Copied ${symbols.length} stock symbols! (Ready for TradingView / Dhan / Chartink)`, 'success');
+    showToast(`Copied ${symbols.length} stock symbols${filterContext}! (Ready for TradingView / Dhan / Chartink)`, 'success');
   };
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -8818,35 +8946,8 @@ function renderStocksTable() {
 
     // 3. Recommended Filter Quick Pills (EMAs Aligned)
     if (state.recFilter && state.recFilter !== 'all') {
-      const close = (typeof stock.close === 'number' && stock.close > 0) ? stock.close : ((typeof stock.price === 'number' && stock.price > 0) ? stock.price : 0);
-      const chg = typeof stock.changePercent === 'number' ? stock.changePercent : parseFloat(stock.changePercent || 0);
-      const isBullStock = chg >= 0;
-
-      // Real EMA values calculation for filter (Strictly real math, no synthetic multipliers)
-      const e10 = (typeof stock.ema10 === 'number') ? stock.ema10 : (stock.emas && typeof stock.emas[10] === 'number' ? stock.emas[10] : null);
-      const e20 = (typeof stock.ema20 === 'number') ? stock.ema20 : (stock.emas && typeof stock.emas[20] === 'number' ? stock.emas[20] : null);
-      const e50 = (typeof stock.ema50 === 'number') ? stock.ema50 : (stock.emas && typeof stock.emas[50] === 'number' ? stock.emas[50] : null);
-      const e150 = (typeof stock.ema150 === 'number') ? stock.ema150 : (stock.emas && typeof stock.emas[150] === 'number' ? stock.emas[150] : null);
-
       if (state.recFilter === 'emas-aligned') {
-        const hasAllEmas = (e10 != null && e20 != null && e50 != null && e150 != null);
-        const hasAnyEma = (e10 != null || e20 != null || e50 != null || e150 != null);
-
-        // Stocks with no candle/EMA data at all or zero price are excluded from EMAs Aligned
-        if (!hasAnyEma || close <= 0) return false;
-
-        if (hasAllEmas) {
-          // If all 4 EMAs are available, apply strict EMA aligned filter:
-          // Price > 10 EMA AND 10 EMA > 20 EMA AND 20 EMA > 50 EMA AND 50 EMA > 150 EMA
-          const isFullyAligned = (close > e10) && (e10 > e20) && (e20 > e50) && (e50 > e150);
-          if (!isFullyAligned) return false;
-        } else if (e10 != null && e20 != null) {
-          // If all 4 EMAs are not available (e.g. IPOs with <150 bars), ensure available EMAs are strictly aligned
-          if (close <= e10 || e10 <= e20) return false;
-          if (e50 != null && e20 <= e50) return false;
-        } else {
-          return false;
-        }
+        if (!isStockEmaAligned(stock)) return false;
       }
     }
 
@@ -9304,12 +9405,37 @@ function exportToCsv() {
     return;
   }
 
-  const screenerName = state.isAggregatedMode 
+  // Filter currentStocks according to active filters (Market cap, search, EMAs aligned)
+  let list = (state.currentStocks || []).filter(stock => {
+    if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
+    if (state.filterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+    if (state.searchQuery) {
+      const q = state.searchQuery.toLowerCase();
+      const sym = (stock.symbol || '').toLowerCase();
+      const name = (stock.name || '').toLowerCase();
+      const sector = (stock.sector || '').toLowerCase();
+      if (!sym.includes(q) && !name.includes(q) && !sector.includes(q)) return false;
+    }
+    if (state.recFilter && state.recFilter !== 'all') {
+      if (state.recFilter === 'emas-aligned') {
+        return isStockEmaAligned(stock);
+      }
+    }
+    return true;
+  });
+
+  if (!list || list.length === 0) {
+    showToast('No stocks matching current filter to export', 'error');
+    return;
+  }
+
+  const baseScreenerName = state.isAggregatedMode 
     ? 'All_Screeners_Confluence' 
     : (state.screeners.find(s => s.id === state.activeScreenerId)?.name || 'Screener_Results');
+  const screenerName = state.recFilter === 'emas-aligned' ? `${baseScreenerName}_EMAs_Aligned` : baseScreenerName;
 
   const headers = ['Sr', 'Symbol', 'Name', 'Close Price (INR)', 'Change (%)', 'Volume', 'Confluence Count'];
-  const rows = state.currentStocks.map((s, idx) => [
+  const rows = list.map((s, idx) => [
     idx + 1,
     `"${s.symbol}"`,
     `"${(s.name || '').replace(/"/g, '""')}"`,
@@ -9328,15 +9454,25 @@ function exportToCsv() {
   link.click();
   document.body.removeChild(link);
 
-  showToast('Exported results to CSV successfully', 'success');
+  showToast(`Exported ${list.length} results to CSV successfully`, 'success');
 }
 
 function handleCopyWatchlistStocks() {
   const activeWl = getActiveWatchlist();
-  const list = activeWl ? activeWl.stocks || [] : [];
+  if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
+    showToast('No stocks in current watchlist to copy', 'error');
+    return;
+  }
+
+  let list = [...activeWl.stocks];
+  let filterContext = '';
+  if (state.watchlistFilter === 'emas-aligned') {
+    list = list.filter(stock => isStockEmaAligned(stock, state.watchlistQuotes[stock.symbol]));
+    filterContext = ' (EMAs Aligned)';
+  }
 
   if (!list || list.length === 0) {
-    showToast('No stocks in current watchlist to copy', 'error');
+    showToast(`No stocks in "${activeWl.name}" match EMAs Aligned to copy`, 'error');
     return;
   }
 
@@ -9344,7 +9480,7 @@ function handleCopyWatchlistStocks() {
   const textToCopy = symbols.join(', ');
 
   const copySuccess = () => {
-    showToast(`Copied ${symbols.length} symbols from "${activeWl.name}"! (Ready for TradingView / Dhan / Chartink)`, 'success');
+    showToast(`Copied ${symbols.length} symbols from "${activeWl.name}"${filterContext}! (Ready for TradingView / Dhan / Chartink)`, 'success');
   };
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -9363,9 +9499,20 @@ function exportWatchlistToCsv() {
     return;
   }
 
-  const wlName = activeWl.name || 'Watchlist';
+  let list = [...activeWl.stocks];
+  if (state.watchlistFilter === 'emas-aligned') {
+    list = list.filter(stock => isStockEmaAligned(stock, state.watchlistQuotes[stock.symbol]));
+  }
+
+  if (!list || list.length === 0) {
+    showToast('No stocks matching current filter to export', 'error');
+    return;
+  }
+
+  const baseWlName = activeWl.name || 'Watchlist';
+  const wlName = state.watchlistFilter === 'emas-aligned' ? `${baseWlName}_EMAs_Aligned` : baseWlName;
   const headers = ['Sr', 'Symbol', 'Name', 'LTP (INR)', 'Change (%)', 'Volume'];
-  const rows = activeWl.stocks.map((s, idx) => {
+  const rows = list.map((s, idx) => {
     const q = state.watchlistQuotes[s.symbol] || {};
     return [
       idx + 1,
@@ -9386,7 +9533,7 @@ function exportWatchlistToCsv() {
   link.click();
   document.body.removeChild(link);
 
-  showToast(`Exported "${wlName}" (${activeWl.stocks.length} stocks) to CSV successfully`, 'success');
+  showToast(`Exported "${wlName}" (${list.length} stocks) to CSV successfully`, 'success');
 }
 
 // -------------------------------------------------------------
@@ -11792,6 +11939,8 @@ window.refreshJournalBadgeCount = refreshJournalBadgeCount;
 // High-Density ScreeningMantis Layout & Columns Window Exports
 window.handleWatchlistDotClick = handleWatchlistDotClick;
 window.setRecommendedFilter = setRecommendedFilter;
+window.setWatchlistFilter = setWatchlistFilter;
+window.isStockEmaAligned = isStockEmaAligned;
 window.openColumnsCustomizerModal = openColumnsCustomizerModal;
 window.closeColumnsCustomizerModal = closeColumnsCustomizerModal;
 window.handleColumnToggle = handleColumnToggle;

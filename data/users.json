@@ -575,11 +575,6 @@
             "addedAt": "2026-09-10T17:27:13.336Z"
           },
           {
-            "symbol": "INOXGREEN",
-            "name": "INOXGREEN",
-            "addedAt": "2026-09-10T17:27:13.336Z"
-          },
-          {
             "symbol": "SAMHI",
             "name": "SAMHI",
             "addedAt": "2026-09-10T17:27:13.337Z"
@@ -1890,12 +1885,6 @@
             "name": "Adani Ports & SEZ Limited",
             "addedAt": "2026-10-09T12:10:50.334Z",
             "addedPrice": 1761
-          },
-          {
-            "symbol": "SUNCLAY",
-            "name": "Sundaram Clayton Ltd",
-            "addedAt": "2026-10-09T12:10:50.334Z",
-            "addedPrice": 1224.4
           },
           {
             "symbol": "CYIENT",
@@ -3403,7 +3392,7 @@
       },
       {
         "id": "wl_mtqwp61t_2",
-        "name": "RANGE",
+        "name": "RANGEme",
         "stocks": [
           {
             "symbol": "CRAFTSMAN",
@@ -3554,8 +3543,2740 @@
             "symbol": "KANOHAR",
             "name": "KANOHAR",
             "addedAt": "2026-09-19T01:25:29.298Z"
+          },
+          {
+            "symbol": "SOLARINDS",
+            "name": "Solar Industries India Limited",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 20000
+          },
+          {
+            "symbol": "APARINDS",
+            "name": "Apar Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 17984
+          },
+          {
+            "symbol": "MTARTECH",
+            "name": "MTAR Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 7781.5
+          },
+          {
+            "symbol": "ALKEM",
+            "name": "Alkem Laboratories Limited",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 5279
+          },
+          {
+            "symbol": "RADICO",
+            "name": "RADICO Limited",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 4550
+          },
+          {
+            "symbol": "SUPREMEIND",
+            "name": "SUPREME INDUSTRIES LIMITED",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 3474.8
+          },
+          {
+            "symbol": "MCX",
+            "name": "Multi Commodity Exchange of India",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 3318.2
+          },
+          {
+            "symbol": "BSE",
+            "name": "BSE Limited",
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 3287.2
+          },
+          {
+            "symbol": "KMEW",
+            "name": "Knowledge Marine & Engineering Works Ltd",
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 3207.8
+          },
+          {
+            "symbol": "GLAND",
+            "name": "Gland Pharma Ltd",
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 3061.8
+          },
+          {
+            "symbol": "CARTRADE",
+            "name": "Cartrade Tech Ltd",
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 2951
+          },
+          {
+            "symbol": "TRENT",
+            "name": "Trent Limited",
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 2918.2
+          },
+          {
+            "symbol": "AZAD",
+            "name": "Azad Engineering Ltd",
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 2910.2
+          },
+          {
+            "symbol": "VINDHYATEL",
+            "name": "Vindhya Telelinks Limited",
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2814.4
+          },
+          {
+            "symbol": "RRKABEL",
+            "name": "R R Kabel Limited",
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2705.6
+          },
+          {
+            "symbol": "WELCORP",
+            "name": "Welspun Corp Limited",
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2640.4
+          },
+          {
+            "symbol": "SRF",
+            "name": "SRF Limited",
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2519.5
+          },
+          {
+            "symbol": "GALAXYSURF",
+            "name": "Galaxy Surfactants Ltd",
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2502.2
+          },
+          {
+            "symbol": "NEOGEN",
+            "name": "Neogen Chemicals Ltd",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2378.2
+          },
+          {
+            "symbol": "MPHASIS",
+            "name": "MphasiS Limited",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2360
+          },
+          {
+            "symbol": "KIRLOSENG",
+            "name": "Kirloskar Oil Engines Limited",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2210.4
+          },
+          {
+            "symbol": "WHEELS",
+            "name": "Wheels India Limited",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2207.2
+          },
+          {
+            "symbol": "TCS",
+            "name": "Tata Consultancy Services Limited",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2156
+          },
+          {
+            "symbol": "AXISCADES",
+            "name": "AXISCADES Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2082.3
+          },
+          {
+            "symbol": "MANORAMA",
+            "name": "Manorama Industries Ltd",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2043.4
+          },
+          {
+            "symbol": "LAURUSLABS",
+            "name": "LAURUSLABS Limited",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2036.6
+          },
+          {
+            "symbol": "BOSCH-HCIL",
+            "name": "Bosch Home Comfort India Ltd",
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 1980.2
+          },
+          {
+            "symbol": "COFORGE",
+            "name": "Coforge Limited",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1867.9
+          },
+          {
+            "symbol": "TATVA",
+            "name": "Tatva Chintan Pharma Chem Ltd",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1804.8
+          },
+          {
+            "symbol": "ATLANTAELE",
+            "name": "Atlanta Electricals Ltd",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1769.5
+          },
+          {
+            "symbol": "NUVAMA",
+            "name": "NUVAMA WEALTH MANAGEMENT LIMITED",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1764.4
+          },
+          {
+            "symbol": "ADANIPORTS",
+            "name": "Adani Ports & SEZ Limited",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1761
+          },
+          {
+            "symbol": "LGEINDIA",
+            "name": "LG Electronics India Ltd",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1757
+          },
+          {
+            "symbol": "AETHER",
+            "name": "Aether Industries Ltd",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1748.1
+          },
+          {
+            "symbol": "KERNEX",
+            "name": "Kernex Microsystems (india) Limited",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1736.3
+          },
+          {
+            "symbol": "UNIMECH",
+            "name": "Unimech Aerospace and Manufacturing Ltd",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1734.8
+          },
+          {
+            "symbol": "SYRMA",
+            "name": "Syrma SGS Technology Ltd",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1719.9
+          },
+          {
+            "symbol": "AUROPHARMA",
+            "name": "Aurobindo Pharma Limited",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1693
+          },
+          {
+            "symbol": "ICICIGI",
+            "name": "ICICI Lombard General Insurance",
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1690.2
+          },
+          {
+            "symbol": "MASTEK",
+            "name": "Mastek Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1679.9
+          },
+          {
+            "symbol": "DEEPAKNTR",
+            "name": "Deepak Nitrite Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1621.9
+          },
+          {
+            "symbol": "ROSSTECH",
+            "name": "Rossell Techsys Ltd",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1574.8
+          },
+          {
+            "symbol": "BLUESTARCO",
+            "name": "Blue Star Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1574
+          },
+          {
+            "symbol": "QPOWER",
+            "name": "Quality Power Electrical Equipments Ltd",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1547.4
+          },
+          {
+            "symbol": "GESHIP",
+            "name": "The Great Eastern Shipping Company Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1533.7
+          },
+          {
+            "symbol": "BHARTIHEXA",
+            "name": "Bharti Hexacom Ltd",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1531.9
+          },
+          {
+            "symbol": "CHENNPETRO",
+            "name": "Chennai Petroleum Corporation",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1487.7
+          },
+          {
+            "symbol": "ASTRAL",
+            "name": "ASTRAL Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1409.8
+          },
+          {
+            "symbol": "DEEPAKFERT",
+            "name": "Deepak Fertilizers And Petrochemicals Corporation Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1392.6
+          },
+          {
+            "symbol": "AEGISLOG",
+            "name": "Aegis Logistics Ltd",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1388.9
+          },
+          {
+            "symbol": "GABRIEL",
+            "name": "Gabriel India Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1362.2
+          },
+          {
+            "symbol": "ICICIBANK",
+            "name": "ICICI Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1355
+          },
+          {
+            "symbol": "PVRINOX",
+            "name": "PVR INOX Limited",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1327.2
+          },
+          {
+            "symbol": "PGIL",
+            "name": "Pearl Global Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1281.1
+          },
+          {
+            "symbol": "INDOMIM",
+            "name": "Indo-MIM Ltd",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1272.6
+          },
+          {
+            "symbol": "AXISBANK",
+            "name": "Axis Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1259.1
+          },
+          {
+            "symbol": "KRISHNADEF",
+            "name": "Krishna Defence & Allied Industries Ltd",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1230.3
+          },
+          {
+            "symbol": "DRREDDY",
+            "name": "Dr. Reddy's Laboratories Limited",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1197
+          },
+          {
+            "symbol": "RAYMOND",
+            "name": "Raymond Limited",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1186.6
+          },
+          {
+            "symbol": "PNBHOUSING",
+            "name": "PNB Housing Finance Limited",
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1158
+          },
+          {
+            "symbol": "ANTELOPUS",
+            "name": "Antelopus Selan Energy Ltd",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1101.5
+          },
+          {
+            "symbol": "MOTILALOFS",
+            "name": "MOTILALOFS Limited",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1026
+          },
+          {
+            "symbol": "SHILPAMED",
+            "name": "Shilpa Medicare Limited",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1021.7
+          },
+          {
+            "symbol": "STLTECH",
+            "name": "Sterlite Technologies Limited",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1015.2
+          },
+          {
+            "symbol": "SIGMAADV",
+            "name": "Sigma Advanced System Ltd",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1008.8
+          },
+          {
+            "symbol": "CYIENTDLM",
+            "name": "Cyient DLM Limited",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 952.35
+          },
+          {
+            "symbol": "AVADHSUGAR",
+            "name": "Avadh Sugar & Energy",
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 945.75
+          },
+          {
+            "symbol": "SKYGOLD",
+            "name": "Sky Gold Ltd",
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 921
+          },
+          {
+            "symbol": "ISGEC",
+            "name": "ISGEC Heavy Engineering  Ltd",
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 909.7
+          },
+          {
+            "symbol": "BBOX",
+            "name": "Black Box Ltd",
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 892.1
+          },
+          {
+            "symbol": "RATEGAIN",
+            "name": "RateGain Travel Technologies",
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 853.65
+          },
+          {
+            "symbol": "INDIANB",
+            "name": "Indian Bank",
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 829.8
+          },
+          {
+            "symbol": "VMART",
+            "name": "V-mart Retail Limited",
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 821.95
+          },
+          {
+            "symbol": "OPTIEMUS",
+            "name": "Optiemus Infracom Ltd",
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 815.85
+          },
+          {
+            "symbol": "SHREEJISPG",
+            "name": "Shreeji Shipping Global Ltd",
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 811.8
+          },
+          {
+            "symbol": "GRAPHITE",
+            "name": "Graphite India Limited",
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 806.6
+          },
+          {
+            "symbol": "KABRAEXTRU",
+            "name": "Kabra Extrusion Technik Limited",
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 795.9
+          },
+          {
+            "symbol": "TDPOWERSYS",
+            "name": "Td Power Systems Limited",
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 793.75
+          },
+          {
+            "symbol": "SGMART",
+            "name": "SG MART LIMITED",
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 775.6
+          },
+          {
+            "symbol": "SOTL",
+            "name": "Savita Oil Technologies Limited",
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 764.8
+          },
+          {
+            "symbol": "WSTCSTPAPR",
+            "name": "West Coast Paper Mills Limited",
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 727.65
+          },
+          {
+            "symbol": "TIMEX",
+            "name": "Timex Group India Ltd",
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 724.4
+          },
+          {
+            "symbol": "ABDL",
+            "name": "Allied Blenders & Distillers Ltd",
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 711.55
+          },
+          {
+            "symbol": "E2E",
+            "name": "E2E Networks Ltd",
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 704.6
+          },
+          {
+            "symbol": "GCSL",
+            "name": "Gretex Corporate Services Ltd",
+            "addedAt": "2026-10-10T17:24:26.679Z",
+            "addedPrice": 701
+          },
+          {
+            "symbol": "RAYMONDREL",
+            "name": "Raymond Realty Ltd",
+            "addedAt": "2026-10-10T17:24:26.679Z",
+            "addedPrice": 698.2
+          },
+          {
+            "symbol": "PNGSREVA",
+            "name": "PNGS Reva Diamond Jewellery Limited",
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 687.75
+          },
+          {
+            "symbol": "PREMEXPLN",
+            "name": "Premier Explosives Limited",
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 687.05
+          },
+          {
+            "symbol": "LENSKART",
+            "name": "Lenskart Solutions Ltd",
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 677.65
+          },
+          {
+            "symbol": "WEWORK",
+            "name": "Wework India Management Ltd",
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 669.45
+          },
+          {
+            "symbol": "PROTEAN",
+            "name": "Protean eGov Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 640.65
+          },
+          {
+            "symbol": "SUNTV",
+            "name": "Sun TV Network Limited",
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 635.9
+          },
+          {
+            "symbol": "OMNI",
+            "name": "Omnitech Engineering Limited",
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 634.1
+          },
+          {
+            "symbol": "LCL",
+            "name": "Lohia Corp Ltd",
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 630.85
+          },
+          {
+            "symbol": "JGCHEM",
+            "name": "J.G.Chemicals Ltd",
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 630.75
+          },
+          {
+            "symbol": "PNGJL",
+            "name": "P N Gadgil Jewellers Ltd",
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 599.95
+          },
+          {
+            "symbol": "THELEELA",
+            "name": "Leela Palaces Hotels & Resorts Ltd",
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 587.5
+          },
+          {
+            "symbol": "POWERICA",
+            "name": "Powerica Ltd",
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 585.45
+          },
+          {
+            "symbol": "RAMRAT",
+            "name": "Ram Ratna Wires Ltd",
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 584.25
+          },
+          {
+            "symbol": "WESTLIFE",
+            "name": "Westlife Foodworld Limited",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 580.6
+          },
+          {
+            "symbol": "CAPILLARY",
+            "name": "Capillary Technologies India Ltd",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 566.65
+          },
+          {
+            "symbol": "ORKLAINDIA",
+            "name": "Orkla India Ltd",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 559.2
+          },
+          {
+            "symbol": "HDFCLIFE",
+            "name": "HDFC Life Insurance Company Limited",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 556.65
+          },
+          {
+            "symbol": "STARHEALTH",
+            "name": "Star Health & Allied Insurance",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 552.1
+          },
+          {
+            "symbol": "LICHSGFIN",
+            "name": "LIC Housing Finance Limited",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 551.65
+          },
+          {
+            "symbol": "AIIL",
+            "name": "Authum Investment & Infrastructure Ltd",
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 549.7
+          },
+          {
+            "symbol": "KIRIINDUS",
+            "name": "Kiri Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.684Z",
+            "addedPrice": 544.25
+          },
+          {
+            "symbol": "ARSSBL",
+            "name": "ANAND RATHI SHARE AND STOCK BROKERS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.684Z",
+            "addedPrice": 539.6
+          },
+          {
+            "symbol": "CMLL",
+            "name": "Caliber Mining and Logistics Ltd",
+            "addedAt": "2026-10-10T17:24:26.685Z",
+            "addedPrice": 529.25
+          },
+          {
+            "symbol": "NRBBEARING",
+            "name": "Nrb Bearing Limited",
+            "addedAt": "2026-10-10T17:24:26.685Z",
+            "addedPrice": 524.95
+          },
+          {
+            "symbol": "VOEPL",
+            "name": "Virtuoso Optoelectronics Ltd",
+            "addedAt": "2026-10-10T17:24:26.685Z",
+            "addedPrice": 524.95
+          },
+          {
+            "symbol": "QUADFUTURE",
+            "name": "Quadrant Future Tek Ltd",
+            "addedAt": "2026-10-10T17:24:26.686Z",
+            "addedPrice": 511.25
+          },
+          {
+            "symbol": "BAJAJCON",
+            "name": "BAJAJ CONSUMER CARE LIMITED",
+            "addedAt": "2026-10-10T17:24:26.686Z",
+            "addedPrice": 506.95
+          },
+          {
+            "symbol": "MMP",
+            "name": "MMP Industries Ltd",
+            "addedAt": "2026-10-10T17:24:26.686Z",
+            "addedPrice": 501.35
+          },
+          {
+            "symbol": "PANAMAPET",
+            "name": "Panama Petrochem Limited",
+            "addedAt": "2026-10-10T17:24:26.687Z",
+            "addedPrice": 495.9
+          },
+          {
+            "symbol": "BERGEPAINT",
+            "name": "Berger Paints (i) Limited",
+            "addedAt": "2026-10-10T17:24:26.687Z",
+            "addedPrice": 471.9
+          },
+          {
+            "symbol": "MODISONLTD",
+            "name": "Modison Ltd",
+            "addedAt": "2026-10-10T17:24:26.687Z",
+            "addedPrice": 471.3
+          },
+          {
+            "symbol": "VALIANTORG",
+            "name": "Valiant Organics Ltd",
+            "addedAt": "2026-10-10T17:24:26.688Z",
+            "addedPrice": 467.7
+          },
+          {
+            "symbol": "TRANSRAILL",
+            "name": "Transrail Lighting Ltd",
+            "addedAt": "2026-10-10T17:24:26.688Z",
+            "addedPrice": 464.65
+          },
+          {
+            "symbol": "MARINE",
+            "name": "Marine Electricals (India) Ltd",
+            "addedAt": "2026-10-10T17:24:26.688Z",
+            "addedPrice": 455.65
+          },
+          {
+            "symbol": "LOKESHMACH",
+            "name": "Lokesh Machines Limited",
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 450.75
+          },
+          {
+            "symbol": "ZENSARTECH",
+            "name": "Zensar Technologies Limited",
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 448.55
+          },
+          {
+            "symbol": "VBL",
+            "name": "Varun Beverages Limited",
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 441
+          },
+          {
+            "symbol": "KOTAKBANK",
+            "name": "Kotak Mahindra Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 441
+          },
+          {
+            "symbol": "MIDHANI",
+            "name": "Mishra Dhatu Nigam Ltd",
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 440.5
+          },
+          {
+            "symbol": "SUNFLAG",
+            "name": "Sunflag Iron and Steel Company",
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 439.8
+          },
+          {
+            "symbol": "DALMIASUG",
+            "name": "Dalmia Bharat Sugar And Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 435.55
+          },
+          {
+            "symbol": "BHEL",
+            "name": "BHEL Limited",
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 433.6
+          },
+          {
+            "symbol": "RBLBANK",
+            "name": "RBL Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 418
+          },
+          {
+            "symbol": "STUDDS",
+            "name": "Studds Accessories Ltd",
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 414.5
+          },
+          {
+            "symbol": "VESUVIUS",
+            "name": "VESUVIUS INDIA LIMITED",
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 409
+          },
+          {
+            "symbol": "SSWL",
+            "name": "Steel Strips Wheels Limited",
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 406.8
+          },
+          {
+            "symbol": "DABUR",
+            "name": "Dabur India Limited",
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 386.7
+          },
+          {
+            "symbol": "DIACABS",
+            "name": "Diamond Power Infrastructure Ltd",
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 380.95
+          },
+          {
+            "symbol": "INDUSTOWER",
+            "name": "Indus Towers Limited",
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 380.85
+          },
+          {
+            "symbol": "NAZARA",
+            "name": "Nazara Technologies Limited",
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 377.65
+          },
+          {
+            "symbol": "KISSHT",
+            "name": "Onemi Technology Solutions Ltd",
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 369.1
+          },
+          {
+            "symbol": "CUPID",
+            "name": "Cupid Limited",
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 366.1
+          },
+          {
+            "symbol": "CELLO",
+            "name": "CELLO WORLD LIMITED",
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 364.95
+          },
+          {
+            "symbol": "BHAGERIA",
+            "name": "Bhageria Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 364.9
+          },
+          {
+            "symbol": "KIOCL",
+            "name": "KIOCL LIMITED",
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 358.75
+          },
+          {
+            "symbol": "RAMBHAJO",
+            "name": "Advit Jewels Ltd",
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 357.45
+          },
+          {
+            "symbol": "STEELCAS",
+            "name": "Steelcast Ltd",
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 356.5
+          },
+          {
+            "symbol": "IIFLCAPS",
+            "name": "IIFL Capital Services Ltd",
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 343.75
+          },
+          {
+            "symbol": "RATNAVEER",
+            "name": "Ratnaveer Precision Engineering Ltd",
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 343.6
+          },
+          {
+            "symbol": "NYKAA",
+            "name": "FSN E-Commerce Ventures Limited",
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 343
+          },
+          {
+            "symbol": "KARURVYSYA",
+            "name": "Karur Vysya Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 339.9
+          },
+          {
+            "symbol": "5PAISA",
+            "name": "5Paisa Capital Ltd",
+            "addedAt": "2026-10-10T17:24:26.695Z",
+            "addedPrice": 339.55
+          },
+          {
+            "symbol": "SENCO",
+            "name": "Senco Gold Limited",
+            "addedAt": "2026-10-10T17:24:26.695Z",
+            "addedPrice": 334.75
+          },
+          {
+            "symbol": "DMCC",
+            "name": "DMCC SPECIALITY CHEMICALS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.695Z",
+            "addedPrice": 332.7
+          },
+          {
+            "symbol": "FEDERALBNK",
+            "name": "The Federal Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.696Z",
+            "addedPrice": 330
+          },
+          {
+            "symbol": "KTKBANK",
+            "name": "The Karnataka Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.696Z",
+            "addedPrice": 328.2
+          },
+          {
+            "symbol": "TAJGVK",
+            "name": "TAJ GVK HOTELS & RESORTS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.696Z",
+            "addedPrice": 325.9
+          },
+          {
+            "symbol": "ONWARDTEC",
+            "name": "Onward Technologies Limited",
+            "addedAt": "2026-10-10T17:24:26.697Z",
+            "addedPrice": 307
+          },
+          {
+            "symbol": "GREENPLY",
+            "name": "Greenply Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.697Z",
+            "addedPrice": 306.7
+          },
+          {
+            "symbol": "UTTAMSUGAR",
+            "name": "Uttam Sugar Mills Limited",
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 298.05
+          },
+          {
+            "symbol": "GANDHAR",
+            "name": "Gandhar Oil Refinery (India) Ltd",
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 296.55
+          },
+          {
+            "symbol": "SHADOWFAX",
+            "name": "Shadowfax Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 294.85
+          },
+          {
+            "symbol": "ANGELONE",
+            "name": "Angel One Limited",
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 292
+          },
+          {
+            "symbol": "PETRONET",
+            "name": "Petronet LNG Limited",
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 291.5
+          },
+          {
+            "symbol": "TARIL",
+            "name": "TRANSFORMERS AND RECTIFIERS (INDIA) LIMITED",
+            "addedAt": "2026-10-10T17:24:26.699Z",
+            "addedPrice": 290.65
+          },
+          {
+            "symbol": "ADFFOODS",
+            "name": "ADF FOODS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.699Z",
+            "addedPrice": 289.7
+          },
+          {
+            "symbol": "JAINREC",
+            "name": "Jain Resource Recycling Ltd",
+            "addedAt": "2026-10-10T17:24:26.699Z",
+            "addedPrice": 288.7
+          },
+          {
+            "symbol": "XTRANET",
+            "name": "Xtranet Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.700Z",
+            "addedPrice": 287.5
+          },
+          {
+            "symbol": "MEIL",
+            "name": "MANGAL ELECTRICAL INDUSTRIES LIMITED",
+            "addedAt": "2026-10-10T17:24:26.700Z",
+            "addedPrice": 277.25
+          },
+          {
+            "symbol": "AEQUS",
+            "name": "Aequs Ltd",
+            "addedAt": "2026-10-10T17:24:26.700Z",
+            "addedPrice": 273.5
+          },
+          {
+            "symbol": "GODIGIT",
+            "name": "GO DIGIT GENERAL INSURANCE LIMITED",
+            "addedAt": "2026-10-10T17:24:26.701Z",
+            "addedPrice": 272.85
+          },
+          {
+            "symbol": "BOROLTD",
+            "name": "BOROSIL LIMITED",
+            "addedAt": "2026-10-10T17:24:26.702Z",
+            "addedPrice": 270.2
+          },
+          {
+            "symbol": "FSL",
+            "name": "Firstsource Solutions Limited",
+            "addedAt": "2026-10-10T17:24:26.702Z",
+            "addedPrice": 268.1
+          },
+          {
+            "symbol": "MBEL",
+            "name": "M & B ENGINEERING LIMITED",
+            "addedAt": "2026-10-10T17:24:26.702Z",
+            "addedPrice": 266.61
+          },
+          {
+            "symbol": "ITC",
+            "name": "ITC Limited",
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 266
+          },
+          {
+            "symbol": "VEDL",
+            "name": "Vedanta Limited",
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 264
+          },
+          {
+            "symbol": "HFCL",
+            "name": "HFCL Limited",
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 260.4
+          },
+          {
+            "symbol": "EPACKPEB",
+            "name": "EPack Prefab Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 253.62
+          },
+          {
+            "symbol": "KAMATHOTEL",
+            "name": "KAMAT HOTELS (I) LIMITED",
+            "addedAt": "2026-10-10T17:24:26.704Z",
+            "addedPrice": 251.05
+          },
+          {
+            "symbol": "MOBIKWIK",
+            "name": "One Mobikwik Systems Ltd",
+            "addedAt": "2026-10-10T17:24:26.704Z",
+            "addedPrice": 245.49
+          },
+          {
+            "symbol": "KILITCH",
+            "name": "Kilitch Drugs (india) Limited",
+            "addedAt": "2026-10-10T17:24:26.705Z",
+            "addedPrice": 241.61
+          },
+          {
+            "symbol": "LOTUSDEV",
+            "name": "Sri Lotus Developers & Realty Ltd",
+            "addedAt": "2026-10-10T17:24:26.705Z",
+            "addedPrice": 239.75
+          },
+          {
+            "symbol": "MANOMAY",
+            "name": "MANOMAY TEX INDIA LIMITED",
+            "addedAt": "2026-10-10T17:24:26.706Z",
+            "addedPrice": 239.33
+          },
+          {
+            "symbol": "PATELRMART",
+            "name": "PATEL RETAIL LIMITED",
+            "addedAt": "2026-10-10T17:24:26.706Z",
+            "addedPrice": 238.28
+          },
+          {
+            "symbol": "CANTABIL",
+            "name": "Cantabil Retail India Limited",
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 238.23
+          },
+          {
+            "symbol": "BANKBARODA",
+            "name": "Bank of Baroda",
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 235.8
+          },
+          {
+            "symbol": "AURUM",
+            "name": "AURUM PROPTECH LIMITED",
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 232.77
+          },
+          {
+            "symbol": "MEESHO",
+            "name": "Meesho Ltd",
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 232.74
+          },
+          {
+            "symbol": "IVALUE",
+            "name": "IVALUE INFOSOLUTIONS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.708Z",
+            "addedPrice": 232.43
+          },
+          {
+            "symbol": "JAYKAY",
+            "name": "Jaykay Enterprises Ltd",
+            "addedAt": "2026-10-10T17:24:26.708Z",
+            "addedPrice": 230.5
+          },
+          {
+            "symbol": "STERTOOLS",
+            "name": "STERLING TOOLS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.709Z",
+            "addedPrice": 225.24
+          },
+          {
+            "symbol": "DPWIRES",
+            "name": "D P WIRES LIMITED",
+            "addedAt": "2026-10-10T17:24:26.710Z",
+            "addedPrice": 224.88
+          },
+          {
+            "symbol": "WELSPUNLIV",
+            "name": "Welspun Living Ltd",
+            "addedAt": "2026-10-10T17:24:26.710Z",
+            "addedPrice": 223.75
+          },
+          {
+            "symbol": "SHRINGARMS",
+            "name": "Shringar House of Mangalsutra Ltd",
+            "addedAt": "2026-10-10T17:24:26.710Z",
+            "addedPrice": 221.13
+          },
+          {
+            "symbol": "RAIN",
+            "name": "Rain Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.711Z",
+            "addedPrice": 215.42
+          },
+          {
+            "symbol": "CHEMPLASTS",
+            "name": "Chemplast Sanmar Ltd",
+            "addedAt": "2026-10-10T17:24:26.711Z",
+            "addedPrice": 214.68
+          },
+          {
+            "symbol": "MVGJL",
+            "name": "Manoj Vaibhav Gems N Jewellers Ltd",
+            "addedAt": "2026-10-10T17:24:26.712Z",
+            "addedPrice": 207.87
+          },
+          {
+            "symbol": "KNACK",
+            "name": "Knack Packaging Ltd",
+            "addedAt": "2026-10-10T17:24:26.712Z",
+            "addedPrice": 207.14
+          },
+          {
+            "symbol": "SURAJEST",
+            "name": "SURAJ ESTATE DEVELOPERS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.713Z",
+            "addedPrice": 202.34
+          },
+          {
+            "symbol": "PLASTIBLEN",
+            "name": "Plastiblends India Limited",
+            "addedAt": "2026-10-10T17:24:26.714Z",
+            "addedPrice": 201.79
+          },
+          {
+            "symbol": "KRISHANA",
+            "name": "Krishana Phoschem Ltd",
+            "addedAt": "2026-10-10T17:24:26.714Z",
+            "addedPrice": 197.11
+          },
+          {
+            "symbol": "GROWW",
+            "name": "Billionbrains Garage Ventures Ltd",
+            "addedAt": "2026-10-10T17:24:26.714Z",
+            "addedPrice": 192.39
+          },
+          {
+            "symbol": "DHAMPURSUG",
+            "name": "Dhampur Sugar Mills Limited",
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 184.58
+          },
+          {
+            "symbol": "GKSL",
+            "name": "Gujarat Kidney & Super Speciality Ltd",
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 184.09
+          },
+          {
+            "symbol": "LXCHEM",
+            "name": "Laxmi Organic Industries Ltd",
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 180.34
+          },
+          {
+            "symbol": "MUKANDLTD",
+            "name": "Mukand Limited",
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 175.99
+          },
+          {
+            "symbol": "MRPL",
+            "name": "Mangalore Refinery & Petrochemicals",
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 172.13
+          },
+          {
+            "symbol": "GYFTR",
+            "name": "GYFTR Ltd",
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 168.63
+          },
+          {
+            "symbol": "GPPL",
+            "name": "Gujarat Pipavav Port Limited",
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 167.9
+          },
+          {
+            "symbol": "PACEDIGITK",
+            "name": "Pace Digitek Ltd",
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 165.13
+          },
+          {
+            "symbol": "ORIENTELEC",
+            "name": "ORIENT ELECTRIC LIMITED",
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 164.77
+          },
+          {
+            "symbol": "GAEL",
+            "name": "GUJARAT AMBUJA EXPORTS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 163.43
+          },
+          {
+            "symbol": "RGL",
+            "name": "Renaissance Global Ltd",
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 160.74
+          },
+          {
+            "symbol": "SAMBHV",
+            "name": "Sambhv Steel Tubes Ltd",
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 160.41
+          },
+          {
+            "symbol": "INDOAMIN",
+            "name": "Indo Amines Ltd",
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 157.72
+          },
+          {
+            "symbol": "TFCILTD",
+            "name": "Tourism Finance Corporation Of India Limited",
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 147.05
+          },
+          {
+            "symbol": "MAWANASUG",
+            "name": "Mawana Sugars Limited",
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 146.44
+          },
+          {
+            "symbol": "CPCAP",
+            "name": "CP CAPITAL LIMITED",
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 146.39
+          },
+          {
+            "symbol": "IGL",
+            "name": "Indraprastha Gas Limited",
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 146.15
+          },
+          {
+            "symbol": "PWL",
+            "name": "Physicswallah Ltd",
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 143.69
+          },
+          {
+            "symbol": "JAMNAAUTO",
+            "name": "Jamna Auto Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 142.67
+          },
+          {
+            "symbol": "NELCAST",
+            "name": "NELCAST LIMITED",
+            "addedAt": "2026-10-10T17:24:26.719Z",
+            "addedPrice": 142.48
+          },
+          {
+            "symbol": "GLOBAL",
+            "name": "Global Education Ltd",
+            "addedAt": "2026-10-10T17:24:26.719Z",
+            "addedPrice": 142.2
+          },
+          {
+            "symbol": "MANBA",
+            "name": "Manba Finance Ltd",
+            "addedAt": "2026-10-10T17:24:26.719Z",
+            "addedPrice": 141.56
+          },
+          {
+            "symbol": "DBOL",
+            "name": "DHAMPUR BIO ORGANICS LIMITED",
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 141.33
+          },
+          {
+            "symbol": "ARIS",
+            "name": "Arisinfra Solutions Ltd",
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 140.31
+          },
+          {
+            "symbol": "FINOPB",
+            "name": "FINO PAYMENTS BANK LIMITED",
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 139.42
+          },
+          {
+            "symbol": "MARSONS",
+            "name": "Marsons Ltd",
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 131.11
+          },
+          {
+            "symbol": "MANAKCOAT",
+            "name": "Manaksia Coated Metals & Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 127.53
+          },
+          {
+            "symbol": "JAYBARMARU",
+            "name": "JAY BHARAT MARUTI LIMITED",
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 126.68
+          },
+          {
+            "symbol": "GPTINFRA",
+            "name": "Gpt Infraprojects Limited",
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 121.88
+          },
+          {
+            "symbol": "PNB",
+            "name": "Punjab National Bank",
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 116.98
+          },
+          {
+            "symbol": "LEMONTREE",
+            "name": "Lemon Tree Hotels Limited",
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 110.43
+          },
+          {
+            "symbol": "FILATEX",
+            "name": "Filatex India Limited",
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 109.06
+          },
+          {
+            "symbol": "AAATECH",
+            "name": "AAA Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.722Z",
+            "addedPrice": 107.92
+          },
+          {
+            "symbol": "ARFIN",
+            "name": "Arfin India Ltd",
+            "addedAt": "2026-10-10T17:24:26.722Z",
+            "addedPrice": 105.14
+          },
+          {
+            "symbol": "VIDYAWIRES",
+            "name": "Vidya Wires Ltd",
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 98.06
+          },
+          {
+            "symbol": "ARIHANTCAP",
+            "name": "Arihant Capital Markets Ltd",
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 96.19
+          },
+          {
+            "symbol": "LLOYDSENGG",
+            "name": "Lloyds Engineering Works Ltd",
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 94.42
+          },
+          {
+            "symbol": "NTPCGREEN",
+            "name": "NTPC Green Energy Ltd",
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 92.6
+          },
+          {
+            "symbol": "KAVDEFENCE",
+            "name": "Kavveri Defence & Wireless Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 92.19
+          },
+          {
+            "symbol": "MANALIPETC",
+            "name": "Manali Petrochemicals Limited",
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 85.87
+          },
+          {
+            "symbol": "MAHABANK",
+            "name": "Bank of Maharashtra",
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 83.16
+          },
+          {
+            "symbol": "GRAUWEIL",
+            "name": "Grauer & Weil (India) Ltd",
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 81.32
+          },
+          {
+            "symbol": "DELTACORP",
+            "name": "Delta Corp Limited",
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 81.31
+          },
+          {
+            "symbol": "EXCELSOFT",
+            "name": "Excelsoft Technologies Ltd",
+            "addedAt": "2026-10-10T17:24:26.725Z",
+            "addedPrice": 81.13
+          },
+          {
+            "symbol": "ONEPOINT",
+            "name": "One Point One Solutions Ltd",
+            "addedAt": "2026-10-10T17:24:26.725Z",
+            "addedPrice": 80.36
+          },
+          {
+            "symbol": "PASUPTAC",
+            "name": "Pasupati Acrylon Ltd",
+            "addedAt": "2026-10-10T17:24:26.725Z",
+            "addedPrice": 73.24
+          },
+          {
+            "symbol": "BROOKS",
+            "name": "BROOKS LABORATORIES LIMITED",
+            "addedAt": "2026-10-10T17:24:26.726Z",
+            "addedPrice": 70.13
+          },
+          {
+            "symbol": "HEXAGON",
+            "name": "Hexagon Nutrition Ltd",
+            "addedAt": "2026-10-10T17:24:26.726Z",
+            "addedPrice": 69.43
+          },
+          {
+            "symbol": "JAIBALAJI",
+            "name": "JAI BALAJI INDUSTRIES LIMITED",
+            "addedAt": "2026-10-10T17:24:26.727Z",
+            "addedPrice": 68.4
+          },
+          {
+            "symbol": "SBC",
+            "name": "SBC Exports Ltd",
+            "addedAt": "2026-10-10T17:24:26.727Z",
+            "addedPrice": 62.43
+          },
+          {
+            "symbol": "FEDDERSHOL",
+            "name": "Fedders Holding Ltd",
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 59.78
+          },
+          {
+            "symbol": "RAJOOENG",
+            "name": "Rajoo Engineers Ltd",
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 59.45
+          },
+          {
+            "symbol": "FCL",
+            "name": "Fineotex Chemical Limited",
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 57.94
+          },
+          {
+            "symbol": "PROZONER",
+            "name": "Prozone Realty Ltd",
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 53.62
+          },
+          {
+            "symbol": "SOUTHBANK",
+            "name": "South Indian Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.729Z",
+            "addedPrice": 47.91
+          },
+          {
+            "symbol": "STLNETWORK",
+            "name": "STL Networks Ltd",
+            "addedAt": "2026-10-10T17:24:26.729Z",
+            "addedPrice": 46.35
+          },
+          {
+            "symbol": "DWARKESH",
+            "name": "Dwarikesh Sugar Industries Limited",
+            "addedAt": "2026-10-10T17:24:26.729Z",
+            "addedPrice": 44.6
+          },
+          {
+            "symbol": "DEVX",
+            "name": "DEV ACCELERATOR LIMITED",
+            "addedAt": "2026-10-10T17:24:26.730Z",
+            "addedPrice": 39.92
+          },
+          {
+            "symbol": "PTL",
+            "name": "Ptl Enterprises Limited",
+            "addedAt": "2026-10-10T17:24:26.730Z",
+            "addedPrice": 38.34
+          },
+          {
+            "symbol": "VINEETLAB",
+            "name": "Vineet Laboratories Ltd",
+            "addedAt": "2026-10-10T17:24:26.735Z",
+            "addedPrice": 37.45
+          },
+          {
+            "symbol": "DHANBANK",
+            "name": "Dhanlaxmi Bank Limited",
+            "addedAt": "2026-10-10T17:24:26.736Z",
+            "addedPrice": 33.96
+          },
+          {
+            "symbol": "KOTYARK",
+            "name": "Kotyark Industries Ltd",
+            "addedAt": "2026-10-10T17:24:26.736Z",
+            "addedPrice": 32.28
+          },
+          {
+            "symbol": "COFFEEDAY",
+            "name": "COFFEE DAY ENTERPRISES LIMITED",
+            "addedAt": "2026-10-10T17:24:26.737Z",
+            "addedPrice": 30.81
           }
-        ]
+        ],
+        "stockHistory": {
+          "CRAFTSMAN": {
+            "addedAt": "2026-09-13T08:14:04.500Z",
+            "addedPrice": null
+          },
+          "TASTYBITE": {
+            "addedAt": "2026-09-13T08:14:04.500Z",
+            "addedPrice": null
+          },
+          "GRWRHITECH": {
+            "addedAt": "2026-09-13T08:14:04.500Z",
+            "addedPrice": null
+          },
+          "CAPLIPOINT": {
+            "addedAt": "2026-09-13T08:14:04.500Z",
+            "addedPrice": null
+          },
+          "NOVARTIND": {
+            "addedAt": "2026-09-13T08:14:04.500Z",
+            "addedPrice": null
+          },
+          "EIMCOELECO": {
+            "addedAt": "2026-09-13T08:14:04.500Z",
+            "addedPrice": null
+          },
+          "INOXINDIA": {
+            "addedAt": "2026-09-13T08:14:04.501Z",
+            "addedPrice": null
+          },
+          "ENTERO": {
+            "addedAt": "2026-09-13T08:14:04.501Z",
+            "addedPrice": null
+          },
+          "RANEHOLDIN": {
+            "addedAt": "2026-09-13T08:14:04.501Z",
+            "addedPrice": null
+          },
+          "SUNDRMFAST": {
+            "addedAt": "2026-09-13T08:14:04.501Z",
+            "addedPrice": null
+          },
+          "VARROC": {
+            "addedAt": "2026-09-13T08:14:04.501Z",
+            "addedPrice": null
+          },
+          "MANINDS": {
+            "addedAt": "2026-09-13T08:14:04.501Z",
+            "addedPrice": null
+          },
+          "AARTIPHARM": {
+            "addedAt": "2026-09-13T08:14:04.502Z",
+            "addedPrice": null
+          },
+          "SHANTIGEAR": {
+            "addedAt": "2026-09-13T08:14:04.502Z",
+            "addedPrice": null
+          },
+          "ASTEC": {
+            "addedAt": "2026-09-13T08:14:04.502Z",
+            "addedPrice": null
+          },
+          "EBGNG": {
+            "addedAt": "2026-09-13T08:14:04.502Z",
+            "addedPrice": null
+          },
+          "KLBRENG-B": {
+            "addedAt": "2026-09-13T08:14:04.502Z",
+            "addedPrice": null
+          },
+          "HONASA": {
+            "addedAt": "2026-09-13T08:14:04.502Z",
+            "addedPrice": null
+          },
+          "VSSL": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "REDINGTON": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "EVEREADY": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "LALITHAA": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "MARKSANS": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "PARAGMILK": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "SHAREINDIA": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "EMIL": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "MBAPL": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "IRISDOREME": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "SIGACHI": {
+            "addedAt": "2026-09-13T08:14:04.503Z",
+            "addedPrice": null
+          },
+          "KANOHAR": {
+            "addedAt": "2026-09-19T01:25:29.298Z",
+            "addedPrice": null
+          },
+          "SOLARINDS": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 20000
+          },
+          "APARINDS": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 17984
+          },
+          "MTARTECH": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 7781.5
+          },
+          "ALKEM": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 5279
+          },
+          "RADICO": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 4550
+          },
+          "SUPREMEIND": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 3474.8
+          },
+          "MCX": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 3318.2
+          },
+          "BSE": {
+            "addedAt": "2026-10-10T17:24:26.667Z",
+            "addedPrice": 3287.2
+          },
+          "KMEW": {
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 3207.8
+          },
+          "GLAND": {
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 3061.8
+          },
+          "CARTRADE": {
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 2951
+          },
+          "TRENT": {
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 2918.2
+          },
+          "AZAD": {
+            "addedAt": "2026-10-10T17:24:26.668Z",
+            "addedPrice": 2910.2
+          },
+          "VINDHYATEL": {
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2814.4
+          },
+          "RRKABEL": {
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2705.6
+          },
+          "WELCORP": {
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2640.4
+          },
+          "SRF": {
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2519.5
+          },
+          "GALAXYSURF": {
+            "addedAt": "2026-10-10T17:24:26.669Z",
+            "addedPrice": 2502.2
+          },
+          "NEOGEN": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2378.2
+          },
+          "MPHASIS": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2360
+          },
+          "KIRLOSENG": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2210.4
+          },
+          "WHEELS": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2207.2
+          },
+          "TCS": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2156
+          },
+          "AXISCADES": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2082.3
+          },
+          "MANORAMA": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2043.4
+          },
+          "LAURUSLABS": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 2036.6
+          },
+          "BOSCH-HCIL": {
+            "addedAt": "2026-10-10T17:24:26.670Z",
+            "addedPrice": 1980.2
+          },
+          "COFORGE": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1867.9
+          },
+          "TATVA": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1804.8
+          },
+          "ATLANTAELE": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1769.5
+          },
+          "NUVAMA": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1764.4
+          },
+          "ADANIPORTS": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1761
+          },
+          "LGEINDIA": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1757
+          },
+          "AETHER": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1748.1
+          },
+          "KERNEX": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1736.3
+          },
+          "UNIMECH": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1734.8
+          },
+          "SYRMA": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1719.9
+          },
+          "AUROPHARMA": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1693
+          },
+          "ICICIGI": {
+            "addedAt": "2026-10-10T17:24:26.671Z",
+            "addedPrice": 1690.2
+          },
+          "MASTEK": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1679.9
+          },
+          "DEEPAKNTR": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1621.9
+          },
+          "ROSSTECH": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1574.8
+          },
+          "BLUESTARCO": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1574
+          },
+          "QPOWER": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1547.4
+          },
+          "GESHIP": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1533.7
+          },
+          "BHARTIHEXA": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1531.9
+          },
+          "CHENNPETRO": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1487.7
+          },
+          "ASTRAL": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1409.8
+          },
+          "DEEPAKFERT": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1392.6
+          },
+          "AEGISLOG": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1388.9
+          },
+          "GABRIEL": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1362.2
+          },
+          "ICICIBANK": {
+            "addedAt": "2026-10-10T17:24:26.672Z",
+            "addedPrice": 1355
+          },
+          "PVRINOX": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1327.2
+          },
+          "PGIL": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1281.1
+          },
+          "INDOMIM": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1272.6
+          },
+          "AXISBANK": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1259.1
+          },
+          "KRISHNADEF": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1230.3
+          },
+          "DRREDDY": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1197
+          },
+          "RAYMOND": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1186.6
+          },
+          "PNBHOUSING": {
+            "addedAt": "2026-10-10T17:24:26.673Z",
+            "addedPrice": 1158
+          },
+          "ANTELOPUS": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1101.5
+          },
+          "MOTILALOFS": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1026
+          },
+          "SHILPAMED": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1021.7
+          },
+          "STLTECH": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1015.2
+          },
+          "SIGMAADV": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 1008.8
+          },
+          "CYIENTDLM": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 952.35
+          },
+          "AVADHSUGAR": {
+            "addedAt": "2026-10-10T17:24:26.674Z",
+            "addedPrice": 945.75
+          },
+          "SKYGOLD": {
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 921
+          },
+          "ISGEC": {
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 909.7
+          },
+          "BBOX": {
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 892.1
+          },
+          "RATEGAIN": {
+            "addedAt": "2026-10-10T17:24:26.675Z",
+            "addedPrice": 853.65
+          },
+          "INDIANB": {
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 829.8
+          },
+          "VMART": {
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 821.95
+          },
+          "OPTIEMUS": {
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 815.85
+          },
+          "SHREEJISPG": {
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 811.8
+          },
+          "GRAPHITE": {
+            "addedAt": "2026-10-10T17:24:26.676Z",
+            "addedPrice": 806.6
+          },
+          "KABRAEXTRU": {
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 795.9
+          },
+          "TDPOWERSYS": {
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 793.75
+          },
+          "SGMART": {
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 775.6
+          },
+          "SOTL": {
+            "addedAt": "2026-10-10T17:24:26.677Z",
+            "addedPrice": 764.8
+          },
+          "WSTCSTPAPR": {
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 727.65
+          },
+          "TIMEX": {
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 724.4
+          },
+          "ABDL": {
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 711.55
+          },
+          "E2E": {
+            "addedAt": "2026-10-10T17:24:26.678Z",
+            "addedPrice": 704.6
+          },
+          "GCSL": {
+            "addedAt": "2026-10-10T17:24:26.679Z",
+            "addedPrice": 701
+          },
+          "RAYMONDREL": {
+            "addedAt": "2026-10-10T17:24:26.679Z",
+            "addedPrice": 698.2
+          },
+          "PNGSREVA": {
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 687.75
+          },
+          "PREMEXPLN": {
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 687.05
+          },
+          "LENSKART": {
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 677.65
+          },
+          "WEWORK": {
+            "addedAt": "2026-10-10T17:24:26.680Z",
+            "addedPrice": 669.45
+          },
+          "PROTEAN": {
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 640.65
+          },
+          "SUNTV": {
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 635.9
+          },
+          "OMNI": {
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 634.1
+          },
+          "LCL": {
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 630.85
+          },
+          "JGCHEM": {
+            "addedAt": "2026-10-10T17:24:26.681Z",
+            "addedPrice": 630.75
+          },
+          "PNGJL": {
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 599.95
+          },
+          "THELEELA": {
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 587.5
+          },
+          "POWERICA": {
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 585.45
+          },
+          "RAMRAT": {
+            "addedAt": "2026-10-10T17:24:26.682Z",
+            "addedPrice": 584.25
+          },
+          "WESTLIFE": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 580.6
+          },
+          "CAPILLARY": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 566.65
+          },
+          "ORKLAINDIA": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 559.2
+          },
+          "HDFCLIFE": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 556.65
+          },
+          "STARHEALTH": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 552.1
+          },
+          "LICHSGFIN": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 551.65
+          },
+          "AIIL": {
+            "addedAt": "2026-10-10T17:24:26.683Z",
+            "addedPrice": 549.7
+          },
+          "KIRIINDUS": {
+            "addedAt": "2026-10-10T17:24:26.684Z",
+            "addedPrice": 544.25
+          },
+          "ARSSBL": {
+            "addedAt": "2026-10-10T17:24:26.684Z",
+            "addedPrice": 539.6
+          },
+          "CMLL": {
+            "addedAt": "2026-10-10T17:24:26.685Z",
+            "addedPrice": 529.25
+          },
+          "NRBBEARING": {
+            "addedAt": "2026-10-10T17:24:26.685Z",
+            "addedPrice": 524.95
+          },
+          "VOEPL": {
+            "addedAt": "2026-10-10T17:24:26.685Z",
+            "addedPrice": 524.95
+          },
+          "QUADFUTURE": {
+            "addedAt": "2026-10-10T17:24:26.686Z",
+            "addedPrice": 511.25
+          },
+          "BAJAJCON": {
+            "addedAt": "2026-10-10T17:24:26.686Z",
+            "addedPrice": 506.95
+          },
+          "MMP": {
+            "addedAt": "2026-10-10T17:24:26.686Z",
+            "addedPrice": 501.35
+          },
+          "PANAMAPET": {
+            "addedAt": "2026-10-10T17:24:26.687Z",
+            "addedPrice": 495.9
+          },
+          "BERGEPAINT": {
+            "addedAt": "2026-10-10T17:24:26.687Z",
+            "addedPrice": 471.9
+          },
+          "MODISONLTD": {
+            "addedAt": "2026-10-10T17:24:26.687Z",
+            "addedPrice": 471.3
+          },
+          "VALIANTORG": {
+            "addedAt": "2026-10-10T17:24:26.688Z",
+            "addedPrice": 467.7
+          },
+          "TRANSRAILL": {
+            "addedAt": "2026-10-10T17:24:26.688Z",
+            "addedPrice": 464.65
+          },
+          "MARINE": {
+            "addedAt": "2026-10-10T17:24:26.688Z",
+            "addedPrice": 455.65
+          },
+          "LOKESHMACH": {
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 450.75
+          },
+          "ZENSARTECH": {
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 448.55
+          },
+          "VBL": {
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 441
+          },
+          "KOTAKBANK": {
+            "addedAt": "2026-10-10T17:24:26.689Z",
+            "addedPrice": 441
+          },
+          "MIDHANI": {
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 440.5
+          },
+          "SUNFLAG": {
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 439.8
+          },
+          "DALMIASUG": {
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 435.55
+          },
+          "BHEL": {
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 433.6
+          },
+          "RBLBANK": {
+            "addedAt": "2026-10-10T17:24:26.690Z",
+            "addedPrice": 418
+          },
+          "STUDDS": {
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 414.5
+          },
+          "VESUVIUS": {
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 409
+          },
+          "SSWL": {
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 406.8
+          },
+          "DABUR": {
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 386.7
+          },
+          "DIACABS": {
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 380.95
+          },
+          "INDUSTOWER": {
+            "addedAt": "2026-10-10T17:24:26.691Z",
+            "addedPrice": 380.85
+          },
+          "NAZARA": {
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 377.65
+          },
+          "KISSHT": {
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 369.1
+          },
+          "CUPID": {
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 366.1
+          },
+          "CELLO": {
+            "addedAt": "2026-10-10T17:24:26.692Z",
+            "addedPrice": 364.95
+          },
+          "BHAGERIA": {
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 364.9
+          },
+          "KIOCL": {
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 358.75
+          },
+          "RAMBHAJO": {
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 357.45
+          },
+          "STEELCAS": {
+            "addedAt": "2026-10-10T17:24:26.693Z",
+            "addedPrice": 356.5
+          },
+          "IIFLCAPS": {
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 343.75
+          },
+          "RATNAVEER": {
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 343.6
+          },
+          "NYKAA": {
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 343
+          },
+          "KARURVYSYA": {
+            "addedAt": "2026-10-10T17:24:26.694Z",
+            "addedPrice": 339.9
+          },
+          "5PAISA": {
+            "addedAt": "2026-10-10T17:24:26.695Z",
+            "addedPrice": 339.55
+          },
+          "SENCO": {
+            "addedAt": "2026-10-10T17:24:26.695Z",
+            "addedPrice": 334.75
+          },
+          "DMCC": {
+            "addedAt": "2026-10-10T17:24:26.695Z",
+            "addedPrice": 332.7
+          },
+          "FEDERALBNK": {
+            "addedAt": "2026-10-10T17:24:26.696Z",
+            "addedPrice": 330
+          },
+          "KTKBANK": {
+            "addedAt": "2026-10-10T17:24:26.696Z",
+            "addedPrice": 328.2
+          },
+          "TAJGVK": {
+            "addedAt": "2026-10-10T17:24:26.696Z",
+            "addedPrice": 325.9
+          },
+          "ONWARDTEC": {
+            "addedAt": "2026-10-10T17:24:26.697Z",
+            "addedPrice": 307
+          },
+          "GREENPLY": {
+            "addedAt": "2026-10-10T17:24:26.697Z",
+            "addedPrice": 306.7
+          },
+          "UTTAMSUGAR": {
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 298.05
+          },
+          "GANDHAR": {
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 296.55
+          },
+          "SHADOWFAX": {
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 294.85
+          },
+          "ANGELONE": {
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 292
+          },
+          "PETRONET": {
+            "addedAt": "2026-10-10T17:24:26.698Z",
+            "addedPrice": 291.5
+          },
+          "TARIL": {
+            "addedAt": "2026-10-10T17:24:26.699Z",
+            "addedPrice": 290.65
+          },
+          "ADFFOODS": {
+            "addedAt": "2026-10-10T17:24:26.699Z",
+            "addedPrice": 289.7
+          },
+          "JAINREC": {
+            "addedAt": "2026-10-10T17:24:26.699Z",
+            "addedPrice": 288.7
+          },
+          "XTRANET": {
+            "addedAt": "2026-10-10T17:24:26.700Z",
+            "addedPrice": 287.5
+          },
+          "MEIL": {
+            "addedAt": "2026-10-10T17:24:26.700Z",
+            "addedPrice": 277.25
+          },
+          "AEQUS": {
+            "addedAt": "2026-10-10T17:24:26.700Z",
+            "addedPrice": 273.5
+          },
+          "GODIGIT": {
+            "addedAt": "2026-10-10T17:24:26.701Z",
+            "addedPrice": 272.85
+          },
+          "BOROLTD": {
+            "addedAt": "2026-10-10T17:24:26.702Z",
+            "addedPrice": 270.2
+          },
+          "FSL": {
+            "addedAt": "2026-10-10T17:24:26.702Z",
+            "addedPrice": 268.1
+          },
+          "MBEL": {
+            "addedAt": "2026-10-10T17:24:26.702Z",
+            "addedPrice": 266.61
+          },
+          "ITC": {
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 266
+          },
+          "VEDL": {
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 264
+          },
+          "HFCL": {
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 260.4
+          },
+          "EPACKPEB": {
+            "addedAt": "2026-10-10T17:24:26.703Z",
+            "addedPrice": 253.62
+          },
+          "KAMATHOTEL": {
+            "addedAt": "2026-10-10T17:24:26.704Z",
+            "addedPrice": 251.05
+          },
+          "MOBIKWIK": {
+            "addedAt": "2026-10-10T17:24:26.704Z",
+            "addedPrice": 245.49
+          },
+          "KILITCH": {
+            "addedAt": "2026-10-10T17:24:26.705Z",
+            "addedPrice": 241.61
+          },
+          "LOTUSDEV": {
+            "addedAt": "2026-10-10T17:24:26.705Z",
+            "addedPrice": 239.75
+          },
+          "MANOMAY": {
+            "addedAt": "2026-10-10T17:24:26.706Z",
+            "addedPrice": 239.33
+          },
+          "PATELRMART": {
+            "addedAt": "2026-10-10T17:24:26.706Z",
+            "addedPrice": 238.28
+          },
+          "CANTABIL": {
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 238.23
+          },
+          "BANKBARODA": {
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 235.8
+          },
+          "AURUM": {
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 232.77
+          },
+          "MEESHO": {
+            "addedAt": "2026-10-10T17:24:26.707Z",
+            "addedPrice": 232.74
+          },
+          "IVALUE": {
+            "addedAt": "2026-10-10T17:24:26.708Z",
+            "addedPrice": 232.43
+          },
+          "JAYKAY": {
+            "addedAt": "2026-10-10T17:24:26.708Z",
+            "addedPrice": 230.5
+          },
+          "STERTOOLS": {
+            "addedAt": "2026-10-10T17:24:26.709Z",
+            "addedPrice": 225.24
+          },
+          "DPWIRES": {
+            "addedAt": "2026-10-10T17:24:26.710Z",
+            "addedPrice": 224.88
+          },
+          "WELSPUNLIV": {
+            "addedAt": "2026-10-10T17:24:26.710Z",
+            "addedPrice": 223.75
+          },
+          "SHRINGARMS": {
+            "addedAt": "2026-10-10T17:24:26.710Z",
+            "addedPrice": 221.13
+          },
+          "RAIN": {
+            "addedAt": "2026-10-10T17:24:26.711Z",
+            "addedPrice": 215.42
+          },
+          "CHEMPLASTS": {
+            "addedAt": "2026-10-10T17:24:26.711Z",
+            "addedPrice": 214.68
+          },
+          "MVGJL": {
+            "addedAt": "2026-10-10T17:24:26.712Z",
+            "addedPrice": 207.87
+          },
+          "KNACK": {
+            "addedAt": "2026-10-10T17:24:26.712Z",
+            "addedPrice": 207.14
+          },
+          "SURAJEST": {
+            "addedAt": "2026-10-10T17:24:26.713Z",
+            "addedPrice": 202.34
+          },
+          "PLASTIBLEN": {
+            "addedAt": "2026-10-10T17:24:26.714Z",
+            "addedPrice": 201.79
+          },
+          "KRISHANA": {
+            "addedAt": "2026-10-10T17:24:26.714Z",
+            "addedPrice": 197.11
+          },
+          "GROWW": {
+            "addedAt": "2026-10-10T17:24:26.714Z",
+            "addedPrice": 192.39
+          },
+          "DHAMPURSUG": {
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 184.58
+          },
+          "GKSL": {
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 184.09
+          },
+          "LXCHEM": {
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 180.34
+          },
+          "MUKANDLTD": {
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 175.99
+          },
+          "MRPL": {
+            "addedAt": "2026-10-10T17:24:26.715Z",
+            "addedPrice": 172.13
+          },
+          "GYFTR": {
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 168.63
+          },
+          "GPPL": {
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 167.9
+          },
+          "PACEDIGITK": {
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 165.13
+          },
+          "ORIENTELEC": {
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 164.77
+          },
+          "GAEL": {
+            "addedAt": "2026-10-10T17:24:26.716Z",
+            "addedPrice": 163.43
+          },
+          "RGL": {
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 160.74
+          },
+          "SAMBHV": {
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 160.41
+          },
+          "INDOAMIN": {
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 157.72
+          },
+          "TFCILTD": {
+            "addedAt": "2026-10-10T17:24:26.717Z",
+            "addedPrice": 147.05
+          },
+          "MAWANASUG": {
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 146.44
+          },
+          "CPCAP": {
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 146.39
+          },
+          "IGL": {
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 146.15
+          },
+          "PWL": {
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 143.69
+          },
+          "JAMNAAUTO": {
+            "addedAt": "2026-10-10T17:24:26.718Z",
+            "addedPrice": 142.67
+          },
+          "NELCAST": {
+            "addedAt": "2026-10-10T17:24:26.719Z",
+            "addedPrice": 142.48
+          },
+          "GLOBAL": {
+            "addedAt": "2026-10-10T17:24:26.719Z",
+            "addedPrice": 142.2
+          },
+          "MANBA": {
+            "addedAt": "2026-10-10T17:24:26.719Z",
+            "addedPrice": 141.56
+          },
+          "DBOL": {
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 141.33
+          },
+          "ARIS": {
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 140.31
+          },
+          "FINOPB": {
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 139.42
+          },
+          "MARSONS": {
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 131.11
+          },
+          "MANAKCOAT": {
+            "addedAt": "2026-10-10T17:24:26.720Z",
+            "addedPrice": 127.53
+          },
+          "JAYBARMARU": {
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 126.68
+          },
+          "GPTINFRA": {
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 121.88
+          },
+          "PNB": {
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 116.98
+          },
+          "LEMONTREE": {
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 110.43
+          },
+          "FILATEX": {
+            "addedAt": "2026-10-10T17:24:26.721Z",
+            "addedPrice": 109.06
+          },
+          "AAATECH": {
+            "addedAt": "2026-10-10T17:24:26.722Z",
+            "addedPrice": 107.92
+          },
+          "ARFIN": {
+            "addedAt": "2026-10-10T17:24:26.722Z",
+            "addedPrice": 105.14
+          },
+          "VIDYAWIRES": {
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 98.06
+          },
+          "ARIHANTCAP": {
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 96.19
+          },
+          "LLOYDSENGG": {
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 94.42
+          },
+          "NTPCGREEN": {
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 92.6
+          },
+          "KAVDEFENCE": {
+            "addedAt": "2026-10-10T17:24:26.723Z",
+            "addedPrice": 92.19
+          },
+          "MANALIPETC": {
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 85.87
+          },
+          "MAHABANK": {
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 83.16
+          },
+          "GRAUWEIL": {
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 81.32
+          },
+          "DELTACORP": {
+            "addedAt": "2026-10-10T17:24:26.724Z",
+            "addedPrice": 81.31
+          },
+          "EXCELSOFT": {
+            "addedAt": "2026-10-10T17:24:26.725Z",
+            "addedPrice": 81.13
+          },
+          "ONEPOINT": {
+            "addedAt": "2026-10-10T17:24:26.725Z",
+            "addedPrice": 80.36
+          },
+          "PASUPTAC": {
+            "addedAt": "2026-10-10T17:24:26.725Z",
+            "addedPrice": 73.24
+          },
+          "BROOKS": {
+            "addedAt": "2026-10-10T17:24:26.726Z",
+            "addedPrice": 70.13
+          },
+          "HEXAGON": {
+            "addedAt": "2026-10-10T17:24:26.726Z",
+            "addedPrice": 69.43
+          },
+          "JAIBALAJI": {
+            "addedAt": "2026-10-10T17:24:26.727Z",
+            "addedPrice": 68.4
+          },
+          "SBC": {
+            "addedAt": "2026-10-10T17:24:26.727Z",
+            "addedPrice": 62.43
+          },
+          "FEDDERSHOL": {
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 59.78
+          },
+          "RAJOOENG": {
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 59.45
+          },
+          "FCL": {
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 57.94
+          },
+          "PROZONER": {
+            "addedAt": "2026-10-10T17:24:26.728Z",
+            "addedPrice": 53.62
+          },
+          "SOUTHBANK": {
+            "addedAt": "2026-10-10T17:24:26.729Z",
+            "addedPrice": 47.91
+          },
+          "STLNETWORK": {
+            "addedAt": "2026-10-10T17:24:26.729Z",
+            "addedPrice": 46.35
+          },
+          "DWARKESH": {
+            "addedAt": "2026-10-10T17:24:26.729Z",
+            "addedPrice": 44.6
+          },
+          "DEVX": {
+            "addedAt": "2026-10-10T17:24:26.730Z",
+            "addedPrice": 39.92
+          },
+          "PTL": {
+            "addedAt": "2026-10-10T17:24:26.730Z",
+            "addedPrice": 38.34
+          },
+          "VINEETLAB": {
+            "addedAt": "2026-10-10T17:24:26.735Z",
+            "addedPrice": 37.45
+          },
+          "DHANBANK": {
+            "addedAt": "2026-10-10T17:24:26.736Z",
+            "addedPrice": 33.96
+          },
+          "KOTYARK": {
+            "addedAt": "2026-10-10T17:24:26.736Z",
+            "addedPrice": 32.28
+          },
+          "COFFEEDAY": {
+            "addedAt": "2026-10-10T17:24:26.737Z",
+            "addedPrice": 30.81
+          }
+        }
       },
       {
         "id": "wl_mtqwp61t_3",
@@ -4281,6 +7002,12 @@
             "name": "E2E Networks Ltd",
             "addedAt": "2026-10-07T18:36:47.247Z",
             "addedPrice": 723.3
+          },
+          {
+            "symbol": "TCPLPACK",
+            "name": "TCPL Packaging Ltd",
+            "addedAt": "2026-10-10T18:14:56.573Z",
+            "addedPrice": 4274.7
           }
         ],
         "stockHistory": {
@@ -4395,6 +7122,10 @@
           "E2E": {
             "addedAt": "2026-10-07T18:36:47.247Z",
             "addedPrice": 723.3
+          },
+          "TCPLPACK": {
+            "addedAt": "2026-10-10T18:14:56.573Z",
+            "addedPrice": 4274.7
           }
         }
       },
@@ -4581,6 +7312,12 @@
             "name": "AONESTEELS",
             "addedAt": "2026-10-07T10:07:22.682Z",
             "addedPrice": null
+          },
+          {
+            "symbol": "FCL",
+            "name": "Fineotex Chemical Limited",
+            "addedAt": "2026-10-10T17:20:54.086Z",
+            "addedPrice": 57.94
           }
         ],
         "stockHistory": {
@@ -4719,6 +7456,10 @@
           "AONESTEELS": {
             "addedAt": "2026-10-07T10:07:22.682Z",
             "addedPrice": null
+          },
+          "FCL": {
+            "addedAt": "2026-10-10T17:20:54.086Z",
+            "addedPrice": 57.94
           }
         }
       },
@@ -4985,8 +7726,224 @@
             "symbol": "VSSL",
             "name": "Vardhman Special Steels Limited",
             "addedAt": "2026-09-24T17:34:15.144Z"
+          },
+          {
+            "symbol": "FCL",
+            "name": "Fineotex Chemical Limited",
+            "addedAt": "2026-10-10T17:20:49.515Z",
+            "addedPrice": 57.94
           }
-        ]
+        ],
+        "stockHistory": {
+          "AKUMS": {
+            "addedAt": "2026-09-24T17:34:15.138Z",
+            "addedPrice": null
+          },
+          "JAMNAAUTO": {
+            "addedAt": "2026-09-24T17:34:15.138Z",
+            "addedPrice": null
+          },
+          "LALPATHLAB": {
+            "addedAt": "2026-09-24T17:34:15.138Z",
+            "addedPrice": null
+          },
+          "NAZARA": {
+            "addedAt": "2026-09-24T17:34:15.138Z",
+            "addedPrice": null
+          },
+          "PAISALO": {
+            "addedAt": "2026-09-24T17:34:15.139Z",
+            "addedPrice": null
+          },
+          "SOUTHBANK": {
+            "addedAt": "2026-09-24T17:34:15.139Z",
+            "addedPrice": null
+          },
+          "AARTIPHARM": {
+            "addedAt": "2026-09-24T17:34:15.139Z",
+            "addedPrice": null
+          },
+          "ACMESOLAR": {
+            "addedAt": "2026-09-24T17:34:15.139Z",
+            "addedPrice": null
+          },
+          "ASMTEC": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "AXISCADES": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "CAPLIPOINT": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "CARBORUNIV": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "CEIGALL": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "DIVISLAB": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "DYNAMATECH": {
+            "addedAt": "2026-09-24T17:34:15.140Z",
+            "addedPrice": null
+          },
+          "ENGINERSIN": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "ENTERO": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "ETERNAL": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "FILATEX": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "GNFC": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "GODREJAGRO": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "GRAUWEIL": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "GREAVESCOT": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "INNOVACAP": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "KDDL": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "KTKBANK": {
+            "addedAt": "2026-09-24T17:34:15.141Z",
+            "addedPrice": null
+          },
+          "LLOYDSENGG": {
+            "addedAt": "2026-09-24T17:34:15.142Z",
+            "addedPrice": null
+          },
+          "LOTUSDEV": {
+            "addedAt": "2026-09-24T17:34:15.142Z",
+            "addedPrice": null
+          },
+          "MAHLOG": {
+            "addedAt": "2026-09-24T17:34:15.142Z",
+            "addedPrice": null
+          },
+          "MANKIND": {
+            "addedAt": "2026-09-24T17:34:15.142Z",
+            "addedPrice": null
+          },
+          "MAXESTATES": {
+            "addedAt": "2026-09-24T17:34:15.142Z",
+            "addedPrice": null
+          },
+          "MCX": {
+            "addedAt": "2026-09-24T17:34:15.142Z",
+            "addedPrice": null
+          },
+          "OLAELEC": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "ORCHPHARMA": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "PITTIENG": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "ROLEXRINGS": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SANSERA": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SBCL": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SHANTIGEAR": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SHILPAMED": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SHREEJISPG": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SMLMAH": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SOLARA": {
+            "addedAt": "2026-09-24T17:34:15.143Z",
+            "addedPrice": null
+          },
+          "SUNFLAG": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "SUPRIYA": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "TI": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "UNIMECH": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "WELCORP": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "WELSPUNLIV": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "WOCKPHARMA": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "VSSL": {
+            "addedAt": "2026-09-24T17:34:15.144Z",
+            "addedPrice": null
+          },
+          "FCL": {
+            "addedAt": "2026-10-10T17:20:49.515Z",
+            "addedPrice": 57.94
+          }
+        }
       }
     ],
     "notes": "smc indiactor on chart\nhttps://www.ankurpatel.info/resources/\n\nhow much data it is tored for candles ?why then no data beyond a certain lookback\n\nhttps://tradewithtech.in/#features  interface\nhttps://pivchart.com/\nRsi setting 50 23 \nAlgo testing \noption to mark crossover of 10/20 etc\n\nresolve pivots issue on chart and analytics\nhttps://chartink.com/dashboard/160633 \n\nscreenshots feature--collection\n\nwork on breadth: \n\nStandard & Sectoral Indices--indice data not correct fetching\n\n\ncheck alert feature when some price corss such and then that stock gets added into alertrigg watchlist\n\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern\n\nV shape recoery onlywhle crash not durring correction---during such correction a W is formed generally",

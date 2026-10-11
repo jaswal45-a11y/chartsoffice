@@ -439,6 +439,12 @@
                   <span id="explore-sync-text">🟢 Prices in Sync</span>
                 </div>
 
+                <!-- EOD BASELINE SYNC SIGNAL -->
+                <div id="explore-eod-sync-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 transition-all cursor-help" title="Daily 4:30 PM EOD Baseline synchronized">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span id="explore-eod-sync-text">EOD Baseline: 4:30 PM</span>
+                </div>
+
                 <!-- Live Summary Counter Badge -->
                 <span id="badge-explore-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></span>
               </div>
@@ -483,7 +489,7 @@
 
               <!-- Search Stock Filter Box -->
               <div class="relative flex items-center min-w-[180px] sm:w-56">
-                <input type="text" id="input-explore-search" oninput="handleExploreSearch(this.value)" placeholder="Filter stock or name..." autocomplete="off"
+                <input type="text" id="input-explore-search" onclick="this.select()" onfocus="this.select()" oninput="handleExploreSearch(this.value)" placeholder="Filter stock or name..." autocomplete="off"
                   class="w-full px-3 py-1.5 text-xs bg-dark-card border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute right-3 pointer-events-none"></i>
               </div>
@@ -826,7 +832,7 @@
 
         <!-- Search Stock Filter Box -->
         <div class="relative flex items-center">
-          <input type="text" id="ssm-stock-search" oninput="filterSectoralStockTable()" placeholder="Search stock or symbol..." autocomplete="off"
+          <input type="text" id="ssm-stock-search" onclick="this.select()" onfocus="this.select()" oninput="filterSectoralStockTable()" placeholder="Search stock or symbol..." autocomplete="off"
             class="w-48 sm:w-64 px-3 py-1.5 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-medium">
           <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute right-3 pointer-events-none"></i>
         </div>
@@ -990,7 +996,9 @@
                       placeholder="TYPE STOCK..." 
                       autocomplete="off"
                       spellcheck="false"
-                      class="min-w-[120px] max-w-[320px] w-auto px-3 py-1 pr-8 text-base font-bold font-mono text-white bg-dark-bg border border-dark-border rounded-lg uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all hover:border-slate-500"
+                      onclick="this.select()"
+                      onfocus="this.select()"
+                      class="min-w-[120px] max-w-[320px] w-auto px-3 py-1 pr-8 text-base font-bold font-mono text-white bg-dark-bg border border-dark-border rounded-lg uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all hover:border-slate-500 cursor-pointer"
                       title="Type any stock name or symbol (e.g. TATA, INFY, HDFC)"
                     >
                     <span id="chart-stock-symbol" class="hidden">RELIANCE</span>

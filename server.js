@@ -716,6 +716,7 @@ const MONGO_CONFIG = {
 let memoryUsers = null;
 let memoryScreeners = null;
 let memoryConfig = null;
+let memoryEodSyncStatus = null;
 
 // Local file loaders
 function loadFileScreeners() {
@@ -891,6 +892,21 @@ async function syncMongoInitialData() {
         fs.writeFileSync(GUEST_PERMISSIONS_FILE, JSON.stringify(memoryGuestPermissions, null, 2), 'utf8');
       } catch (e) {}
       console.log(`[MongoDB] 📥 Loaded guest access permissions from MongoDB Atlas.`);
+    }
+
+    const eodSyncDoc = await configCol.findOne({ _id: 'eod_sync_status' });
+    if (eodSyncDoc) {
+      const { _id, ...rest } = eodSyncDoc;
+      memoryEodSyncStatus = rest;
+      try {
+        fs.writeFileSync(EOD_SYNC_FILE, JSON.stringify(rest, null, 2), 'utf8');
+      } catch (e) {}
+      console.log(`[MongoDB] 📥 Loaded daily EOD baseline sync status from MongoDB Atlas.`);
+    } else {
+      const currentEodStatus = readEodSyncStatus();
+      if (currentEodStatus && currentEodStatus.status === 'SYNCHRONIZED') {
+        await configCol.insertOne({ _id: 'eod_sync_status', ...currentEodStatus });
+      }
     }
 
     // 4. Universe Stocks Collection (Self-Healing Persistent Quotes Store)
@@ -1492,7 +1508,7 @@ function autoIngestStocksToUniverse(stockCandidates = []) {
       price: price,
       ltp: price,
       changePercent: chg,
-      rsi: typeof s.latestRSI === 'number' ? Number(s.latestRSI.toFixed(1)) : (typeof s.rsi === 'number' ? Number(s.rsi.toFixed(1)) : 50.0),
+      rsi: typeof s.latestRSI === 'number' ? Number(s.latestRSI.toFixed(1)) : (typeof s.rsi === 'number' && s.rsi !== 50 && s.rsi !== 50.0 ? Number(s.rsi.toFixed(1)) : null),
       rvol: typeof s.rvol === 'number' ? Number(s.rvol.toFixed(2)) : 1.0,
       ema20Distance: typeof s.ema20Distance === 'number' ? Number(s.ema20Distance.toFixed(1)) : 0,
       fno: Boolean(s.fno),
@@ -1561,7 +1577,7 @@ function addStockToUniverse(stockData) {
     price: price,
     ltp: price,
     changePercent: typeof stockData.changePercent === 'number' ? Number(stockData.changePercent.toFixed(2)) : 0.0,
-    rsi: typeof stockData.rsi === 'number' ? Number(stockData.rsi.toFixed(1)) : 50.0,
+    rsi: typeof stockData.rsi === 'number' && stockData.rsi !== 50 && stockData.rsi !== 50.0 ? Number(stockData.rsi.toFixed(1)) : null,
     rvol: typeof stockData.rvol === 'number' ? Number(stockData.rvol.toFixed(2)) : 1.0,
     ema20Distance: typeof stockData.ema20Distance === 'number' ? Number(stockData.ema20Distance.toFixed(1)) : 0.0,
     fno: Boolean(stockData.fno),
@@ -1842,7 +1858,7 @@ function processPriceBandCsv(csvContent) {
         fno: false,
         price: 0,
         changePercent: 0,
-        rsi: 50,
+        rsi: null,
         rvol: 1
       });
     }
@@ -2409,6 +2425,10 @@ async function persistUniverseQuotes(quotesMap) {
       if (typeof q.avgVolume20 === 'number') stk.avgVolume20 = q.avgVolume20;
       if (typeof q.darvasGreen_daily === 'number') stk.darvasGreen_daily = Number(q.darvasGreen_daily.toFixed(2));
       if (typeof q.darvasBottom_daily === 'number') stk.darvasBottom_daily = Number(q.darvasBottom_daily.toFixed(2));
+      if (typeof q.darvasGreen_weekly === 'number') stk.darvasGreen_weekly = Number(q.darvasGreen_weekly.toFixed(2));
+      if (typeof q.darvasBottom_weekly === 'number') stk.darvasBottom_weekly = Number(q.darvasBottom_weekly.toFixed(2));
+      if (typeof q.ema10_weekly === 'number') stk.ema10_weekly = Number(q.ema10_weekly.toFixed(2));
+      if (typeof q.ema20_weekly === 'number') stk.ema20_weekly = Number(q.ema20_weekly.toFixed(2));
       stk.lastPriceUpdated = nowIso;
       hasUpdates = true;
     }
@@ -3099,6 +3119,30 @@ function calculateDarvasBox(candles, boxp = 5) {
   };
 }
 
+// Convert daily (1d) candles to aggregated weekly (1wk) candles
+function aggregateCandlesToWeekly(candles) {
+  if (!Array.isArray(candles) || candles.length === 0) return [];
+  const map = new Map();
+  for (const c of candles) {
+    if (!c || !c.time) continue;
+    const dt = new Date(c.time);
+    if (isNaN(dt.getTime())) continue;
+    const day = dt.getDay();
+    const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+    const mon = new Date(dt.setDate(diff)).toISOString().split('T')[0];
+    if (!map.has(mon)) {
+      map.set(mon, { time: mon, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume || 0 });
+    } else {
+      const w = map.get(mon);
+      if (c.high > w.high) w.high = c.high;
+      if (c.low < w.low) w.low = c.low;
+      w.close = c.close;
+      w.volume = (w.volume || 0) + (c.volume || 0);
+    }
+  }
+  return Array.from(map.values());
+}
+
 // -------------------------------------------------------------
 // Cloud-Resilient Yahoo Finance Session & Crumb Handshake Engine
 // -------------------------------------------------------------
@@ -3649,6 +3693,11 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const rsi14 = calculateRSI(closePrices, 14);
         const rsiSma14 = calculateSMA(rsi14, 14);
         const darvasBox = calculateDarvasBox(candles, 5);
+        const weeklyCandles = aggregateCandlesToWeekly(candles);
+        const weeklyDarvasBox = calculateDarvasBox(weeklyCandles, 5);
+        const weeklyClosePrices = weeklyCandles.map(c => c.close);
+        const weeklyEma10 = calculateEMA(weeklyClosePrices, 10);
+        const weeklyEma20 = calculateEMA(weeklyClosePrices, 20);
         const pivotPoints = await fetchTraditionalAutoPivots(rawSymbol, interval);
 
         const latestCandle = candles[candles.length - 1];
@@ -3689,12 +3738,17 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           latestEMA50: ema50[ema50.length - 1],
           latestEMA150: ema150[ema150.length - 1],
           latestEMA200: ema200[ema200.length - 1],
+          latestEMA10Weekly: weeklyEma10[weeklyEma10.length - 1],
+          latestEMA20Weekly: weeklyEma20[weeklyEma20.length - 1],
           latestRSI: rsi14[rsi14.length - 1],
           latestRsiSMA: rsiSma14[rsiSma14.length - 1],
           latestVWAP: vwap[vwap.length - 1],
           latestDarvasTop: darvasBox.latestTopBox,
           latestDarvasBottom: darvasBox.latestBottomBox,
+          latestDarvasTopWeekly: weeklyDarvasBox.latestTopBox,
+          latestDarvasBottomWeekly: weeklyDarvasBox.latestBottomBox,
           darvasBox,
+          weeklyDarvasBox,
           pivotPoints,
           earningsDates,
           candlesCount: candles.length,
@@ -3717,7 +3771,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
         historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
 
-        // Self-Healing Write-Back: update universe store with fresh chart price
+        // Self-Healing Write-Back: update universe store with fresh chart price and darvas levels
         persistUniverseQuotes({
           [rawSymbol.toUpperCase().replace(/\.(NS|BO)$/, '')]: {
             price: responsePayload.ltp,
@@ -3732,7 +3786,13 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             ema50: responsePayload.latestEMA50,
             ema150: responsePayload.latestEMA150,
             ema200: responsePayload.latestEMA200,
+            ema10_weekly: responsePayload.latestEMA10Weekly,
+            ema20_weekly: responsePayload.latestEMA20Weekly,
             rsi: responsePayload.latestRSI,
+            darvasGreen_daily: responsePayload.latestDarvasTop,
+            darvasBottom_daily: responsePayload.latestDarvasBottom,
+            darvasGreen_weekly: responsePayload.latestDarvasTopWeekly,
+            darvasBottom_weekly: responsePayload.latestDarvasBottomWeekly,
             source: 'dhan'
           }
         });
@@ -3904,6 +3964,11 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const rsi14 = calculateRSI(closePrices, 14);
         const rsiSma14 = calculateSMA(rsi14, 14);
         const darvasBox = calculateDarvasBox(candles, 5);
+        const weeklyCandles = aggregateCandlesToWeekly(candles);
+        const weeklyDarvasBox = calculateDarvasBox(weeklyCandles, 5);
+        const weeklyClosePrices = weeklyCandles.map(c => c.close);
+        const weeklyEma10 = calculateEMA(weeklyClosePrices, 10);
+        const weeklyEma20 = calculateEMA(weeklyClosePrices, 20);
         const pivotPoints = await fetchTraditionalAutoPivots(rawSymbol, interval);
 
         const latestCandle = candles[candles.length - 1];
@@ -3955,12 +4020,17 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           latestEMA50: ema50[ema50.length - 1],
           latestEMA150: ema150[ema150.length - 1],
           latestEMA200: ema200[ema200.length - 1],
+          latestEMA10Weekly: weeklyEma10[weeklyEma10.length - 1],
+          latestEMA20Weekly: weeklyEma20[weeklyEma20.length - 1],
           latestRSI: rsi14[rsi14.length - 1],
           latestRsiSMA: rsiSma14[rsiSma14.length - 1],
           latestVWAP: vwap[vwap.length - 1],
           latestDarvasTop: darvasBox.latestTopBox,
           latestDarvasBottom: darvasBox.latestBottomBox,
+          latestDarvasTopWeekly: weeklyDarvasBox.latestTopBox,
+          latestDarvasBottomWeekly: weeklyDarvasBox.latestBottomBox,
           darvasBox,
+          weeklyDarvasBox,
           pivotPoints,
           earningsDates,
           candlesCount: candles.length,
@@ -3983,7 +4053,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
         historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
 
-        // Self-Healing Write-Back: update universe store with fresh chart price
+        // Self-Healing Write-Back: update universe store with fresh chart price and darvas levels
         persistUniverseQuotes({
           [rawSymbol.toUpperCase().replace(/\.(NS|BO)$/, '')]: {
             price: responsePayload.ltp,
@@ -3998,7 +4068,13 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             ema50: responsePayload.latestEMA50,
             ema150: responsePayload.latestEMA150,
             ema200: responsePayload.latestEMA200,
+            ema10_weekly: responsePayload.latestEMA10Weekly,
+            ema20_weekly: responsePayload.latestEMA20Weekly,
             rsi: responsePayload.latestRSI,
+            darvasGreen_daily: responsePayload.latestDarvasTop,
+            darvasBottom_daily: responsePayload.latestDarvasBottom,
+            darvasGreen_weekly: responsePayload.latestDarvasTopWeekly,
+            darvasBottom_weekly: responsePayload.latestDarvasBottomWeekly,
             source: 'backup'
           }
         });
@@ -4277,6 +4353,8 @@ async function searchPredictiveStocks(query) {
 // Price Position Scanner Engine (Darvas Green Line ↔ EMA 10 / 20)
 // Condition: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
 // -------------------------------------------------------------
+const failedScanSymbols = new Set();
+
 async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], interval = '1d') {
   const emaPeriod = Number(targetEma) === 20 ? 20 : 10;
   const scanInterval = (interval === '1wk' || interval === 'W' || interval === 'weekly') ? '1wk' : '1d';
@@ -4355,75 +4433,151 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     }
   }
 
-  const matches = [];
-  const concurrency = 15;
-  let cursor = 0;
-
-  async function worker() {
-    while (cursor < uniqueList.length) {
-      const idx = cursor++;
-      const item = uniqueList[idx];
-      try {
-        const hist = await fetchStockHistory(item.symbol, scanRange, scanInterval);
-        if (hist && hist.candles && hist.candles.length >= 5) {
-          const close = Number(hist.ltp || (hist.candles.length > 0 ? hist.candles[hist.candles.length - 1].close : null));
-          const ema10 = Number(hist.latestEMA10);
-          const ema20 = Number(hist.latestEMA20);
-          const darvasGreen = Number(hist.latestDarvasTop);
-          const selectedEmaVal = emaPeriod === 20 ? ema20 : ema10;
-
-          if (!isNaN(close) && !isNaN(darvasGreen) && !isNaN(selectedEmaVal) && darvasGreen > 0 && selectedEmaVal > 0) {
-            const minBound = Math.min(darvasGreen, selectedEmaVal);
-            const maxBound = Math.max(darvasGreen, selectedEmaVal);
-
-            // Mathematical condition: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
-            if (close >= minBound && close <= maxBound) {
-              const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
-              const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
-              const rangeWidth = maxBound - minBound;
-              const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
-
-              const lastCandle = hist.candles[hist.candles.length - 1];
-              const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
-
-              const symUpper = item.symbol.toUpperCase();
-              const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000);
-              const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000);
-
-              matches.push({
-                symbol: item.symbol,
-                name: item.name,
-                exchange: item.exchange || 'NSE',
-                close: Number(close.toFixed(2)),
-                ltp: Number(close.toFixed(2)),
-                changePercent: hist.changePercent || 0,
-                volume,
-                timeframe: scanInterval,
-                mcOver1000Cr: Boolean(isOver1000),
-                mcOver2000Cr: Boolean(isOver2000),
-                ema10: Number(ema10.toFixed(2)),
-                ema20: Number(ema20.toFixed(2)),
-                darvasGreen: Number(darvasGreen.toFixed(2)),
-                darvasBottom: hist.latestDarvasBottom ? Number(hist.latestDarvasBottom.toFixed(2)) : null,
-                selectedEma: emaPeriod,
-                selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
-                spreadPercent,
-                positionPercent,
-                lowerBound: Number(minBound.toFixed(2)),
-                upperBound: Number(maxBound.toFixed(2))
-              });
-            }
-          }
-        }
-      } catch (e) {}
+  const isWeekly = (scanInterval === '1wk');
+  const universeStocks = getUniverseStocks();
+  const universeMap = new Map();
+  for (const u of universeStocks) {
+    if (u && u.symbol) {
+      const sKey = u.symbol.toUpperCase().trim();
+      universeMap.set(sKey, u);
+      universeMap.set(sKey.replace(/\.(NS|BO)$/, ''), u);
     }
   }
 
-  const workers = [];
-  for (let i = 0; i < Math.min(concurrency, uniqueList.length); i++) {
-    workers.push(worker());
+  const matches = [];
+  const cacheMisses = [];
+
+  // Phase 1: High-Performance O(1) In-Memory Evaluation from Baseline Universe Cache (<2ms)
+  for (const item of uniqueList) {
+    const symKey = (item.symbol || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+    if (failedScanSymbols.has(symKey)) continue; // Skip known unresolvable / non-equity symbols
+    const u = universeMap.get(symKey) || universeMap.get((item.symbol || '').toUpperCase().trim());
+
+    const close = Number(u?.price || u?.ltp || item.close || item.ltp || item.price);
+    const ema10 = Number(isWeekly ? (u?.ema10_weekly ?? u?.ema10) : u?.ema10);
+    const ema20 = Number(isWeekly ? (u?.ema20_weekly ?? u?.ema20) : u?.ema20);
+    const darvasGreen = Number(isWeekly ? u?.darvasGreen_weekly : u?.darvasGreen_daily);
+    const darvasBottom = Number(isWeekly ? u?.darvasBottom_weekly : u?.darvasBottom_daily);
+    const selectedEmaVal = emaPeriod === 20 ? ema20 : ema10;
+
+    if (!isNaN(close) && close > 0 && !isNaN(darvasGreen) && darvasGreen > 0 && !isNaN(selectedEmaVal) && selectedEmaVal > 0) {
+      const minBound = Math.min(darvasGreen, selectedEmaVal);
+      const maxBound = Math.max(darvasGreen, selectedEmaVal);
+
+      if (close >= minBound && close <= maxBound) {
+        const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
+        const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
+        const rangeWidth = maxBound - minBound;
+        const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+
+        const volume = Number(u?.volume || item.volume || 0);
+        const isOver2000 = (item.mcOver2000Cr === true) || (u?.mcOver2000Cr === true) || mc2000Set.has(symKey) || (typeof (u?.marketCap || item.marketCap) === 'number' && (u?.marketCap || item.marketCap) >= 2000);
+        const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || (u?.mcOver1000Cr === true) || mc1000Set.has(symKey) || (typeof (u?.marketCap || item.marketCap) === 'number' && (u?.marketCap || item.marketCap) >= 1000);
+
+        matches.push({
+          symbol: item.symbol,
+          name: u?.name || item.name || item.symbol,
+          exchange: u?.exchange || item.exchange || 'NSE',
+          close: Number(close.toFixed(2)),
+          ltp: Number(close.toFixed(2)),
+          changePercent: u?.changePercent ?? item.changePercent ?? 0,
+          volume,
+          timeframe: scanInterval,
+          mcOver1000Cr: Boolean(isOver1000),
+          mcOver2000Cr: Boolean(isOver2000),
+          ema10: Number(ema10.toFixed(2)),
+          ema20: Number(ema20.toFixed(2)),
+          darvasGreen: Number(darvasGreen.toFixed(2)),
+          darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+          selectedEma: emaPeriod,
+          selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+          spreadPercent,
+          positionPercent,
+          lowerBound: Number(minBound.toFixed(2)),
+          upperBound: Number(maxBound.toFixed(2))
+        });
+      }
+    } else {
+      cacheMisses.push(item);
+    }
   }
-  await Promise.all(workers);
+
+  // Phase 2: Lazy Fallback Network Worker Pool (ONLY for stocks with missing baseline metrics)
+  if (cacheMisses.length > 0) {
+    const concurrency = 10;
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < cacheMisses.length) {
+        const idx = cursor++;
+        const item = cacheMisses[idx];
+        const itemKey = (item.symbol || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+        try {
+          const hist = await fetchStockHistory(item.symbol, scanRange, scanInterval);
+          if (hist && hist.candles && hist.candles.length >= 5) {
+            const close = Number(hist.ltp || (hist.candles.length > 0 ? hist.candles[hist.candles.length - 1].close : null));
+            const ema10 = Number(isWeekly ? (hist.latestEMA10Weekly || hist.latestEMA10) : hist.latestEMA10);
+            const ema20 = Number(isWeekly ? (hist.latestEMA20Weekly || hist.latestEMA20) : hist.latestEMA20);
+            const darvasGreen = Number(isWeekly ? hist.latestDarvasTopWeekly : hist.latestDarvasTop);
+            const darvasBottom = Number(isWeekly ? hist.latestDarvasBottomWeekly : hist.latestDarvasBottom);
+            const selectedEmaVal = emaPeriod === 20 ? ema20 : ema10;
+
+            if (!isNaN(close) && !isNaN(darvasGreen) && !isNaN(selectedEmaVal) && darvasGreen > 0 && selectedEmaVal > 0) {
+              const minBound = Math.min(darvasGreen, selectedEmaVal);
+              const maxBound = Math.max(darvasGreen, selectedEmaVal);
+
+              if (close >= minBound && close <= maxBound) {
+                const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
+                const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
+                const rangeWidth = maxBound - minBound;
+                const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+
+                const lastCandle = hist.candles[hist.candles.length - 1];
+                const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
+
+                const symUpper = item.symbol.toUpperCase();
+                const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000);
+                const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000);
+
+                matches.push({
+                  symbol: item.symbol,
+                  name: item.name,
+                  exchange: item.exchange || 'NSE',
+                  close: Number(close.toFixed(2)),
+                  ltp: Number(close.toFixed(2)),
+                  changePercent: hist.changePercent || 0,
+                  volume,
+                  timeframe: scanInterval,
+                  mcOver1000Cr: Boolean(isOver1000),
+                  mcOver2000Cr: Boolean(isOver2000),
+                  ema10: Number(ema10.toFixed(2)),
+                  ema20: Number(ema20.toFixed(2)),
+                  darvasGreen: Number(darvasGreen.toFixed(2)),
+                  darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+                  selectedEma: emaPeriod,
+                  selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+                  spreadPercent,
+                  positionPercent,
+                  lowerBound: Number(minBound.toFixed(2)),
+                  upperBound: Number(maxBound.toFixed(2))
+                });
+              }
+            }
+          } else {
+            failedScanSymbols.add(itemKey);
+          }
+        } catch (_) {
+          failedScanSymbols.add(itemKey);
+        }
+      }
+    }
+
+    const workers = [];
+    for (let i = 0; i < Math.min(concurrency, cacheMisses.length); i++) {
+      workers.push(worker());
+    }
+    await Promise.all(workers);
+  }
 
   // Sort by tightest spread percentage first
   matches.sort((a, b) => a.spreadPercent - b.spreadPercent);
@@ -5685,6 +5839,46 @@ async function fetchBatchQuotes(symbols, forceRefresh = false) {
     }
   }
 
+  // Enrich all returned quotes with EMAs & technicals from universe stocks
+  try {
+    const universe = getLocalStockUniverse() || getUniverseStocks();
+    if (Array.isArray(universe)) {
+      const universeMap = new Map();
+      universe.forEach(u => {
+        if (u && u.symbol) universeMap.set(String(u.symbol).toUpperCase().trim(), u);
+      });
+
+      results.forEach(quote => {
+        const u = universeMap.get(String(quote.symbol).toUpperCase().trim());
+        if (u) {
+          const bE10 = (typeof u.ema10 === 'number') ? u.ema10 : null;
+          const bE20 = (typeof u.ema20 === 'number') ? u.ema20 : null;
+          const bE50 = (typeof u.ema50 === 'number') ? u.ema50 : null;
+          const bE150 = (typeof u.ema150 === 'number') ? u.ema150 : null;
+          const bE200 = (typeof u.ema200 === 'number') ? u.ema200 : null;
+          const curPrice = Number(quote.ltp || 0);
+
+          const liveE10 = (bE10 != null && curPrice > 0) ? ((curPrice * (2 / 11)) + (bE10 * (9 / 11))) : bE10;
+          const liveE20 = (bE20 != null && curPrice > 0) ? ((curPrice * (2 / 21)) + (bE20 * (19 / 21))) : bE20;
+          const liveE50 = (bE50 != null && curPrice > 0) ? ((curPrice * (2 / 51)) + (bE50 * (49 / 51))) : bE50;
+          const liveE150 = (bE150 != null && curPrice > 0) ? ((curPrice * (2 / 151)) + (bE150 * (149 / 151))) : bE150;
+          const liveE200 = (bE200 != null && curPrice > 0) ? ((curPrice * (2 / 201)) + (bE200 * (199 / 201))) : bE200;
+
+          quote.ema10 = liveE10 > 0 ? Number(liveE10.toFixed(2)) : null;
+          quote.ema20 = liveE20 > 0 ? Number(liveE20.toFixed(2)) : null;
+          quote.ema50 = liveE50 > 0 ? Number(liveE50.toFixed(2)) : null;
+          quote.ema150 = liveE150 > 0 ? Number(liveE150.toFixed(2)) : null;
+          quote.ema200 = liveE200 > 0 ? Number(liveE200.toFixed(2)) : null;
+          if (quote.rsi == null && u.rsi != null) quote.rsi = u.rsi;
+          if (quote.mcOver1000Cr == null) quote.mcOver1000Cr = u.mcOver1000Cr || false;
+          if (quote.mcOver2000Cr == null) quote.mcOver2000Cr = u.mcOver2000Cr || false;
+        }
+      });
+    }
+  } catch (enrichErr) {
+    console.warn('[EXPLORE] Quote enrichment warning:', enrichErr.message);
+  }
+
   return results;
 }
 
@@ -6396,31 +6590,55 @@ async function computeExploreStocksData(forceRefresh = false) {
       || historyCache.get(`${symbol}_6mo_1d`)?.data
       || historyCache.get(`${symbol}_default_1d`)?.data;
 
-    // 14-day RSI (real calculation from daily closes, never artificial offsets)
+    // 14-day RSI (real calculation from daily closes, never artificial offsets or 50.0 placeholders)
     let rsi = (typeof cachedHist?.latestRSI === 'number')
       ? Number(cachedHist.latestRSI.toFixed(1))
-      : (typeof screenerMatch?.rsi === 'number'
+      : (typeof screenerMatch?.rsi === 'number' && screenerMatch.rsi !== 50 && screenerMatch.rsi !== 50.0
         ? Number(screenerMatch.rsi.toFixed(1))
-        : (typeof stk.rsi === 'number' && (stk.rsi !== 50 || stk.ema10 != null) ? Number(stk.rsi.toFixed(1)) : null));
+        : (typeof stk.rsi === 'number' && stk.rsi !== 50 && stk.rsi !== 50.0 ? Number(stk.rsi.toFixed(1)) : null));
+
+    // Live O(1) Wilder RSI if baseline exists
+    if (stk.prevClose && ltp > 0 && typeof stk.rsi_avgGain === 'number' && typeof stk.rsi_avgLoss === 'number') {
+      const diff = ltp - stk.prevClose;
+      const curGain = diff > 0 ? diff : 0;
+      const curLoss = diff < 0 ? Math.abs(diff) : 0;
+      const smoothGain = ((stk.rsi_avgGain * 13) + curGain) / 14;
+      const smoothLoss = ((stk.rsi_avgLoss * 13) + curLoss) / 14;
+      if (smoothLoss === 0) {
+        rsi = 100;
+      } else {
+        const rs = smoothGain / smoothLoss;
+        rsi = Number((100 - (100 / (1 + rs))).toFixed(1));
+      }
+    }
 
     // Relative Volume (RVOL) across 5D, 10D, 20D, 50D lookbacks
-    const baseRvol = stk.rvol !== undefined ? stk.rvol : (Math.abs(changePercent) > 2.5 ? 2.4 : 1.1);
+    const baseRvol = (typeof stk.avgVolume20 === 'number' && stk.avgVolume20 > 0 && volume > 0)
+      ? Number((volume / stk.avgVolume20).toFixed(2))
+      : (stk.rvol !== undefined ? stk.rvol : (Math.abs(changePercent) > 2.5 ? 2.4 : 1.1));
     const rvol5 = Number(baseRvol.toFixed(2));
     const rvol10 = Number((baseRvol * 0.95).toFixed(2));
     const rvol20 = Number(baseRvol.toFixed(2));
     const rvol50 = Number((baseRvol * 1.05).toFixed(2));
 
-    const e10 = (typeof stk.ema10 === 'number') ? stk.ema10 : (screenerMatch?.ema10 ?? (typeof cachedHist?.latestEMA10 === 'number' ? cachedHist.latestEMA10 : null));
-    const e20 = (typeof stk.ema20 === 'number') ? stk.ema20 : (screenerMatch?.ema20 ?? (typeof cachedHist?.latestEMA20 === 'number' ? cachedHist.latestEMA20 : null));
-    const e50 = (typeof stk.ema50 === 'number') ? stk.ema50 : (screenerMatch?.ema50 ?? (typeof cachedHist?.latestEMA50 === 'number' ? cachedHist.latestEMA50 : null));
-    const e150 = (typeof stk.ema150 === 'number') ? stk.ema150 : (screenerMatch?.ema150 ?? (typeof cachedHist?.latestEMA150 === 'number' ? cachedHist.latestEMA150 : null));
-    const e200 = (typeof stk.ema200 === 'number') ? stk.ema200 : (screenerMatch?.ema200 ?? (typeof cachedHist?.latestEMA200 === 'number' ? cachedHist.latestEMA200 : null));
+    const bE10 = (typeof stk.ema10 === 'number') ? stk.ema10 : (screenerMatch?.ema10 ?? (typeof cachedHist?.latestEMA10 === 'number' ? cachedHist.latestEMA10 : null));
+    const bE20 = (typeof stk.ema20 === 'number') ? stk.ema20 : (screenerMatch?.ema20 ?? (typeof cachedHist?.latestEMA20 === 'number' ? cachedHist.latestEMA20 : null));
+    const bE50 = (typeof stk.ema50 === 'number') ? stk.ema50 : (screenerMatch?.ema50 ?? (typeof cachedHist?.latestEMA50 === 'number' ? cachedHist.latestEMA50 : null));
+    const bE150 = (typeof stk.ema150 === 'number') ? stk.ema150 : (screenerMatch?.ema150 ?? (typeof cachedHist?.latestEMA150 === 'number' ? cachedHist.latestEMA150 : null));
+    const bE200 = (typeof stk.ema200 === 'number') ? stk.ema200 : (screenerMatch?.ema200 ?? (typeof cachedHist?.latestEMA200 === 'number' ? cachedHist.latestEMA200 : null));
 
-    const ema10 = e10 != null ? Number(e10.toFixed(2)) : null;
-    const ema20 = e20 != null ? Number(e20.toFixed(2)) : null;
-    const ema50 = e50 != null ? Number(e50.toFixed(2)) : null;
-    const ema150 = e150 != null ? Number(e150.toFixed(2)) : null;
-    const ema200 = e200 != null ? Number(e200.toFixed(2)) : null;
+    // Live O(1) Recursive Live EMAs during active market trading
+    const liveE10 = (bE10 != null && ltp > 0) ? ((ltp * (2 / 11)) + (bE10 * (9 / 11))) : bE10;
+    const liveE20 = (bE20 != null && ltp > 0) ? ((ltp * (2 / 21)) + (bE20 * (19 / 21))) : bE20;
+    const liveE50 = (bE50 != null && ltp > 0) ? ((ltp * (2 / 51)) + (bE50 * (49 / 51))) : bE50;
+    const liveE150 = (bE150 != null && ltp > 0) ? ((ltp * (2 / 151)) + (bE150 * (149 / 151))) : bE150;
+    const liveE200 = (bE200 != null && ltp > 0) ? ((ltp * (2 / 201)) + (bE200 * (199 / 201))) : bE200;
+
+    const ema10 = liveE10 != null ? Number(liveE10.toFixed(2)) : null;
+    const ema20 = liveE20 != null ? Number(liveE20.toFixed(2)) : null;
+    const ema50 = liveE50 != null ? Number(liveE50.toFixed(2)) : null;
+    const ema150 = liveE150 != null ? Number(liveE150.toFixed(2)) : null;
+    const ema200 = liveE200 != null ? Number(liveE200.toFixed(2)) : null;
 
     const aboveEma10 = (ema10 != null && ltp != null) ? (ltp >= ema10) : null;
     const aboveEma20 = (ema20 != null && ltp != null) ? (ltp >= ema20) : null;
@@ -6574,7 +6792,11 @@ async function computeExploreStocksData(forceRefresh = false) {
         s1: weeklyS1,
         regime: weeklyPivotRegime,
         label: weeklyPivotLabel
-      }
+      },
+      darvasGreen: stk.darvasGreen_daily || stk.darvasGreen || null,
+      darvasBottom: stk.darvasBottom_daily || stk.darvasBottom || null,
+      darvasGreenWeekly: stk.darvasGreen_weekly || stk.darvasGreenWeekly || null,
+      darvasBottomWeekly: stk.darvasBottom_weekly || stk.darvasBottomWeekly || null
     };
   });
 
@@ -8479,7 +8701,7 @@ const server = http.createServer(async (req, res) => {
                 ema200: typeof cachedHist.latestEMA200 === 'number' ? Number(cachedHist.latestEMA200.toFixed(2)) : null,
                 ltp: cachedHist.ltp
               };
-            } else if (u && u.ema10 != null && u.rsi != null && u.rsi !== 50) {
+            } else if (u && u.ema10 != null && u.rsi != null && u.rsi !== 50 && u.rsi !== 50.0) {
               technicals[sym] = {
                 rsi: Number(u.rsi.toFixed(1)),
                 ema10: Number(u.ema10.toFixed(2)),
@@ -8931,10 +9153,32 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
     const universe = getUniverseStocks();
     if (!universe || universe.length === 0) return;
 
-    // Prioritize F&O stocks and top market-cap stocks that need accurate EMAs and RSI
+    // Prioritize all user watchlist stocks first, then F&O, then by market-cap
+    const watchlistSymbolSet = new Set();
+    try {
+      const users = readUsers();
+      for (const u of users) {
+        if (Array.isArray(u.watchlists)) {
+          for (const wl of u.watchlists) {
+            if (Array.isArray(wl.stocks)) {
+              for (const s of wl.stocks) {
+                if (s && s.symbol) watchlistSymbolSet.add(s.symbol.toUpperCase().replace(/\.(NS|BO)$/, ''));
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
     const needed = universe
-      .filter(s => s.ema10 == null || s.ema20 == null || s.ema50 == null || s.ema150 == null || s.rsi == null || (s.rsi === 50.0 && s.ema10 == null))
+      .filter(s => s.ema10 == null || s.ema20 == null || s.darvasGreen_daily == null || s.darvasGreen_weekly == null || s.rsi == null || s.rsi === 50 || s.rsi === 50.0)
       .sort((a, b) => {
+        const aSym = (a.symbol || '').toUpperCase().replace(/\.(NS|BO)$/, '');
+        const bSym = (b.symbol || '').toUpperCase().replace(/\.(NS|BO)$/, '');
+        const aInWl = watchlistSymbolSet.has(aSym);
+        const bInWl = watchlistSymbolSet.has(bSym);
+        if (aInWl && !bInWl) return -1;
+        if (!aInWl && bInWl) return 1;
         if (a.fno && !b.fno) return -1;
         if (!a.fno && b.fno) return 1;
         return (b.marketCap || 0) - (a.marketCap || 0);
@@ -8942,7 +9186,7 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
       .slice(0, limit);
 
     if (needed.length === 0) return;
-    console.log(`[WARM-UP] Calculating real EMAs & RSI for ${needed.length} universe stocks in background...`);
+    console.log(`[WARM-UP] Calculating real EMAs, Darvas & RSI for ${needed.length} universe stocks in background...`);
 
     const concurrency = 6;
     for (let i = 0; i < needed.length; i += concurrency) {
@@ -8965,7 +9209,13 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
                 ema50: hist.latestEMA50,
                 ema150: hist.latestEMA150,
                 ema200: hist.latestEMA200,
-                rsi: hist.latestRSI
+                ema10_weekly: hist.latestEMA10Weekly || null,
+                ema20_weekly: hist.latestEMA20Weekly || null,
+                rsi: hist.latestRSI,
+                darvasGreen_daily: hist.latestDarvasTop || null,
+                darvasBottom_daily: hist.latestDarvasBottom || null,
+                darvasGreen_weekly: hist.latestDarvasTopWeekly || null,
+                darvasBottom_weekly: hist.latestDarvasBottomWeekly || null
               }
             });
           }
@@ -8987,31 +9237,43 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
 let isEodSyncRunning = false;
 
 function readEodSyncStatus() {
+  if (memoryEodSyncStatus && memoryEodSyncStatus.status) {
+    return memoryEodSyncStatus;
+  }
   try {
     if (fs.existsSync(EOD_SYNC_FILE)) {
       const parsed = JSON.parse(fs.readFileSync(EOD_SYNC_FILE, 'utf8'));
-      if (parsed && parsed.status) return parsed;
+      if (parsed && parsed.status) {
+        memoryEodSyncStatus = parsed;
+        return parsed;
+      }
     }
   } catch (_) {}
-  const now = new Date();
-  const istDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
   return {
-    success: true,
-    lastSyncTimestamp: now.toISOString(),
-    lastSyncDateIST: istDate,
-    lastSyncTimeIST: '04:30 PM',
-    syncedStocksCount: 3676,
-    status: 'SYNCHRONIZED',
+    success: false,
+    lastSyncTimestamp: null,
+    lastSyncDateIST: 'NEVER',
+    lastSyncTimeIST: null,
+    syncedStocksCount: 0,
+    status: 'PENDING',
     source: 'Automated 4:30 PM EOD Scheduler',
-    message: 'Daily EOD Baseline synchronized successfully for 3,676 stocks.'
+    message: 'Daily EOD Baseline pending synchronization.'
   };
 }
 
 function saveEodSyncStatus(statusObj) {
+  memoryEodSyncStatus = statusObj;
   try {
     fs.writeFileSync(EOD_SYNC_FILE, JSON.stringify(statusObj, null, 2), 'utf8');
   } catch (err) {
     console.warn('[EOD-SYNC] Failed saving status file:', err.message);
+  }
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    MONGO_CONFIG.db.collection('config').updateOne(
+      { _id: 'eod_sync_status' },
+      { $set: { ...statusObj, _id: 'eod_sync_status' } },
+      { upsert: true }
+    ).catch(err => console.warn('[EOD-SYNC] MongoDB status sync notice:', err.message));
   }
 }
 
@@ -9085,7 +9347,11 @@ async function runDailyEodBaselineSync() {
               rsi_avgLoss: avgLoss,
               avgVolume20: avgVol20,
               darvasGreen_daily: hist.latestDarvasTop || null,
-              darvasBottom_daily: hist.latestDarvasBottom || null
+              darvasBottom_daily: hist.latestDarvasBottom || null,
+              darvasGreen_weekly: hist.latestDarvasTopWeekly || null,
+              darvasBottom_weekly: hist.latestDarvasBottomWeekly || null,
+              ema10_weekly: hist.latestEMA10Weekly || null,
+              ema20_weekly: hist.latestEMA20Weekly || null
             };
             syncedCount++;
           }
@@ -9136,8 +9402,9 @@ function scheduleDailyEodSync() {
       const hour = parseInt(istHourStr, 10);
       const min = parseInt(istMinStr, 10);
 
-      // Trigger at 16:30 (4:30 PM IST)
-      if (hour === 16 && min >= 30 && min <= 35) {
+      // Trigger at or after 16:30 (4:30 PM IST) on any day if not yet synced for today
+      const isPast430 = (hour > 16) || (hour === 16 && min >= 30);
+      if (isPast430) {
         const currentStatus = readEodSyncStatus();
         if (currentStatus.lastSyncDateIST !== istDateStr && !isEodSyncRunning) {
           console.log(`[EOD-SYNC] Scheduled 4:30 PM IST trigger fired for date ${istDateStr}...`);
@@ -9162,11 +9429,11 @@ async function startServer() {
   console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
   startMutualFundDealsPoller();
   scheduleDailyEodSync();
-  setTimeout(() => warmUpTopStocksTechnicalCache(250), 2000);
+  setTimeout(() => warmUpTopStocksTechnicalCache(300), 2000);
   // Periodically continue calculating uncomputed stocks in background batches
   setInterval(() => {
-    warmUpTopStocksTechnicalCache(40);
-  }, 20000);
+    warmUpTopStocksTechnicalCache(50);
+  }, 10000);
 }
 
 startServer();
