@@ -9423,6 +9423,25 @@ function initMarketIndicesStrip() {
   marketIndicesTimer = setInterval(fetchMarketIndices, 12000);
 }
 
+function formatEodSyncDate(dateStr) {
+  if (!dateStr || dateStr === 'NEVER') return '';
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    }
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    }
+  } catch (_) {}
+  return dateStr;
+}
+
 async function fetchAndRenderEodSyncStatus() {
   try {
     const res = await fetch(`/api/system/eod-status?t=${Date.now()}`);
@@ -9432,7 +9451,9 @@ async function fetchAndRenderEodSyncStatus() {
     const elContainer = document.getElementById('eod-sync-badge-container');
     if (data.success && elText) {
       const timeStr = data.lastSyncTimeIST || '4:30 PM';
-      elText.textContent = `EOD Synced: ${timeStr}`;
+      const dateStr = formatEodSyncDate(data.lastSyncDateIST);
+      const label = dateStr ? `EOD Synced: ${dateStr}, ${timeStr}` : `EOD Synced: ${timeStr}`;
+      elText.textContent = label;
       if (elContainer) {
         elContainer.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST)`;
       }

@@ -9734,20 +9734,25 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
 // Automated Daily EOD Baseline Sync Engine (Scheduled Daily at 4:30 PM IST)
 // -------------------------------------------------------------
 let isEodSyncRunning = false;
+let eodSyncFileMtime = 0;
 
 function readEodSyncStatus() {
-  if (memoryEodSyncStatus && memoryEodSyncStatus.status) {
-    return memoryEodSyncStatus;
-  }
   try {
     if (fs.existsSync(EOD_SYNC_FILE)) {
-      const parsed = JSON.parse(fs.readFileSync(EOD_SYNC_FILE, 'utf8'));
-      if (parsed && parsed.status) {
-        memoryEodSyncStatus = parsed;
-        return parsed;
+      const stats = fs.statSync(EOD_SYNC_FILE);
+      if (!memoryEodSyncStatus || stats.mtimeMs > eodSyncFileMtime) {
+        eodSyncFileMtime = stats.mtimeMs;
+        const parsed = JSON.parse(fs.readFileSync(EOD_SYNC_FILE, 'utf8'));
+        if (parsed && parsed.status) {
+          memoryEodSyncStatus = parsed;
+          return parsed;
+        }
       }
     }
   } catch (_) {}
+  if (memoryEodSyncStatus && memoryEodSyncStatus.status) {
+    return memoryEodSyncStatus;
+  }
   return {
     success: false,
     lastSyncTimestamp: null,
@@ -9878,7 +9883,7 @@ async function runDailyEodBaselineSync() {
       syncedStocksCount: syncedCount || universe.length,
       status: 'SYNCHRONIZED',
       source: 'Automated 4:30 PM EOD Scheduler',
-      message: `Daily EOD Baseline synchronized successfully for ${syncedCount || universe.length} stocks at ${istTime} IST.`
+      message: `Daily EOD Baseline synchronized successfully for ${syncedCount || universe.length} stocks on ${istDate} at ${istTime} IST.`
     };
 
     saveEodSyncStatus(statusPayload);
