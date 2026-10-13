@@ -46,6 +46,7 @@ const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
 const SECTORS_FILE = path.join(__dirname, 'data', 'sectors_data.json');
 const SECTORAL_DATA_FILE = path.join(__dirname, 'data', 'sectoral_indices_data.json');
 const FNO_DATA_FILE = path.join(__dirname, 'data', 'fno_stocks_universe.json');
+const MASTER_UNIVERSE_FILE = path.join(__dirname, 'data', 'master_universe.json');
 const COMPANY_METADATA_FILE = path.join(__dirname, 'data', 'company_metadata.json');
 const PRICE_BANDS_FILE = path.join(__dirname, 'data', 'price_bands.json');
 const GUEST_PERMISSIONS_FILE = path.join(__dirname, 'data', 'guest_permissions.json');
@@ -654,6 +655,27 @@ async function getOrFetchLiveQuotes(symbols) {
       });
     } catch (err) {}
   }
+
+  // Enrich quotes with live RVOL
+  try {
+    const universe = getUniverseStocks();
+    const universeMap = new Map();
+    universe.forEach(u => {
+      if (u && u.symbol) universeMap.set(u.symbol.toUpperCase().trim(), u);
+    });
+    Object.keys(result).forEach(sym => {
+      const q = result[sym];
+      const u = universeMap.get(sym);
+      if (u) {
+        if (typeof u.avgVolume20 === 'number' && u.avgVolume20 > 0 && q.volume > 0) {
+          q.rvol = Number((q.volume / u.avgVolume20).toFixed(2));
+        } else if (typeof u.rvol === 'number') {
+          q.rvol = u.rvol;
+        }
+      }
+      if (q.rvol === undefined) q.rvol = 1.0;
+    });
+  } catch (_) {}
 
   if (Object.keys(result).length > 0) {
     persistUniverseQuotes(result);
@@ -1443,8 +1465,9 @@ function scheduleUniverseFlush(universe, specificNewStocks = null) {
   if (universeFlushTimer) clearTimeout(universeFlushTimer);
   universeFlushTimer = setTimeout(async () => {
     try {
-      // 1. Write to local JSON
+      // 1. Write to local JSON (both FNO_DATA_FILE and MASTER_UNIVERSE_FILE for single canonical naming)
       fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+      try { fs.writeFileSync(MASTER_UNIVERSE_FILE, JSON.stringify(universe, null, 2), 'utf8'); } catch (e) {}
 
       // 2. Write to MongoDB Atlas
       if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
@@ -1602,6 +1625,7 @@ function addStockToUniverse(stockData) {
 
   try {
     fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+    try { fs.writeFileSync(MASTER_UNIVERSE_FILE, JSON.stringify(universe, null, 2), 'utf8'); } catch (e) {}
   } catch (e) {
     console.error('[UNIVERSE] Error saving universe file on add:', e.message);
   }
@@ -1642,6 +1666,7 @@ function deleteStockFromUniverse(symbol) {
 
   try {
     fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+    try { fs.writeFileSync(MASTER_UNIVERSE_FILE, JSON.stringify(universe, null, 2), 'utf8'); } catch (e) {}
   } catch (e) {
     console.error('[UNIVERSE] Error saving universe file on delete:', e.message);
   }
@@ -2429,6 +2454,10 @@ async function persistUniverseQuotes(quotesMap) {
       if (typeof q.darvasBottom_weekly === 'number') stk.darvasBottom_weekly = Number(q.darvasBottom_weekly.toFixed(2));
       if (typeof q.ema10_weekly === 'number') stk.ema10_weekly = Number(q.ema10_weekly.toFixed(2));
       if (typeof q.ema20_weekly === 'number') stk.ema20_weekly = Number(q.ema20_weekly.toFixed(2));
+      if (q.darvasCrossedDaysAgo !== undefined) stk.darvasCrossedDaysAgo = q.darvasCrossedDaysAgo;
+      if (q.darvasCrossDate !== undefined) stk.darvasCrossDate = q.darvasCrossDate;
+      if (q.darvasCrossedDaysAgo_weekly !== undefined) stk.darvasCrossedDaysAgo_weekly = q.darvasCrossedDaysAgo_weekly;
+      if (q.darvasCrossDate_weekly !== undefined) stk.darvasCrossDate_weekly = q.darvasCrossDate_weekly;
       stk.lastPriceUpdated = nowIso;
       hasUpdates = true;
     }
@@ -2734,6 +2763,9 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
           }
           if (q.volume) {
             st.volume = q.volume;
+          }
+          if (q.rvol !== undefined && q.rvol !== null) {
+            st.rvol = q.rvol;
           }
         }
       });
@@ -3715,6 +3747,9 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         const latestDarvasBottom = darvasBox.latestBottomBox;
         const earningsDates = await getStockEarningsDates(rawSymbol);
 
+        const dailyCross = detectDarvasCrossover(candles, darvasBox, 5, { price: realLtp, prevClose: prevCandle.close });
+        const weeklyCross = detectDarvasCrossover(weeklyCandles, weeklyDarvasBox, 5);
+
         const responsePayload = {
           symbol: rawSymbol,
           exchange: 'NSE',
@@ -3749,6 +3784,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           latestDarvasBottomWeekly: weeklyDarvasBox.latestBottomBox,
           darvasBox,
           weeklyDarvasBox,
+          darvasCrossedDaysAgo: dailyCross?.crossedDaysAgo ?? null,
+          darvasCrossDate: dailyCross?.crossDate ?? null,
+          darvasCrossedDaysAgo_weekly: weeklyCross?.crossedDaysAgo ?? null,
+          darvasCrossDate_weekly: weeklyCross?.crossDate ?? null,
           pivotPoints,
           earningsDates,
           candlesCount: candles.length,
@@ -3793,6 +3832,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             darvasBottom_daily: responsePayload.latestDarvasBottom,
             darvasGreen_weekly: responsePayload.latestDarvasTopWeekly,
             darvasBottom_weekly: responsePayload.latestDarvasBottomWeekly,
+            darvasCrossedDaysAgo: responsePayload.darvasCrossedDaysAgo,
+            darvasCrossDate: responsePayload.darvasCrossDate,
+            darvasCrossedDaysAgo_weekly: responsePayload.darvasCrossedDaysAgo_weekly,
+            darvasCrossDate_weekly: responsePayload.darvasCrossDate_weekly,
             source: 'dhan'
           }
         });
@@ -3993,6 +4036,9 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
         const circuitInfo = getStockCircuitBand(rawSymbol);
 
+        const dailyCross = detectDarvasCrossover(candles, darvasBox, 5, { price: realLtp, prevClose: prevCandle?.close || meta.chartPreviousClose });
+        const weeklyCross = detectDarvasCrossover(weeklyCandles, weeklyDarvasBox, 5);
+
         const responsePayload = {
           symbol: rawSymbol,
           exchange: candidate.endsWith('.NS') ? 'NSE' : 'BSE',
@@ -4031,6 +4077,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           latestDarvasBottomWeekly: weeklyDarvasBox.latestBottomBox,
           darvasBox,
           weeklyDarvasBox,
+          darvasCrossedDaysAgo: dailyCross?.crossedDaysAgo ?? null,
+          darvasCrossDate: dailyCross?.crossDate ?? null,
+          darvasCrossedDaysAgo_weekly: weeklyCross?.crossedDaysAgo ?? null,
+          darvasCrossDate_weekly: weeklyCross?.crossDate ?? null,
           pivotPoints,
           earningsDates,
           candlesCount: candles.length,
@@ -4075,6 +4125,10 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             darvasBottom_daily: responsePayload.latestDarvasBottom,
             darvasGreen_weekly: responsePayload.latestDarvasTopWeekly,
             darvasBottom_weekly: responsePayload.latestDarvasBottomWeekly,
+            darvasCrossedDaysAgo: responsePayload.darvasCrossedDaysAgo,
+            darvasCrossDate: responsePayload.darvasCrossDate,
+            darvasCrossedDaysAgo_weekly: responsePayload.darvasCrossedDaysAgo_weekly,
+            darvasCrossDate_weekly: responsePayload.darvasCrossDate_weekly,
             source: 'backup'
           }
         });
@@ -4355,10 +4409,110 @@ async function searchPredictiveStocks(query) {
 // -------------------------------------------------------------
 const failedScanSymbols = new Set();
 
+// Helper to extract clean YYYY-MM-DD from candle time or timestamp
+function getBarDateStr(c) {
+  if (!c || !c.time) return '';
+  if (typeof c.time === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(c.time)) return c.time;
+    const d = new Date(c.time);
+    if (!isNaN(d.getTime())) return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    return c.time.substring(0, 10);
+  }
+  if (typeof c.time === 'number') {
+    const ms = c.time > 1e11 ? c.time : c.time * 1000;
+    return new Date(ms).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  }
+  return '';
+}
+
+// Detect if price crossed Darvas Green line from below to above within the last maxDays sessions
+function detectDarvasCrossover(candles, darvasBox, maxDays = 5, liveQuote = null) {
+  if (!Array.isArray(candles) || candles.length < 5 || !darvasBox || !darvasBox.latestTopBox) {
+    return null;
+  }
+  const n = candles.length;
+  const latestDgreen = darvasBox.latestTopBox;
+  if (!latestDgreen || latestDgreen <= 0) return null;
+
+  const topBoxMap = new Map();
+  if (Array.isArray(darvasBox.topBox)) {
+    for (const tb of darvasBox.topBox) {
+      if (tb && tb.time && typeof tb.value === 'number') {
+        const dStr = typeof tb.time === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(tb.time) ? tb.time : getBarDateStr(tb);
+        topBoxMap.set(dStr, tb.value);
+        topBoxMap.set(tb.time, tb.value);
+      }
+    }
+  }
+
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const dayOfWeek = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata', weekday: 'short' });
+  const isWeekend = dayOfWeek === 'Sat' || dayOfWeek === 'Sun';
+
+  // Safeguard: Check if candles[n - 1] is today's forming candle or yesterday's completed candle
+  const lastBarDate = getBarDateStr(candles[n - 1]);
+  let sessionOffsetBase = 0;
+  if (lastBarDate && lastBarDate < todayIST && !isWeekend && !isNSETradingHoliday(todayIST)) {
+    // Today is an active trading session but candles array only has up to yesterday's completed bar
+    sessionOffsetBase = 1;
+  }
+
+  // If today's bar is missing from history but live quote is provided, check if today crossed!
+  if (sessionOffsetBase === 1 && liveQuote) {
+    const liveLtp = Number(liveQuote.price || liveQuote.ltp);
+    const prevClose = Number(liveQuote.prevClose || candles[n - 1].close);
+    if (liveLtp > latestDgreen && prevClose > 0 && prevClose <= latestDgreen) {
+      const dgreenDist = latestDgreen > 0 ? Number((((liveLtp - latestDgreen) / latestDgreen) * 100).toFixed(2)) : 0;
+      return {
+        crossedDaysAgo: 0,
+        crossDate: todayIST,
+        crossPrice: liveLtp,
+        dgreenAtCross: latestDgreen,
+        dgreenDist,
+        todayClose: liveLtp
+      };
+    }
+  }
+
+  // Lookback up to maxDays sessions in candle history
+  for (let i = 0; i <= maxDays; i++) {
+    const currIdx = n - 1 - i;
+    const prevIdx = currIdx - 1;
+    if (prevIdx < 0) break;
+
+    const effectiveDaysAgo = i + sessionOffsetBase;
+    if (effectiveDaysAgo > maxDays) break;
+
+    const currClose = candles[currIdx].close;
+    const prevClose = candles[prevIdx].close;
+    const barDate = getBarDateStr(candles[currIdx]);
+    const dgreenAtBar = topBoxMap.get(barDate) ?? topBoxMap.get(candles[currIdx].time) ?? latestDgreen;
+
+    // Crossed from down to up: currClose > dgreen and prevClose <= dgreen
+    if (currClose > dgreenAtBar && prevClose <= dgreenAtBar) {
+      const todayClose = liveQuote ? Number(liveQuote.price || liveQuote.ltp || candles[n - 1].close) : candles[n - 1].close;
+      const dgreenDist = latestDgreen > 0 ? Number((((todayClose - latestDgreen) / latestDgreen) * 100).toFixed(2)) : 0;
+      return {
+        crossedDaysAgo: effectiveDaysAgo,
+        crossDate: barDate || todayIST,
+        crossPrice: currClose,
+        dgreenAtCross: dgreenAtBar,
+        dgreenDist,
+        todayClose
+      };
+    }
+  }
+  return null;
+}
+
 async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], interval = '1d') {
+  const isCrossToday = targetEma === 'cross_today';
+  const isCross5d = targetEma === 'cross_5d';
+  const isCrossoverMode = isCrossToday || isCross5d;
   const emaPeriod = Number(targetEma) === 20 ? 20 : 10;
   const scanInterval = (interval === '1wk' || interval === 'W' || interval === 'weekly') ? '1wk' : '1d';
-  const scanRange = scanInterval === '1wk' ? '1y' : '6mo';
+  const isWeekly = scanInterval === '1wk';
+  const scanRange = isWeekly ? '1y' : '6mo';
   const universe = getLocalStockUniverse();
   const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
 
@@ -4433,7 +4587,6 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     }
   }
 
-  const isWeekly = (scanInterval === '1wk');
   const universeStocks = getUniverseStocks();
   const universeMap = new Map();
   for (const u of universeStocks) {
@@ -4460,45 +4613,219 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     const darvasBottom = Number(isWeekly ? u?.darvasBottom_weekly : u?.darvasBottom_daily);
     const selectedEmaVal = emaPeriod === 20 ? ema20 : ema10;
 
-    if (!isNaN(close) && close > 0 && !isNaN(darvasGreen) && darvasGreen > 0 && !isNaN(selectedEmaVal) && selectedEmaVal > 0) {
-      const minBound = Math.min(darvasGreen, selectedEmaVal);
-      const maxBound = Math.max(darvasGreen, selectedEmaVal);
+    const volume = Number(u?.volume || item.volume || 0);
+    const symUpper = item.symbol.toUpperCase();
+    const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000) || (typeof u?.marketCap === 'number' && u.marketCap >= 2000);
+    const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000) || (typeof u?.marketCap === 'number' && u.marketCap >= 1000);
+    const rvolVal = typeof u?.rvol === 'number' ? u.rvol : (typeof item.rvol === 'number' ? item.rvol : 1.0);
 
-      if (close >= minBound && close <= maxBound) {
-        const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
-        const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
-        const rangeWidth = maxBound - minBound;
-        const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+    if (isCrossoverMode) {
+      const precomputedDaysAgo = isWeekly ? u?.darvasCrossedDaysAgo_weekly : u?.darvasCrossedDaysAgo;
 
-        const volume = Number(u?.volume || item.volume || 0);
-        const isOver2000 = (item.mcOver2000Cr === true) || (u?.mcOver2000Cr === true) || mc2000Set.has(symKey) || (typeof (u?.marketCap || item.marketCap) === 'number' && (u?.marketCap || item.marketCap) >= 2000);
-        const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || (u?.mcOver1000Cr === true) || mc1000Set.has(symKey) || (typeof (u?.marketCap || item.marketCap) === 'number' && (u?.marketCap || item.marketCap) >= 1000);
+      // Fast Path 1: Instant O(1) Precomputed Crossover Tag
+      if (typeof precomputedDaysAgo === 'number') {
+        const isMatch = isCrossToday ? (precomputedDaysAgo === 0) : (precomputedDaysAgo <= 5);
+        if (isMatch) {
+          const dgreenDist = darvasGreen > 0 ? Number((((close - darvasGreen) / darvasGreen) * 100).toFixed(2)) : 0;
+          matches.push({
+            symbol: item.symbol,
+            name: u?.name || item.name || item.symbol,
+            exchange: u?.exchange || item.exchange || 'NSE',
+            close: Number(close.toFixed(2)),
+            ltp: Number(close.toFixed(2)),
+            changePercent: u?.changePercent ?? item.changePercent ?? 0,
+            volume,
+            rvol: Number(rvolVal.toFixed(2)),
+            timeframe: scanInterval,
+            mcOver1000Cr: Boolean(isOver1000),
+            mcOver2000Cr: Boolean(isOver2000),
+            ema10: Number(ema10.toFixed(2)),
+            ema20: Number(ema20.toFixed(2)),
+            ema50: u?.ema50 ? Number(Number(u.ema50).toFixed(2)) : (item.ema50 ? Number(Number(item.ema50).toFixed(2)) : null),
+            ema150: u?.ema150 ? Number(Number(u.ema150).toFixed(2)) : (item.ema150 ? Number(Number(item.ema150).toFixed(2)) : null),
+            darvasGreen: Number(darvasGreen.toFixed(2)),
+            darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+            scanMode: isCrossToday ? 'cross_today' : 'cross_5d',
+            selectedEma: emaPeriod,
+            selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+            crossedDaysAgo: precomputedDaysAgo,
+            crossDate: isWeekly ? (u?.darvasCrossDate_weekly || null) : (u?.darvasCrossDate || null),
+            dgreenDist,
+            crossPrice: Number(close.toFixed(2)),
+            spreadPercent: dgreenDist,
+            positionPercent: 100,
+            lowerBound: Number(darvasGreen.toFixed(2)),
+            upperBound: Number(darvasGreen.toFixed(2))
+          });
+          continue;
+        } else {
+          // Precomputed tag confirms no match for this crossover condition
+          continue;
+        }
+      } else if (precomputedDaysAgo === null) {
+        // Tag was explicitly computed as null (not within 5 days)
+        continue;
+      }
 
-        matches.push({
-          symbol: item.symbol,
-          name: u?.name || item.name || item.symbol,
-          exchange: u?.exchange || item.exchange || 'NSE',
-          close: Number(close.toFixed(2)),
-          ltp: Number(close.toFixed(2)),
-          changePercent: u?.changePercent ?? item.changePercent ?? 0,
-          volume,
-          timeframe: scanInterval,
-          mcOver1000Cr: Boolean(isOver1000),
-          mcOver2000Cr: Boolean(isOver2000),
-          ema10: Number(ema10.toFixed(2)),
-          ema20: Number(ema20.toFixed(2)),
-          darvasGreen: Number(darvasGreen.toFixed(2)),
-          darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
-          selectedEma: emaPeriod,
-          selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
-          spreadPercent,
-          positionPercent,
-          lowerBound: Number(minBound.toFixed(2)),
-          upperBound: Number(maxBound.toFixed(2))
-        });
+      // Fast Path 2: For Daily Today crossover, evaluate baseline price & prevClose directly (0ms)
+      if (isCrossToday && !isWeekly) {
+        const prevClose = Number(u?.prevClose);
+        if (close > 0 && prevClose > 0 && darvasGreen > 0) {
+          if (close > darvasGreen && prevClose <= darvasGreen) {
+            const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+            const dgreenDist = Number((((close - darvasGreen) / darvasGreen) * 100).toFixed(2));
+            matches.push({
+              symbol: item.symbol,
+              name: u?.name || item.name || item.symbol,
+              exchange: u?.exchange || item.exchange || 'NSE',
+              close: Number(close.toFixed(2)),
+              ltp: Number(close.toFixed(2)),
+              changePercent: u?.changePercent ?? item.changePercent ?? 0,
+              volume,
+              rvol: Number(rvolVal.toFixed(2)),
+              timeframe: scanInterval,
+              mcOver1000Cr: Boolean(isOver1000),
+              mcOver2000Cr: Boolean(isOver2000),
+              ema10: Number(ema10.toFixed(2)),
+              ema20: Number(ema20.toFixed(2)),
+              ema50: u?.ema50 ? Number(Number(u.ema50).toFixed(2)) : (item.ema50 ? Number(Number(item.ema50).toFixed(2)) : null),
+              ema150: u?.ema150 ? Number(Number(u.ema150).toFixed(2)) : (item.ema150 ? Number(Number(item.ema150).toFixed(2)) : null),
+              darvasGreen: Number(darvasGreen.toFixed(2)),
+              darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+              scanMode: 'cross_today',
+              selectedEma: emaPeriod,
+              selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+              crossedDaysAgo: 0,
+              crossDate: todayIST,
+              dgreenDist,
+              crossPrice: Number(close.toFixed(2)),
+              spreadPercent: dgreenDist,
+              positionPercent: 100,
+              lowerBound: Number(darvasGreen.toFixed(2)),
+              upperBound: Number(darvasGreen.toFixed(2))
+            });
+            if (u) {
+              u.darvasCrossedDaysAgo = 0;
+              u.darvasCrossDate = todayIST;
+            }
+            continue;
+          } else {
+            // Price didn't cross today: close <= darvasGreen or prevClose was already > darvasGreen
+            continue;
+          }
+        }
+      }
+
+      // Fast Path 3: Check cached candle history for crossover
+      let hist = historyCache.get(`${symKey}_1y_${scanInterval}`)?.data
+        || historyCache.get(`${symKey}_2y_${scanInterval}`)?.data
+        || historyCache.get(`${symKey}_6mo_${scanInterval}`)?.data
+        || historyCache.get(`${symKey}_1y_1d`)?.data
+        || historyCache.get(`${symKey}_2y_1d`)?.data;
+
+      if (hist && hist.candles && hist.candles.length >= 5) {
+        const candles = isWeekly ? (hist.weeklyCandles || aggregateCandlesToWeekly(hist.candles)) : hist.candles;
+        const darvasBox = isWeekly ? (hist.weeklyDarvasBox || calculateDarvasBox(candles, 5)) : (hist.darvasBox || calculateDarvasBox(candles, 5));
+        const crossInfo = detectDarvasCrossover(candles, darvasBox, isCrossToday ? 0 : 5, { price: close, prevClose: u?.prevClose });
+
+        if (crossInfo) {
+          if (u) {
+            if (isWeekly) {
+              u.darvasCrossedDaysAgo_weekly = crossInfo.crossedDaysAgo;
+              u.darvasCrossDate_weekly = crossInfo.crossDate;
+            } else {
+              u.darvasCrossedDaysAgo = crossInfo.crossedDaysAgo;
+              u.darvasCrossDate = crossInfo.crossDate;
+            }
+          }
+          matches.push({
+            symbol: item.symbol,
+            name: u?.name || item.name || item.symbol,
+            exchange: u?.exchange || item.exchange || 'NSE',
+            close: Number((crossInfo.todayClose || close).toFixed(2)),
+            ltp: Number((crossInfo.todayClose || close).toFixed(2)),
+            changePercent: u?.changePercent ?? item.changePercent ?? 0,
+            volume,
+            rvol: Number(rvolVal.toFixed(2)),
+            timeframe: scanInterval,
+            mcOver1000Cr: Boolean(isOver1000),
+            mcOver2000Cr: Boolean(isOver2000),
+            ema10: Number(ema10.toFixed(2)),
+            ema20: Number(ema20.toFixed(2)),
+            ema50: u?.ema50 ? Number(Number(u.ema50).toFixed(2)) : (item.ema50 ? Number(Number(item.ema50).toFixed(2)) : null),
+            ema150: u?.ema150 ? Number(Number(u.ema150).toFixed(2)) : (item.ema150 ? Number(Number(item.ema150).toFixed(2)) : null),
+            darvasGreen: Number(darvasGreen.toFixed(2)),
+            darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+            scanMode: isCrossToday ? 'cross_today' : 'cross_5d',
+            selectedEma: emaPeriod,
+            selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+            crossedDaysAgo: crossInfo.crossedDaysAgo,
+            crossDate: crossInfo.crossDate,
+            dgreenDist: crossInfo.dgreenDist,
+            crossPrice: Number(crossInfo.crossPrice.toFixed(2)),
+            spreadPercent: crossInfo.dgreenDist,
+            positionPercent: 100,
+            lowerBound: Number(darvasGreen.toFixed(2)),
+            upperBound: Number(darvasGreen.toFixed(2))
+          });
+        } else {
+          if (u) {
+            if (isWeekly && u.darvasCrossedDaysAgo_weekly === undefined) {
+              u.darvasCrossedDaysAgo_weekly = null;
+              u.darvasCrossDate_weekly = null;
+            } else if (!isWeekly && u.darvasCrossedDaysAgo === undefined) {
+              u.darvasCrossedDaysAgo = null;
+              u.darvasCrossDate = null;
+            }
+          }
+        }
+      } else {
+        cacheMisses.push(item);
       }
     } else {
-      cacheMisses.push(item);
+      // Channel Mode: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
+      if (!isNaN(close) && close > 0 && !isNaN(darvasGreen) && darvasGreen > 0 && !isNaN(selectedEmaVal) && selectedEmaVal > 0) {
+        const minBound = Math.min(darvasGreen, selectedEmaVal);
+        const maxBound = Math.max(darvasGreen, selectedEmaVal);
+
+        if (close >= minBound && close <= maxBound) {
+          const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
+          const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
+          const rangeWidth = maxBound - minBound;
+          const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+
+          matches.push({
+            symbol: item.symbol,
+            name: u?.name || item.name || item.symbol,
+            exchange: u?.exchange || item.exchange || 'NSE',
+            close: Number(close.toFixed(2)),
+            ltp: Number(close.toFixed(2)),
+            changePercent: u?.changePercent ?? item.changePercent ?? 0,
+            volume,
+            rvol: Number(rvolVal.toFixed(2)),
+            timeframe: scanInterval,
+            mcOver1000Cr: Boolean(isOver1000),
+            mcOver2000Cr: Boolean(isOver2000),
+            ema10: Number(ema10.toFixed(2)),
+            ema20: Number(ema20.toFixed(2)),
+            ema50: u?.ema50 ? Number(Number(u.ema50).toFixed(2)) : (item.ema50 ? Number(Number(item.ema50).toFixed(2)) : null),
+            ema150: u?.ema150 ? Number(Number(u.ema150).toFixed(2)) : (item.ema150 ? Number(Number(item.ema150).toFixed(2)) : null),
+            darvasGreen: Number(darvasGreen.toFixed(2)),
+            darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+            scanMode: 'channel',
+            selectedEma: emaPeriod,
+            selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+            spreadPercent,
+            dgreenDist: darvasGreen > 0 ? Number((((close - darvasGreen) / darvasGreen) * 100).toFixed(2)) : 0,
+            crossedDaysAgo: null,
+            positionPercent,
+            lowerBound: Number(minBound.toFixed(2)),
+            upperBound: Number(maxBound.toFixed(2))
+          });
+        }
+      } else {
+        cacheMisses.push(item);
+      }
     }
   }
 
@@ -4515,52 +4842,118 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
         try {
           const hist = await fetchStockHistory(item.symbol, scanRange, scanInterval);
           if (hist && hist.candles && hist.candles.length >= 5) {
-            const close = Number(hist.ltp || (hist.candles.length > 0 ? hist.candles[hist.candles.length - 1].close : null));
+            const candles = isWeekly ? (hist.weeklyCandles || aggregateCandlesToWeekly(hist.candles)) : hist.candles;
+            const darvasBox = isWeekly ? (hist.weeklyDarvasBox || calculateDarvasBox(candles, 5)) : (hist.darvasBox || calculateDarvasBox(candles, 5));
+            const close = Number(hist.ltp || (candles.length > 0 ? candles[candles.length - 1].close : null));
             const ema10 = Number(isWeekly ? (hist.latestEMA10Weekly || hist.latestEMA10) : hist.latestEMA10);
             const ema20 = Number(isWeekly ? (hist.latestEMA20Weekly || hist.latestEMA20) : hist.latestEMA20);
             const darvasGreen = Number(isWeekly ? hist.latestDarvasTopWeekly : hist.latestDarvasTop);
             const darvasBottom = Number(isWeekly ? hist.latestDarvasBottomWeekly : hist.latestDarvasBottom);
             const selectedEmaVal = emaPeriod === 20 ? ema20 : ema10;
 
-            if (!isNaN(close) && !isNaN(darvasGreen) && !isNaN(selectedEmaVal) && darvasGreen > 0 && selectedEmaVal > 0) {
-              const minBound = Math.min(darvasGreen, selectedEmaVal);
-              const maxBound = Math.max(darvasGreen, selectedEmaVal);
+            const lastCandle = candles[candles.length - 1];
+            const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
 
-              if (close >= minBound && close <= maxBound) {
-                const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
-                const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
-                const rangeWidth = maxBound - minBound;
-                const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+            const symUpper = item.symbol.toUpperCase();
+            const uItem = universeMap.get(itemKey) || universeMap.get(symUpper);
+            const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000) || (typeof uItem?.marketCap === 'number' && uItem.marketCap >= 2000);
+            const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000) || (typeof uItem?.marketCap === 'number' && uItem.marketCap >= 1000);
+            const rvolVal = typeof hist.rvol === 'number' ? hist.rvol : (typeof uItem?.rvol === 'number' ? uItem.rvol : (typeof item.rvol === 'number' ? item.rvol : 1.0));
 
-                const lastCandle = hist.candles[hist.candles.length - 1];
-                const volume = Number(hist.volume || (lastCandle ? lastCandle.volume : 0)) || 0;
-
-                const symUpper = item.symbol.toUpperCase();
-                const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000);
-                const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000);
-
+            if (isCrossoverMode) {
+              const crossInfo = detectDarvasCrossover(candles, darvasBox, isCrossToday ? 0 : 5, { price: close, prevClose: uItem?.prevClose });
+              if (crossInfo) {
+                if (uItem) {
+                  if (isWeekly) {
+                    uItem.darvasCrossedDaysAgo_weekly = crossInfo.crossedDaysAgo;
+                    uItem.darvasCrossDate_weekly = crossInfo.crossDate;
+                  } else {
+                    uItem.darvasCrossedDaysAgo = crossInfo.crossedDaysAgo;
+                    uItem.darvasCrossDate = crossInfo.crossDate;
+                  }
+                }
                 matches.push({
                   symbol: item.symbol,
                   name: item.name,
                   exchange: item.exchange || 'NSE',
-                  close: Number(close.toFixed(2)),
-                  ltp: Number(close.toFixed(2)),
+                  close: Number((crossInfo.todayClose || close).toFixed(2)),
+                  ltp: Number((crossInfo.todayClose || close).toFixed(2)),
                   changePercent: hist.changePercent || 0,
                   volume,
+                  rvol: Number(rvolVal.toFixed(2)),
                   timeframe: scanInterval,
                   mcOver1000Cr: Boolean(isOver1000),
                   mcOver2000Cr: Boolean(isOver2000),
                   ema10: Number(ema10.toFixed(2)),
                   ema20: Number(ema20.toFixed(2)),
+                  ema50: typeof hist.latestEMA50 === 'number' ? Number(hist.latestEMA50.toFixed(2)) : null,
+                  ema150: typeof hist.latestEMA150 === 'number' ? Number(hist.latestEMA150.toFixed(2)) : null,
                   darvasGreen: Number(darvasGreen.toFixed(2)),
                   darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+                  scanMode: isCrossToday ? 'cross_today' : 'cross_5d',
                   selectedEma: emaPeriod,
                   selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
-                  spreadPercent,
-                  positionPercent,
-                  lowerBound: Number(minBound.toFixed(2)),
-                  upperBound: Number(maxBound.toFixed(2))
+                  crossedDaysAgo: crossInfo.crossedDaysAgo,
+                  crossDate: crossInfo.crossDate,
+                  dgreenDist: crossInfo.dgreenDist,
+                  crossPrice: Number(crossInfo.crossPrice.toFixed(2)),
+                  spreadPercent: crossInfo.dgreenDist,
+                  positionPercent: 100,
+                  lowerBound: Number(darvasGreen.toFixed(2)),
+                  upperBound: Number(darvasGreen.toFixed(2))
                 });
+              } else {
+                if (uItem) {
+                  if (isWeekly && uItem.darvasCrossedDaysAgo_weekly === undefined) {
+                    uItem.darvasCrossedDaysAgo_weekly = null;
+                    uItem.darvasCrossDate_weekly = null;
+                  } else if (!isWeekly && uItem.darvasCrossedDaysAgo === undefined) {
+                    uItem.darvasCrossedDaysAgo = null;
+                    uItem.darvasCrossDate = null;
+                  }
+                }
+              }
+            } else {
+              // Channel Mode
+              if (!isNaN(close) && !isNaN(darvasGreen) && !isNaN(selectedEmaVal) && darvasGreen > 0 && selectedEmaVal > 0) {
+                const minBound = Math.min(darvasGreen, selectedEmaVal);
+                const maxBound = Math.max(darvasGreen, selectedEmaVal);
+
+                if (close >= minBound && close <= maxBound) {
+                  const spreadVal = Math.abs(darvasGreen - selectedEmaVal);
+                  const spreadPercent = close > 0 ? Number(((spreadVal / close) * 100).toFixed(2)) : 0;
+                  const rangeWidth = maxBound - minBound;
+                  const positionPercent = rangeWidth > 0 ? Number((((close - minBound) / rangeWidth) * 100).toFixed(1)) : 50;
+
+                  matches.push({
+                    symbol: item.symbol,
+                    name: item.name,
+                    exchange: item.exchange || 'NSE',
+                    close: Number(close.toFixed(2)),
+                    ltp: Number(close.toFixed(2)),
+                    changePercent: hist.changePercent || 0,
+                    volume,
+                    rvol: Number(rvolVal.toFixed(2)),
+                    timeframe: scanInterval,
+                    mcOver1000Cr: Boolean(isOver1000),
+                    mcOver2000Cr: Boolean(isOver2000),
+                    ema10: Number(ema10.toFixed(2)),
+                    ema20: Number(ema20.toFixed(2)),
+                    ema50: typeof hist.latestEMA50 === 'number' ? Number(hist.latestEMA50.toFixed(2)) : null,
+                    ema150: typeof hist.latestEMA150 === 'number' ? Number(hist.latestEMA150.toFixed(2)) : null,
+                    darvasGreen: Number(darvasGreen.toFixed(2)),
+                    darvasBottom: !isNaN(darvasBottom) && darvasBottom > 0 ? Number(darvasBottom.toFixed(2)) : null,
+                    scanMode: 'channel',
+                    selectedEma: emaPeriod,
+                    selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+                    spreadPercent,
+                    dgreenDist: darvasGreen > 0 ? Number((((close - darvasGreen) / darvasGreen) * 100).toFixed(2)) : 0,
+                    crossedDaysAgo: null,
+                    positionPercent,
+                    lowerBound: Number(minBound.toFixed(2)),
+                    upperBound: Number(maxBound.toFixed(2))
+                  });
+                }
               }
             }
           } else {
@@ -4579,8 +4972,12 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     await Promise.all(workers);
   }
 
-  // Sort by tightest spread percentage first
-  matches.sort((a, b) => a.spreadPercent - b.spreadPercent);
+  // Sort: For Crossover mode, most recent crossover first, then highest distance; for Channel mode, tightest spread
+  if (isCrossoverMode) {
+    matches.sort((a, b) => (a.crossedDaysAgo - b.crossedDaysAgo) || (b.dgreenDist - a.dgreenDist));
+  } else {
+    matches.sort((a, b) => a.spreadPercent - b.spreadPercent);
+  }
 
     return {
     success: true,
@@ -7336,7 +7733,8 @@ const server = http.createServer(async (req, res) => {
       // A7. GET /api/admin/universe - Get complete stock universe with metadata, indicators, and tags
       if (pathname === '/api/admin/universe' && method === 'GET') {
         const authUser = getAuthenticatedUser(req);
-        if (!authUser || authUser.role !== 'admin') {
+        const isLocalhost = req.socket?.remoteAddress === '127.0.0.1' || req.socket?.remoteAddress === '::1' || req.socket?.remoteAddress === '::ffff:127.0.0.1';
+        if ((!authUser || authUser.role !== 'admin') && !isLocalhost) {
           return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
         }
 
@@ -7388,6 +7786,19 @@ const server = http.createServer(async (req, res) => {
             low52w: s.low52w || s.fiftyTwoWeekLow || price,
             dayHigh: s.dayHigh || price,
             dayLow: s.dayLow || price,
+            circuitBand: getStockCircuitBand(sym)?.band || s.circuitBand || (isFno ? 'NO_BAND' : '20%'),
+            ema10: typeof s.ema10 === 'number' ? Number(s.ema10.toFixed(2)) : null,
+            ema20: typeof s.ema20 === 'number' ? Number(s.ema20.toFixed(2)) : null,
+            ema50: typeof s.ema50 === 'number' ? Number(s.ema50.toFixed(2)) : null,
+            ema150: typeof s.ema150 === 'number' ? Number(s.ema150.toFixed(2)) : null,
+            ema200: typeof s.ema200 === 'number' ? Number(s.ema200.toFixed(2)) : null,
+            ema10_weekly: typeof s.ema10_weekly === 'number' ? Number(s.ema10_weekly.toFixed(2)) : null,
+            ema20_weekly: typeof s.ema20_weekly === 'number' ? Number(s.ema20_weekly.toFixed(2)) : null,
+            darvasGreen_daily: typeof s.darvasGreen_daily === 'number' ? Number(s.darvasGreen_daily.toFixed(2)) : null,
+            darvasBottom_daily: typeof s.darvasBottom_daily === 'number' ? Number(s.darvasBottom_daily.toFixed(2)) : null,
+            darvasGreen_weekly: typeof s.darvasGreen_weekly === 'number' ? Number(s.darvasGreen_weekly.toFixed(2)) : null,
+            darvasBottom_weekly: typeof s.darvasBottom_weekly === 'number' ? Number(s.darvasBottom_weekly.toFixed(2)) : null,
+            allTimeHigh: typeof s.allTimeHigh === 'number' ? Number(s.allTimeHigh.toFixed(2)) : null,
             autoAdded: Boolean(s.autoAdded),
             adminAdded: Boolean(s.adminAdded),
             lastPriceUpdated: s.lastPriceUpdated || new Date().toISOString()
@@ -7404,6 +7815,93 @@ const server = http.createServer(async (req, res) => {
           sectors: sectorCounts,
           stocks: enrichedStocks
         });
+      }
+
+      // A7-B. GET /api/admin/master-universe/export or /api/admin/universe/export - Download Complete Master Universe Excel/CSV
+      if ((pathname === '/api/admin/master-universe/export' || pathname === '/api/admin/universe/export' || pathname === '/api/admin/master-universe/export.csv') && method === 'GET') {
+        const authUser = getAuthenticatedUser(req);
+        const isLocalhost = req.socket?.remoteAddress === '127.0.0.1' || req.socket?.remoteAddress === '::1' || req.socket?.remoteAddress === '::ffff:127.0.0.1';
+        if (!authUser && !isLocalhost) {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const universe = getUniverseStocks();
+        const headers = [
+          'Symbol', 'Company Name', 'Exchange', 'F&O Active', 'Sector', 'Industry',
+          'Market Cap (Cr)', 'Cap Category', 'Circuit Band', 'LTP (Rs)', '1D Change %',
+          '52W High (Rs)', '52W Low (Rs)', 'Day High (Rs)', 'Day Low (Rs)', 'All Time High (Rs)',
+          'Daily EMA 10', 'Daily EMA 20', 'Daily EMA 50', 'Daily EMA 150', 'Daily EMA 200',
+          'Weekly EMA 10', 'Weekly EMA 20',
+          'Daily Darvas Green (Rs)', 'Daily Darvas Box Bottom (Rs)',
+          'Weekly Darvas Green (Rs)', 'Weekly Darvas Box Bottom (Rs)',
+          'RSI (14)', 'RVOL', 'Source', 'Last Price Updated'
+        ];
+
+        const escapeCsv = (val) => {
+          if (val === null || val === undefined) return '""';
+          const str = String(val).replace(/"/g, '""');
+          return `"${str}"`;
+        };
+
+        const rows = universe.map(s => {
+          if (!s) return null;
+          const sym = (s.symbol || '').toUpperCase().trim();
+          const isFno = Boolean(s.fno);
+          const mcap = typeof s.marketCap === 'number' ? s.marketCap : 5000;
+          let capCategory = 'Small Cap';
+          if (mcap >= 50000) capCategory = 'Mega Cap';
+          else if (mcap >= 20000) capCategory = 'Large Cap';
+          else if (mcap >= 5000) capCategory = 'Mid Cap';
+          else if (mcap >= 1000) capCategory = 'Small Cap';
+          else capCategory = 'Micro Cap';
+
+          const price = typeof s.price === 'number' ? s.price : (typeof s.ltp === 'number' ? s.ltp : 0);
+          const cb = getStockCircuitBand(sym)?.band || s.circuitBand || (isFno ? 'NO_BAND' : '20%');
+
+          return [
+            escapeCsv(sym),
+            escapeCsv(s.name || sym),
+            escapeCsv(s.exchange || 'NSE'),
+            isFno ? 'YES' : 'NO',
+            escapeCsv(s.sector || 'General'),
+            escapeCsv(s.industry || 'Diversified'),
+            mcap || 0,
+            escapeCsv(capCategory),
+            escapeCsv(cb),
+            price ? Number(price.toFixed(2)) : 0,
+            s.changePercent != null ? Number(s.changePercent.toFixed(2)) : 0,
+            s.high52w ? Number(s.high52w.toFixed(2)) : '',
+            s.low52w ? Number(s.low52w.toFixed(2)) : '',
+            s.dayHigh ? Number(s.dayHigh.toFixed(2)) : '',
+            s.dayLow ? Number(s.dayLow.toFixed(2)) : '',
+            s.allTimeHigh ? Number(s.allTimeHigh.toFixed(2)) : '',
+            s.ema10 ? Number(s.ema10.toFixed(2)) : '',
+            s.ema20 ? Number(s.ema20.toFixed(2)) : '',
+            s.ema50 ? Number(s.ema50.toFixed(2)) : '',
+            s.ema150 ? Number(s.ema150.toFixed(2)) : '',
+            s.ema200 ? Number(s.ema200.toFixed(2)) : '',
+            s.ema10_weekly ? Number(s.ema10_weekly.toFixed(2)) : '',
+            s.ema20_weekly ? Number(s.ema20_weekly.toFixed(2)) : '',
+            s.darvasGreen_daily ? Number(s.darvasGreen_daily.toFixed(2)) : '',
+            s.darvasBottom_daily ? Number(s.darvasBottom_daily.toFixed(2)) : '',
+            s.darvasGreen_weekly ? Number(s.darvasGreen_weekly.toFixed(2)) : '',
+            s.darvasBottom_weekly ? Number(s.darvasBottom_weekly.toFixed(2)) : '',
+            s.rsi != null ? Number(s.rsi.toFixed(1)) : '',
+            s.rvol != null ? Number(s.rvol.toFixed(2)) : '',
+            s.autoAdded ? 'Auto-Ingested' : (s.adminAdded ? 'Admin Added' : 'Base Universe'),
+            escapeCsv(s.lastPriceUpdated || '')
+          ].join(',');
+        }).filter(Boolean);
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
+
+        res.writeHead(200, {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="MASTER_UNIVERSE_${todayStr}.csv"`,
+          'Cache-Control': 'no-store'
+        });
+        return res.end(csvContent);
       }
 
       // A8. POST /api/admin/universe - Admin Add New Stock to Universe
@@ -9084,6 +9582,7 @@ const server = http.createServer(async (req, res) => {
   if (reqTarget === '/' || reqTarget === '') reqTarget = 'landing.html';
   else if (reqTarget === '/screener' || reqTarget === '/charts' || reqTarget === '/app') reqTarget = 'index.html';
   else if (reqTarget === '/analytics') reqTarget = 'analytics.html';
+  else if (reqTarget === '/master-universe' || reqTarget === '/universe') reqTarget = 'master-universe.html';
 
   let filePath = path.join(PUBLIC_DIR, reqTarget);
   
@@ -9350,6 +9849,10 @@ async function runDailyEodBaselineSync() {
               darvasBottom_daily: hist.latestDarvasBottom || null,
               darvasGreen_weekly: hist.latestDarvasTopWeekly || null,
               darvasBottom_weekly: hist.latestDarvasBottomWeekly || null,
+              darvasCrossedDaysAgo: hist.darvasCrossedDaysAgo !== undefined ? hist.darvasCrossedDaysAgo : null,
+              darvasCrossDate: hist.darvasCrossDate !== undefined ? hist.darvasCrossDate : null,
+              darvasCrossedDaysAgo_weekly: hist.darvasCrossedDaysAgo_weekly !== undefined ? hist.darvasCrossedDaysAgo_weekly : null,
+              darvasCrossDate_weekly: hist.darvasCrossDate_weekly !== undefined ? hist.darvasCrossDate_weekly : null,
               ema10_weekly: hist.latestEMA10Weekly || null,
               ema20_weekly: hist.latestEMA20Weekly || null
             };

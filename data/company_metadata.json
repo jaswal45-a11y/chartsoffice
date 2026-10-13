@@ -88937,5 +88937,416 @@
     "last_updated": "Sep 2026",
     "ai_generated": false,
     "data_version": "2.0"
+  },
+  {
+    "ticker": "SRIT",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "SRIT INDIA LIMITED",
+    "data_version": "2.0",
+    "description": "SRIT INDIA LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "SHAHINVEST",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "SHAH INVESTOR'S HOME LIMITED",
+    "data_version": "2.0",
+    "description": "SHAH INVESTOR'S HOME LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "GREENASIA",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "GREEN ASIA IMPEX LIMITED",
+    "data_version": "2.0",
+    "description": "GREEN ASIA IMPEX LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "INSURADD",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "DSP MUTUAL FUND - DSP BSE INSURANCE ETF",
+    "data_version": "2.0",
+    "description": "DSP MUTUAL FUND - DSP BSE INSURANCE ETF is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "PAPADMALJI",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "PAPADMALJI AGRO FOODS LIMITED",
+    "data_version": "2.0",
+    "description": "PAPADMALJI AGRO FOODS LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTYSML250MQ100",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NIFTYSML250MQ100",
+    "data_version": "2.0",
+    "description": "NIFTYSML250MQ100 is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Diversified",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ]
+  },
+  {
+    "ticker": "NITYAS",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NITYAS GEMS AND JEWELLERY LIMITED",
+    "data_version": "2.0",
+    "description": "NITYAS GEMS AND JEWELLERY LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "EVENTIONS",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "EVENTIONS LIMITED",
+    "data_version": "2.0",
+    "description": "EVENTIONS LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "VNL",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "VISHAL NIRMITI LIMITED",
+    "data_version": "2.0",
+    "description": "VISHAL NIRMITI LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "BELDING",
+    "ai_generated": false,
+    "business_type": "Aluminum",
+    "company_name": "Belding India Limited",
+    "data_version": "2.0",
+    "description": "Belding India Limited engages in engineering, manufacturing, and technology-led infrastructure solutions services in India. It operates through EPC projects, Battery Energy Storage Systems (BESS), Edge Data Centres, Integrated Engineering Solutions, Advanced Manufacturing, and Security Solutions.",
+    "exchange": "BSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Aluminum",
+    "key_revenue_driver": "Operations in Aluminum",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Aluminum",
+      "Basic Materials Solutions"
+    ],
+    "sector": "Basic Materials",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Basic Materials",
+      "Aluminum",
+      "belding.ltd"
+    ],
+    "website": "https://www.belding.ltd"
+  },
+  {
+    "ticker": "AGOL",
+    "ai_generated": false,
+    "business_type": "Luxury Goods",
+    "company_name": "Ashapuri Gold Ornament Limited",
+    "data_version": "2.0",
+    "description": "Ashapuri Gold Ornament Limited engages in the manufacture, wholesale, and sale of gold jewelry in India. It offers various jewelry products, such as antique, traditional, and bridal jewelry products, as well as customized jewelry products, including chokers, bangles, necklaces, bracelets, and bespoke designs.",
+    "exchange": "BSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Luxury Goods",
+    "key_revenue_driver": "Operations in Luxury Goods",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Luxury Goods",
+      "Consumer Cyclical Solutions"
+    ],
+    "sector": "Consumer Cyclical",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Consumer Cyclical",
+      "Luxury Goods",
+      "ashapurigold.com"
+    ],
+    "website": "https://ashapurigold.com"
+  },
+  {
+    "ticker": "NATCO-RE",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "NATCO PHARMA LIMITED-RE",
+    "data_version": "2.0",
+    "description": "NATCO PHARMA LIMITED-RE is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "TRIVENIPT",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "TRIVENI POWER TRANSMISSION LIMITED",
+    "data_version": "2.0",
+    "description": "TRIVENI POWER TRANSMISSION LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "Equities",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "RKFAL",
+    "ai_generated": true,
+    "business_type": "Industrial & Commercial Operations",
+    "company_name": "R.K. FASHION ACCESSORIES LIMITED",
+    "data_version": "2.0",
+    "description": "R.K. FASHION ACCESSORIES LIMITED is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in NSE SME.",
+    "exchange": "NSE",
+    "geographic_exposure": "Domestic & International Markets",
+    "industry": "NSE SME",
+    "key_revenue_driver": "Core operational revenue from NSE SME",
+    "last_updated": "Sep 2026",
+    "products": [
+      "NSE SME",
+      "General Solutions"
+    ],
+    "sector": "General",
+    "source": "Verified Exchange Classification",
+    "themes": [
+      "General",
+      "NSE SME",
+      "Mid Cap"
+    ]
+  },
+  {
+    "ticker": "NIFTYMULTIMFG",
+    "exchange": "NSE",
+    "company_name": "NIFTYMULTIMFG",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTYMULTIMFG is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "VIKRAMTH",
+    "ai_generated": false,
+    "business_type": "Drug Manufacturers - Specialty & Generic",
+    "company_name": "Vikram Thermo (India) Limited",
+    "data_version": "2.0",
+    "description": "Vikram Thermo (India) Limited engages in the manufacture, marketing, and export of pharmaceutical excipients and chemicals in India and internationally. The company offers pharmaceutical polymer products, such as DRUGCOAT, a methacrylic co-polymer-based pharma polymer used for enteric and protective coating, taste mask...",
+    "exchange": "BSE",
+    "geographic_exposure": "India & Global",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "key_revenue_driver": "Operations in Drug Manufacturers - Specialty & Generic",
+    "last_updated": "Sep 2026",
+    "products": [
+      "Drug Manufacturers - Specialty & Generic",
+      "Healthcare Solutions"
+    ],
+    "sector": "Healthcare",
+    "source": "Verified Financial Disclosures",
+    "themes": [
+      "Healthcare",
+      "Drug Manufacturers - Specialty & Generic",
+      "vikramthermo.com"
+    ],
+    "website": "https://www.vikramthermo.com"
+  },
+  {
+    "ticker": "NXT100CASE",
+    "exchange": "NSE",
+    "company_name": "ZERODHA MUTUAL FUND - ZERODHA NIFTY NEXT 100 ETF",
+    "sector": "General",
+    "industry": "Equities",
+    "description": "ZERODHA MUTUAL FUND - ZERODHA NIFTY NEXT 100 ETF is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Equities.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Equities",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Equities",
+      "Mid Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Equities",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
   }
 ]

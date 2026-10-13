@@ -401,10 +401,11 @@
             <table class="data-table" id="dense-screener-table">
               <thead>
                 <tr>
-                  <th class="cursor-pointer" data-sort="symbol" title="Stock Name (Sort)">Stock Name</th>
-                  <th class="num cursor-pointer" data-sort="close" title="Close Price (Sort)">Close (₹)</th>
-                  <th class="num cursor-pointer" data-sort="changePercent" title="Change % (Sort)">Change %</th>
-                  <th class="num cursor-pointer" data-sort="volume" title="Volume (Sort)">Volume</th>
+                  <th class="cursor-pointer" data-sort="symbol" title="Stock Symbol / Name (Sort)">Stock</th>
+                  <th class="num cursor-pointer col-close" data-sort="close" title="Close Price (Sort)">Close (₹)</th>
+                  <th class="num cursor-pointer col-chg" data-sort="changePercent" title="Change % (Sort)">Chg %</th>
+                  <th class="num cursor-pointer col-vol" data-sort="volume" title="Volume (Sort)">Vol</th>
+                  <th class="num cursor-pointer col-rvol" data-sort="rvol" title="Relative Volume (Sort)">RVOL</th>
                   <th style="text-align: center;" class="col-emas">
                     EMAs<br><span style="font-size: 8.5px; font-weight: normal; color: var(--text-muted);">10 20 50 150</span>
                   </th>
@@ -497,21 +498,27 @@
                       <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
                     </div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="ltp" title="Sort by Last Traded Price">
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="ltp" title="Sort by Close Price">
                     <div class="flex items-center justify-end gap-1">
-                      <span>LTP (₹)</span>
+                      <span>Close (₹)</span>
                       <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
                     </div>
                   </th>
                   <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="changePercent" title="Sort by % Change">
                     <div class="flex items-center justify-end gap-1">
-                      <span>% Chg</span>
+                      <span>Chg %</span>
                       <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
                     </div>
                   </th>
                   <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 transition-colors" data-wlsort="volume" title="Sort by Volume">
                     <div class="flex items-center justify-end gap-1">
                       <span>Vol</span>
+                      <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
+                    </div>
+                  </th>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-amber-300 text-amber-400 font-bold transition-colors" data-wlsort="rvol" title="Sort by Relative Volume (RVOL)">
+                    <div class="flex items-center justify-end gap-1">
+                      <span>RVOL</span>
                       <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
                     </div>
                   </th>
@@ -548,23 +555,20 @@
                 <option value="1wk">🟢 Darvas (W)</option>
               </select>
               <span class="text-slate-500 font-bold text-xs">↔</span>
-              <!-- Segmented EMA Switch (1-Click) -->
-              <div class="inline-flex rounded-lg bg-dark-bg p-0.5 border border-dark-border" id="pricescan-ema-toggle-group">
-                <button type="button" data-ema="10" id="btn-ema-10" class="pricescan-ema-btn active px-2 py-0.5 rounded-md text-[11px] font-bold font-mono transition-all bg-blue-600 text-white shadow-sm cursor-pointer">
-                  EMA 10
-                </button>
-                <button type="button" data-ema="20" id="btn-ema-20" class="pricescan-ema-btn px-2 py-0.5 rounded-md text-[11px] font-bold font-mono transition-all text-slate-400 hover:text-white cursor-pointer">
-                  EMA 20
-                </button>
-              </div>
-              <input type="hidden" id="select-pricescan-ema" value="10">
+              <!-- Condition Dropdown (EMA 10 | EMA 20 | Today | Last 5) -->
+              <select id="select-pricescan-ema" class="px-2 py-0.5 text-[11px] font-bold font-mono bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-md focus:outline-none focus:border-blue-400 cursor-pointer shadow-sm hover:bg-blue-500/25 transition-colors" title="Select Scanning Condition">
+                <option value="10">EMA 10</option>
+                <option value="20">EMA 20</option>
+                <option value="cross_today">Today</option>
+                <option value="cross_5d">Last 5</option>
+              </select>
             </div>
 
             <!-- Middle: Compact Scope Dropdown with All 7 Options -->
             <div class="flex items-center gap-1.5 flex-1 min-w-[130px] max-w-[210px]">
               <select id="select-pricescan-scope" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                <option value="fno" selected>🎯 F&O Stocks (~200)</option>
                 <option value="current">⚡ Current Screener</option>
-                <option value="fno">🎯 F&O Stocks (~200)</option>
                 <option value="large">🏢 Large Cap (Top 100)</option>
                 <option value="mid">📈 Mid Cap (150)</option>
                 <option value="small">🚀 Small Cap (250)</option>
@@ -585,6 +589,12 @@
                 <input type="checkbox" id="chk-pricescan-mc2000" class="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
                 <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
               </label>
+            </div>
+
+            <!-- Quick Filter Pills: All Stocks & EMAs Aligned (Identical to Screener & Watchlist) -->
+            <div class="rec-filter-strip shrink-0" id="pricescan-filter-pills-bar">
+              <button type="button" data-psfilter="all" class="rec-pill active" onclick="setPricescanFilter('all')">All Stocks</button>
+              <button type="button" data-psfilter="emas-aligned" class="rec-pill" onclick="setPricescanFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
             </div>
 
             <!-- Right: Compact Run Button, Copy Button & Match Count Badge -->
@@ -611,29 +621,26 @@
                   <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="symbol" title="Sort by Stock Symbol">
                     <div class="flex items-center gap-1">Stock <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="close" title="Sort by Last Traded Price">
-                    <div class="flex items-center justify-end gap-1">LTP (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="close" title="Sort by Close Price">
+                    <div class="flex items-center justify-end gap-1">Close (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                   <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="changePercent" title="Sort by 1-Day % Change">
-                    <div class="flex items-center justify-end gap-1">1D % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                    <div class="flex items-center justify-end gap-1">Chg % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                   <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="volume" title="Sort by Trade Volume">
-                    <div class="flex items-center justify-end gap-1">Volume <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                    <div class="flex items-center justify-end gap-1">Vol <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-blue-300 text-blue-400 font-bold pricescan-sort-th select-none" data-psort="selectedEmaValue" title="Sort by Selected EMA Value">
-                    <div class="flex items-center justify-end gap-1"><span id="pricescan-dynamic-ema-col">EMA 10 (₹)</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-amber-300 text-amber-400 font-bold pricescan-sort-th select-none" data-psort="rvol" title="Sort by Relative Volume (RVOL)">
+                    <div class="flex items-center justify-end gap-1">RVOL <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-emerald-300 text-emerald-400 pricescan-sort-th select-none" data-psort="darvasGreen" title="Sort by Darvas Green TopBox">
-                    <div class="flex items-center justify-end gap-1"><span id="pricescan-dynamic-darvas-col">Darvas (D)</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
-                  </th>
-                  <th class="py-2.5 px-2 text-center cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="spreadPercent" title="Sort by Spread %">
-                    <div class="flex items-center justify-center gap-1">Spread <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-center cursor-pointer hover:text-slate-200 pricescan-sort-th select-none" data-psort="spreadPercent" id="pricescan-dynamic-last-col-th" title="Sort by Spread % / Distance from Dgreen">
+                    <div class="flex items-center justify-center gap-1"><span id="pricescan-dynamic-last-col-title">Spread %</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                 </tr>
               </thead>
               <tbody id="pricescan-tbody" class="divide-y divide-dark-border/30">
                 <tr>
-                  <td colspan="7" class="p-12 text-center text-slate-500">
+                  <td colspan="6" class="p-12 text-center text-slate-500">
                     <div class="flex flex-col items-center justify-center gap-2">
                       <i data-lucide="crosshair" class="w-8 h-8 text-slate-600"></i>
                       <p class="text-xs text-slate-400">Select Scope and click <span class="text-emerald-400 font-semibold">RUN</span> to scan price positions.</p>
@@ -728,17 +735,17 @@
                   <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="symbol" title="Sort by Stock Symbol">
                     <div class="flex items-center gap-1">Stock <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="close" title="Sort by Last Traded Price">
-                    <div class="flex items-center justify-end gap-1">LTP (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="close" title="Sort by Close Price">
+                    <div class="flex items-center justify-end gap-1">Close (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="changePercent" title="Sort by 1-Day % Change">
-                    <div class="flex items-center justify-end gap-1">1D % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="changePercent" title="Sort by Change %">
+                    <div class="flex items-center justify-end gap-1">Chg % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                   <th class="py-2.5 px-2 text-right cursor-pointer hover:text-amber-300 text-amber-400 font-bold ssrvol-sort-th select-none" data-ssort="rvol" title="Sort by Relative Volume">
                     <div class="flex items-center justify-end gap-1">RVOL <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="avgVolume" title="Sort by Average Volume">
-                    <div class="flex items-center justify-end gap-1"><span id="ssrvol-dynamic-avgvol-col">Avg Vol (20D)</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 ssrvol-sort-th select-none" data-ssort="avgVolume" title="Sort by Volume">
+                    <div class="flex items-center justify-end gap-1"><span id="ssrvol-dynamic-avgvol-col">Vol (20D)</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                   <th class="py-2.5 px-2 text-center cursor-pointer hover:text-amber-300 text-amber-400 font-bold ssrvol-sort-th select-none" data-ssort="isStrongStart" title="Sort by Strong Start Status">
                     <div class="flex items-center justify-center gap-1">SS (★) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
@@ -837,11 +844,11 @@
                   <th class="py-2.5 px-3 cursor-pointer hover:text-slate-200 vcpscan-sort-th select-none" data-vsort="symbol" title="Sort by Stock Symbol">
                     <div class="flex items-center gap-1">Stock <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 vcpscan-sort-th select-none" data-vsort="close" title="Sort by Last Traded Price">
-                    <div class="flex items-center justify-end gap-1">LTP (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 vcpscan-sort-th select-none" data-vsort="close" title="Sort by Close Price">
+                    <div class="flex items-center justify-end gap-1">Close (₹) <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 vcpscan-sort-th select-none" data-vsort="changePercent" title="Sort by 1-Day % Change">
-                    <div class="flex items-center justify-end gap-1">1D % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-slate-200 vcpscan-sort-th select-none" data-vsort="changePercent" title="Sort by Change %">
+                    <div class="flex items-center justify-end gap-1">Chg % <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
                   </th>
                   <th class="py-2.5 px-2 text-center cursor-pointer hover:text-purple-300 text-purple-400 font-bold vcpscan-sort-th select-none" data-vsort="wavesCount" title="Contraction Count (2T, 3T, 4T)">
                     <div class="flex items-center justify-center gap-1">VCP <i data-lucide="arrow-up-down" class="w-3 h-3"></i></div>
@@ -1496,8 +1503,8 @@
             <span>Guest Feature Access</span>
           </button>
           <button id="admin-tab-btn-universe" onclick="switchAdminConsoleTab('universe')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 hover:bg-dark-accent cursor-pointer">
-            <i data-lucide="database" class="w-3.5 h-3.5"></i>
-            <span>Stock Universe</span>
+            <i data-lucide="database" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>Master Universe</span>
             <span id="admin-tab-badge-universe-count" class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/30">...</span>
           </button>
           <button id="admin-tab-btn-docs" onclick="switchAdminConsoleTab('docs')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-1.5 hover:bg-dark-accent cursor-pointer">
@@ -1968,8 +1975,8 @@
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-bold text-white text-sm flex items-center gap-1.5">
-                  <i data-lucide="database" class="w-4 h-4 text-blue-400"></i>
-                  <span>Universe Explorer</span>
+                  <i data-lucide="database" class="w-4 h-4 text-sky-400"></i>
+                  <span>Master Universe</span>
                 </span>
                 <span id="admin-universe-total-badge" class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
                   0 Stocks
@@ -1983,20 +1990,26 @@
               </div>
 
               <div class="flex items-center gap-2 flex-wrap">
-                <!-- Toggle Add Stock Button -->
-                <button onclick="toggleAdminAddStockPanel()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow transition-all flex items-center gap-1.5 cursor-pointer">
-                  <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-                  <span>Add Stock to Universe</span>
+                <!-- Open Spreadsheet / Excel Viewer Button -->
+                <button onclick="handleAdminOpenMasterUniverseSpreadsheet()" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer" title="Open complete Master Universe in a full Google Sheets / Excel spreadsheet viewer in a new tab">
+                  <i data-lucide="table" class="w-3.5 h-3.5"></i>
+                  <span>📊 Open Spreadsheet View</span>
                 </button>
 
-                <!-- Export CSV Button -->
-                <button onclick="handleExportUniverseCSV()" class="px-3 py-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-200 hover:text-white font-semibold text-xs shadow transition-all flex items-center gap-1.5 cursor-pointer" title="Download full universe with metadata as CSV">
-                  <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
-                  <span>Export CSV</span>
+                <!-- Download CSV (Excel / Sheets format) Button -->
+                <button onclick="handleExportUniverseCSV()" class="px-3 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer" title="Download entire Master Universe with all 30 metadata columns as Excel (.CSV)">
+                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                  <span>📥 Download CSV (Excel)</span>
+                </button>
+
+                <!-- Toggle Add Stock Button -->
+                <button onclick="toggleAdminAddStockPanel()" class="px-2.5 py-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-200 hover:text-white font-semibold text-xs shadow transition-all flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span>Add Stock</span>
                 </button>
 
                 <!-- Refresh Button -->
-                <button onclick="loadAdminUniverse(true)" class="p-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer" title="Refresh Universe">
+                <button onclick="loadAdminUniverse(true)" class="p-1.5 rounded-lg bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer" title="Refresh Master Universe">
                   <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
@@ -3374,7 +3387,7 @@
           <div class="grid grid-cols-2 gap-2">
             <label class="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" id="col-toggle-symbol" checked disabled class="rounded text-emerald-500 opacity-60">
-              <span>Stock Name (Required)</span>
+              <span>Stock (Required)</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" id="col-toggle-close" checked onchange="handleColumnToggle('close', this.checked)" class="rounded text-emerald-500">
@@ -3382,11 +3395,15 @@
             </label>
             <label class="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" id="col-toggle-chg" checked onchange="handleColumnToggle('chg', this.checked)" class="rounded text-emerald-500">
-              <span>Change %</span>
+              <span>Chg %</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" id="col-toggle-vol" checked onchange="handleColumnToggle('vol', this.checked)" class="rounded text-emerald-500">
-              <span>Volume</span>
+              <span>Vol</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="col-toggle-rvol" checked onchange="handleColumnToggle('rvol', this.checked)" class="rounded text-emerald-500">
+              <span>RVOL</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" id="col-toggle-emas" checked onchange="handleColumnToggle('emas', this.checked)" class="rounded text-emerald-500">

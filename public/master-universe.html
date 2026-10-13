@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Universe — Stock Database & Metadata Inspector (Excel / Google Sheets)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><ellipse cx='12' cy='5' rx='9' ry='3'/><path d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'/><path d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-dark: #111827;
+      --border-dark: #1f293d;
+      --accent: #0ea5e9;
+      --accent-green: #10b981;
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    /* Spreadsheet Grid Styles */
+    .sheet-table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .sheet-table th, .sheet-table td {
+      border-right: 1px solid #1e293b;
+      border-bottom: 1px solid #1e293b;
+      white-space: nowrap;
+    }
+    .sheet-table th {
+      position: sticky;
+      top: 0;
+      background: #111827;
+      z-index: 20;
+      user-select: none;
+    }
+    .sheet-table th.freeze-1, .sheet-table td.freeze-1 {
+      position: sticky;
+      left: 0;
+      background: #0f172a;
+      z-index: 15;
+    }
+    .sheet-table th.freeze-2, .sheet-table td.freeze-2 {
+      position: sticky;
+      left: 48px;
+      background: #0f172a;
+      z-index: 15;
+    }
+    .sheet-table th.freeze-3, .sheet-table td.freeze-3 {
+      position: sticky;
+      left: 178px;
+      background: #0f172a;
+      z-index: 15;
+    }
+    .sheet-table th.freeze-1, .sheet-table th.freeze-2, .sheet-table th.freeze-3 {
+      z-index: 30;
+      background: #1e293b;
+    }
+    .sheet-row:hover td {
+      background-color: rgba(30, 58, 138, 0.25) !important;
+    }
+    .sheet-row:hover td.freeze-1, .sheet-row:hover td.freeze-2, .sheet-row:hover td.freeze-3 {
+      background-color: #172554 !important;
+    }
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-xs">
+
+  <!-- ====================================================================== -->
+  <!-- Top Navigation Ribbon / Toolbar -->
+  <!-- ====================================================================== -->
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-4 flex-wrap z-40 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="p-1.5 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400">
+          <i data-lucide="database" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-extrabold text-white tracking-wide">MASTER UNIVERSE</h1>
+            <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Single Source of Truth</span>
+          </div>
+          <p class="text-[10px] text-slate-400">Authentic Stock Database &amp; Complete Metadata Inspector (Excel / Google Sheets)</p>
+        </div>
+      </div>
+
+      <!-- KPI Badges -->
+      <div class="hidden md:flex items-center gap-1.5 ml-3 font-mono">
+        <span id="badge-total" class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">0 Stocks</span>
+        <span id="badge-fno" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">0 F&amp;O</span>
+        <span id="badge-sectors" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30">0 Sectors</span>
+      </div>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center gap-2">
+      <!-- Download CSV (Excel / Sheets format) -->
+      <button onclick="downloadMasterUniverseCSV()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer" title="Download the entire Master Universe with all 30 metadata columns as Excel CSV">
+        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+        <span>Download Excel (.CSV)</span>
+      </button>
+
+      <!-- Copy Symbols -->
+      <button onclick="copyFilteredSymbols()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer" title="Copy currently filtered stock ticker symbols to clipboard">
+        <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-400"></i>
+        <span>Copy Symbols</span>
+      </button>
+
+      <!-- Reload -->
+      <button onclick="loadMasterUniverse(true)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer" title="Reload live data">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+      </button>
+
+      <!-- Back to App -->
+      <a href="/app" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-semibold text-xs transition-all flex items-center gap-1 cursor-pointer">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        <span>Back to App</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ====================================================================== -->
+  <!-- Filter / Search Ribbon -->
+  <!-- ====================================================================== -->
+  <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2 flex items-center gap-3 flex-wrap shrink-0">
+    <!-- Live Search -->
+    <div class="relative flex-1 min-w-[200px] max-w-sm">
+      <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+      <input 
+        type="text" 
+        id="search-input" 
+        placeholder="Filter symbol, company name, sector, industry..." 
+        oninput="handleFilterChange()"
+        onclick="this.select()"
+        class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+      >
+    </div>
+
+    <!-- FNO Segment Filter -->
+    <div>
+      <select id="filter-fno" onchange="handleFilterChange()" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer">
+        <option value="ALL">All Instruments</option>
+        <option value="FNO_ONLY">F&amp;O Derivatives Only</option>
+        <option value="NON_FNO">Cash / Non-F&amp;O Only</option>
+      </select>
+    </div>
+
+    <!-- Market Cap Tier Filter -->
+    <div>
+      <select id="filter-cap" onchange="handleFilterChange()" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer">
+        <option value="ALL">All Market Caps</option>
+        <option value="MEGA">Mega Cap (≥₹50,000 Cr)</option>
+        <option value="LARGE">Large Cap (₹20,000-50,000 Cr)</option>
+        <option value="MID">Mid Cap (₹5,000-20,000 Cr)</option>
+        <option value="SMALL">Small Cap (₹1,000-5,000 Cr)</option>
+        <option value="MICRO">Micro Cap (&lt;₹1,000 Cr)</option>
+      </select>
+    </div>
+
+    <!-- Sector Filter -->
+    <div>
+      <select id="filter-sector" onchange="handleFilterChange()" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer max-w-[200px]">
+        <option value="ALL">All Sectors</option>
+      </select>
+    </div>
+
+    <!-- Circuit Band Filter -->
+    <div>
+      <select id="filter-circuit" onchange="handleFilterChange()" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer">
+        <option value="ALL">All Circuit Bands</option>
+        <option value="20">20% Band</option>
+        <option value="10">10% Band</option>
+        <option value="5">5% Band</option>
+        <option value="2">2% Band</option>
+        <option value="NO_BAND">No Band (F&amp;O / Free)</option>
+      </select>
+    </div>
+
+    <!-- Page Size -->
+    <div class="ml-auto flex items-center gap-2 text-slate-400">
+      <span class="text-[11px]">Rows:</span>
+      <select id="select-page-size" onchange="handlePageSizeChange(this.value)" class="px-2 py-1 rounded bg-slate-950 border border-slate-800 text-xs text-slate-200 cursor-pointer">
+        <option value="50">50</option>
+        <option value="100" selected>100</option>
+        <option value="250">250</option>
+        <option value="500">500</option>
+        <option value="ALL">All</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- Spreadsheet Grid Container (Sticky Headers & Frozen Left Columns) -->
+  <!-- ====================================================================== -->
+  <main class="flex-1 overflow-auto bg-slate-950 relative" id="sheet-container">
+    <table class="sheet-table w-full text-left font-mono text-[11px] text-slate-300">
+      <thead>
+        <tr class="text-[10px] uppercase font-bold text-slate-400">
+          <th class="py-2 px-2 text-center w-12 freeze-1">#</th>
+          <th class="py-2 px-3 freeze-2 cursor-pointer hover:text-white" onclick="handleSort('symbol')">Symbol ⬍</th>
+          <th class="py-2 px-3 freeze-3 cursor-pointer hover:text-white min-w-[200px]" onclick="handleSort('name')">Company Name ⬍</th>
+          <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('exchange')">Exch</th>
+          <th class="py-2 px-3 text-center cursor-pointer hover:text-white" onclick="handleSort('fno')">F&amp;O</th>
+          <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('sector')">Sector</th>
+          <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('industry')">Industry</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('marketCap')">Market Cap (₹ Cr) ⬍</th>
+          <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('capCategory')">Cap Tier</th>
+          <th class="py-2 px-3 text-center cursor-pointer hover:text-white" onclick="handleSort('circuitBand')">Circuit Band</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('price')">LTP (₹) ⬍</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('changePercent')">1D Change % ⬍</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('high52w')">52W High (₹)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('low52w')">52W Low (₹)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema10')">EMA 10</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema20')">EMA 20</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema50')">EMA 50</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema150')">EMA 150</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema200')">EMA 200</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema10_weekly')">EMA 10 (W)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('ema20_weekly')">EMA 20 (W)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('darvasGreen_daily')">Darvas Green (D)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('darvasBottom_daily')">Darvas Bot (D)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('darvasGreen_weekly')">Darvas Green (W)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('darvasBottom_weekly')">Darvas Bot (W)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('rsi')">RSI (14)</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('rvol')">RVOL</th>
+          <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('autoAdded')">Source</th>
+          <th class="py-2 px-3">Last Synced</th>
+        </tr>
+      </thead>
+      <tbody id="sheet-tbody">
+        <tr>
+          <td colspan="29" class="py-16 text-center text-slate-400 font-sans">
+            <div class="flex flex-col items-center gap-2">
+              <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-sky-400"></i>
+              <span>Loading authentic Master Universe (3,600+ securities)...</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <!-- ====================================================================== -->
+  <!-- Footer Pagination Bar -->
+  <!-- ====================================================================== -->
+  <footer class="bg-slate-900 border-t border-slate-800 px-4 py-2 flex items-center justify-between text-xs text-slate-400 shrink-0 flex-wrap gap-2">
+    <div id="pagination-info" class="font-mono">
+      Showing 0 to 0 of 0 stocks
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btn-prev" onclick="handlePageChange(-1)" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all">
+        Previous
+      </button>
+      <span id="page-display" class="font-mono font-bold text-white px-2">Page 1 of 1</span>
+      <button id="btn-next" onclick="handlePageChange(1)" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all">
+        Next
+      </button>
+    </div>
+  </footer>
+
+  <!-- Client-Side Controller -->
+  <script>
+    const state = {
+      stocks: [],
+      filtered: [],
+      sectors: {},
+      search: '',
+      fnoFilter: 'ALL',
+      capFilter: 'ALL',
+      sectorFilter: 'ALL',
+      circuitFilter: 'ALL',
+      sortField: 'marketCap',
+      sortAsc: false,
+      page: 1,
+      pageSize: 100,
+      totalCount: 0
+    };
+
+    function getAuthToken() {
+      const q = new URLSearchParams(window.location.search);
+      return q.get('token') || localStorage.getItem('sangam_auth_token') || '';
+    }
+
+    async function loadMasterUniverse(forceRefresh = false) {
+      const tbody = document.getElementById('sheet-tbody');
+      tbody.innerHTML = `<tr><td colspan="29" class="py-16 text-center text-slate-400 font-sans">
+        <div class="flex flex-col items-center gap-2">
+          <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-sky-400"></i>
+          <span>Loading Master Universe...</span>
+        </div>
+      </td></tr>`;
+      if (window.lucide) lucide.createIcons();
+
+      try {
+        const token = getAuthToken();
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`/api/admin/universe?t=${Date.now()}`, { headers });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to load master universe');
+        }
+
+        state.stocks = data.stocks || [];
+        state.totalCount = data.totalCount || state.stocks.length;
+        state.sectors = data.sectors || {};
+
+        // Update Badges
+        document.getElementById('badge-total').textContent = `${state.totalCount.toLocaleString()} Stocks`;
+        document.getElementById('badge-fno').textContent = `${(data.fnoCount || 0).toLocaleString()} F&O Active`;
+        document.getElementById('badge-sectors').textContent = `${Object.keys(state.sectors).length} Sectors`;
+
+        populateSectorOptions();
+        applyFilters();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="29" class="py-12 text-center text-rose-400 font-sans">
+          Error loading Master Universe: ${err.message}. If authentication is required, log in as admin.
+        </td></tr>`;
+      }
+    }
+
+    function populateSectorOptions() {
+      const select = document.getElementById('filter-sector');
+      if (!select) return;
+      const sorted = Object.keys(state.sectors).sort((a, b) => a.localeCompare(b));
+      select.innerHTML = '<option value="ALL">All Sectors</option>';
+      sorted.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec;
+        opt.textContent = `${sec} (${state.sectors[sec]})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function handleFilterChange() {
+      state.search = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+      state.fnoFilter = document.getElementById('filter-fno')?.value || 'ALL';
+      state.capFilter = document.getElementById('filter-cap')?.value || 'ALL';
+      state.sectorFilter = document.getElementById('filter-sector')?.value || 'ALL';
+      state.circuitFilter = document.getElementById('filter-circuit')?.value || 'ALL';
+      state.page = 1;
+      applyFilters();
+    }
+
+    function handlePageSizeChange(val) {
+      state.pageSize = val === 'ALL' ? state.filtered.length || 99999 : parseInt(val, 10);
+      state.page = 1;
+      renderTable();
+    }
+
+    function handlePageChange(delta) {
+      state.page += delta;
+      renderTable();
+    }
+
+    function handleSort(field) {
+      if (state.sortField === field) {
+        state.sortAsc = !state.sortAsc;
+      } else {
+        state.sortField = field;
+        state.sortAsc = (field === 'symbol' || field === 'name' || field === 'sector');
+      }
+      applySort();
+      renderTable();
+    }
+
+    function applyFilters() {
+      const { stocks, search, fnoFilter, capFilter, sectorFilter, circuitFilter } = state;
+
+      state.filtered = stocks.filter(s => {
+        if (!s) return false;
+
+        // Search text
+        if (search) {
+          const sym = (s.symbol || '').toLowerCase();
+          const name = (s.name || '').toLowerCase();
+          const sec = (s.sector || '').toLowerCase();
+          const ind = (s.industry || '').toLowerCase();
+          if (!sym.includes(search) && !name.includes(search) && !sec.includes(search) && !ind.includes(search)) {
+            return false;
+          }
+        }
+
+        // FNO
+        if (fnoFilter === 'FNO_ONLY' && !s.fno) return false;
+        if (fnoFilter === 'NON_FNO' && s.fno) return false;
+
+        // Cap tier
+        if (capFilter !== 'ALL') {
+          const mcap = s.marketCap || 0;
+          if (capFilter === 'MEGA' && mcap < 50000) return false;
+          if (capFilter === 'LARGE' && (mcap < 20000 || mcap >= 50000)) return false;
+          if (capFilter === 'MID' && (mcap < 5000 || mcap >= 20000)) return false;
+          if (capFilter === 'SMALL' && (mcap < 1000 || mcap >= 5000)) return false;
+          if (capFilter === 'MICRO' && mcap >= 1000) return false;
+        }
+
+        // Sector
+        if (sectorFilter !== 'ALL' && s.sector !== sectorFilter) return false;
+
+        // Circuit band
+        if (circuitFilter !== 'ALL') {
+          const cb = String(s.circuitBand || '').toUpperCase();
+          if (circuitFilter === 'NO_BAND' && !cb.includes('NO_BAND')) return false;
+          if (circuitFilter !== 'NO_BAND' && !cb.includes(circuitFilter)) return false;
+        }
+
+        return true;
+      });
+
+      applySort();
+      renderTable();
+    }
+
+    function applySort() {
+      const field = state.sortField;
+      const asc = state.sortAsc ? 1 : -1;
+
+      state.filtered.sort((a, b) => {
+        let va = a[field];
+        let vb = b[field];
+
+        if (va == null) return 1;
+        if (vb == null) return -1;
+
+        if (typeof va === 'string') {
+          return va.localeCompare(vb) * asc;
+        }
+        return (va - vb) * asc;
+      });
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('sheet-tbody');
+      const totalFiltered = state.filtered.length;
+      const pageSize = state.pageSize;
+      const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+      state.page = Math.min(Math.max(1, state.page), totalPages);
+      const curPage = state.page;
+
+      const startIdx = (curPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, totalFiltered);
+      const items = state.filtered.slice(startIdx, endIdx);
+
+      // Pagination Controls
+      document.getElementById('pagination-info').textContent = totalFiltered > 0
+        ? `Showing ${(startIdx + 1).toLocaleString()} to ${endIdx.toLocaleString()} of ${totalFiltered.toLocaleString()} stocks (Filtered from ${state.totalCount.toLocaleString()})`
+        : `0 stocks found`;
+      document.getElementById('page-display').textContent = `Page ${curPage} of ${totalPages}`;
+      document.getElementById('btn-prev').disabled = curPage <= 1;
+      document.getElementById('btn-next').disabled = curPage >= totalPages;
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="29" class="py-12 text-center text-slate-500 font-sans">
+          No stocks matched the active filters.
+        </td></tr>`;
+        return;
+      }
+
+      const rowsHtml = items.map((s, idx) => {
+        const rowNum = startIdx + idx + 1;
+        const isFno = Boolean(s.fno);
+        const ltp = typeof s.price === 'number' && s.price > 0 ? `₹${s.price.toFixed(2)}` : '--';
+        const chg = typeof s.changePercent === 'number' ? `${s.changePercent >= 0 ? '+' : ''}${s.changePercent.toFixed(2)}%` : '0.00%';
+        const chgColor = (s.changePercent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400';
+        const mcap = s.marketCap ? `₹${Number(s.marketCap).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : '--';
+        const cb = s.circuitBand || (isFno ? 'NO_BAND' : '20%');
+        const cbBadge = cb === 'NO_BAND'
+          ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-800 text-slate-400 border border-slate-700">NO BAND</span>'
+          : `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">${cb}</span>`;
+
+        return `
+          <tr class="sheet-row border-b border-slate-900">
+            <td class="py-1.5 px-2 text-center text-slate-500 freeze-1">${rowNum}</td>
+            <td class="py-1.5 px-3 freeze-2">
+              <a href="/app?symbol=${s.symbol}" target="_blank" class="font-bold text-white hover:text-sky-400 transition-colors flex items-center gap-1">
+                <span>${s.symbol}</span>
+                <i data-lucide="external-link" class="w-3 h-3 text-slate-500"></i>
+              </a>
+            </td>
+            <td class="py-1.5 px-3 freeze-3 text-slate-200 font-sans truncate max-w-[240px]" title="${s.name || s.symbol}">
+              ${s.name || s.symbol}
+            </td>
+            <td class="py-1.5 px-3 text-slate-400 font-bold">${s.exchange || 'NSE'}</td>
+            <td class="py-1.5 px-3 text-center">
+              ${isFno ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">F&amp;O</span>' : '<span class="px-1.5 py-0.2 rounded text-[9px] text-slate-500">Cash</span>'}
+            </td>
+            <td class="py-1.5 px-3 font-semibold text-teal-300">${s.sector || 'General'}</td>
+            <td class="py-1.5 px-3 text-slate-400 truncate max-w-[160px]">${s.industry || 'Diversified'}</td>
+            <td class="py-1.5 px-3 text-right font-bold text-slate-200">${mcap}</td>
+            <td class="py-1.5 px-3 text-slate-300">${s.capCategory || 'Small Cap'}</td>
+            <td class="py-1.5 px-3 text-center">${cbBadge}</td>
+            <td class="py-1.5 px-3 text-right font-bold text-white">${ltp}</td>
+            <td class="py-1.5 px-3 text-right font-bold ${chgColor}">${chg}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.high52w ? '₹' + Number(s.high52w).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-400">${s.low52w ? '₹' + Number(s.low52w).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.ema10 ? Number(s.ema10).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.ema20 ? Number(s.ema20).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.ema50 ? Number(s.ema50).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.ema150 ? Number(s.ema150).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.ema200 ? Number(s.ema200).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-indigo-300 font-semibold">${s.ema10_weekly ? Number(s.ema10_weekly).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-indigo-300 font-semibold">${s.ema20_weekly ? Number(s.ema20_weekly).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right font-semibold text-emerald-400">${s.darvasGreen_daily ? '₹' + Number(s.darvasGreen_daily).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-rose-400">${s.darvasBottom_daily ? '₹' + Number(s.darvasBottom_daily).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right font-semibold text-emerald-400">${s.darvasGreen_weekly ? '₹' + Number(s.darvasGreen_weekly).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-rose-400">${s.darvasBottom_weekly ? '₹' + Number(s.darvasBottom_weekly).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-slate-300">${s.rsi ? Number(s.rsi).toFixed(1) : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-cyan-400">${s.rvol ? Number(s.rvol).toFixed(2) + 'x' : '--'}</td>
+            <td class="py-1.5 px-3">${s.autoAdded ? '<span class="text-purple-400 font-semibold">Auto</span>' : (s.adminAdded ? '<span class="text-amber-400 font-semibold">Admin</span>' : '<span class="text-slate-500">Base</span>')}</td>
+            <td class="py-1.5 px-3 text-slate-500 text-[10px]">${(s.lastPriceUpdated || '').split('T')[0]}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function downloadMasterUniverseCSV() {
+      const token = getAuthToken();
+      const exportUrl = `/api/admin/master-universe/export${token ? '?token=' + encodeURIComponent(token) : ''}`;
+      window.location.href = exportUrl;
+    }
+
+    function copyFilteredSymbols() {
+      const syms = state.filtered.map(s => s.symbol).filter(Boolean);
+      if (syms.length === 0) return alert('No symbols to copy');
+      navigator.clipboard.writeText(syms.join(', ')).then(() => {
+        alert(`Copied ${syms.length} stock symbols to clipboard!`);
+      });
+    }
+
+    // Auto-run on mount
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMasterUniverse();
+    });
+  </script>
+</body>
+</html>

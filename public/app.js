@@ -59,7 +59,25 @@ function getCapCategoryTooltip(capCategory, mcap) {
   }
   return 'Market Capitalization = Total Shares Outstanding × Current Market Price';
 }
-window.getCapCategoryTooltip = getCapCategoryTooltip;
+function getStockRvol(stock, quote) {
+  if (quote && typeof quote.rvol === 'number' && !isNaN(quote.rvol)) return quote.rvol;
+  if (stock && typeof stock.rvol === 'number' && !isNaN(stock.rvol)) return stock.rvol;
+  if (stock && stock.volume && stock.avgVolume20 && stock.avgVolume20 > 0) {
+    return Number((stock.volume / stock.avgVolume20).toFixed(2));
+  }
+  return 1.0;
+}
+window.getStockRvol = getStockRvol;
+
+function formatRvolBadge(rvol) {
+  const val = typeof rvol === 'number' && !isNaN(rvol) ? rvol : 1.0;
+  const isHigh = val >= 1.20;
+  if (isHigh) {
+    return `<span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30" title="RVOL ≥ 1.20x (${(val * 100).toFixed(0)}%)">${val.toFixed(2)}x</span>`;
+  }
+  return `<span class="font-mono text-[11px] text-slate-300" title="RVOL: ${val.toFixed(2)}x">${val.toFixed(2)}x</span>`;
+}
+window.formatRvolBadge = formatRvolBadge;
 
 function getFnoBadgeHtml(stockOrSymbol, extraClass = '') {
   if (!isFnoStock(stockOrSymbol)) return '';
@@ -137,6 +155,8 @@ const state = {
   pricescanSortAscending: true,
   pricescanFilterMc1000: false,
   pricescanFilterMc2000: false,
+  pricescanFilter: 'all',
+  pricescanEmasAligned: false,
   // SS_RVOL Scanner State
   ssrvolResults: [],
   ssrvolSortField: 'rvol',
@@ -297,7 +317,9 @@ const state = {
     close: true,
     chg: true,
     vol: true,
-    emas: true
+    rvol: true,
+    emas: true,
+    rsi: true
   },
   recFilter: 'all',
   watchlistFilter: 'all',
@@ -476,6 +498,7 @@ const el = {
   selectPricescanScope: document.getElementById('select-pricescan-scope'),
   chkPricescanMc1000: document.getElementById('chk-pricescan-mc1000'),
   chkPricescanMc2000: document.getElementById('chk-pricescan-mc2000'),
+  btnPricescanEmasAligned: document.getElementById('btn-pricescan-emas-aligned'),
   pricescanResultsCount: document.getElementById('pricescan-results-count'),
   pricescanResultsCountBadge: document.getElementById('pricescan-results-count-badge'),
   btnEma10: document.getElementById('btn-ema-10'),
@@ -485,6 +508,8 @@ const el = {
   pricescanFooterInfo: document.getElementById('pricescan-footer-info'),
   pricescanDynamicEmaCol: document.getElementById('pricescan-dynamic-ema-col'),
   pricescanDynamicDarvasCol: document.getElementById('pricescan-dynamic-darvas-col'),
+  pricescanDynamicLastColTitle: document.getElementById('pricescan-dynamic-last-col-title'),
+  pricescanDynamicLastColTh: document.getElementById('pricescan-dynamic-last-col-th'),
   btnOpenAddModalDeck: document.getElementById('btn-open-add-modal-deck'),
 
   // SS_RVOL Scanner Elements
@@ -3014,7 +3039,7 @@ function renderWatchlistStocks() {
   if (!activeWl || !Array.isArray(activeWl.stocks) || activeWl.stocks.length === 0) {
     el.watchlistTbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-16 text-center text-slate-500">
+        <td colspan="6" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <div class="w-10 h-10 rounded-full bg-dark-bg flex items-center justify-center text-slate-600">
               <i data-lucide="star" class="w-5 h-5 text-amber-500/40"></i>
@@ -3052,7 +3077,7 @@ function renderWatchlistStocks() {
   if (stocksToRender.length === 0) {
     el.watchlistTbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-12 text-center text-slate-500">
+        <td colspan="6" class="py-12 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="filter" class="w-6 h-6 text-slate-600"></i>
             <p class="text-xs font-semibold text-slate-300">No stocks match "${state.watchlistFilter === 'emas-aligned' ? 'EMAs Aligned' : state.watchlistFilter}"</p>
@@ -3080,7 +3105,7 @@ function renderWatchlistStocks() {
       const nameA = (a.name || a.symbol || '').toUpperCase();
       const nameB = (b.name || b.symbol || '').toUpperCase();
       return isAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-    } else if (sortField === 'ltp') {
+    } else if (sortField === 'ltp' || sortField === 'close') {
       const valA = (typeof quoteA.ltp === 'number' && quoteA.ltp > 0) ? quoteA.ltp : 0;
       const valB = (typeof quoteB.ltp === 'number' && quoteB.ltp > 0) ? quoteB.ltp : 0;
       return isAsc ? valA - valB : valB - valA;
@@ -3091,6 +3116,10 @@ function renderWatchlistStocks() {
     } else if (sortField === 'volume') {
       const valA = (typeof quoteA.volume === 'number' && quoteA.volume > 0) ? quoteA.volume : 0;
       const valB = (typeof quoteB.volume === 'number' && quoteB.volume > 0) ? quoteB.volume : 0;
+      return isAsc ? valA - valB : valB - valA;
+    } else if (sortField === 'rvol') {
+      const valA = getStockRvol(a, quoteA);
+      const valB = getStockRvol(b, quoteB);
       return isAsc ? valA - valB : valB - valA;
     }
 
@@ -3105,6 +3134,7 @@ function renderWatchlistStocks() {
     const ltpStr = quote.ltp ? fmt.currency(quote.ltp) : '...';
     const chgStr = quote.changePercent !== undefined ? fmt.percent(quote.changePercent) : '...';
     const volStr = (quote.volume && quote.volume > 0) ? fmt.volume(quote.volume) : '--';
+    const stockRvol = getStockRvol(stock, quote);
     const isBull = (quote.changePercent || 0) >= 0;
     const chgBadge = quote.changePercent !== undefined
       ? (isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20')
@@ -3124,11 +3154,14 @@ function renderWatchlistStocks() {
           <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${stock.name || stock.symbol}">${stock.name || stock.symbol}</span>
         </div>
       </td>
-      <td class="py-2.5 px-2 text-right font-mono font-semibold text-slate-200 text-xs">${ltpStr}</td>
+      <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-100 text-xs">${ltpStr}</td>
       <td class="py-2.5 px-2 text-right">
-        <span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold ${chgBadge}">${chgStr}</span>
+        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${chgBadge}">${chgStr}</span>
       </td>
       <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">${volStr}</td>
+      <td class="py-2.5 px-2 text-right">
+        ${formatRvolBadge(stockRvol)}
+      </td>
       <td class="py-2.5 px-1 text-center">
         <button class="btn-remove-wl-stock p-1 rounded hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors cursor-pointer" data-symbol="${stock.symbol}" title="Remove from watchlist">
           <i data-lucide="x" class="w-3.5 h-3.5"></i>
@@ -4060,44 +4093,17 @@ function setupEventListeners() {
     });
   }
 
-  // DarvasScan Listeners (Segmented 1-Click Toggle + Enter Shortcut + Copy)
+  // DarvasScan Listeners (Condition Dropdown: EMA 10, EMA 20, Today, Last 5)
   const setPricescanEma = (val) => {
     const vStr = String(val);
     if (el.selectPricescanEma) el.selectPricescanEma.value = vStr;
     const tf = el.selectPricescanTimeframe?.value || '1d';
     const tfCode = tf === '1wk' ? 'W' : 'D';
-    const btn10 = document.getElementById('btn-ema-10');
-    const btn20 = document.getElementById('btn-ema-20');
-    if (vStr === '10') {
-      btn10?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-      btn10?.classList.remove('text-slate-400');
-      btn20?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-      btn20?.classList.add('text-slate-400');
-      if (el.pricescanDynamicEmaCol) {
-        el.pricescanDynamicEmaCol.textContent = `EMA 10 (${tfCode}) (₹)`;
-      }
-    } else {
-      btn20?.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-      btn20?.classList.remove('text-slate-400');
-      btn10?.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-      btn10?.classList.add('text-slate-400');
-      if (el.pricescanDynamicEmaCol) {
-        el.pricescanDynamicEmaCol.textContent = `EMA 20 (${tfCode}) (₹)`;
-      }
-    }
-    if (el.pricescanDynamicDarvasCol) {
-      el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
-    }
-    if (el.pricescanFooterInfo) {
-      el.pricescanFooterInfo.textContent = `min(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode}))`;
-    }
+    updatePricescanConditionLabels(vStr, tfCode);
     if (state.pricescanResults && state.pricescanResults.length > 0) {
       renderPricescanTable();
     }
   };
-
-  document.getElementById('btn-ema-10')?.addEventListener('click', () => setPricescanEma(10));
-  document.getElementById('btn-ema-20')?.addEventListener('click', () => setPricescanEma(20));
 
   if (el.selectPricescanEma) {
     el.selectPricescanEma.addEventListener('change', () => setPricescanEma(el.selectPricescanEma.value));
@@ -4107,16 +4113,8 @@ function setupEventListeners() {
     el.selectPricescanTimeframe.addEventListener('change', () => {
       const tf = el.selectPricescanTimeframe.value;
       const tfCode = tf === '1wk' ? 'W' : 'D';
-      const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
-      if (el.pricescanDynamicDarvasCol) {
-        el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
-      }
-      if (el.pricescanDynamicEmaCol) {
-        el.pricescanDynamicEmaCol.textContent = `EMA ${ema} (${tfCode}) (₹)`;
-      }
-      if (el.pricescanFooterInfo) {
-        el.pricescanFooterInfo.textContent = `min(DarvasGreen(${tfCode}), EMA${ema}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${ema}(${tfCode}))`;
-      }
+      const cond = el.selectPricescanEma?.value || '10';
+      updatePricescanConditionLabels(cond, tfCode);
     });
   }
 
@@ -4148,6 +4146,9 @@ function setupEventListeners() {
       }
       renderPricescanTable();
     });
+  }
+  if (el.btnPricescanEmasAligned) {
+    el.btnPricescanEmasAligned.addEventListener('click', togglePricescanEmasAligned);
   }
 
   // Keyboard Enter Shortcut to run scan when Scanner view is open
@@ -6877,8 +6878,12 @@ function handleCopyStocks() {
     list = (state.pricescanResults || []).filter(stock => {
       if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+      if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) return false;
       return true;
     });
+    if (state.pricescanEmasAligned) {
+      filterContext = ' (EMAs Aligned)';
+    }
   } else {
     list = (state.currentStocks || []).filter(stock => {
       if (state.filterMc2000 && stock.mcOver2000Cr !== true) return false;
@@ -6952,6 +6957,7 @@ function getActiveDisplayedStocksList() {
     list = [...(state.pricescanResults || [])].filter(stock => {
       if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+      if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) return false;
       return true;
     });
     const sortField = state.pricescanSortField || 'spreadPercent';
@@ -6964,6 +6970,15 @@ function getActiveDisplayedStocksList() {
       if (sortField === 'close' || sortField === 'ltp') {
         valA = (typeof a.close === 'number' && a.close > 0) ? a.close : (a.ltp || 0);
         valB = (typeof b.close === 'number' && b.close > 0) ? b.close : (b.ltp || 0);
+      } else if (sortField === 'rvol') {
+        valA = (typeof a.rvol === 'number') ? a.rvol : 1.0;
+        valB = (typeof b.rvol === 'number') ? b.rvol : 1.0;
+      } else if (sortField === 'spreadPercent' || sortField === 'dgreenDist') {
+        valA = (typeof a.dgreenDist === 'number') ? a.dgreenDist : (typeof a.spreadPercent === 'number' ? a.spreadPercent : 0);
+        valB = (typeof b.dgreenDist === 'number') ? b.dgreenDist : (typeof b.spreadPercent === 'number' ? b.spreadPercent : 0);
+      } else if (sortField === 'crossedDaysAgo') {
+        valA = (typeof a.crossedDaysAgo === 'number') ? a.crossedDaysAgo : 999;
+        valB = (typeof b.crossedDaysAgo === 'number') ? b.crossedDaysAgo : 999;
       } else if (sortField === 'selectedEmaValue') {
         valA = ema === 20 ? (a.ema20 || a.selectedEmaValue) : (a.ema10 || a.selectedEmaValue);
         valB = ema === 20 ? (b.ema20 || b.selectedEmaValue) : (b.ema10 || b.selectedEmaValue);
@@ -7509,10 +7524,10 @@ function selectStock(stock) {
 
 function populatePricescanScopeOptions() {
   if (!el.selectPricescanScope) return;
-  const currentVal = el.selectPricescanScope.value || 'current';
+  const screenerStockCount = (state.currentStocks || []).length;
+  const currentVal = el.selectPricescanScope.value || (screenerStockCount > 0 ? 'current' : 'fno');
 
   let html = `<optgroup label="Active Workspace">`;
-  const screenerStockCount = (state.currentStocks || []).length;
   html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
 
   if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
@@ -7524,7 +7539,7 @@ function populatePricescanScopeOptions() {
   html += `
     </optgroup>
     <optgroup label="Market Indices & Universes">
-      <option value="fno">🎯 F&O Stocks (~200)</option>
+      <option value="fno" ${currentVal === 'fno' ? 'selected' : ''}>🎯 F&O Stocks (~200)</option>
       <option value="large">🏢 Large Cap (Top 100)</option>
       <option value="mid">📈 Mid Cap (150)</option>
       <option value="small">🚀 Small Cap (250)</option>
@@ -7542,29 +7557,48 @@ function populatePricescanScopeOptions() {
   }
 }
 
+function updatePricescanConditionLabels(val, tfCode) {
+  const vStr = String(val || '10');
+  const isCrossToday = vStr === 'cross_today';
+  const isCross5d = vStr === 'cross_5d';
+  const isCrossover = isCrossToday || isCross5d;
+
+  if (el.pricescanDynamicLastColTitle) {
+    el.pricescanDynamicLastColTitle.textContent = isCrossover ? 'Dist / Cross' : 'Spread %';
+  }
+  if (el.pricescanDynamicLastColTh) {
+    el.pricescanDynamicLastColTh.title = isCrossover 
+      ? 'Sort by Distance % from Darvas Green Line' 
+      : 'Sort by Spread % between Darvas Green & EMA';
+  }
+
+  if (el.pricescanFooterInfo) {
+    if (isCrossToday) {
+      el.pricescanFooterInfo.textContent = `Price crossed above DarvasGreen(${tfCode}) today${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
+    } else if (isCross5d) {
+      el.pricescanFooterInfo.textContent = `Price crossed above DarvasGreen(${tfCode}) in last 5 sessions${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
+    } else {
+      el.pricescanFooterInfo.textContent = `min(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode}))${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
+    }
+  }
+}
+
 async function runPricePositionScan() {
-  const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+  const selectedCondition = el.selectPricescanEma?.value || '10';
+  const isCrossToday = selectedCondition === 'cross_today';
+  const isCross5d = selectedCondition === 'cross_5d';
+  const isCrossoverMode = isCrossToday || isCross5d;
   const interval = el.selectPricescanTimeframe?.value || '1d';
   const tfCode = interval === '1wk' ? 'W' : 'D';
   const tfLabel = interval === '1wk' ? 'Weekly' : 'Daily';
-  const scope = el.selectPricescanScope?.value || 'current';
+  let scope = el.selectPricescanScope?.value || 'fno';
   const btn = el.btnRunPricescan;
   const tbody = el.pricescanTbody;
   const statusBadge = el.pricescanStatusBadge;
   const countEl = el.pricescanResultsCount;
-  const footerInfo = el.pricescanFooterInfo;
 
-  // Update dynamic table column header
-  if (el.pricescanDynamicEmaCol) {
-    el.pricescanDynamicEmaCol.textContent = `EMA ${ema} (${tfCode}) (₹)`;
-  }
-  if (el.pricescanDynamicDarvasCol) {
-    el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
-  }
-
-  if (footerInfo) {
-    footerInfo.textContent = `Condition: min(DarvasGreen(${tfCode}), EMA${ema}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${ema}(${tfCode}))`;
-  }
+  // Update dynamic labels
+  updatePricescanConditionLabels(selectedCondition, tfCode);
 
   // Determine stock list & scanning label based on scope
   let stockList = [];
@@ -7572,10 +7606,12 @@ async function runPricePositionScan() {
 
   if (scope === 'current') {
     stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
-    scanScopeLabel = `${stockList.length} Screener Stocks`;
     if (stockList.length === 0) {
-      showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
-      return;
+      scope = 'fno';
+      if (el.selectPricescanScope) el.selectPricescanScope.value = 'fno';
+      scanScopeLabel = 'F&O Stocks';
+    } else {
+      scanScopeLabel = `${stockList.length} Screener Stocks`;
     }
   } else if (scope.startsWith('wl_') || scope === 'watchlist') {
     const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
@@ -7607,14 +7643,20 @@ async function runPricePositionScan() {
     statusBadge.className = 'text-[11px] text-amber-400 font-mono animate-pulse';
   }
 
+  const scanSubtitle = isCrossToday
+    ? `Checking price crossed above Darvas Green Line (${tfLabel}) today`
+    : isCross5d
+      ? `Checking price crossed above Darvas Green Line (${tfLabel}) in last 5 sessions`
+      : `Checking Darvas Green Line (${tfLabel}) & EMA ${selectedCondition} (${tfLabel}) channel`;
+
   if (tbody) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="p-8 text-center text-slate-400">
+        <td colspan="6" class="p-8 text-center text-slate-400">
           <div class="flex flex-col items-center justify-center gap-3">
             <i data-lucide="loader-2" class="w-8 h-8 text-emerald-400 animate-spin"></i>
             <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel} (${tfLabel})...</p>
-            <p class="text-[11px] text-slate-500">Checking Darvas Green Line (${tfLabel}) & EMA ${ema} (${tfLabel}) boundary condition</p>
+            <p class="text-[11px] text-slate-500">${scanSubtitle}</p>
           </div>
         </td>
       </tr>
@@ -7630,7 +7672,7 @@ async function runPricePositionScan() {
         ...getAuthHeaders()
       },
       body: JSON.stringify({
-        targetEma: ema,
+        targetEma: selectedCondition,
         interval,
         scope,
         stockList
@@ -7672,7 +7714,7 @@ async function runPricePositionScan() {
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="p-6 text-center text-rose-400">
+          <td colspan="6" class="p-6 text-center text-rose-400">
             <p class="text-xs font-semibold">Error running scan: ${err.message}</p>
           </td>
         </tr>
@@ -7689,6 +7731,25 @@ async function runPricePositionScan() {
   }
 }
 
+function setPricescanFilter(filterKey) {
+  state.pricescanFilter = filterKey || 'all';
+  state.pricescanEmasAligned = (state.pricescanFilter === 'emas-aligned');
+
+  document.querySelectorAll('#pricescan-filter-pills-bar .rec-pill').forEach(btn => {
+    if (btn.dataset.psfilter === state.pricescanFilter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  renderPricescanTable();
+}
+
+function togglePricescanEmasAligned() {
+  setPricescanFilter(state.pricescanFilter === 'emas-aligned' ? 'all' : 'emas-aligned');
+}
+
 // -------------------------------------------------------------
 // Render DarvasScan Table with Dynamic Sorting
 // -------------------------------------------------------------
@@ -7696,7 +7757,10 @@ function renderPricescanTable() {
   const tbody = el.pricescanTbody;
   if (!tbody) return;
 
-  const ema = parseInt(el.selectPricescanEma?.value || '10', 10);
+  const selectedCondition = el.selectPricescanEma?.value || '10';
+  const isCrossToday = selectedCondition === 'cross_today';
+  const isCross5d = selectedCondition === 'cross_5d';
+  const isCrossoverMode = isCrossToday || isCross5d;
   const interval = el.selectPricescanTimeframe?.value || '1d';
   const tfCode = interval === '1wk' ? 'W' : 'D';
 
@@ -7707,18 +7771,30 @@ function renderPricescanTable() {
     if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
       return false;
     }
+    if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) {
+      return false;
+    }
     return true;
   });
 
   if (el.pricescanResultsCount) el.pricescanResultsCount.textContent = matches.length;
-  if (el.pricescanResultsCountBadge) el.pricescanResultsCountBadge.textContent = matches.length;
-
-  // Update dynamic table column header text
-  if (el.pricescanDynamicEmaCol) {
-    el.pricescanDynamicEmaCol.textContent = `EMA ${ema} (${tfCode}) (₹)`;
+  if (el.pricescanResultsCountBadge) {
+    el.pricescanResultsCountBadge.textContent = matches.length;
+    el.pricescanResultsCountBadge.title = state.pricescanEmasAligned 
+      ? `Matches (EMAs Aligned: ${matches.length} of ${state.pricescanResults.length})` 
+      : `Matching Stocks Count: ${matches.length}`;
   }
-  if (el.pricescanDynamicDarvasCol) {
-    el.pricescanDynamicDarvasCol.textContent = `Darvas (${tfCode})`;
+
+  // Update dynamic column title and footer info
+  updatePricescanConditionLabels(selectedCondition, tfCode);
+
+  let conditionDesc = '';
+  if (isCrossToday) {
+    conditionDesc = `Price crossed above DarvasGreen(${tfCode}) today`;
+  } else if (isCross5d) {
+    conditionDesc = `Price crossed above DarvasGreen(${tfCode}) in last 5 sessions`;
+  } else {
+    conditionDesc = `min(DarvasGreen(${tfCode}), EMA${selectedCondition}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${selectedCondition}(${tfCode}))`;
   }
 
   // Update active column header highlight and icon
@@ -7744,11 +7820,11 @@ function renderPricescanTable() {
   if (matches.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="p-8 text-center text-slate-500">
+        <td colspan="6" class="p-8 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
-            <p class="text-xs text-slate-300">No stocks matched the condition: <span class="font-mono text-amber-400">min(DarvasGreen(${tfCode}), EMA${ema}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${ema}(${tfCode}))</span></p>
-            <p class="text-[11px] text-slate-500">Try adjusting Market Cap filters, changing EMA to ${ema === 10 ? 'EMA 20' : 'EMA 10'}, or scanning a broader scope.</p>
+            <p class="text-xs text-slate-300">No stocks matched the condition: <span class="font-mono text-amber-400">${conditionDesc}</span>${state.pricescanEmasAligned ? ' <span class="text-emerald-400 font-semibold">+ EMAs Aligned</span>' : ''}</p>
+            <p class="text-[11px] text-slate-500">${state.pricescanEmasAligned ? 'Try toggling off "EMAs Aligned" or scanning a broader scope.' : 'Try adjusting Market Cap filters, switching condition, or scanning a broader scope.'}</p>
           </div>
         </td>
       </tr>
@@ -7764,9 +7840,18 @@ function renderPricescanTable() {
     if (sortField === 'close' || sortField === 'ltp') {
       valA = (typeof a.close === 'number' && a.close > 0) ? a.close : (a.ltp || 0);
       valB = (typeof b.close === 'number' && b.close > 0) ? b.close : (b.ltp || 0);
+    } else if (sortField === 'rvol') {
+      valA = (typeof a.rvol === 'number') ? a.rvol : 1.0;
+      valB = (typeof b.rvol === 'number') ? b.rvol : 1.0;
+    } else if (sortField === 'spreadPercent' || sortField === 'dgreenDist') {
+      valA = (typeof a.dgreenDist === 'number') ? a.dgreenDist : (typeof a.spreadPercent === 'number' ? a.spreadPercent : 0);
+      valB = (typeof b.dgreenDist === 'number') ? b.dgreenDist : (typeof b.spreadPercent === 'number' ? b.spreadPercent : 0);
+    } else if (sortField === 'crossedDaysAgo') {
+      valA = (typeof a.crossedDaysAgo === 'number') ? a.crossedDaysAgo : 999;
+      valB = (typeof b.crossedDaysAgo === 'number') ? b.crossedDaysAgo : 999;
     } else if (sortField === 'selectedEmaValue') {
-      valA = ema === 20 ? (a.ema20 || a.selectedEmaValue) : (a.ema10 || a.selectedEmaValue);
-      valB = ema === 20 ? (b.ema20 || b.selectedEmaValue) : (b.ema10 || b.selectedEmaValue);
+      valA = selectedCondition === '20' ? (a.ema20 || a.selectedEmaValue) : (a.ema10 || a.selectedEmaValue);
+      valB = selectedCondition === '20' ? (b.ema20 || b.selectedEmaValue) : (b.ema10 || b.selectedEmaValue);
     }
     if (typeof valA === 'string') {
       return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
@@ -7785,7 +7870,7 @@ function renderPricescanTable() {
       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
       : 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
     const ltpPrice = (typeof m.close === 'number' && m.close > 0) ? m.close : (m.ltp || 0);
-    const selectedEmaVal = ema === 20 ? (m.ema20 || m.selectedEmaValue) : (m.ema10 || m.selectedEmaValue);
+    const stockRvol = (typeof m.rvol === 'number') ? m.rvol : getStockRvol(m);
 
     let mcBadgeHtml = '';
     if (m.mcOver2000Cr) {
@@ -7798,6 +7883,36 @@ function renderPricescanTable() {
       mcBadgeHtml = `
         <span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">
           &gt;1k
+        </span>
+      `;
+    }
+
+    // Dynamic 6th column: Crossover timing + distance badge vs Channel Spread badge
+    let lastColHtml = '';
+    const isRowCrossover = m.scanMode === 'cross_today' || m.scanMode === 'cross_5d' || (typeof m.crossedDaysAgo === 'number') || isCrossoverMode;
+
+    if (isRowCrossover && (typeof m.crossedDaysAgo === 'number' || typeof m.dgreenDist === 'number')) {
+      const daysAgo = typeof m.crossedDaysAgo === 'number' ? m.crossedDaysAgo : 0;
+      const timingBadge = daysAgo === 0 
+        ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold font-mono">Today ★</span>`
+        : `<span class="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-medium font-mono">${daysAgo}d ago</span>`;
+      
+      const distVal = typeof m.dgreenDist === 'number' ? m.dgreenDist : (m.spreadPercent || 0);
+      const isDistPos = distVal >= 0;
+      const distColor = isDistPos ? 'text-emerald-400' : 'text-rose-400';
+      const distSign = isDistPos ? '+' : '';
+      const dateSubtitle = m.crossDate ? ` on ${m.crossDate}` : '';
+
+      lastColHtml = `
+        <div class="flex items-center justify-center gap-1.5" title="Crossed ${daysAgo === 0 ? 'today' : daysAgo + ' days ago'}${dateSubtitle} | Darvas Green: ₹${m.darvasGreen || '—'} | Distance: ${distSign}${distVal}%">
+          ${timingBadge}
+          <span class="text-[10px] font-mono font-semibold ${distColor}">${distSign}${distVal}%</span>
+        </div>
+      `;
+    } else {
+      lastColHtml = `
+        <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold" title="Channel width between Darvas Green(${tfCode}) and EMA${selectedCondition}(${tfCode}): ${m.spreadPercent}%">
+          ${m.spreadPercent}%
         </span>
       `;
     }
@@ -7828,16 +7943,11 @@ function renderPricescanTable() {
         <td class="py-2.5 px-2 text-right font-mono text-slate-400 text-[11px]">
           ${fmt.volume(m.volume)}
         </td>
-        <td class="py-2.5 px-2 text-right font-mono text-xs text-blue-400 font-bold bg-blue-500/5 rounded">
-          ${fmt.currency(selectedEmaVal)}
-        </td>
-        <td class="py-2.5 px-2 text-right font-mono text-xs font-bold text-emerald-400">
-          ${fmt.currency(m.darvasGreen)}
+        <td class="py-2.5 px-2 text-right">
+          ${formatRvolBadge(stockRvol)}
         </td>
         <td class="py-2.5 px-2 text-center font-mono text-[11px]">
-          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold" title="Channel width between Darvas Green and EMA${ema} (${tfCode}): ${m.spreadPercent}%">
-            ${m.spreadPercent}%
-          </span>
+          ${lastColHtml}
         </td>
       </tr>
     `;
@@ -9017,7 +9127,7 @@ function renderStocksTable() {
   if (list.length === 0) {
     el.stocksTbody.innerHTML = `
       <tr>
-        <td colspan="5" class="py-16 text-center text-slate-500">
+        <td colspan="7" class="py-16 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="search-x" class="w-6 h-6 text-slate-600"></i>
             <p class="text-sm font-medium text-slate-400">No matching stocks found</p>
@@ -9071,6 +9181,7 @@ function renderStocksTable() {
     // Volume Today
     const todayVol = (typeof stock.volume === 'number' && stock.volume > 0) ? stock.volume : ((typeof stock.vol === 'number' && stock.vol > 0) ? stock.vol : 0);
     const volFormatted = fmt.volume(todayVol);
+    const stockRvol = getStockRvol(stock);
 
     const tr = document.createElement('tr');
     tr.className = `dense-row stock-row cursor-pointer select-none ${isSelected ? 'selected' : ''}`;
@@ -9108,6 +9219,11 @@ function renderStocksTable() {
       <!-- 4. Volume Today -->
       <td class="col-vol num" title="Today's Traded Volume: ${todayVol.toLocaleString('en-IN')} shares">
         ${volFormatted}
+      </td>
+
+      <!-- 4b. RVOL -->
+      <td class="col-rvol num" title="Relative Volume (RVOL): ${stockRvol.toFixed(2)}x">
+        ${formatRvolBadge(stockRvol)}
       </td>
 
       <!-- 5. 4-in-1 EMA Matrix [10 20 50 150] -->
@@ -9176,7 +9292,7 @@ async function handleWatchlistDotClick(e, symbol, wlIndex) {
 function setRecommendedFilter(filterKey) {
   state.recFilter = filterKey || 'all';
   
-  document.querySelectorAll('#rec-filter-pills-bar .rec-filter-pill, .rec-pill').forEach(btn => {
+  document.querySelectorAll('#rec-filter-pills-bar .rec-filter-pill, #rec-filter-pills-bar .rec-pill').forEach(btn => {
     if (btn.dataset.filter === state.recFilter) {
       btn.classList.add('active');
     } else {
@@ -9214,7 +9330,7 @@ function handleColumnToggle(colKey, isChecked) {
 }
 
 function toggleAllActiveColumns() {
-  const cols = ['close', 'chg', 'vol', 'emas', 'rsi'];
+  const cols = ['close', 'chg', 'vol', 'rvol', 'emas', 'rsi'];
   const allChecked = cols.every(k => state.denseColumns[k] !== false);
   const targetState = !allChecked;
 
@@ -9233,6 +9349,7 @@ function resetDefaultColumns() {
     close: true,
     chg: true,
     vol: true,
+    rvol: true,
     emas: true,
     rsi: true
   };
@@ -9259,12 +9376,12 @@ function loadColumnPreferences() {
       delete parsed.ema20;
       delete parsed.dpivot;
       delete parsed.wpivot;
-      delete parsed.rvol;
       delete parsed.emax;
       delete parsed['52wh'];
       delete parsed['high52w'];
       state.denseColumns = { ...state.denseColumns, ...parsed };
       if (state.denseColumns.vol === undefined) state.denseColumns.vol = true;
+      if (state.denseColumns.rvol === undefined) state.denseColumns.rvol = true;
       if (state.denseColumns.emas === undefined) state.denseColumns.emas = true;
       if (state.denseColumns.rsi === undefined) state.denseColumns.rsi = true;
     }
@@ -9281,7 +9398,7 @@ function saveColumnPreferences() {
 
 function applyColumnVisibilityToTable() {
   const prefs = state.denseColumns || {};
-  const allColKeys = ['symbol', 'close', 'chg', 'vol', 'emas', 'rsi'];
+  const allColKeys = ['symbol', 'close', 'chg', 'vol', 'rvol', 'emas', 'rsi'];
   
   allColKeys.forEach(colKey => {
     const isVisible = prefs[colKey] !== false;
@@ -10433,49 +10550,18 @@ async function handleAdminDeleteStock(symbol) {
   }
 }
 
+function handleAdminOpenMasterUniverseSpreadsheet() {
+  const token = state.authToken || localStorage.getItem('sangam_auth_token') || '';
+  const url = token ? `/master-universe.html?token=${encodeURIComponent(token)}` : '/master-universe.html';
+  window.open(url, '_blank');
+}
+
 function handleExportUniverseCSV() {
-  const list = adminUniverseState.filtered && adminUniverseState.filtered.length > 0
-    ? adminUniverseState.filtered
-    : adminUniverseState.stocks;
-
-  if (!list || list.length === 0) {
-    showToast('No stocks available to export', 'warning');
-    return;
-  }
-
-  const headers = ['Symbol', 'Company Name', 'Exchange', 'Sector', 'Industry', 'Market Cap (Cr)', 'Cap Category', 'F&O Active', 'LTP', '1D Change %', '52W High', '52W Low', 'RSI', 'RVOL', 'Auto Ingested', 'Admin Added', 'Last Price Updated'];
-  
-  const rows = list.map(s => [
-    `"${s.symbol || ''}"`,
-    `"${(s.name || '').replace(/"/g, '""')}"`,
-    `"${s.exchange || 'NSE'}"`,
-    `"${(s.sector || '').replace(/"/g, '""')}"`,
-    `"${(s.industry || '').replace(/"/g, '""')}"`,
-    s.marketCap || 0,
-    `"${s.capCategory || ''}"`,
-    s.fno ? 'YES' : 'NO',
-    s.price || 0,
-    s.changePercent || 0,
-    s.high52w || '',
-    s.low52w || '',
-    s.rsi || '',
-    s.rvol || '',
-    s.autoAdded ? 'YES' : 'NO',
-    s.adminAdded ? 'YES' : 'NO',
-    `"${s.lastPriceUpdated || ''}"`
-  ]);
-
-  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `Sangam_Stock_Universe_${new Date().toISOString().split('T')[0]}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast(`Exported ${list.length} stocks to CSV!`, 'success');
+  const token = state.authToken || localStorage.getItem('sangam_auth_token') || '';
+  // Directly trigger backend authoritative CSV export (UTF-8 BOM formatted for Excel & Google Sheets)
+  const exportUrl = `/api/admin/master-universe/export${token ? '?token=' + encodeURIComponent(token) : ''}`;
+  window.location.href = exportUrl;
+  showToast('Downloading MASTER_UNIVERSE.csv (Excel / Google Sheets)...', 'info');
 }
 
 function handleAdminOpenArchitectureTab() {
@@ -11193,6 +11279,7 @@ window.handleAdminUniversePageSizeChange = handleAdminUniversePageSizeChange;
 window.handleAdminAddStock = handleAdminAddStock;
 window.handleAdminDeleteStock = handleAdminDeleteStock;
 window.handleExportUniverseCSV = handleExportUniverseCSV;
+window.handleAdminOpenMasterUniverseSpreadsheet = handleAdminOpenMasterUniverseSpreadsheet;
 window.handleAdminOpenArchitectureTab = handleAdminOpenArchitectureTab;
 window.handleAdminOpenCheatsheetTab = handleAdminOpenCheatsheetTab;
 window.closeAdminDocViewer = closeAdminDocViewer;
@@ -11941,6 +12028,8 @@ window.handleWatchlistDotClick = handleWatchlistDotClick;
 window.setRecommendedFilter = setRecommendedFilter;
 window.setWatchlistFilter = setWatchlistFilter;
 window.isStockEmaAligned = isStockEmaAligned;
+window.togglePricescanEmasAligned = togglePricescanEmasAligned;
+window.setPricescanFilter = setPricescanFilter;
 window.openColumnsCustomizerModal = openColumnsCustomizerModal;
 window.closeColumnsCustomizerModal = closeColumnsCustomizerModal;
 window.handleColumnToggle = handleColumnToggle;
