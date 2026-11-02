@@ -119,6 +119,46 @@ function isNSETradingHoliday(dateStr) {
   return Boolean(NSE_TRADING_HOLIDAYS[ymd]);
 }
 
+// -------------------------------------------------------------
+// Centralized ETF Detection & Permanent Exclusion Guard
+// -------------------------------------------------------------
+const KNOWN_ETF_SYMBOLS = new Set([
+  'BHARAT22', 'CPSEETF', 'MAFANG', 'MON100', 'MOM100', 'MOM30', 'MOM50',
+  'MASPTOP50', 'HDFCLIQUID', 'SETF10GILT', 'GSEC5IETF', 'GSEC10IETF',
+  'LIQUIDBEES', 'LIQUIDETF', 'ABSLNN50ET', 'ICICIB22', 'ICICINV20', 'NV20',
+  'ELIQUID', 'LIQUIDADD', 'LIQUIDPLUS', 'LIQUIDSBI', 'SBILIQETF', 'LIQUIDBETA',
+  'LIQUID1', 'AONELIQUID', 'LIQGRWBEES', 'LIQUIDSHRI', 'SETFNIFBK', 'SETFNIF50',
+  'QNIFTY', 'HDFCNIFTY', 'NIFTYBETA', 'SILVER001', 'MOMIDMTM', 'GOLDBEES',
+  'SILVERBEES', 'NIFTYBEES', 'BANKBEES', 'ITBEES', 'PHARMABEES', 'AUTOBEES',
+  'INFRABEES', 'CONSUMBEES', 'PSUBNKBEES', 'JUNIORBEES', 'SHARIABEES',
+  'FARBEES', 'GILT5YBEES', 'LTGILTBEES', 'MID150BEES', 'MANUFGBEES', 'NV20BEES',
+  'SNXT30BEES', 'NIF100BEES', 'GOLD1', 'SILVER1', 'SILVER', 'GOLDETF',
+  'SILVERETF', 'GOLDIETF', 'SILVERIETF', 'TATAGOLD', 'TATSILV', 'UNIONGOLD',
+  'TWCGOLDETF', 'QGOLDHALF', 'SBIGOLD', 'SBISILVER', 'MOGOLD', 'MOSILVER',
+  'HDFCGOLD', 'HDFCSILVER', 'ICICIGOLD', 'ICICISILV', 'KOTAKGOLD', 'KOTAKSILV',
+  'AXISGOLD', 'AXISSILVER', 'DSPGOLD', 'DSPSILVER', 'BSLGOLDETF'
+]);
+
+function isInstrumentETF(symbol, name = '') {
+  if (!symbol) return false;
+  const sym = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  if (KNOWN_ETF_SYMBOLS.has(sym)) return true;
+
+  if (sym.endsWith('BEES') || sym.endsWith('ETF') || sym.endsWith('IETF') || sym.endsWith('BETF') || sym.endsWith('GETF') || sym.endsWith('INAV') || sym.startsWith('SETF') ||
+      /_ETF\b/.test(sym) || /-ETF\b/.test(sym)) {
+    return true;
+  }
+
+  if (name) {
+    const n = String(name).toUpperCase();
+    if (/\bEXCHANGE\s+TRADED\s+FUND\b/.test(n) || /\bETF\b/.test(n) || /-ETF\b/.test(n) ||
+        /\(ETF\)/.test(n) || /\[ETF\]/.test(n) || /\bBEES\b/.test(n) || /\bBHARAT\s+BOND\b/.test(n)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function sanitizeDhanValue(val) {
   if (!val) return '';
   let clean = String(val).trim();
@@ -527,6 +567,9 @@ async function fetchDhanLiveQuotes(symbols) {
 }
 
 // Live Intraday Quotes In-Memory Cache (25s TTL)
+// Centralized Symbol-wise In-Memory Live Daily Candle Aggregator
+const LIVE_DAILY_CANDLES = new Map(); // symbol -> { symbol, date, open, high, low, close, volume, isProvisional, updatedAt }
+
 const LIVE_QUOTES_CACHE = {
   data: {}, // { [symbol]: { price, changePercent, prevClose, volume, dayHigh, dayLow, timestamp } }
   lastUpdated: 0,
@@ -624,6 +667,7 @@ async function getOrFetchLiveQuotes(symbols) {
           q.fiftyTwoWeekLow = prevCached?.fiftyTwoWeekLow;
           LIVE_QUOTES_CACHE.data[sym] = q;
           result[sym] = q;
+          updateLiveDailyCandle(sym, q);
         }
       });
       remainingNeeded = needed.filter(sym => !result[sym]);
@@ -651,6 +695,7 @@ async function getOrFetchLiveQuotes(symbols) {
           };
           LIVE_QUOTES_CACHE.data[q.symbol] = formatted;
           result[q.symbol] = formatted;
+          updateLiveDailyCandle(q.symbol, formatted);
         }
       });
     } catch (err) {}
@@ -1036,8 +1081,146 @@ async function syncMongoInitialData() {
       console.log(`[MongoDB] 📥 Loaded ${memorySavedCharts.length} saved charts from MongoDB Atlas.`);
     }
 
+    // 8. Daily OHLCV Historical Candles Collection (Progressive Historical Loading & EOD Finalization)
+    const ohlcvCol = db.collection('daily_ohlcv');
+    try {
+      await ohlcvCol.createIndex({ symbol: 1, date: 1 }, { unique: true });
+      await ohlcvCol.createIndex({ date: -1 });
+      console.log('[MongoDB] ✅ Verified daily_ohlcv collection indexes ({ symbol: 1, date: 1 }).');
+
+      // Enforce 3-year maximum data retention by purging candles older than 3 years
+      const threeYearsAgoStr = new Date(Date.now() - (3 * 365.25 * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
+      const purgeRes = await ohlcvCol.deleteMany({ date: { $lt: threeYearsAgoStr } });
+      if (purgeRes.deletedCount > 0) {
+        console.log(`[MongoDB] 🧹 Cleaned up ${purgeRes.deletedCount} historical candles older than 3 years (< ${threeYearsAgoStr}).`);
+      }
+    } catch (idxErr) {}
+
   } catch (err) {
     console.error('[MongoDB] Error during initial data sync:', err.message);
+  }
+}
+
+// -------------------------------------------------------------
+// Centralized Symbol-wise In-Memory Live Daily Candle Aggregator
+// -------------------------------------------------------------
+function updateLiveDailyCandle(symbol, quote) {
+  if (!symbol || !quote || isInstrumentETF(symbol)) return null;
+  const price = Number(quote.price || quote.ltp);
+  if (!price || isNaN(price) || price <= 0) return null;
+
+  const cleanSym = symbol.toUpperCase().replace(/\.(NS|BO)$/, "").trim();
+  const todayIST = getISTDateString(Math.floor(Date.now() / 1000));
+
+  // Skip updating daily candle on weekends or holidays
+  const now = new Date();
+  const istDay = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })).getDay();
+  if (istDay === 0 || istDay === 6) return null;
+  if (isNSETradingHoliday(todayIST)) return null;
+
+  let existing = LIVE_DAILY_CANDLES.get(cleanSym);
+  const dayHigh = Number(quote.dayHigh || price);
+  const dayLow = Number(quote.dayLow || price);
+  const vol = Number(quote.volume || 0);
+
+  if (!existing || existing.date !== todayIST) {
+    existing = {
+      symbol: cleanSym,
+      date: todayIST,
+      open: Number(quote.open || price),
+      high: dayHigh,
+      low: dayLow,
+      close: price,
+      volume: vol,
+      isProvisional: true,
+      updatedAt: Date.now()
+    };
+  } else {
+    existing.close = price;
+    existing.high = Math.max(existing.high, price, dayHigh);
+    existing.low = Math.min(existing.low, price, dayLow);
+    if (vol > 0) existing.volume = Math.max(existing.volume, vol);
+    existing.updatedAt = Date.now();
+  }
+
+  LIVE_DAILY_CANDLES.set(cleanSym, existing);
+  return existing;
+}
+
+// -------------------------------------------------------------
+// MongoDB daily_ohlcv Persistent Storage Helpers
+// -------------------------------------------------------------
+async function getOhlcvFromMongo(symbol, startDate = null, endDate = null) {
+  if (!MONGO_CONFIG.isConnected || !MONGO_CONFIG.db) return null;
+  try {
+    const col = MONGO_CONFIG.db.collection("daily_ohlcv");
+    const query = { symbol: symbol.toUpperCase() };
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = startDate;
+      if (endDate) query.date.$lt = endDate;
+    }
+    const docs = await col.find(query, {
+      projection: { _id: 0, date: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+    }).sort({ date: 1 }).toArray();
+
+    if (docs && docs.length > 0) {
+      return docs.map(d => ({
+        time: d.date,
+        open: d.open,
+        high: d.high,
+        low: d.low,
+        close: d.close,
+        volume: d.volume || 0
+      }));
+    }
+  } catch (err) {
+    console.warn(`[OHLCV-DB] Query error for ${symbol}:`, err.message);
+  }
+  return null;
+}
+
+async function saveOhlcvToMongo(symbol, candles, isFinalized = false) {
+  if (!symbol || isInstrumentETF(symbol)) return;
+  if (!MONGO_CONFIG.isConnected || !MONGO_CONFIG.db || !Array.isArray(candles) || candles.length === 0) return;
+  try {
+    const col = MONGO_CONFIG.db.collection("daily_ohlcv");
+    const cleanSym = symbol.toUpperCase();
+    const threeYearsAgo = new Date();
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+    const minRetentionDate = threeYearsAgo.toISOString().slice(0, 10);
+
+    const ops = candles.filter(c => {
+      if (!c || !c.time || !c.close) return false;
+      const dateStr = typeof c.time === "string" ? c.time.slice(0, 10) : getISTDateString(c.time);
+      return dateStr >= minRetentionDate;
+    }).map(c => {
+      const dateStr = typeof c.time === "string" ? c.time.slice(0, 10) : getISTDateString(c.time);
+      return {
+        updateOne: {
+          filter: { symbol: cleanSym, date: dateStr },
+          update: {
+            $set: {
+              symbol: cleanSym,
+              date: dateStr,
+              open: Number(c.open.toFixed(2)),
+              high: Number(c.high.toFixed(2)),
+              low: Number(c.low.toFixed(2)),
+              close: Number(c.close.toFixed(2)),
+              volume: Math.round(c.volume || 0),
+              isFinalized: Boolean(isFinalized),
+              updatedAt: new Date()
+            }
+          },
+          upsert: true
+        }
+      };
+    });
+    if (ops.length > 0) {
+      await col.bulkWrite(ops, { ordered: false });
+    }
+  } catch (err) {
+    console.warn(`[OHLCV-DB] Save error for ${symbol}:`, err.message);
   }
 }
 
@@ -2424,7 +2607,7 @@ async function persistUniverseQuotes(quotesMap) {
   const nowIso = new Date().toISOString();
 
   universe.forEach(stk => {
-    if (!stk || !stk.symbol) return;
+    if (!stk || !stk.symbol || isInstrumentETF(stk.symbol)) return;
     const sym = stk.symbol.toUpperCase().trim();
     const q = quotesMap[sym] || quotesMap[sym.replace(/\.(NS|BO)$/, '')];
     if (q && typeof q.price === 'number' && q.price > 0) {
@@ -2715,7 +2898,11 @@ async function executeChartinkScreener(targetUrlOrSlug, customClause = null) {
   }
 
   const resultJson = await processRes.json();
-  const rawStocks = Array.isArray(resultJson.data) ? resultJson.data : [];
+  const rawStocks = (Array.isArray(resultJson.data) ? resultJson.data : []).filter(s => {
+    const sym = s.nsecode || s.bsecode || '';
+    const name = s.name || s.company_name || '';
+    return !isInstrumentETF(sym, name);
+  });
 
   // Fetch Market Cap > 1000 Cr & > 2000 Cr symbols sets to tag each stock
   const { mc1000Set, mc2000Set } = await getMarketCapSets();
@@ -3659,7 +3846,7 @@ async function fetchTraditionalAutoPivots(rawSymbol, activeInterval) {
 // In-memory cache for stock history (5 seconds TTL for instant responsiveness)
 const historyCache = new Map();
 
-async function fetchStockHistory(rawSymbol, customRange = null, customInterval = '1d') {
+async function fetchStockHistory(rawSymbol, customRange = null, customInterval = '1d', queryBefore = null) {
   let interval = '1d';
   let isIntraday = false;
   let yahooRange = '2y';
@@ -3683,7 +3870,6 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   } else {
     interval = '1d';
     isIntraday = false;
-    yahooRange = '2y';
   }
 
   let selectedRange = customRange || (isIntraday ? (interval === '5m' ? '5d' : '1mo') : '2y');
@@ -3692,13 +3878,185 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
   if (selectedRange === '12m' || selectedRange === '12mo') selectedRange = '1y';
   if (selectedRange === '24m' || selectedRange === '24mo') selectedRange = '2y';
 
-  const cacheKey = `${rawSymbol.toUpperCase()}_${selectedRange}_${interval}`;
+  if (!isIntraday) {
+    if (queryBefore) {
+      yahooRange = '5y';
+    } else {
+      yahooRange = '2y';
+    }
+  }
+
+  const cleanSymUpper = rawSymbol.toUpperCase().replace(/\.(NS|BO)$/, '');
+  const cacheKey = `${cleanSymUpper}_${selectedRange}_${interval}_${queryBefore || 'latest'}`;
   const cached = historyCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < (isIntraday ? 10000 : 60000))) {
     return cached.data;
   }
 
   let sym = rawSymbol.trim().toUpperCase().replace(/&/g, '%26');
+
+  // 0. Check MongoDB daily_ohlcv if requesting historical candles before a specific date
+  if (interval === '1d' && queryBefore) {
+    const mongoOlder = await getOhlcvFromMongo(cleanSymUpper, null, queryBefore);
+    if (mongoOlder && mongoOlder.length >= 80) {
+      const cappedOlder = mongoOlder.slice(-500); // Strictly cap to 500 trading candles (2 years)
+      const responsePayload = {
+        symbol: rawSymbol,
+        exchange: 'NSE',
+        source: 'mongo',
+        interval: '1d',
+        range: selectedRange,
+        isBackgroundHistory: true,
+        candlesCount: cappedOlder.length,
+        candles: cappedOlder
+      };
+      historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+      return responsePayload;
+    }
+  }
+
+  // 0a. Check MongoDB daily_ohlcv for instant 1y chart loading
+  if (interval === '1d' && !queryBefore && selectedRange === '1y') {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const oneYearAgoStr = oneYearAgo.toISOString().slice(0, 10);
+    const mongoCandles = await getOhlcvFromMongo(cleanSymUpper, oneYearAgoStr);
+    if (mongoCandles && mongoCandles.length >= 220) {
+      let candles = [...mongoCandles];
+      const todayStr = getISTDateString(Math.floor(Date.now() / 1000));
+      let liveCandle = LIVE_DAILY_CANDLES.get(cleanSymUpper);
+      if (!liveCandle) {
+        const q = LIVE_QUOTES_CACHE.data[cleanSymUpper] || quotesCache.get(cleanSymUpper)?.data;
+        if (q && q.price) liveCandle = updateLiveDailyCandle(cleanSymUpper, q);
+      }
+      if (liveCandle && liveCandle.date === todayStr && !isNSETradingHoliday(todayStr)) {
+        const lastIdx = candles.length - 1;
+        if (candles[lastIdx] && candles[lastIdx].time === todayStr) {
+          candles[lastIdx] = { time: todayStr, open: liveCandle.open, high: liveCandle.high, low: liveCandle.low, close: liveCandle.close, volume: liveCandle.volume };
+        } else {
+          candles.push({ time: todayStr, open: liveCandle.open, high: liveCandle.high, low: liveCandle.low, close: liveCandle.close, volume: liveCandle.volume });
+        }
+      }
+      const closePrices = candles.map(c => c.close);
+      const volumeValues = candles.map(c => c.volume);
+      const ema10 = calculateEMA(closePrices, 10);
+      const ema20 = calculateEMA(closePrices, 20);
+      const ema50 = calculateEMA(closePrices, 50);
+      const ema150 = calculateEMA(closePrices, 150);
+      const ema200 = calculateEMA(closePrices, 200);
+      const volAvg9 = calculateSMA(volumeValues, 9);
+      const vwap = calculateVWAP(candles, false);
+      const rsi14 = calculateRSI(closePrices, 14);
+      const rsiSma14 = calculateSMA(rsi14, 14);
+      const darvasBox = calculateDarvasBox(candles, 5);
+      const weeklyCandles = aggregateCandlesToWeekly(candles);
+      const weeklyDarvasBox = calculateDarvasBox(weeklyCandles, 5);
+      const weeklyClosePrices = weeklyCandles.map(c => c.close);
+      const weeklyEma10 = calculateEMA(weeklyClosePrices, 10);
+      const weeklyEma20 = calculateEMA(weeklyClosePrices, 20);
+      // Instant Pivot Points calculation from in-memory weekly candles (<0.1ms)
+      let pivotPoints = null;
+      if (weeklyCandles && weeklyCandles.length >= 2) {
+        const prev = weeklyCandles[weeklyCandles.length - 2];
+        if (prev && prev.high && prev.low && prev.close) {
+          const { high, low, close } = prev;
+          const p = Number(((high + low + close) / 3).toFixed(2));
+          const r1 = Number(((2 * p) - low).toFixed(2));
+          const s1 = Number(((2 * p) - high).toFixed(2));
+          const r2 = Number((p + (high - low)).toFixed(2));
+          const s2 = Number((p - (high - low)).toFixed(2));
+          const r3 = Number((high + (2 * (p - low))).toFixed(2));
+          const s3 = Number((low - (2 * (high - p))).toFixed(2));
+          const r4 = Number((high + (3 * (p - low))).toFixed(2));
+          const s4 = Number((low - (3 * (high - p))).toFixed(2));
+          const r5 = Number((high + (4 * (p - low))).toFixed(2));
+          const s5 = Number((low - (4 * (high - p))).toFixed(2));
+          pivotPoints = { type: 'Weekly (W)', p, r1, s1, r2, s2, r3, s3, r4, s4, r5, s5 };
+        }
+      }
+
+      const latestCandle = candles[candles.length - 1];
+      const prevCandle = candles.length > 1 ? candles[candles.length - 2] : latestCandle;
+      const realLtp = latestCandle.close;
+      const changePercent = prevCandle.close ? Number((((realLtp - prevCandle.close) / prevCandle.close) * 100).toFixed(2)) : 0;
+      const high52w = Math.max(realLtp, ...candles.slice(-250).map(c => c.high));
+      const low52w = Math.min(...candles.slice(-250).map(c => c.low));
+      const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
+      const pctFrom52wHigh = Math.min(0, Number((((realLtp - high52w) / high52w) * 100).toFixed(2)));
+      const pctFromAth = Math.min(0, Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2)));
+
+      // Instant cached earnings dates (<0.1ms) - fetch in background if missing
+      loadEarningsCalendar();
+      const cleanTick = cleanSymUpper.replace(/%26/g, '&');
+      let earningsDates = memoryEarningsCalendar.get(cleanTick)?.dates || [];
+      if (earningsDates.length === 0) {
+        getStockEarningsDates(rawSymbol).catch(() => {});
+      }
+      const dailyCross = detectDarvasCrossover(candles, darvasBox, 5, { price: realLtp, prevClose: prevCandle.close });
+      const weeklyCross = detectDarvasCrossover(weeklyCandles, weeklyDarvasBox, 5);
+
+      const responsePayload = {
+        symbol: rawSymbol,
+        exchange: 'NSE',
+        source: 'mongo',
+        sourceLabel: 'MongoDB',
+        interval: '1d',
+        range: selectedRange,
+        initialRange: selectedRange,
+        isIntraday: false,
+        ltp: realLtp,
+        changePercent,
+        high52w,
+        low52w,
+        fiftyTwoWeekHigh: high52w,
+        fiftyTwoWeekLow: low52w,
+        allTimeHigh,
+        pctFrom52wHigh,
+        pctFromAth,
+        latestEMA10: ema10[ema10.length - 1],
+        latestEMA20: ema20[ema20.length - 1],
+        latestEMA50: ema50[ema50.length - 1],
+        latestEMA150: ema150[ema150.length - 1],
+        latestEMA200: ema200[ema200.length - 1],
+        latestEMA10Weekly: weeklyEma10[weeklyEma10.length - 1],
+        latestEMA20Weekly: weeklyEma20[weeklyEma20.length - 1],
+        latestRSI: rsi14[rsi14.length - 1],
+        latestRsiSMA: rsiSma14[rsiSma14.length - 1],
+        latestVWAP: vwap[vwap.length - 1],
+        latestDarvasTop: darvasBox.latestTopBox,
+        latestDarvasBottom: darvasBox.latestBottomBox,
+        latestDarvasTopWeekly: weeklyDarvasBox.latestTopBox,
+        latestDarvasBottomWeekly: weeklyDarvasBox.latestBottomBox,
+        darvasBox,
+        weeklyDarvasBox,
+        darvasCrossedDaysAgo: dailyCross?.crossedDaysAgo ?? null,
+        darvasCrossDate: dailyCross?.crossDate ?? null,
+        darvasCrossedDaysAgo_weekly: weeklyCross?.crossedDaysAgo ?? null,
+        darvasCrossDate_weekly: weeklyCross?.crossDate ?? null,
+        pivotPoints,
+        earningsDates,
+        candlesCount: candles.length,
+        candles,
+        volumeSeries: candles.map(c => ({
+          time: c.time,
+          value: c.volume,
+          color: c.close >= c.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
+        })),
+        volAvg9: mapSeriesWithWhitespace(candles, volAvg9),
+        vwapSeries: mapSeriesWithWhitespace(candles, vwap),
+        ema10: mapSeriesWithWhitespace(candles, ema10),
+        ema20: mapSeriesWithWhitespace(candles, ema20),
+        ema50: mapSeriesWithWhitespace(candles, ema50),
+        ema150: mapSeriesWithWhitespace(candles, ema150),
+        ema200: mapSeriesWithWhitespace(candles, ema200),
+        rsi14: mapSeriesWithWhitespace(candles, rsi14),
+        rsiSma14: mapSeriesWithWhitespace(candles, rsiSma14)
+      };
+
+      historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+      return responsePayload;
+    }
+  }
 
   // 1. Try Primary Tier: DhanHQ Broker API (if configured and not intraday)
   if (isDhanConfigured() && !isIntraday) {
@@ -3712,6 +4070,31 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
           return !isZeroVolFlat;
         });
         if (candles.length === 0) candles = dhanRes.candles;
+
+        if (queryBefore && interval === '1d') {
+          const olderCandles = candles.filter(c => c.time < queryBefore).slice(-500);
+          saveOhlcvToMongo(cleanSymUpper, olderCandles, true);
+          const responsePayload = {
+            symbol: rawSymbol,
+            exchange: 'NSE',
+            source: 'dhan',
+            interval: '1d',
+            range: selectedRange,
+            isBackgroundHistory: true,
+            candlesCount: olderCandles.length,
+            candles: olderCandles
+          };
+          historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+          return responsePayload;
+        }
+
+        if (interval === '1d') {
+          saveOhlcvToMongo(cleanSymUpper, candles, false);
+          if (selectedRange === '1y') {
+            candles = candles.slice(-260);
+          }
+        }
+
         const closePrices = candles.map(c => c.close);
         const volumeValues = candles.map(c => c.volume);
 
@@ -3876,7 +4259,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         }
       }
 
-      const candles = [];
+      let candles = [];
       for (let i = 0; i < timestamps.length; i++) {
         let c = closes[i];
         let o = quotes.open[i];
@@ -3994,6 +4377,30 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       }
 
       if (candles.length > 0) {
+        if (queryBefore && interval === '1d') {
+          const olderCandles = candles.filter(c => c.time < queryBefore).slice(-500);
+          saveOhlcvToMongo(cleanSymUpper, olderCandles, true);
+          const responsePayload = {
+            symbol: rawSymbol,
+            exchange: 'NSE',
+            source: 'backup',
+            interval: '1d',
+            range: selectedRange,
+            isBackgroundHistory: true,
+            candlesCount: olderCandles.length,
+            candles: olderCandles
+          };
+          historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+          return responsePayload;
+        }
+
+        if (interval === '1d') {
+          saveOhlcvToMongo(cleanSymUpper, candles, false);
+          if (selectedRange === '1y') {
+            candles = candles.slice(-260);
+          }
+        }
+
         const closePrices = candles.map(c => c.close);
         const volumeValues = candles.map(c => c.volume);
 
@@ -4322,6 +4729,7 @@ async function searchPredictiveStocks(query) {
   const add = (symbol, name, exchange = 'NSE') => {
     if (!symbol) return;
     const s = symbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+    if (isInstrumentETF(s, name)) return;
     if (!seen.has(s) && s.length <= 16 && !/^0P\w+/.test(s)) {
       seen.add(s);
       results.push({
@@ -8930,15 +9338,46 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+            // 9a2. GET /api/stocks/:symbol/live-candle - Today's Live Real-Time Aggregated Daily Candle
+      const liveCandleMatch = pathname.match(/^\/api\/stocks\/([a-zA-Z0-9_%-]+)\/live-candle$/);
+      if (liveCandleMatch && method === 'GET') {
+        const rawSymbol = decodeURIComponent(liveCandleMatch[1]);
+        if (isInstrumentETF(rawSymbol)) {
+          return sendJson(res, 400, { success: false, isETF: true, error: 'ETFs are excluded from the platform.' });
+        }
+        const cleanSym = rawSymbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+        let liveCandle = LIVE_DAILY_CANDLES.get(cleanSym) || null;
+        if (!liveCandle) {
+          const q = LIVE_QUOTES_CACHE.data[cleanSym] || quotesCache.get(cleanSym)?.data;
+          if (q && q.price) {
+            liveCandle = updateLiveDailyCandle(cleanSym, q);
+          }
+        }
+        return sendJson(res, 200, {
+          success: true,
+          symbol: cleanSym,
+          candle: liveCandle,
+          isProvisional: Boolean(liveCandle?.isProvisional)
+        });
+      }
+
       // 9. GET /api/stocks/:symbol/history or /api/stocks/:symbol - Historical OHLCV + Indicators
       const historyMatch = pathname !== '/api/stocks/search' ? pathname.match(/^\/api\/stocks\/([a-zA-Z0-9_%-]+)(?:\/history)?$/) : null;
       if (historyMatch && method === 'GET') {
         const rawSymbol = decodeURIComponent(historyMatch[1]);
-        const queryRange = parsedUrl.query.range || null;
+        if (isInstrumentETF(rawSymbol)) {
+          return sendJson(res, 400, {
+            success: false,
+            isETF: true,
+            error: `"${rawSymbol.toUpperCase()}" is an Exchange Traded Fund (ETF). ETFs are excluded from the stock screening and charting platform.`
+          });
+        }
+        const queryRange = parsedUrl.query.range || parsedUrl.query.period || null;
         const queryInterval = parsedUrl.query.interval || '1d';
+        const queryBefore = parsedUrl.query.before || null;
 
         try {
-          const histData = await fetchStockHistory(rawSymbol, queryRange, queryInterval);
+          const histData = await fetchStockHistory(rawSymbol, queryRange, queryInterval, queryBefore);
           if (histData && histData.symbol) {
             autoIngestStocksToUniverse({
               symbol: histData.symbol,
@@ -9405,6 +9844,18 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { success: true, message: 'Daily EOD Baseline Sync initiated in background.' });
       }
 
+      // 13e. GET /api/admin/ohlcv-sync-status - Live Universe OHLCV Ingestion Progress
+      if (pathname === '/api/admin/ohlcv-sync-status' && method === 'GET') {
+        const statusFile = path.join(__dirname, 'ohlcv_sync_status.json');
+        if (fs.existsSync(statusFile)) {
+          try {
+            const statusData = JSON.parse(fs.readFileSync(statusFile, 'utf8'));
+            return sendJson(res, 200, { success: true, ...statusData });
+          } catch (e) {}
+        }
+        return sendJson(res, 200, { success: true, status: 'IDLE', message: 'No sync active or status file not yet generated.' });
+      }
+
       // -------------------------------------------------------------
       // 14. Visual Trading Journal (Chart Screenshot) APIs
       // -------------------------------------------------------------
@@ -9798,6 +10249,7 @@ async function runDailyEodBaselineSync() {
     });
 
     const quotesBatch = {};
+    const eodOhlcvBatch = [];
     const concurrency = 8;
     let syncedCount = 0;
 
@@ -9809,6 +10261,27 @@ async function runDailyEodBaselineSync() {
           if (hist && hist.candles && hist.candles.length >= 2) {
             const lastC = hist.candles[hist.candles.length - 1];
             const prevC = hist.candles[hist.candles.length - 2];
+            if (lastC && lastC.close) {
+              eodOhlcvBatch.push({
+                updateOne: {
+                  filter: { symbol: s.symbol.toUpperCase(), date: String(lastC.time).slice(0, 10) },
+                  update: {
+                    $set: {
+                      symbol: s.symbol.toUpperCase(),
+                      date: String(lastC.time).slice(0, 10),
+                      open: Number(lastC.open.toFixed(2)),
+                      high: Number(lastC.high.toFixed(2)),
+                      low: Number(lastC.low.toFixed(2)),
+                      close: Number(lastC.close.toFixed(2)),
+                      volume: Math.round(lastC.volume || 0),
+                      isFinalized: true,
+                      updatedAt: new Date()
+                    }
+                  },
+                  upsert: true
+                }
+              });
+            }
             
             // Compute Wilder RSI gain/loss baseline state from last 14 bars
             let avgGain = null, avgLoss = null;
@@ -9869,6 +10342,15 @@ async function runDailyEodBaselineSync() {
 
     if (Object.keys(quotesBatch).length > 0) {
       await persistUniverseQuotes(quotesBatch);
+    }
+
+    if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db && eodOhlcvBatch.length > 0) {
+      try {
+        await MONGO_CONFIG.db.collection("daily_ohlcv").bulkWrite(eodOhlcvBatch, { ordered: false });
+        console.log(`[EOD-SYNC] ✅ Persisted ${eodOhlcvBatch.length} finalized daily candles to daily_ohlcv collection.`);
+      } catch (ohlcvErr) {
+        console.warn("[EOD-SYNC] Daily OHLCV bulk persist notice:", ohlcvErr.message);
+      }
     }
 
     const now = new Date();

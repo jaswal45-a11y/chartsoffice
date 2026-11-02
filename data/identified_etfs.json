@@ -1,0 +1,2120 @@
+[
+  {
+    "symbol": "NV20",
+    "name": "KOTAK NIFTY 50 VALUE 20 ETF",
+    "marketCap": 56902.5,
+    "price": 11625
+  },
+  {
+    "symbol": "EBBETF0431",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND ETF - APRIL 2031",
+    "marketCap": 7150.95,
+    "price": 1417.37
+  },
+  {
+    "symbol": "ELIQUID",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY 1D RATE LIQUID ETF",
+    "marketCap": 5246.95,
+    "price": 1055.5
+  },
+  {
+    "symbol": "EBBETF0430",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND  ETF - APRIL 2030",
+    "marketCap": 8029.4,
+    "price": 1598.57
+  },
+  {
+    "symbol": "LIQUIDBETF",
+    "name": "Bajaj Finserv Nifty 1D Rate Liquid ETF",
+    "marketCap": 5502.4,
+    "price": 1105.89
+  },
+  {
+    "symbol": "CASHIETF",
+    "name": "ICICI PRUDENTIAL MF-ICICI PRUDENTIAL BSE LIQUID RATE ETF-GROWTH",
+    "marketCap": 5406.35,
+    "price": 1086.8
+  },
+  {
+    "symbol": "LIQUIDADD",
+    "name": "DSP BSE LIQUID RATE ETF",
+    "marketCap": 5732.65,
+    "price": 1152.35
+  },
+  {
+    "symbol": "LIQUIDPLUS",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 1D RATE LIQUID ETF-GROWTH",
+    "marketCap": 5524.75,
+    "price": 1110.69
+  },
+  {
+    "symbol": "LIQUIDSBI",
+    "name": "SBI Nifty 1D Rate ETF",
+    "marketCap": 5000,
+    "price": 999.99
+  },
+  {
+    "symbol": "SBILIQETF",
+    "name": "SBI MUTUAL FUND - SBI NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "marketCap": 5288.1,
+    "price": 1063.01
+  },
+  {
+    "symbol": "LIQUIDBETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "marketCap": 5048.2,
+    "price": 1014.25
+  },
+  {
+    "symbol": "BBETF0432",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND ETF - APRIL 2032 - GROWTH",
+    "marketCap": 6680,
+    "price": 1328
+  },
+  {
+    "symbol": "EBBETF0433",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND ETF-APRIL 2033",
+    "marketCap": 6524.35,
+    "price": 1289.18
+  },
+  {
+    "symbol": "LIQUID1",
+    "name": "Kotak Nifty 1D Rate Liquid ETF",
+    "marketCap": 5622.05,
+    "price": 1129.97
+  },
+  {
+    "symbol": "AONELIQUID",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "marketCap": 5392.9,
+    "price": 1084.02
+  },
+  {
+    "symbol": "LIQGRWBEES",
+    "name": "NIPPON INDIA MUTUAL FUND-NIPPON INDIA NIFTY 1D RATE LIQUID ETF-GROWTH",
+    "marketCap": 5285.5,
+    "price": 1062.38
+  },
+  {
+    "symbol": "LIQUIDSHRI",
+    "name": "SHRIRAM MUTUAL FUND -SHRIRAM NIFTY 1D RATE LIQUID ETF",
+    "marketCap": 5615.65,
+    "price": 1128.62
+  },
+  {
+    "symbol": "HDFCLIQUID",
+    "name": "HDFC NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "marketCap": 5398.15,
+    "price": 1085.19
+  },
+  {
+    "symbol": "SETFNIFBK",
+    "name": "SBI-ETF NIFTY BANK",
+    "marketCap": 2856.5,
+    "price": 564.6
+  },
+  {
+    "symbol": "SHARIABEES",
+    "name": "NIPPON INDIA ETF NIFTY 50 SHARIAH BEES",
+    "marketCap": 2162.6,
+    "price": 450.58
+  },
+  {
+    "symbol": "LIQUIDBEES",
+    "name": "Nippon India ETF Liquid BeES",
+    "marketCap": 4999.95,
+    "price": 999.99
+  },
+  {
+    "symbol": "LICNETFSEN",
+    "name": "LIC MUTUAL FUND - LIC MF EXCHANGE TRADED FUND - SENSEX",
+    "marketCap": 4146.95,
+    "price": 860
+  },
+  {
+    "symbol": "SENSEXBETA",
+    "name": "UTI BSE SENSEX ETF",
+    "marketCap": 4086.45,
+    "price": 830.76
+  },
+  {
+    "symbol": "SBIETFIT",
+    "name": "SBI MUTUAL FUND-SBI ETF IT",
+    "marketCap": 1560.7,
+    "price": 354.14
+  },
+  {
+    "symbol": "LIQUIDIETF",
+    "name": "ICICI PRUDENTIAL BSE LIQUID RATE ETF- IDCW",
+    "marketCap": 4999.95,
+    "price": 999.99
+  },
+  {
+    "symbol": "SENSEXIETF",
+    "name": "ICICI PRUDENTIAL BSE SENSEX ETF",
+    "marketCap": 4258.8,
+    "price": 865.52
+  },
+  {
+    "symbol": "EQUAL50ADD",
+    "name": "DSP Nifty 50 Equal Weight ETF",
+    "marketCap": 1663.75,
+    "price": 329.91
+  },
+  {
+    "symbol": "JUNIORBEES",
+    "name": "Nippon India ETF Junior BeES",
+    "marketCap": 3883.45,
+    "price": 744.17
+  },
+  {
+    "symbol": "INFRABEES",
+    "name": "NIPPON INDIA ETF NIFTY INFRASTRUCTURE BEES",
+    "marketCap": 4647.25,
+    "price": 933.81
+  },
+  {
+    "symbol": "MON100",
+    "name": "MOTILAL OSWAL MUTUAL FUND-MOTILAL OSWAL MOST SHARES NASDAQ 100 ETF -GO",
+    "marketCap": 1620.55,
+    "price": 280.91
+  },
+  {
+    "symbol": "ITAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY IT ETF",
+    "marketCap": 1556.8,
+    "price": 362.47
+  },
+  {
+    "symbol": "LIQUID",
+    "name": "Mirae Asset Nifty 1D Rate Liquid ETF",
+    "marketCap": 4999.95,
+    "price": 999.99
+  },
+  {
+    "symbol": "ABSLLIQUID",
+    "name": "Aditya Birla SL Crisil Overnight Fund AI Index ETF",
+    "marketCap": 5000,
+    "price": 1000
+  },
+  {
+    "symbol": "BNKETFAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY BANK ETF",
+    "marketCap": 2865.9,
+    "price": 567.36
+  },
+  {
+    "symbol": "HNGSNGBEES",
+    "name": "NIPPON INDIA ETF HANG SENG BEES",
+    "marketCap": 2288.7,
+    "price": 432.71
+  },
+  {
+    "symbol": "LIQUIDETF",
+    "name": "DSP NIFTY 1D RATE LIQUID ETF",
+    "marketCap": 4999.95,
+    "price": 999.99
+  },
+  {
+    "symbol": "BANKBEES",
+    "name": "Nippon India ETF Bank Bees",
+    "marketCap": 2881.65,
+    "price": 568.78
+  },
+  {
+    "symbol": "EQUAL50",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY50 EQUAL WEIGHT ETF",
+    "marketCap": 1603.15,
+    "price": 319.33
+  },
+  {
+    "symbol": "BANKETF",
+    "name": "Mirae Asset Nifty Bank ETF",
+    "marketCap": 2835.55,
+    "price": 560.37
+  },
+  {
+    "symbol": "NEXT50",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY NEXT 50 ETF (MANXT50) - MI",
+    "marketCap": 3707.9,
+    "price": 712.01
+  },
+  {
+    "symbol": "ITBETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY IT ETF",
+    "marketCap": 1482.75,
+    "price": 344.06
+  },
+  {
+    "symbol": "SBIETFPB",
+    "name": "SBI ETF PRIVATE BANK",
+    "marketCap": 1371.45,
+    "price": 276.03
+  },
+  {
+    "symbol": "NIFTY1",
+    "name": "KOTAK NIFTY 50 ETF",
+    "marketCap": 1287.45,
+    "price": 258.91
+  },
+  {
+    "symbol": "NETF",
+    "name": "TATA NIFTY 50 EXCHANGE TRADED FUND",
+    "marketCap": 1268.1,
+    "price": 252.32
+  },
+  {
+    "symbol": "SETFNIF50",
+    "name": "SBI-ETF NIFTY 50",
+    "marketCap": 1247.35,
+    "price": 247.34
+  },
+  {
+    "symbol": "NIFTYBETF",
+    "name": "Bajaj Finserv Nifty 50 ETF",
+    "marketCap": 1195.5,
+    "price": 240.04
+  },
+  {
+    "symbol": "MOQUALITY",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL S&P BSE QUALITY ETF",
+    "marketCap": 1037.95,
+    "price": 185.92
+  },
+  {
+    "symbol": "MAFANG",
+    "name": "Mirae Asset NYSE FANG+ ETF",
+    "marketCap": 1192.1,
+    "price": 218.83
+  },
+  {
+    "symbol": "MID150BEES",
+    "name": "NIPPON INDIA ETF NIFTY MIDCAP 150",
+    "marketCap": 1155.6,
+    "price": 220.62
+  },
+  {
+    "symbol": "HDFCSML250",
+    "name": "HDFC Nifty Small Cap 250 ETF",
+    "marketCap": 916.65,
+    "price": 171.26
+  },
+  {
+    "symbol": "CHOICEGOLD",
+    "name": "CHOICE MUTUAL FUND - CHOICE GOLD ETF",
+    "marketCap": 745.65,
+    "price": 135.42
+  },
+  {
+    "symbol": "SETF10GILT",
+    "name": "SBI MUTUAL FUND - SBI-ETF 10 YEAR GILT",
+    "marketCap": 1312.55,
+    "price": 258.85
+  },
+  {
+    "symbol": "GROWWMC150",
+    "name": "Groww Nifty Midcap 150 ETF",
+    "marketCap": 1130.45,
+    "price": 212.34
+  },
+  {
+    "symbol": "MONQ50",
+    "name": "Motilal Oswal Nasdaq Q 50 ETF",
+    "marketCap": 1073.05,
+    "price": 213.8
+  },
+  {
+    "symbol": "MAKEINDIA",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY INDIA MANUFACTURING ETF",
+    "marketCap": 807.75,
+    "price": 154.39
+  },
+  {
+    "symbol": "SETFGOLD",
+    "name": "SBI-ETF GOLD",
+    "marketCap": 642.15,
+    "price": 120.02
+  },
+  {
+    "symbol": "ESILVER",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS SILVER ETF",
+    "marketCap": 1146.45,
+    "price": 179.47
+  },
+  {
+    "symbol": "SILVER",
+    "name": "ADITYA BIRLA SUN LIFE MUTUAL FUND - ADITYA BIRLA SUN LIFE SILVER ETF",
+    "marketCap": 1141.65,
+    "price": 50.97
+  },
+  {
+    "symbol": "SILVERBETA",
+    "name": "UTI MUTUAL FUND - UTI SILVER EXCHANGE TRADED FUND (UTI SILVER ETF)",
+    "marketCap": 1104.35,
+    "price": 173.16
+  },
+  {
+    "symbol": "SILVERBEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA SILVER ETF",
+    "marketCap": 1094,
+    "price": 171.39
+  },
+  {
+    "symbol": "SBIETFQLTY",
+    "name": "SBI MUTUAL FUND - SBI - ETF QUALITY - SBI-ETF QUALITY",
+    "marketCap": 1060.95,
+    "price": 206.66
+  },
+  {
+    "symbol": "TWCGOLDETF",
+    "name": "The Wealth Company Gold ETF",
+    "marketCap": 749.95,
+    "price": 136.13
+  },
+  {
+    "symbol": "LICMFGOLD",
+    "name": "LIC MF GOLD EXCHANGE TRADED FUND",
+    "marketCap": 678.5,
+    "price": 122.95
+  },
+  {
+    "symbol": "HDFCNIMEG",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY METAL ETF",
+    "marketCap": 653.55,
+    "price": 121.46
+  },
+  {
+    "symbol": "GOLDIETF",
+    "name": "ICICI PRUDENTIAL GOLD ETF",
+    "marketCap": 645.15,
+    "price": 116.62
+  },
+  {
+    "symbol": "HDFCGOLD",
+    "name": "HDFC GOLD ETF",
+    "marketCap": 643.15,
+    "price": 116.57
+  },
+  {
+    "symbol": "IVZINNIFTY",
+    "name": "Invesco India Nifty ETF",
+    "marketCap": 1332.8,
+    "price": 267.86
+  },
+  {
+    "symbol": "IDFNIFTYET",
+    "name": "BANDHAN NIFTY 50 ETF",
+    "marketCap": 1282.95,
+    "price": 257.64
+  },
+  {
+    "symbol": "NIFTYETF",
+    "name": "NIFTYETF",
+    "marketCap": 1260.75,
+    "price": 254.01
+  },
+  {
+    "symbol": "SILVERIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL SILVER ETF",
+    "marketCap": 1141.75,
+    "price": 178.75
+  },
+  {
+    "symbol": "MANUFGBEES",
+    "name": "Nippon India Nifty India Manufacturing ETF",
+    "marketCap": 795.6,
+    "price": 153.4
+  },
+  {
+    "symbol": "GOLDBND",
+    "name": "BANDHAN MUTUAL FUND - BANDHAN GOLD ETF",
+    "marketCap": 753.1,
+    "price": 136.14
+  },
+  {
+    "symbol": "SILVERAG",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET SILVER ETF",
+    "marketCap": 1113.8,
+    "price": 174.89
+  },
+  {
+    "symbol": "HDFCSILVER",
+    "name": "HDFC MUTUAL FUND - HDFC SILVER ETF",
+    "marketCap": 1093.3,
+    "price": 171.45
+  },
+  {
+    "symbol": "UNIONGOLD",
+    "name": "UNION MUTUAL FUND - UNION GOLD ETF",
+    "marketCap": 737.75,
+    "price": 133.35
+  },
+  {
+    "symbol": "HSBCGOLD",
+    "name": "HSBC MUTUAL FUND - HSBC GOLD ETF",
+    "marketCap": 653.2,
+    "price": 118.5
+  },
+  {
+    "symbol": "GSEC10IETF",
+    "name": "ICICI PRU MUTUAL FUND-ICICI PRUDENTIAL NIFTY 10 YR BENCHMARK G-SEC ETF",
+    "marketCap": 1310.25,
+    "price": 258.88
+  },
+  {
+    "symbol": "NIFTYBEES",
+    "name": "NIPPON INDIA ETF NIFTY 50 BEES",
+    "marketCap": 1320.65,
+    "price": 265.9
+  },
+  {
+    "symbol": "MOM50",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL MOST SHARES M50 ETF",
+    "marketCap": 1211.55,
+    "price": 244.94
+  },
+  {
+    "symbol": "SILVERAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS SILVER ETF",
+    "marketCap": 1136.5,
+    "price": 178.49
+  },
+  {
+    "symbol": "SBISILVER",
+    "name": "SBI MUTUAL FUND - SBI SILVER ETF",
+    "marketCap": 1121.4,
+    "price": 175.81
+  },
+  {
+    "symbol": "LOWVOL",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 100 LOW VOLATILITY 30 ETF",
+    "marketCap": 992.25,
+    "price": 196.76
+  },
+  {
+    "symbol": "MOGOLD",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL GOLD ETF",
+    "marketCap": 743.5,
+    "price": 135.35
+  },
+  {
+    "symbol": "BSLGOLDETF",
+    "name": "ADITYA BIRLA SUN LIFE GOLD ETF - GROWTH",
+    "marketCap": 662,
+    "price": 120
+  },
+  {
+    "symbol": "NIFTYIETF",
+    "name": "NIFTYIETF",
+    "marketCap": 1313.35,
+    "price": 264.37
+  },
+  {
+    "symbol": "GOLDETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET GOLD ETF",
+    "marketCap": 731.7,
+    "price": 132.8
+  },
+  {
+    "symbol": "AUTOBEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA NIFTY AUTO ETF",
+    "marketCap": 1392.55,
+    "price": 265.91
+  },
+  {
+    "symbol": "LICNFNHGP",
+    "name": "LIC Nomura MF ETF - Nifty 100",
+    "marketCap": 1339.3,
+    "price": 266.26
+  },
+  {
+    "symbol": "BBNPPGOLD",
+    "name": "BARODA BNP PARIBAS MUTUAL FUND - BARODA BNP PARIBAS GOLD ETF",
+    "marketCap": 726.25,
+    "price": 131.5
+  },
+  {
+    "symbol": "ABSL10BANK",
+    "name": "ADITYA BIRLA SUN LIFE MF - ADITYA BIRLA SUN LIFE BSE TOP 10 BANKS ETF",
+    "marketCap": 820.95,
+    "price": 163.74
+  },
+  {
+    "symbol": "GOLD360",
+    "name": "360 ONE MUTUAL FUND - 360 ONE GOLD ETF",
+    "marketCap": 732.5,
+    "price": 132.65
+  },
+  {
+    "symbol": "LICNETFN50",
+    "name": "LIC Nomura MF ETF - NIFTY 50 - Growth Plan",
+    "marketCap": 1300.55,
+    "price": 261.92
+  },
+  {
+    "symbol": "NIFTYAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY 50 ETF",
+    "marketCap": 1294.95,
+    "price": 258.16
+  },
+  {
+    "symbol": "NIFTYADD",
+    "name": "DSP  MUTUAL FUND - DSP NIFTY 50 ETF",
+    "marketCap": 1221.05,
+    "price": 246.12
+  },
+  {
+    "symbol": "MIDCAPBETA",
+    "name": "UTI Nifty Midcap 150 ETF",
+    "marketCap": 1136.6,
+    "price": 216.52
+  },
+  {
+    "symbol": "MOSILVER",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL SILVER ETF",
+    "marketCap": 1130,
+    "price": 177.58
+  },
+  {
+    "symbol": "EGOLD",
+    "name": "EDELWEISS MUTUAL FUND -EDELWEISS GOLD ETF",
+    "marketCap": 752,
+    "price": 136.5
+  },
+  {
+    "symbol": "IVZINGOLD",
+    "name": "INVESCO INDIA GOLD EXCHANGE TRADED FUND",
+    "marketCap": 657,
+    "price": 118.45
+  },
+  {
+    "symbol": "AXISNIFTY",
+    "name": "Axis Nifty ETF",
+    "marketCap": 1333.2,
+    "price": 266.64
+  },
+  {
+    "symbol": "NIF100BEES",
+    "name": "NIPPON INDIA ETF NIFTY 100",
+    "marketCap": 1291.25,
+    "price": 257.14
+  },
+  {
+    "symbol": "SILVER360",
+    "name": "360 ONE MUTUAL FUND - 360 ONE SILVER ETF",
+    "marketCap": 1125.95,
+    "price": 176.48
+  },
+  {
+    "symbol": "NPBET",
+    "name": "TATA NIFTY PRIVATE BANK EXCHANGE TRADED FUND",
+    "marketCap": 1394.35,
+    "price": 280.12
+  },
+  {
+    "symbol": "SILVERBND",
+    "name": "Bandhan Silver ETF",
+    "marketCap": 1148.9,
+    "price": 180.6
+  },
+  {
+    "symbol": "HEALTHIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY HEALTHCARE ETF",
+    "marketCap": 860.05,
+    "price": 168.66
+  },
+  {
+    "symbol": "NV20BEES",
+    "name": "Nippon India ETF Nifty 50 Value 20",
+    "marketCap": 672.2,
+    "price": 135.9
+  },
+  {
+    "symbol": "CONSUMBEES",
+    "name": "NIPPON INDIA ETF NIFTY INDIA CONSUMPTION",
+    "marketCap": 637.55,
+    "price": 124.66
+  },
+  {
+    "symbol": "SBIETFCON",
+    "name": "SBI MUTUAL FUND - SBI ETF CONSUMPTION",
+    "marketCap": 588.25,
+    "price": 114.16
+  },
+  {
+    "symbol": "MODEFENCE",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY INDIA DEFENCE ETF",
+    "marketCap": 515.4,
+    "price": 96.58
+  },
+  {
+    "symbol": "MASPTOP50",
+    "name": "Mirae Asset S&P 500 Top 50 ETF",
+    "marketCap": 492.45,
+    "price": 95.81
+  },
+  {
+    "symbol": "BANKBETA",
+    "name": "UTI Nifty Bank ETF",
+    "marketCap": 288,
+    "price": 56.8
+  },
+  {
+    "symbol": "HDFCQUAL",
+    "name": "HDFC Nifty 100 Quality 30 ETF",
+    "marketCap": 282.65,
+    "price": 56.85
+  },
+  {
+    "symbol": "GOLDBETA",
+    "name": "UTI MUTUAL FUND - UTI GOLD EXCHANGE TRADED FUND",
+    "marketCap": 633.25,
+    "price": 114.85
+  },
+  {
+    "symbol": "GOLD1",
+    "name": "KOTAK MUTUAL FUND - GOLD EXCHANGE TRADED FUND",
+    "marketCap": 628.6,
+    "price": 113.67
+  },
+  {
+    "symbol": "GROWWLIQID",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY 1D RATE LIQUID ETF",
+    "marketCap": 554.55,
+    "price": 111.45
+  },
+  {
+    "symbol": "MOVALUE",
+    "name": "Motilal Oswal S&P BSE Enhanced Value ETF Fund",
+    "marketCap": 553.45,
+    "price": 106.75
+  },
+  {
+    "symbol": "PSUBNKBEES",
+    "name": "Nippon India ETF PSU Bank Bees",
+    "marketCap": 461.75,
+    "price": 92.94
+  },
+  {
+    "symbol": "BANKBETF",
+    "name": "BAJAJ FINSERV MUTUAL FUND - BAJAJ FINSERV NIFTY BANK ETF",
+    "marketCap": 283.05,
+    "price": 55.92
+  },
+  {
+    "symbol": "MIDSMALL",
+    "name": "MIRAEASSETMF-MIRAE ASSET NIFTY MIDSMALLCAP400 MOMENTUM QUALITY 100 ETF",
+    "marketCap": 254.95,
+    "price": 49.52
+  },
+  {
+    "symbol": "ABGSEC",
+    "name": "ADITYABIRLASUNLIFEMF-ADITYA BIRLA SUN LIFE CRISIL BROAD BASED GILT ETF",
+    "marketCap": 566.3,
+    "price": 112.36
+  },
+  {
+    "symbol": "MOREALTY",
+    "name": "Motilal Oswal Nifty Realty ETF",
+    "marketCap": 435.35,
+    "price": 82.3
+  },
+  {
+    "symbol": "BSLSENETFG",
+    "name": "ADITYA BIRLA SUN LIFE BSE SENSEX ETF",
+    "marketCap": 373.55,
+    "price": 75.89
+  },
+  {
+    "symbol": "NEXT50ETF",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY NEXT 50 ETF",
+    "marketCap": 368.8,
+    "price": 69.55
+  },
+  {
+    "symbol": "GROWWNXT50",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY NEXT 50 ETF",
+    "marketCap": 358.85,
+    "price": 69.35
+  },
+  {
+    "symbol": "GILT5BETA",
+    "name": "UTI Nifty 5 yr Benchmark G-Sec ETF",
+    "marketCap": 328.3,
+    "price": 65.5
+  },
+  {
+    "symbol": "SBIMIDMOM",
+    "name": "SBI NIFTY MIDCAP150 MOMENTUM 50 ETF",
+    "marketCap": 312.05,
+    "price": 60.11
+  },
+  {
+    "symbol": "MOALPHA50",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY ALPHA 50 ETF",
+    "marketCap": 272.95,
+    "price": 52.01
+  },
+  {
+    "symbol": "GOLDAXIS",
+    "name": "Axis Gold ETF",
+    "marketCap": 626.8,
+    "price": 113.27
+  },
+  {
+    "symbol": "GOLDBEES",
+    "name": "NIPPON INDIA ETF GOLD BEES",
+    "marketCap": 622.15,
+    "price": 112.53
+  },
+  {
+    "symbol": "CONSUMAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY INDIA CONSUMPTION ETF",
+    "marketCap": 586.35,
+    "price": 115.01
+  },
+  {
+    "symbol": "HDFCGROWTH",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY GROWTH SECTORS 15 ETF",
+    "marketCap": 567.05,
+    "price": 116.65
+  },
+  {
+    "symbol": "PSUBANK",
+    "name": "KOTAK NIFTY PSU BANK ETF",
+    "marketCap": 414.75,
+    "price": 83.26
+  },
+  {
+    "symbol": "BANKIETF",
+    "name": "ICICI Prudential Nifty Bank ETF",
+    "marketCap": 285.55,
+    "price": 56.44
+  },
+  {
+    "symbol": "SMALLGROWW",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY SMALLCAP 250 MOMENTUM QUALITY 100 ETF",
+    "marketCap": 242.95,
+    "price": 45.79
+  },
+  {
+    "symbol": "SBIBPB",
+    "name": "SBI MUTUAL FUND - SBI BSE PSU BANK ETF",
+    "marketCap": 240.45,
+    "price": 48.18
+  },
+  {
+    "symbol": "SELECTIPO",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE SELECT IPO ETF",
+    "marketCap": 236,
+    "price": 44.96
+  },
+  {
+    "symbol": "QGOLDHALF",
+    "name": "QUANTUM GOLD ETF",
+    "marketCap": 624,
+    "price": 112.23
+  },
+  {
+    "symbol": "NEXT50BETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY NEXT 50 EXCHANGE TRADED FUND - UTI NIFTY N",
+    "marketCap": 388.25,
+    "price": 74.34
+  },
+  {
+    "symbol": "MOMOMENTUM",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 200 MOMENTUM 30 ETF",
+    "marketCap": 305,
+    "price": 58.93
+  },
+  {
+    "symbol": "ICICIB22",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - BHARAT 22 ETF",
+    "marketCap": 562,
+    "price": 110.65
+  },
+  {
+    "symbol": "PSUBNKIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY PSU BANK ETF",
+    "marketCap": 419.25,
+    "price": 84.48
+  },
+  {
+    "symbol": "SENSEXAXIS",
+    "name": "AXIS BSE SENSEX ETF",
+    "marketCap": 384,
+    "price": 77.93
+  },
+  {
+    "symbol": "NEXT50IETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY NEXT 50 ETF",
+    "marketCap": 379.05,
+    "price": 72.62
+  },
+  {
+    "symbol": "GSEC5IETF",
+    "name": "ICICI Prudential Nifty 5 Yr Benchmark G-Sec ETF",
+    "marketCap": 329.25,
+    "price": 65.6
+  },
+  {
+    "symbol": "IVZBANKNF",
+    "name": "Invesco India Nifty Bank ETF",
+    "marketCap": 277.5,
+    "price": 54.91
+  },
+  {
+    "symbol": "MOIPO",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL BSE SELECT IPO ETF",
+    "marketCap": 237.1,
+    "price": 45.45
+  },
+  {
+    "symbol": "CPSEETF",
+    "name": "CPSE ETF",
+    "marketCap": 465.2,
+    "price": 90.34
+  },
+  {
+    "symbol": "TNIDETF",
+    "name": "TATA MUTUAL FUND - TATA NIFTY INDIA DIGITAL EXCHANGE TRADED FUND",
+    "marketCap": 428.5,
+    "price": 89.23
+  },
+  {
+    "symbol": "PSUBANKADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY PSU BANK ETF",
+    "marketCap": 419.45,
+    "price": 84.19
+  },
+  {
+    "symbol": "HDFCNEXT50",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY NEXT 50 ETF",
+    "marketCap": 366.05,
+    "price": 70.23
+  },
+  {
+    "symbol": "GILT5YBEES",
+    "name": "NIPPON INDIA ETF NIFTY 5 YR BENCHMARK GSEC",
+    "marketCap": 329.85,
+    "price": 65.44
+  },
+  {
+    "symbol": "BANKADD",
+    "name": "DSP  MUTUAL FUND - DSP NIFTY BANK ETF",
+    "marketCap": 285.1,
+    "price": 56.44
+  },
+  {
+    "symbol": "INFRAIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND-ICICI PRUDENTIAL NIFTY INFRASTRUCTURE ETF",
+    "marketCap": 462.15,
+    "price": 92.96
+  },
+  {
+    "symbol": "IVZSENSEX",
+    "name": "Invesco India BSE Sensex ETF",
+    "marketCap": 369,
+    "price": 74.9
+  },
+  {
+    "symbol": "MOINFRA",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL BSE INDIA INFRASTRUCTURE ETF",
+    "marketCap": 289.6,
+    "price": 56.41
+  },
+  {
+    "symbol": "ESENSEX",
+    "name": "Edelweiss BSE Sensex ETF",
+    "marketCap": 373.25,
+    "price": 75.77
+  },
+  {
+    "symbol": "COMMOIETF",
+    "name": "ICICI Prudential Nifty Commodities ETF",
+    "marketCap": 484.8,
+    "price": 94.77
+  },
+  {
+    "symbol": "GROWWPSE",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY PSE ETF",
+    "marketCap": 483.1,
+    "price": 92.61
+  },
+  {
+    "symbol": "BBNPNBETF",
+    "name": "BARODA BNP PARIBAS MUTUAL FUND- BARODA BNP PARIBAS NIFTY BANK ETF",
+    "marketCap": 280.15,
+    "price": 55.03
+  },
+  {
+    "symbol": "GROWWHOSPI",
+    "name": "GROWW MUTUAL FUND - GROWW BSE HOSPITALS ETF",
+    "marketCap": 258.2,
+    "price": 46.97
+  },
+  {
+    "symbol": "GROWWPSUBK",
+    "name": "Groww Nifty PSU Bank ETF",
+    "marketCap": 418.75,
+    "price": 83.7
+  },
+  {
+    "symbol": "SENSEXADD",
+    "name": "DSP BSE SENSEX ETF",
+    "marketCap": 381.4,
+    "price": 78
+  },
+  {
+    "symbol": "DIVOPPBEES",
+    "name": "NIPPON INDIA ETF NIFTY DIVIDEND OPPORTUNITIES 50",
+    "marketCap": 371.1,
+    "price": 74.69
+  },
+  {
+    "symbol": "EBANKNIFTY",
+    "name": "Edelweiss Nifty Bank ETF",
+    "marketCap": 281.1,
+    "price": 55.24
+  },
+  {
+    "symbol": "MOCAPITAL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY CAPITAL MARKET ETF",
+    "marketCap": 264.85,
+    "price": 52.32
+  },
+  {
+    "symbol": "HDFCVALUE",
+    "name": "HDFC Nifty 50 Value 20 ETF",
+    "marketCap": 606.35,
+    "price": 122.71
+  },
+  {
+    "symbol": "MOPSE",
+    "name": "Motilal Oswal Nifty PSE ETF",
+    "marketCap": 487.85,
+    "price": 94.72
+  },
+  {
+    "symbol": "HDFCSENSEX",
+    "name": "HDFC BSE SENSEX ETF",
+    "marketCap": 420.15,
+    "price": 85.34
+  },
+  {
+    "symbol": "MOM100",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL MOST SHARES M100 ETF GO",
+    "marketCap": 331.8,
+    "price": 62.57
+  },
+  {
+    "symbol": "ALPHA",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY ALPHA 50 ETF",
+    "marketCap": 263.8,
+    "price": 49.9
+  },
+  {
+    "symbol": "FMCGIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY FMCG ETF",
+    "marketCap": 247.4,
+    "price": 47.15
+  },
+  {
+    "symbol": "DEFENCE",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE INDIA DEFENCE ETF",
+    "marketCap": 392.4,
+    "price": 74.08
+  },
+  {
+    "symbol": "ENEXT50",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY NEXT 50 ETF",
+    "marketCap": 358.8,
+    "price": 68.87
+  },
+  {
+    "symbol": "MONEXT50",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY NEXT 50 ETF",
+    "marketCap": 357.6,
+    "price": 68.91
+  },
+  {
+    "symbol": "HDFCNIFBAN",
+    "name": "HDFC NIFTY BANK ETF",
+    "marketCap": 286.45,
+    "price": 56.61
+  },
+  {
+    "symbol": "ABSLBANETF",
+    "name": "Aditya Birla Sun Life Banking ETF",
+    "marketCap": 285.25,
+    "price": 56.38
+  },
+  {
+    "symbol": "CONSUMIETF",
+    "name": "ICICI PRUDENTIAL NIFTY INDIA CONSUMPTION ETF",
+    "marketCap": 591.5,
+    "price": 116.77
+  },
+  {
+    "symbol": "SNXT50BETA",
+    "name": "UTI BSE Sensex Next 50 ETF",
+    "marketCap": 459.35,
+    "price": 88.25
+  },
+  {
+    "symbol": "TOP10ADD",
+    "name": "DSP Nifty Top 10 Equal Weight ETF",
+    "marketCap": 419.4,
+    "price": 86.98
+  },
+  {
+    "symbol": "HDFCPSUBK",
+    "name": "HDFC MUTUAL FUND -HDFC NIFTY PSU BANK ETF",
+    "marketCap": 418.05,
+    "price": 84.22
+  },
+  {
+    "symbol": "BANKPSU",
+    "name": "Mirae Asset Nifty PSU Bank ETF",
+    "marketCap": 417.25,
+    "price": 84.17
+  },
+  {
+    "symbol": "MOTOUR",
+    "name": "Motilal Oswal Nifty India Tourism ETF",
+    "marketCap": 383.5,
+    "price": 77.09
+  },
+  {
+    "symbol": "ABSLNN50ET",
+    "name": "ADITYA BIRLA SUN LIFE NIFTY NEXT 50 ETF",
+    "marketCap": 377.55,
+    "price": 72.45
+  },
+  {
+    "symbol": "NEXT50ADD",
+    "name": "DSP Nifty Next 50 ETF",
+    "marketCap": 361.1,
+    "price": 69.39
+  },
+  {
+    "symbol": "LIQUIDCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY 1D RATE LIQUID ETF",
+    "marketCap": 580.5,
+    "price": 116.7
+  },
+  {
+    "symbol": "SENSEXETF",
+    "name": "Mirae Asset S&P BSE Sensex ETF",
+    "marketCap": 381.7,
+    "price": 77.95
+  },
+  {
+    "symbol": "LICNMID100",
+    "name": "LIC MF Nifty Midcap 100 ETF",
+    "marketCap": 308.35,
+    "price": 57.51
+  },
+  {
+    "symbol": "GSEC10ABSL",
+    "name": "ADITYABIRLASUNLIFEMF - ADITYA BIRLA SUN LIFE CRISIL 10 YEAR GILT ETF",
+    "marketCap": 558.15,
+    "price": 109.93
+  },
+  {
+    "symbol": "GROWWDEFNC",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY INDIA DEFENCE ETF",
+    "marketCap": 469.35,
+    "price": 87.92
+  },
+  {
+    "symbol": "MOGSEC",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL 5 YEAR G SEC ETF - GROWTH",
+    "marketCap": 326.6,
+    "price": 65.29
+  },
+  {
+    "symbol": "MOMENTUM50",
+    "name": "Motilal Oswal Nifty 500 Momentum 50 ETF",
+    "marketCap": 267.3,
+    "price": 51.59
+  },
+  {
+    "symbol": "MOHEALTH",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL S&P BSE HEALTHCARE ETF",
+    "marketCap": 262,
+    "price": 50.88
+  },
+  {
+    "symbol": "SMALLCAP",
+    "name": "MIRAE ASSET MF-MIRAE ASSET NIFTY SMALLCAP 250 MOMENTUM QUALITY 100 ETF",
+    "marketCap": 243.45,
+    "price": 46.04
+  },
+  {
+    "symbol": "NEXT30ADD",
+    "name": "DSP BSE SENSEX Next 30 ETF",
+    "marketCap": 209.6,
+    "price": 40.45
+  },
+  {
+    "symbol": "ESG",
+    "name": "Mirae Asset Nifty 100 ESG Sector Leaders ETF",
+    "marketCap": 198.8,
+    "price": 39.75
+  },
+  {
+    "symbol": "TECH",
+    "name": "ADITYA BIRLA SUN LIFE MUTUAL FUND - ADITYA BIRLA SUN LIFE NIFTY IT ETF",
+    "marketCap": 154.6,
+    "price": 35.44
+  },
+  {
+    "symbol": "ALPHAETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 200 ALPHA 30 ETF",
+    "marketCap": 129.8,
+    "price": 25
+  },
+  {
+    "symbol": "GROWWSLVR",
+    "name": "GROWW MUTUAL FUND - GROWW SILVER ETF",
+    "marketCap": 112,
+    "price": 17.58
+  },
+  {
+    "symbol": "LOWVOL1",
+    "name": "KOTAK NIFTY 100 LOW VOLATILITY 30 ETF",
+    "marketCap": 100.85,
+    "price": 20.17
+  },
+  {
+    "symbol": "MOLOWVOL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL S&P BSE LOW VOLATILITY ETF",
+    "marketCap": 174.6,
+    "price": 34.39
+  },
+  {
+    "symbol": "DIVIDEND",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE 500 DIVIDEND LEADERS 50 ETF",
+    "marketCap": 173.9,
+    "price": 34.57
+  },
+  {
+    "symbol": "IT",
+    "name": "KOTAK NIFTY IT ETF",
+    "marketCap": 156.7,
+    "price": 35.94
+  },
+  {
+    "symbol": "HDFCNIFIT",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY IT ETF",
+    "marketCap": 150.35,
+    "price": 34.58
+  },
+  {
+    "symbol": "NIF100IETF",
+    "name": "ICICI Prudential Nifty 100 ETF",
+    "marketCap": 135.8,
+    "price": 27.15
+  },
+  {
+    "symbol": "MID150",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY MIDCAP 150 ETF",
+    "marketCap": 116.95,
+    "price": 21.68
+  },
+  {
+    "symbol": "SNXT30BEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA BSE SENSEX NEXT 30 ETF",
+    "marketCap": 208.05,
+    "price": 40.23
+  },
+  {
+    "symbol": "GSEC10YEAR",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 8-13 YR G-SEC ETF",
+    "marketCap": 149.95,
+    "price": 29.57
+  },
+  {
+    "symbol": "MIDCAPETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY MIDCAP 150 ETF",
+    "marketCap": 114.8,
+    "price": 21.79
+  },
+  {
+    "symbol": "TATSILV",
+    "name": "TATA MUTUAL FUND TATA SILVER EXCHANGE TRADED FUND",
+    "marketCap": 111.05,
+    "price": 17.45
+  },
+  {
+    "symbol": "HDFCBSE500",
+    "name": "HDFC BSE 500 ETF",
+    "marketCap": 181.9,
+    "price": 35.57
+  },
+  {
+    "symbol": "EVINDIA",
+    "name": "MIRAE ASSET MF - MIRAE ASSET NIFTY EV AND NEW AGE AUTOMOTIVE ETF",
+    "marketCap": 157.5,
+    "price": 29.86
+  },
+  {
+    "symbol": "PVTBANKADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY PRIVATE BANK ETF",
+    "marketCap": 136.65,
+    "price": 27.44
+  },
+  {
+    "symbol": "SILVER1",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK SILVER ETF",
+    "marketCap": 110.95,
+    "price": 17.36
+  },
+  {
+    "symbol": "LOWVOLIETF",
+    "name": "ICICI Prudential Nifty 100 Low Volatility 30 ETF",
+    "marketCap": 105.9,
+    "price": 21.04
+  },
+  {
+    "symbol": "SBINEQWETF",
+    "name": "SBI Nifty50 Equal Weight ETF",
+    "marketCap": 160.75,
+    "price": 31.62
+  },
+  {
+    "symbol": "ITADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY IT ETF",
+    "marketCap": 149.5,
+    "price": 34.35
+  },
+  {
+    "symbol": "CHEMICAL",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY CHEMICALS ETF",
+    "marketCap": 145.7,
+    "price": 27.05
+  },
+  {
+    "symbol": "MSCIINDIA",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK MSCI INDIA ETF",
+    "marketCap": 144.3,
+    "price": 28.54
+  },
+  {
+    "symbol": "MSCIADD",
+    "name": "DSP MUTUAL FUND - DSP MSCI INDIA ETF",
+    "marketCap": 142.9,
+    "price": 28.35
+  },
+  {
+    "symbol": "MIDQ50ADD",
+    "name": "DSP  MUTUAL FUND - DSP NIFTY MIDCAP 150 QUALITY 50 ETF",
+    "marketCap": 121.15,
+    "price": 23.2
+  },
+  {
+    "symbol": "MOENERGY",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY ENERGY ETF",
+    "marketCap": 188.2,
+    "price": 36.22
+  },
+  {
+    "symbol": "ELMDIV",
+    "name": "EDELWEISS MF - EDELWEISS BSE LARGEMID (60:40) STABLE DIVIDEND 50 ETF",
+    "marketCap": 175.7,
+    "price": 35.05
+  },
+  {
+    "symbol": "PHARMABEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA NIFTY PHARMA ETF",
+    "marketCap": 139,
+    "price": 27.87
+  },
+  {
+    "symbol": "SILVERADD",
+    "name": "DSP  MUTUAL FUND - DSP SILVER ETF",
+    "marketCap": 110.2,
+    "price": 17.2
+  },
+  {
+    "symbol": "QUALITY30",
+    "name": "Kotak Nifty200 Quality 30 ETF",
+    "marketCap": 101,
+    "price": 19.55
+  },
+  {
+    "symbol": "FMCGADD",
+    "name": "DSP Nifty FMCG ETF",
+    "marketCap": 230.55,
+    "price": 44.02
+  },
+  {
+    "symbol": "MOM30IETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND -  ICICI PRU NIFTY 200 MOMENTUM 30 ETF",
+    "marketCap": 153.3,
+    "price": 29.78
+  },
+  {
+    "symbol": "MOMENTUM",
+    "name": "Aditya Birla Sun Life Nifty 200 Momentum 30 ETF",
+    "marketCap": 153.15,
+    "price": 29.47
+  },
+  {
+    "symbol": "GOLDCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA GOLD ETF",
+    "marketCap": 118.35,
+    "price": 21.43
+  },
+  {
+    "symbol": "NIFTYQLITY",
+    "name": "Aditya Birla Sun Life Nifty 200 Quality 30 ETF",
+    "marketCap": 101.85,
+    "price": 20.11
+  },
+  {
+    "symbol": "EMULTIMQ",
+    "name": "Edelweiss Nifty500 Multicap Momentum Qual. 50 ETF",
+    "marketCap": 206.45,
+    "price": 39.03
+  },
+  {
+    "symbol": "HDFCMOMENT",
+    "name": "HDFC Nifty 200 Momentum 30 ETF",
+    "marketCap": 152.55,
+    "price": 29.41
+  },
+  {
+    "symbol": "LICNETFGSC",
+    "name": "LIC MF - LIC MF G-SEC LT ETF - GO",
+    "marketCap": 145.35,
+    "price": 28.95
+  },
+  {
+    "symbol": "PVTBANIETF",
+    "name": "ICICI PRUDENTIAL NIFTY PRIVATE BANK ETF - NIFTY PRIVATE BANK INDEX",
+    "marketCap": 136.2,
+    "price": 27.19
+  },
+  {
+    "symbol": "HDFCNIF100",
+    "name": "HDFC Nifty 100 ETF",
+    "marketCap": 125.9,
+    "price": 25.06
+  },
+  {
+    "symbol": "MONIFTY100",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 100 ETF",
+    "marketCap": 122.5,
+    "price": 24.46
+  },
+  {
+    "symbol": "HDFCMID150",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY MIDCAP 150 ETF",
+    "marketCap": 113.5,
+    "price": 21.61
+  },
+  {
+    "symbol": "BANK10BETF",
+    "name": "BAJAJ FINSERV MUTUAL FUND - BAJAJ FINSERV BSE TOP 10 BANKS ETF",
+    "marketCap": 101.25,
+    "price": 20.4
+  },
+  {
+    "symbol": "FINIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRU NIFTY FIN SER EX-BANK ETF",
+    "marketCap": 155.5,
+    "price": 29.49
+  },
+  {
+    "symbol": "LTGILTCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY 8-13 YR G-SEC ETF",
+    "marketCap": 151.1,
+    "price": 29.99
+  },
+  {
+    "symbol": "HDFCPVTBAN",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY PRIVATE BANK ETF",
+    "marketCap": 137.25,
+    "price": 27.53
+  },
+  {
+    "symbol": "BSLNIFTY",
+    "name": "Aditya Birla Sun Life Nifty 50 ETF",
+    "marketCap": 135.8,
+    "price": 27.36
+  },
+  {
+    "symbol": "ALPL30IETF",
+    "name": "ICICI PRUDENTIAL NIFTY ALPHA LOW VOLATILITY 30 ETF",
+    "marketCap": 134.25,
+    "price": 26.08
+  },
+  {
+    "symbol": "GILT10BETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY 10 YR BENCHMARK G-SEC ETF",
+    "marketCap": 132.3,
+    "price": 25.95
+  },
+  {
+    "symbol": "VALUEAXIS",
+    "name": "Axis Nifty500 Value 50 ETF",
+    "marketCap": 160.65,
+    "price": 30.6
+  },
+  {
+    "symbol": "ITIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY IT ETF",
+    "marketCap": 156.75,
+    "price": 35.99
+  },
+  {
+    "symbol": "MOMENTUM30",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY 200 MOMENTUM 30 ETF",
+    "marketCap": 153.45,
+    "price": 29.22
+  },
+  {
+    "symbol": "LTGILTBEES",
+    "name": "NIPPON INDIA ETF NIFTY 8-13 YR G-SEC LONG TERM GILT",
+    "marketCap": 148.25,
+    "price": 29.41
+  },
+  {
+    "symbol": "PVTBKGROWW",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY PRIVATE BANK ETF",
+    "marketCap": 135.3,
+    "price": 27.04
+  },
+  {
+    "symbol": "GSEC10ADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY 10 YR BENCHMARK G-SEC ETF",
+    "marketCap": 133.85,
+    "price": 26.2
+  },
+  {
+    "symbol": "MIDCAPIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY MIDCAP 150 ETF",
+    "marketCap": 116.55,
+    "price": 21.92
+  },
+  {
+    "symbol": "MONIFTY500",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 500 ETF",
+    "marketCap": 115.95,
+    "price": 22.59
+  },
+  {
+    "symbol": "GROWWEV",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY EV & NEW AGE AUTOMOTIVE ETF",
+    "marketCap": 157.15,
+    "price": 29.72
+  },
+  {
+    "symbol": "HEALTHCARE",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 500 HEALTHCARE ETF",
+    "marketCap": 109.2,
+    "price": 21.44
+  },
+  {
+    "symbol": "BSE500IETF",
+    "name": "ICICI Prudential S&P BSE 500 ETF",
+    "marketCap": 191.6,
+    "price": 37.7
+  },
+  {
+    "symbol": "NIF500BETA",
+    "name": "UTI Nifty 500 ETF",
+    "marketCap": 180.95,
+    "price": 35.26
+  },
+  {
+    "symbol": "ENERGY",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY ENERGY ETF",
+    "marketCap": 179.08,
+    "price": 36.48
+  },
+  {
+    "symbol": "ITBEES",
+    "name": "NIPPON LIFE INDIA ASSET MANAGEMENT LIMITED",
+    "marketCap": 156.5,
+    "price": 36.06
+  },
+  {
+    "symbol": "AUTOIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL  NIFTY AUTO ETF",
+    "marketCap": 139.65,
+    "price": 26.63
+  },
+  {
+    "symbol": "MOMNC",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY MNC ETF",
+    "marketCap": 156.75,
+    "price": 28.85
+  },
+  {
+    "symbol": "ABSLMSCIN",
+    "name": "ADITYA BIRLA SUN LIFE MF- ADITYA BIRLA SUN LIFE MSCI INDIA ETF",
+    "marketCap": 142.35,
+    "price": 28.36
+  },
+  {
+    "symbol": "MIDCAPADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY MIDCAP 150 ETF",
+    "marketCap": 117,
+    "price": 21.26
+  },
+  {
+    "symbol": "ITETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY IT ETF",
+    "marketCap": 149.35,
+    "price": 34.43
+  },
+  {
+    "symbol": "ECAPINSURE",
+    "name": "Edelweiss BSE Capital Markets & Insurance ETF",
+    "marketCap": 116.85,
+    "price": 22.24
+  },
+  {
+    "symbol": "ENIFTY",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY 50 ETF",
+    "marketCap": 116.8,
+    "price": 23.52
+  },
+  {
+    "symbol": "LARGEMID50",
+    "name": "MIRAE ASSET BSE LARGEMID (60:40) STABLE DIVIDEND 50 ETF",
+    "marketCap": 175.1,
+    "price": 34.99
+  },
+  {
+    "symbol": "MNC",
+    "name": "Kotak Nifty MNC ETF",
+    "marketCap": 161,
+    "price": 30.01
+  },
+  {
+    "symbol": "MON50EQUAL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 50 EQUAL WEIGHT ETF",
+    "marketCap": 160.65,
+    "price": 31.98
+  },
+  {
+    "symbol": "PVTBANK",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY PRIVATE BANK ETF",
+    "marketCap": 136.55,
+    "price": 27.2
+  },
+  {
+    "symbol": "SILVERCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA SILVER ETF",
+    "marketCap": 115.9,
+    "price": 18.1
+  },
+  {
+    "symbol": "NIFTY100EW",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY 100 EQUAL WEIGHT ETF",
+    "marketCap": 170.45,
+    "price": 33.4
+  },
+  {
+    "symbol": "EVIETF",
+    "name": "ICICI PRUDENTIAL MF-ICICI PRUDENTIAL NIFTY EV & NEW AGE AUTOMOTIVE ETF",
+    "marketCap": 157.6,
+    "price": 29.67
+  },
+  {
+    "symbol": "MOSERVICE",
+    "name": "Motilal Oswal Nifty Services Sector ETF",
+    "marketCap": 149.1,
+    "price": 31.12
+  },
+  {
+    "symbol": "GROWWCHEM",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY CHEMICALS ETF",
+    "marketCap": 147.2,
+    "price": 27.11
+  },
+  {
+    "symbol": "GROWWRAIL",
+    "name": "Groww Nifty India Railways PSU ETF",
+    "marketCap": 133.75,
+    "price": 25.31
+  },
+  {
+    "symbol": "BFSI",
+    "name": "Mirae Asset Nifty Financial Services ETF - RG",
+    "marketCap": 130.55,
+    "price": 25.87
+  },
+  {
+    "symbol": "SBINMID150",
+    "name": "SBI Nifty Midcap 150 ETF",
+    "marketCap": 113.05,
+    "price": 21.27
+  },
+  {
+    "symbol": "MAHKTECH",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET HANG SENG TECH ETF",
+    "marketCap": 108.9,
+    "price": 20.77
+  },
+  {
+    "symbol": "QUAL30IETF",
+    "name": "ICICI Prudential Nifty 200 Quality 30 ETF",
+    "marketCap": 101,
+    "price": 19.85
+  },
+  {
+    "symbol": "HEALTHY",
+    "name": "ADITYA BIRLA SUN LIFE MF-ADITYA BIRLA SUN LIFE NIFTY HEALTHCARE ETF",
+    "marketCap": 85.85,
+    "price": 17
+  },
+  {
+    "symbol": "GROWWGOLD",
+    "name": "GROWW MUTUAL FUND - GROWW GOLD ETF",
+    "marketCap": 73.5,
+    "price": 13.32
+  },
+  {
+    "symbol": "GROWWPOWER",
+    "name": "GROWW MUTUAL FUND - GROWW BSE POWER ETF",
+    "marketCap": 55.4,
+    "price": 10.62
+  },
+  {
+    "symbol": "ELM250",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY LARGEMIDCAP 250 ETF",
+    "marketCap": 81.15,
+    "price": 15.89
+  },
+  {
+    "symbol": "TOP100CASE",
+    "name": "Zerodha Nifty 100 ETF",
+    "marketCap": 51.1,
+    "price": 10.23
+  },
+  {
+    "symbol": "TOP20",
+    "name": "Mirae Asset Nifty Top 20 Equal Weight ETF",
+    "marketCap": 42.75,
+    "price": 8.75
+  },
+  {
+    "symbol": "NV20IETF",
+    "name": "ICICI PRUDENTIAL NIFTY50 VALUE 20 ETF",
+    "marketCap": 65.55,
+    "price": 13.23
+  },
+  {
+    "symbol": "ABSLPSE",
+    "name": "ADITYA BIRLA SUN LIFE MUTUAL FUND-ADITYA BIRLA SUN LIFE NIFTY PSE ETF",
+    "marketCap": 49.85,
+    "price": 9.65
+  },
+  {
+    "symbol": "GROWWRLTY",
+    "name": "Groww Nifty Realty ETF",
+    "marketCap": 48.55,
+    "price": 9.14
+  },
+  {
+    "symbol": "INFRA",
+    "name": "Mirae Asset Nifty India Infrastr. & Logistics ETF",
+    "marketCap": 58.7,
+    "price": 11.32
+  },
+  {
+    "symbol": "AONETOTAL",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE NIFTY TOTAL MARKET ETF",
+    "marketCap": 57.95,
+    "price": 11.3
+  },
+  {
+    "symbol": "GROWWCAPM",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY CAPITAL MARKETS ETF",
+    "marketCap": 55.6,
+    "price": 11.04
+  },
+  {
+    "symbol": "GROWWNIFTY",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY 50 ETF",
+    "marketCap": 46.8,
+    "price": 9.41
+  },
+  {
+    "symbol": "MOSMALL250",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY SMALLCAP 250 ETF",
+    "marketCap": 91.65,
+    "price": 17.06
+  },
+  {
+    "symbol": "SBISMLETF",
+    "name": "SBI MUTUAL FUND - SBI NIFTY SMALLCAP 250 ETF",
+    "marketCap": 90.8,
+    "price": 17.13
+  },
+  {
+    "symbol": "MOOILGAS",
+    "name": "Motilal Oswal Nifty Oil & Gas ETF",
+    "marketCap": 54.45,
+    "price": 10.82
+  },
+  {
+    "symbol": "CONSUMER",
+    "name": "MIRAE ASSET MF- MIRAE ASSET NIFTY INDIA NEW AGE CONSUMPTION ETF",
+    "marketCap": 58.05,
+    "price": 11.23
+  },
+  {
+    "symbol": "SBIVALETF",
+    "name": "SBI MUTUAL FUND - SBI NIFTY200 VALUE 30 ETF",
+    "marketCap": 71.85,
+    "price": 13.89
+  },
+  {
+    "symbol": "CEMNTGROWW",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY CEMENTS ETF",
+    "marketCap": 70.65,
+    "price": 13.6
+  },
+  {
+    "symbol": "AONEGOLD",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE GOLD ETF",
+    "marketCap": 70.1,
+    "price": 12.77
+  },
+  {
+    "symbol": "EQUAL200",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE 200 EQUAL WEIGHT ETF",
+    "marketCap": 67.05,
+    "price": 12.94
+  },
+  {
+    "symbol": "MOMMIDCAP",
+    "name": "Mirae Asset BSE Midcap 150 Momentum 30 ETF",
+    "marketCap": 63.8,
+    "price": 12.22
+  },
+  {
+    "symbol": "NIFTYJBLK",
+    "name": "JIO BLACKROCK MUTUAL FUND - JIOBLACKROCK NIFTY 50 ETF",
+    "marketCap": 59.6,
+    "price": 11.97
+  },
+  {
+    "symbol": "SML100CASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY SMALLCAP 100 ETF",
+    "marketCap": 55.95,
+    "price": 10.55
+  },
+  {
+    "symbol": "GROWWN200",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY 200 ETF",
+    "marketCap": 54.55,
+    "price": 10.7
+  },
+  {
+    "symbol": "ENERGYAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY ENERGY ETF",
+    "marketCap": 96.5,
+    "price": 18.01
+  },
+  {
+    "symbol": "EBANK10",
+    "name": "Edelweiss BSE Top 10 Bank ETF",
+    "marketCap": 81.85,
+    "price": 16.11
+  },
+  {
+    "symbol": "MULTICAP",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 500 MULTICAP 50:25:25 ETF",
+    "marketCap": 81.45,
+    "price": 15.83
+  },
+  {
+    "symbol": "VALUE",
+    "name": "Mirae Asset Nifty 500 Value 50 ETF",
+    "marketCap": 78.8,
+    "price": 15.09
+  },
+  {
+    "symbol": "SECLEDBETA",
+    "name": "UTI MUTUAL FUND - UTI BSE INDIA SECTOR LEADERS EXCHANGE TRADED FUND",
+    "marketCap": 74.6,
+    "price": 14.17
+  },
+  {
+    "symbol": "METAL",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY METAL ETF",
+    "marketCap": 66.1,
+    "price": 12.25
+  },
+  {
+    "symbol": "OILIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY OIL & GAS ETF",
+    "marketCap": 55.05,
+    "price": 10.94
+  },
+  {
+    "symbol": "GROWWMOM50",
+    "name": "Groww Nifty 500 Momentum 50 ETF",
+    "marketCap": 54.1,
+    "price": 10.42
+  },
+  {
+    "symbol": "AONETMMQ50",
+    "name": "ANGEL ONE MF - ANGEL ONE NIFTY TOTAL MARKET MOMENTUM QUALITY 50 ETF",
+    "marketCap": 51,
+    "price": 9.7
+  },
+  {
+    "symbol": "AONESILVER",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE SILVER ETF",
+    "marketCap": 43.8,
+    "price": 6.9
+  },
+  {
+    "symbol": "HEALTHADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY HEALTHCARE ETF",
+    "marketCap": 84.95,
+    "price": 16.57
+  },
+  {
+    "symbol": "MOBANK10",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL BSE TOP 10 BANKS ETF",
+    "marketCap": 83.3,
+    "price": 16.36
+  },
+  {
+    "symbol": "INSUREIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL BSE INSURANCE ETF",
+    "marketCap": 74.6,
+    "price": 14.03
+  },
+  {
+    "symbol": "CONS",
+    "name": "KOTAK NIFTY INDIA CONSUMPTION ETF",
+    "marketCap": 58.75,
+    "price": 11.53
+  },
+  {
+    "symbol": "MID150CASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY MIDCAP 150 ETF",
+    "marketCap": 56.65,
+    "price": 10.73
+  },
+  {
+    "symbol": "MSCI360",
+    "name": "360 ONE MUTUAL FUND - 360 ONE MSCI INDIA ETF",
+    "marketCap": 48.7,
+    "price": 9.62
+  },
+  {
+    "symbol": "SMALLADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY SMALLCAP 250 ETF",
+    "marketCap": 91.4,
+    "price": 17.12
+  },
+  {
+    "symbol": "GROWWSC250",
+    "name": "Groww Nifty Smallcap 250 ETF",
+    "marketCap": 52.35,
+    "price": 9.86
+  },
+  {
+    "symbol": "TOP15IETF",
+    "name": "ICICI Prudential Nifty Top 15 Equal Weight ETF",
+    "marketCap": 46.75,
+    "price": 9.54
+  },
+  {
+    "symbol": "MOMETAL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY METAL ETF",
+    "marketCap": 65.75,
+    "price": 12.13
+  },
+  {
+    "symbol": "FLEXIADD",
+    "name": "DSP Nifty500 Flexicap Quality 30 ETF",
+    "marketCap": 48.55,
+    "price": 9.64
+  },
+  {
+    "symbol": "AONENIFTY",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE NIFTY 50 ETF",
+    "marketCap": 48,
+    "price": 9.6
+  },
+  {
+    "symbol": "SMALL250",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY SMALLCAP 250 ETF",
+    "marketCap": 91.05,
+    "price": 17.04
+  },
+  {
+    "symbol": "EMETAL",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY METAL ETF",
+    "marketCap": 64.8,
+    "price": 12.29
+  },
+  {
+    "symbol": "SMALLIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY SMALLCAP 250 ETF",
+    "marketCap": 91.3,
+    "price": 17.06
+  },
+  {
+    "symbol": "GROWWMETAL",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY METAL ETF",
+    "marketCap": 62.65,
+    "price": 11.57
+  },
+  {
+    "symbol": "HYBRIDETF",
+    "name": "MIRAE MF-MIRAE ASSET NIFTY200 MOMENTUM 30PLUS 8-13 YR G-SEC 50:50 ETF",
+    "marketCap": 49.65,
+    "price": 9.68
+  },
+  {
+    "symbol": "MIDSELIETF",
+    "name": "ICICI PRUDENTIAL BSE MIDCAP SELECT ETF",
+    "marketCap": 95.15,
+    "price": 18.48
+  },
+  {
+    "symbol": "TATAGOLD",
+    "name": "TATA MUTUAL FUND TATA GOLD EXCHANGE TRADED FUND",
+    "marketCap": 73.1,
+    "price": 13.27
+  },
+  {
+    "symbol": "INTERNET",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY INDIA INTERNET ETF",
+    "marketCap": 69.65,
+    "price": 13.22
+  },
+  {
+    "symbol": "NIFTYCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY 50 ETF",
+    "marketCap": 46.5,
+    "price": 9.36
+  },
+  {
+    "symbol": "HDFCLOWVOL",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY100 LOW VOLATILITY 30 ETF",
+    "marketCap": 99.05,
+    "price": 19.64
+  },
+  {
+    "symbol": "METALIETF",
+    "name": "ICICI Prudential Nifty Metal ETF",
+    "marketCap": 65.9,
+    "price": 12.24
+  },
+  {
+    "symbol": "MIDCAP",
+    "name": "KOTAK NIFTY MIDCAP 50 ETF",
+    "marketCap": 89.4,
+    "price": 17.1
+  },
+  {
+    "symbol": "BANK10ADD",
+    "name": "DSP MUTUAL FUND - DSP BSE TOP 10 BANKS ETF",
+    "marketCap": 82.2,
+    "price": 16.3
+  },
+  {
+    "symbol": "VAL30IETF",
+    "name": "ICICI Prudential Nifty200 Value 30 ETF",
+    "marketCap": 74.25,
+    "price": 14.41
+  },
+  {
+    "symbol": "GOLDADD",
+    "name": "DSP MUTUAL FUND - DSP GOLD ETF",
+    "marketCap": 73.1,
+    "price": 13.23
+  },
+  {
+    "symbol": "GROWWNET",
+    "name": "Groww Nifty India Internet ETF",
+    "marketCap": 51.25,
+    "price": 9.83
+  },
+  {
+    "symbol": "GROWWLOVOL",
+    "name": "Groww Nifty 500 Low Volatility 50 ETF",
+    "marketCap": 50.3,
+    "price": 10.02
+  },
+  {
+    "symbol": "INSURADD",
+    "name": "DSP MUTUAL FUND - DSP BSE INSURANCE ETF",
+    "marketCap": 5000,
+    "price": 13.94
+  },
+  {
+    "symbol": "NXT100CASE",
+    "name": "ZERODHA MUTUAL FUND - ZERODHA NIFTY NEXT 100 ETF",
+    "marketCap": 5000,
+    "price": 10.08
+  },
+  {
+    "symbol": "BIRLATOTAL",
+    "name": "ADITYA BIRLA SUN LIFE MF - ADITYA BIRLA SUN LIFE BSE TOTAL MARKET ETF",
+    "marketCap": 5000,
+    "price": 10.24
+  },
+  {
+    "symbol": "FARBEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA CRISIL-IBX FAR GILT ETF",
+    "marketCap": 5000,
+    "price": 133.53
+  },
+  {
+    "symbol": "HFTSEINDIA",
+    "name": "HDFC MUTUAL FUND - HDFC FTSE INDIA EQUITY ETF",
+    "marketCap": 5000,
+    "price": 30.77
+  },
+  {
+    "symbol": "PHARMAIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY PHARMA ETF",
+    "marketCap": 5000,
+    "price": 27.08
+  },
+  {
+    "symbol": "SBIBANKNIF",
+    "name": "SBI NIFTY BANK ETF",
+    "marketCap": 5000,
+    "price": 565.12
+  },
+  {
+    "symbol": "SBIDEFETF",
+    "name": "SBI MUTUAL FUND - SBI BSE INDIA DEFENCE ETF",
+    "marketCap": 5000,
+    "price": 74.62
+  },
+  {
+    "symbol": "SBIGOLD",
+    "name": "SBI GOLD ETF",
+    "marketCap": 5000,
+    "price": 116.09
+  },
+  {
+    "symbol": "SBINEXT50",
+    "name": "SBI NIFTY NEXT 50 ETF",
+    "marketCap": 5000,
+    "price": 739.11
+  },
+  {
+    "symbol": "SBINIFTY50",
+    "name": "SBI NIFTY 50 ETF",
+    "marketCap": 5000,
+    "price": 251.53
+  }
+]

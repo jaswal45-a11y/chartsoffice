@@ -1,9 +1,159 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-10-13T19:20:33.432Z",
-  "latestDealId": "7a1eacfc3747",
+  "lastUpdated": "2026-11-02T19:49:22.216Z",
+  "latestDealId": "1be8cd746968",
   "deals": [
+    {
+      "id": "1be8cd746968",
+      "exchange": "NSE",
+      "date": "02-Nov-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "EAAA India Alternat.",
+      "dealType": "BUY",
+      "volume": "806167",
+      "dealPrice": "1679.75"
+    },
+    {
+      "id": "087095b7aafd",
+      "exchange": "NSE",
+      "date": "02-Nov-26",
+      "clientName": "BANK OF INDIA MUTUAL FUND",
+      "companyName": "One Mobikwik Systems",
+      "dealType": "BUY",
+      "volume": "690120",
+      "dealPrice": "225.13"
+    },
+    {
+      "id": "628cb968bd6a",
+      "exchange": "NSE",
+      "date": "02-Nov-26",
+      "clientName": "FRANKLIN TEMPLETON MUTUAL FUND",
+      "companyName": "Go Fashion (India)",
+      "dealType": "SELL",
+      "volume": "1333125",
+      "dealPrice": "245.54"
+    },
+    {
+      "id": "5fe8cb134ec1",
+      "exchange": "NSE",
+      "date": "30-Oct-26",
+      "clientName": "GOLDMAN SACHS FUNDS - GOLDMAN SACHS INDIA EQUITY PORTFOLIO",
+      "companyName": "Sagility",
+      "dealType": "BUY",
+      "volume": "27267148",
+      "dealPrice": "42.62"
+    },
+    {
+      "id": "bf662579012a",
+      "exchange": "NSE",
+      "date": "30-Oct-26",
+      "clientName": "ICICI PRUDENTIAL MUTUAL FUND",
+      "companyName": "Sagility",
+      "dealType": "BUY",
+      "volume": "35087719",
+      "dealPrice": "42.75"
+    },
+    {
+      "id": "e0dab154be24",
+      "exchange": "BSE",
+      "date": "27-Oct-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Popular Vehicles&Ser",
+      "dealType": "BUY",
+      "volume": "4927581",
+      "dealPrice": "91.5"
+    },
+    {
+      "id": "0c3a1c74230b",
+      "exchange": "BSE",
+      "date": "27-Oct-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Popular Vehicles&Ser",
+      "dealType": "SELL",
+      "volume": "4927581",
+      "dealPrice": "91.5"
+    },
+    {
+      "id": "ad006723a37e",
+      "exchange": "NSE",
+      "date": "23-Oct-26",
+      "clientName": "INVESCO MUTUAL FUND",
+      "companyName": "Sahajanand Medical",
+      "dealType": "BUY",
+      "volume": "800000",
+      "dealPrice": "374.91"
+    },
+    {
+      "id": "bce9318b6887",
+      "exchange": "NSE",
+      "date": "23-Oct-26",
+      "clientName": "INVESCO MUTUAL FUND",
+      "companyName": "Sahajanand Medical",
+      "dealType": "BUY",
+      "volume": "2807366",
+      "dealPrice": "371.44"
+    },
+    {
+      "id": "5cf0e8297b49",
+      "exchange": "NSE",
+      "date": "23-Oct-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Tonbo Imaging India",
+      "dealType": "BUY",
+      "volume": "500000",
+      "dealPrice": "1154.64"
+    },
+    {
+      "id": "021c54e621fe",
+      "exchange": "NSE",
+      "date": "23-Oct-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Tonbo Imaging India",
+      "dealType": "BUY",
+      "volume": "500000",
+      "dealPrice": "1200"
+    },
+    {
+      "id": "0062aeb76a74",
+      "exchange": "NSE",
+      "date": "15-Oct-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "NATCO-RE",
+      "dealType": "BUY",
+      "volume": "678946",
+      "dealPrice": "24.88"
+    },
+    {
+      "id": "775b7f8525e1",
+      "exchange": "NSE",
+      "date": "14-Oct-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "NATCO-RE",
+      "dealType": "BUY",
+      "volume": "232343",
+      "dealPrice": "27"
+    },
+    {
+      "id": "8f80deac382e",
+      "exchange": "NSE",
+      "date": "12-Oct-26",
+      "clientName": "BANK OF INDIA MUTUAL FUND",
+      "companyName": "NATCO-RE",
+      "dealType": "BUY",
+      "volume": "325523",
+      "dealPrice": "32.5"
+    },
+    {
+      "id": "831a94f25fac",
+      "exchange": "NSE",
+      "date": "12-Oct-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "NATCO-RE",
+      "dealType": "BUY",
+      "volume": "1200000",
+      "dealPrice": "31.99"
+    },
     {
       "id": "7a1eacfc3747",
       "exchange": "BSE",
@@ -35,26 +185,6 @@
       "dealPrice": "216.12"
     },
     {
-      "id": "8f80deac382e",
-      "exchange": "NSE",
-      "date": "12-Oct-26",
-      "clientName": "BANK OF INDIA MUTUAL FUND",
-      "companyName": "NATCO-RE",
-      "dealType": "BUY",
-      "volume": "325523",
-      "dealPrice": "32.5"
-    },
-    {
-      "id": "831a94f25fac",
-      "exchange": "NSE",
-      "date": "12-Oct-26",
-      "clientName": "NIPPON INDIA MUTUAL FUND",
-      "companyName": "NATCO-RE",
-      "dealType": "BUY",
-      "volume": "1200000",
-      "dealPrice": "31.99"
-    },
-    {
       "id": "aa7cc770654f",
       "exchange": "NSE",
       "date": "08-Oct-26",
@@ -73,136 +203,6 @@
       "dealType": "BUY",
       "volume": "2300000",
       "dealPrice": "1315"
-    },
-    {
-      "id": "eb09cb7c495b",
-      "exchange": "BSE",
-      "date": "30-Sep-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "Innova Captab",
-      "dealType": "BUY",
-      "volume": "833250",
-      "dealPrice": "1080"
-    },
-    {
-      "id": "372526481074",
-      "exchange": "BSE",
-      "date": "30-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
-      "companyName": "Avalon Technologies",
-      "dealType": "BUY",
-      "volume": "2401587",
-      "dealPrice": "2171"
-    },
-    {
-      "id": "993149271f6b",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "FRANKLIN TEMPLETON MUTUAL FUND",
-      "companyName": "Honasa Consumer",
-      "dealType": "BUY",
-      "volume": "3333333",
-      "dealPrice": "450"
-    },
-    {
-      "id": "66fb83c343cb",
-      "exchange": "BSE",
-      "date": "29-Sep-26",
-      "clientName": "WHITE OAK CAPITAL MUTUAL FUND",
-      "companyName": "CUBEINVIT",
-      "dealType": "BUY",
-      "volume": "8480104",
-      "dealPrice": "153.3"
-    },
-    {
-      "id": "d519524b7f67",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "NIPPON INDIA MUTUAL FUND",
-      "companyName": "BSE",
-      "dealType": "BUY",
-      "volume": "2529550",
-      "dealPrice": "3200"
-    },
-    {
-      "id": "57c34928f0a7",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "UTI MUTUAL FUND",
-      "companyName": "BSE",
-      "dealType": "BUY",
-      "volume": "2712950",
-      "dealPrice": "3200"
-    },
-    {
-      "id": "cf7f3fa25d11",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "ABAKKUS INVESTMENT MANAGERS PRIVATE LIMITED",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "255320",
-      "dealPrice": "1824"
-    },
-    {
-      "id": "d4efbddd2780",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "ABAKKUS INVESTMENT MANAGERS PRIVATE LIMITED",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "604253",
-      "dealPrice": "1824"
-    },
-    {
-      "id": "33620a43e0c5",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "224781",
-      "dealPrice": "1824"
-    },
-    {
-      "id": "6f786e835766",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "339912",
-      "dealPrice": "1824"
-    },
-    {
-      "id": "7bf459b8ea97",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "910088",
-      "dealPrice": "1824"
-    },
-    {
-      "id": "47e5dd344c81",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND .",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "224781",
-      "dealPrice": "1824"
-    },
-    {
-      "id": "30d6a5bcb029",
-      "exchange": "NSE",
-      "date": "29-Sep-26",
-      "clientName": "KOTAK MAHINDRA MUTUAL FUND.",
-      "companyName": "Axiscades Tech.",
-      "dealType": "BUY",
-      "volume": "224781",
-      "dealPrice": "1824"
     }
   ]
 }

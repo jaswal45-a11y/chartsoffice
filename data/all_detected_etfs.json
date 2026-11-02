@@ -1,0 +1,2150 @@
+[
+  {
+    "symbol": "NV20",
+    "name": "KOTAK NIFTY 50 VALUE 20 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EBBETF0431",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND ETF - APRIL 2031",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ELIQUID",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY 1D RATE LIQUID ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EBBETF0430",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND  ETF - APRIL 2030",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDBETF",
+    "name": "Bajaj Finserv Nifty 1D Rate Liquid ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "CASHIETF",
+    "name": "ICICI PRUDENTIAL MF-ICICI PRUDENTIAL BSE LIQUID RATE ETF-GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDADD",
+    "name": "DSP BSE LIQUID RATE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDPLUS",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 1D RATE LIQUID ETF-GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDSBI",
+    "name": "SBI Nifty 1D Rate ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "SBILIQETF",
+    "name": "SBI MUTUAL FUND - SBI NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDBETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BBETF0432",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND ETF - APRIL 2032 - GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EBBETF0433",
+    "name": "EDELWEISS MUTUAL FUND - BHARAT BOND ETF-APRIL 2033",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUID1",
+    "name": "Kotak Nifty 1D Rate Liquid ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "AONELIQUID",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQGRWBEES",
+    "name": "NIPPON INDIA MUTUAL FUND-NIPPON INDIA NIFTY 1D RATE LIQUID ETF-GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDSHRI",
+    "name": "SHRIRAM MUTUAL FUND -SHRIRAM NIFTY 1D RATE LIQUID ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCLIQUID",
+    "name": "HDFC NIFTY 1D RATE LIQUID ETF - GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SETFNIFBK",
+    "name": "SBI-ETF NIFTY BANK",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SHARIABEES",
+    "name": "NIPPON INDIA ETF NIFTY 50 SHARIAH BEES",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDBEES",
+    "name": "Nippon India ETF Liquid BeES",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "LICNETFSEN",
+    "name": "LIC MUTUAL FUND - LIC MF EXCHANGE TRADED FUND - SENSEX",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SENSEXBETA",
+    "name": "UTI BSE SENSEX ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIETFIT",
+    "name": "SBI MUTUAL FUND-SBI ETF IT",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDIETF",
+    "name": "ICICI PRUDENTIAL BSE LIQUID RATE ETF- IDCW",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SENSEXIETF",
+    "name": "ICICI PRUDENTIAL BSE SENSEX ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EQUAL50ADD",
+    "name": "DSP Nifty 50 Equal Weight ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "JUNIORBEES",
+    "name": "Nippon India ETF Junior BeES",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "INFRABEES",
+    "name": "NIPPON INDIA ETF NIFTY INFRASTRUCTURE BEES",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MON100",
+    "name": "MOTILAL OSWAL MUTUAL FUND-MOTILAL OSWAL MOST SHARES NASDAQ 100 ETF -GO",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ITAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUID",
+    "name": "Mirae Asset Nifty 1D Rate Liquid ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ABSLLIQUID",
+    "name": "Aditya Birla SL Crisil Overnight Fund AI Index ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "BNKETFAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HNGSNGBEES",
+    "name": "NIPPON INDIA ETF HANG SENG BEES",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LIQUIDETF",
+    "name": "DSP NIFTY 1D RATE LIQUID ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANKBEES",
+    "name": "Nippon India ETF Bank Bees",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "EQUAL50",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY50 EQUAL WEIGHT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANKETF",
+    "name": "Mirae Asset Nifty Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "NEXT50",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY NEXT 50 ETF (MANXT50) - MI",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ITBETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIETFPB",
+    "name": "SBI ETF PRIVATE BANK",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "NIFTY1",
+    "name": "KOTAK NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NETF",
+    "name": "TATA NIFTY 50 EXCHANGE TRADED FUND",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SETFNIF50",
+    "name": "SBI-ETF NIFTY 50",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYBETF",
+    "name": "Bajaj Finserv Nifty 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOQUALITY",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL S&P BSE QUALITY ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MAFANG",
+    "name": "Mirae Asset NYSE FANG+ ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MID150BEES",
+    "name": "NIPPON INDIA ETF NIFTY MIDCAP 150",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCSML250",
+    "name": "HDFC Nifty Small Cap 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "CHOICEGOLD",
+    "name": "CHOICE MUTUAL FUND - CHOICE GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SETF10GILT",
+    "name": "SBI MUTUAL FUND - SBI-ETF 10 YEAR GILT",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWMC150",
+    "name": "Groww Nifty Midcap 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MONQ50",
+    "name": "Motilal Oswal Nasdaq Q 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MAKEINDIA",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY INDIA MANUFACTURING ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SETFGOLD",
+    "name": "SBI-ETF GOLD",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ESILVER",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVER",
+    "name": "ADITYA BIRLA SUN LIFE MUTUAL FUND - ADITYA BIRLA SUN LIFE SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVERBETA",
+    "name": "UTI MUTUAL FUND - UTI SILVER EXCHANGE TRADED FUND (UTI SILVER ETF)",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVERBEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIETFQLTY",
+    "name": "SBI MUTUAL FUND - SBI - ETF QUALITY - SBI-ETF QUALITY",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "TWCGOLDETF",
+    "name": "The Wealth Company Gold ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Gems, Jewellery & Watches"
+  },
+  {
+    "symbol": "LICMFGOLD",
+    "name": "LIC MF GOLD EXCHANGE TRADED FUND",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCNIMEG",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY METAL ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GOLDIETF",
+    "name": "ICICI PRUDENTIAL GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCGOLD",
+    "name": "HDFC GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "IVZINNIFTY",
+    "name": "Invesco India Nifty ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "IDFNIFTYET",
+    "name": "BANDHAN NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYETF",
+    "name": "NIFTYETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "SILVERIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MANUFGBEES",
+    "name": "Nippon India Nifty India Manufacturing ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GOLDBND",
+    "name": "BANDHAN MUTUAL FUND - BANDHAN GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVERAG",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCSILVER",
+    "name": "HDFC MUTUAL FUND - HDFC SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "UNIONGOLD",
+    "name": "UNION MUTUAL FUND - UNION GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HSBCGOLD",
+    "name": "HSBC MUTUAL FUND - HSBC GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GSEC10IETF",
+    "name": "ICICI PRU MUTUAL FUND-ICICI PRUDENTIAL NIFTY 10 YR BENCHMARK G-SEC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYBEES",
+    "name": "NIPPON INDIA ETF NIFTY 50 BEES",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOM50",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL MOST SHARES M50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVERAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBISILVER",
+    "name": "SBI MUTUAL FUND - SBI SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LOWVOL",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 100 LOW VOLATILITY 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOGOLD",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BSLGOLDETF",
+    "name": "ADITYA BIRLA SUN LIFE GOLD ETF - GROWTH",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYIETF",
+    "name": "NIFTYIETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GOLDETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "AUTOBEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA NIFTY AUTO ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LICNFNHGP",
+    "name": "LIC Nomura MF ETF - Nifty 100",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "BBNPPGOLD",
+    "name": "BARODA BNP PARIBAS MUTUAL FUND - BARODA BNP PARIBAS GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "QNIFTY",
+    "name": "QNIFTY",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ABSL10BANK",
+    "name": "ADITYA BIRLA SUN LIFE MF - ADITYA BIRLA SUN LIFE BSE TOP 10 BANKS ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GOLD360",
+    "name": "360 ONE MUTUAL FUND - 360 ONE GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYBETA",
+    "name": "NIFTYBETA",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "HDFCNIFTY",
+    "name": "HDFCNIFTY",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "LICNETFN50",
+    "name": "LIC Nomura MF ETF - NIFTY 50 - Growth Plan",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "NIFTYAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYADD",
+    "name": "DSP  MUTUAL FUND - DSP NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDCAPBETA",
+    "name": "UTI Nifty Midcap 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOSILVER",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EGOLD",
+    "name": "EDELWEISS MUTUAL FUND -EDELWEISS GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "IVZINGOLD",
+    "name": "INVESCO INDIA GOLD EXCHANGE TRADED FUND",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "AXISNIFTY",
+    "name": "Axis Nifty ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "NIF100BEES",
+    "name": "NIPPON INDIA ETF NIFTY 100",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVER360",
+    "name": "360 ONE MUTUAL FUND - 360 ONE SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NPBET",
+    "name": "TATA NIFTY PRIVATE BANK EXCHANGE TRADED FUND",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVERBND",
+    "name": "Bandhan Silver ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "HEALTHIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY HEALTHCARE ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NV20BEES",
+    "name": "Nippon India ETF Nifty 50 Value 20",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "CONSUMBEES",
+    "name": "NIPPON INDIA ETF NIFTY INDIA CONSUMPTION",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIETFCON",
+    "name": "SBI MUTUAL FUND - SBI ETF CONSUMPTION",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MODEFENCE",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY INDIA DEFENCE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MASPTOP50",
+    "name": "Mirae Asset S&P 500 Top 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "BANKBETA",
+    "name": "UTI Nifty Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "HDFCQUAL",
+    "name": "HDFC Nifty 100 Quality 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GOLDBETA",
+    "name": "UTI MUTUAL FUND - UTI GOLD EXCHANGE TRADED FUND",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GOLD1",
+    "name": "KOTAK MUTUAL FUND - GOLD EXCHANGE TRADED FUND",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWLIQID",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY 1D RATE LIQUID ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOVALUE",
+    "name": "Motilal Oswal S&P BSE Enhanced Value ETF Fund",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "PSUBNKBEES",
+    "name": "Nippon India ETF PSU Bank Bees",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "BANKBETF",
+    "name": "BAJAJ FINSERV MUTUAL FUND - BAJAJ FINSERV NIFTY BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDSMALL",
+    "name": "MIRAEASSETMF-MIRAE ASSET NIFTY MIDSMALLCAP400 MOMENTUM QUALITY 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ABGSEC",
+    "name": "ADITYABIRLASUNLIFEMF-ADITYA BIRLA SUN LIFE CRISIL BROAD BASED GILT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOREALTY",
+    "name": "Motilal Oswal Nifty Realty ETF",
+    "sector": "Realty & Construction",
+    "industry": "Real Estate Development & Residential"
+  },
+  {
+    "symbol": "BSLSENETFG",
+    "name": "ADITYA BIRLA SUN LIFE BSE SENSEX ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NEXT50ETF",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWNXT50",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GILT5BETA",
+    "name": "UTI Nifty 5 yr Benchmark G-Sec ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "SBIMIDMOM",
+    "name": "SBI NIFTY MIDCAP150 MOMENTUM 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOALPHA50",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY ALPHA 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GOLDAXIS",
+    "name": "Axis Gold ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Gems, Jewellery & Watches"
+  },
+  {
+    "symbol": "GOLDBEES",
+    "name": "NIPPON INDIA ETF GOLD BEES",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "CONSUMAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY INDIA CONSUMPTION ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCGROWTH",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY GROWTH SECTORS 15 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PSUBANK",
+    "name": "KOTAK NIFTY PSU BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANKIETF",
+    "name": "ICICI Prudential Nifty Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "SMALLGROWW",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY SMALLCAP 250 MOMENTUM QUALITY 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIBPB",
+    "name": "SBI MUTUAL FUND - SBI BSE PSU BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SELECTIPO",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE SELECT IPO ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "QGOLDHALF",
+    "name": "QUANTUM GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NEXT50BETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY NEXT 50 EXCHANGE TRADED FUND - UTI NIFTY N",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOMOMENTUM",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 200 MOMENTUM 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ICICIB22",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - BHARAT 22 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PSUBNKIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY PSU BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SENSEXAXIS",
+    "name": "AXIS BSE SENSEX ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NEXT50IETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GSEC5IETF",
+    "name": "ICICI Prudential Nifty 5 Yr Benchmark G-Sec ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "IVZBANKNF",
+    "name": "Invesco India Nifty Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "MOIPO",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL BSE SELECT IPO ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "CPSEETF",
+    "name": "CPSE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "TNIDETF",
+    "name": "TATA MUTUAL FUND - TATA NIFTY INDIA DIGITAL EXCHANGE TRADED FUND",
+    "sector": "Information Technology",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PSUBANKADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY PSU BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCNEXT50",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GILT5YBEES",
+    "name": "NIPPON INDIA ETF NIFTY 5 YR BENCHMARK GSEC",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANKADD",
+    "name": "DSP  MUTUAL FUND - DSP NIFTY BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "INFRAIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND-ICICI PRUDENTIAL NIFTY INFRASTRUCTURE ETF",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "IVZSENSEX",
+    "name": "Invesco India BSE Sensex ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOMIDMTM",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY MIDCAP150 MOMENTUM 50",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOINFRA",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL BSE INDIA INFRASTRUCTURE ETF",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ESENSEX",
+    "name": "Edelweiss BSE Sensex ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "COMMOIETF",
+    "name": "ICICI Prudential Nifty Commodities ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GROWWPSE",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY PSE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BBNPNBETF",
+    "name": "BARODA BNP PARIBAS MUTUAL FUND- BARODA BNP PARIBAS NIFTY BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWHOSPI",
+    "name": "GROWW MUTUAL FUND - GROWW BSE HOSPITALS ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWPSUBK",
+    "name": "Groww Nifty PSU Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "SENSEXADD",
+    "name": "DSP BSE SENSEX ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "DIVOPPBEES",
+    "name": "NIPPON INDIA ETF NIFTY DIVIDEND OPPORTUNITIES 50",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EBANKNIFTY",
+    "name": "Edelweiss Nifty Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "MOCAPITAL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY CAPITAL MARKET ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCVALUE",
+    "name": "HDFC Nifty 50 Value 20 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOPSE",
+    "name": "Motilal Oswal Nifty PSE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "HDFCSENSEX",
+    "name": "HDFC BSE SENSEX ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOM100",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL MOST SHARES M100 ETF GO",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ALPHA",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY ALPHA 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "FMCGIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY FMCG ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "DEFENCE",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE INDIA DEFENCE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ENEXT50",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MONEXT50",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCNIFBAN",
+    "name": "HDFC NIFTY BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ABSLBANETF",
+    "name": "Aditya Birla Sun Life Banking ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "CONSUMIETF",
+    "name": "ICICI PRUDENTIAL NIFTY INDIA CONSUMPTION ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SNXT50BETA",
+    "name": "UTI BSE Sensex Next 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "TOP10ADD",
+    "name": "DSP Nifty Top 10 Equal Weight ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "HDFCPSUBK",
+    "name": "HDFC MUTUAL FUND -HDFC NIFTY PSU BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANKPSU",
+    "name": "Mirae Asset Nifty PSU Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "MOTOUR",
+    "name": "Motilal Oswal Nifty India Tourism ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Hotels, Resorts & Hospitality"
+  },
+  {
+    "symbol": "ABSLNN50ET",
+    "name": "ADITYA BIRLA SUN LIFE NIFTY NEXT 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NEXT50ADD",
+    "name": "DSP Nifty Next 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "LIQUIDCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY 1D RATE LIQUID ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SENSEXETF",
+    "name": "Mirae Asset S&P BSE Sensex ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "LICNMID100",
+    "name": "LIC MF Nifty Midcap 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GSEC10ABSL",
+    "name": "ADITYABIRLASUNLIFEMF - ADITYA BIRLA SUN LIFE CRISIL 10 YEAR GILT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWDEFNC",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY INDIA DEFENCE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOGSEC",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL 5 YEAR G SEC ETF - GROWTH",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOMENTUM50",
+    "name": "Motilal Oswal Nifty 500 Momentum 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOHEALTH",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL S&P BSE HEALTHCARE ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SMALLCAP",
+    "name": "MIRAE ASSET MF-MIRAE ASSET NIFTY SMALLCAP 250 MOMENTUM QUALITY 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NEXT30ADD",
+    "name": "DSP BSE SENSEX Next 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ESG",
+    "name": "Mirae Asset Nifty 100 ESG Sector Leaders ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "TECH",
+    "name": "ADITYA BIRLA SUN LIFE MUTUAL FUND - ADITYA BIRLA SUN LIFE NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ALPHAETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 200 ALPHA 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWSLVR",
+    "name": "GROWW MUTUAL FUND - GROWW SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LOWVOL1",
+    "name": "KOTAK NIFTY 100 LOW VOLATILITY 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOLOWVOL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL S&P BSE LOW VOLATILITY ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "DIVIDEND",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE 500 DIVIDEND LEADERS 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "IT",
+    "name": "KOTAK NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCNIFIT",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIF100IETF",
+    "name": "ICICI Prudential Nifty 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MID150",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY MIDCAP 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SNXT30BEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA BSE SENSEX NEXT 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GSEC10YEAR",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 8-13 YR G-SEC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDCAPETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY MIDCAP 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "TATSILV",
+    "name": "TATA MUTUAL FUND TATA SILVER EXCHANGE TRADED FUND",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCBSE500",
+    "name": "HDFC BSE 500 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EVINDIA",
+    "name": "MIRAE ASSET MF - MIRAE ASSET NIFTY EV AND NEW AGE AUTOMOTIVE ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PVTBANKADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY PRIVATE BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVER1",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LOWVOLIETF",
+    "name": "ICICI Prudential Nifty 100 Low Volatility 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "SBINEQWETF",
+    "name": "SBI Nifty50 Equal Weight ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ITADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "CHEMICAL",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY CHEMICALS ETF",
+    "sector": "Metals, Mining & Chemicals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MSCIINDIA",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK MSCI INDIA ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MSCIADD",
+    "name": "DSP MUTUAL FUND - DSP MSCI INDIA ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDQ50ADD",
+    "name": "DSP  MUTUAL FUND - DSP NIFTY MIDCAP 150 QUALITY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOENERGY",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY ENERGY ETF",
+    "sector": "Power & Utilities",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ELMDIV",
+    "name": "EDELWEISS MF - EDELWEISS BSE LARGEMID (60:40) STABLE DIVIDEND 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PHARMABEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA NIFTY PHARMA ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVER001",
+    "name": "SILVER001",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "SILVERADD",
+    "name": "DSP  MUTUAL FUND - DSP SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "QUALITY30",
+    "name": "Kotak Nifty200 Quality 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "FMCGADD",
+    "name": "DSP Nifty FMCG ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOM30IETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND -  ICICI PRU NIFTY 200 MOMENTUM 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOMENTUM",
+    "name": "Aditya Birla Sun Life Nifty 200 Momentum 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GOLDCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYQLITY",
+    "name": "Aditya Birla Sun Life Nifty 200 Quality 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "EMULTIMQ",
+    "name": "Edelweiss Nifty500 Multicap Momentum Qual. 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "HDFCMOMENT",
+    "name": "HDFC Nifty 200 Momentum 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "LICNETFGSC",
+    "name": "LIC MF - LIC MF G-SEC LT ETF - GO",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PVTBANIETF",
+    "name": "ICICI PRUDENTIAL NIFTY PRIVATE BANK ETF - NIFTY PRIVATE BANK INDEX",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCNIF100",
+    "name": "HDFC Nifty 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MONIFTY100",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCMID150",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY MIDCAP 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANK10BETF",
+    "name": "BAJAJ FINSERV MUTUAL FUND - BAJAJ FINSERV BSE TOP 10 BANKS ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "FINIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRU NIFTY FIN SER EX-BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LTGILTCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY 8-13 YR G-SEC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCPVTBAN",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY PRIVATE BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BSLNIFTY",
+    "name": "Aditya Birla Sun Life Nifty 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ALPL30IETF",
+    "name": "ICICI PRUDENTIAL NIFTY ALPHA LOW VOLATILITY 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GILT10BETA",
+    "name": "UTI MUTUAL FUND - UTI NIFTY 10 YR BENCHMARK G-SEC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "VALUEAXIS",
+    "name": "Axis Nifty500 Value 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ITIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOMENTUM30",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY 200 MOMENTUM 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LTGILTBEES",
+    "name": "NIPPON INDIA ETF NIFTY 8-13 YR G-SEC LONG TERM GILT",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PVTBKGROWW",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY PRIVATE BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GSEC10ADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY 10 YR BENCHMARK G-SEC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDCAPIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY MIDCAP 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MONIFTY500",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 500 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWEV",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY EV & NEW AGE AUTOMOTIVE ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HEALTHCARE",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 500 HEALTHCARE ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BSE500IETF",
+    "name": "ICICI Prudential S&P BSE 500 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "NIF500BETA",
+    "name": "UTI Nifty 500 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "ENERGY",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY ENERGY ETF",
+    "sector": "Power & Utilities",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ITBEES",
+    "name": "NIPPON LIFE INDIA ASSET MANAGEMENT LIMITED",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "AUTOIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL  NIFTY AUTO ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOMNC",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY MNC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ABSLMSCIN",
+    "name": "ADITYA BIRLA SUN LIFE MF- ADITYA BIRLA SUN LIFE MSCI INDIA ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDCAPADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY MIDCAP 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ITETF",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY IT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ECAPINSURE",
+    "name": "Edelweiss BSE Capital Markets & Insurance ETF",
+    "sector": "Financial Services",
+    "industry": "Non-Banking Financial Services (NBFC)"
+  },
+  {
+    "symbol": "ENIFTY",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "LARGEMID50",
+    "name": "MIRAE ASSET BSE LARGEMID (60:40) STABLE DIVIDEND 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MNC",
+    "name": "Kotak Nifty MNC ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MON50EQUAL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY 50 EQUAL WEIGHT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "PVTBANK",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY PRIVATE BANK ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SILVERCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTY100EW",
+    "name": "KOTAK MAHINDRA MUTUAL FUND - KOTAK NIFTY 100 EQUAL WEIGHT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EVIETF",
+    "name": "ICICI PRUDENTIAL MF-ICICI PRUDENTIAL NIFTY EV & NEW AGE AUTOMOTIVE ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOSERVICE",
+    "name": "Motilal Oswal Nifty Services Sector ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GROWWCHEM",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY CHEMICALS ETF",
+    "sector": "Metals, Mining & Chemicals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWRAIL",
+    "name": "Groww Nifty India Railways PSU ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "BFSI",
+    "name": "Mirae Asset Nifty Financial Services ETF - RG",
+    "sector": "Financial Services",
+    "industry": "Non-Banking Financial Services (NBFC)"
+  },
+  {
+    "symbol": "SBINMID150",
+    "name": "SBI Nifty Midcap 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MAHKTECH",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET HANG SENG TECH ETF",
+    "sector": "Information Technology",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "QUAL30IETF",
+    "name": "ICICI Prudential Nifty 200 Quality 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "HEALTHY",
+    "name": "ADITYA BIRLA SUN LIFE MF-ADITYA BIRLA SUN LIFE NIFTY HEALTHCARE ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWGOLD",
+    "name": "GROWW MUTUAL FUND - GROWW GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWPOWER",
+    "name": "GROWW MUTUAL FUND - GROWW BSE POWER ETF",
+    "sector": "Power & Utilities",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ELM250",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY LARGEMIDCAP 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "TOP100CASE",
+    "name": "Zerodha Nifty 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "TOP20",
+    "name": "Mirae Asset Nifty Top 20 Equal Weight ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "NV20IETF",
+    "name": "ICICI PRUDENTIAL NIFTY50 VALUE 20 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ABSLPSE",
+    "name": "ADITYA BIRLA SUN LIFE MUTUAL FUND-ADITYA BIRLA SUN LIFE NIFTY PSE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWRLTY",
+    "name": "Groww Nifty Realty ETF",
+    "sector": "Realty & Construction",
+    "industry": "Real Estate Development & Residential"
+  },
+  {
+    "symbol": "INFRA",
+    "name": "Mirae Asset Nifty India Infrastr. & Logistics ETF",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Engineering, Procurement & Construction"
+  },
+  {
+    "symbol": "AONETOTAL",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE NIFTY TOTAL MARKET ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWCAPM",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY CAPITAL MARKETS ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWNIFTY",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOSMALL250",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY SMALLCAP 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBISMLETF",
+    "name": "SBI MUTUAL FUND - SBI NIFTY SMALLCAP 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOOILGAS",
+    "name": "Motilal Oswal Nifty Oil & Gas ETF",
+    "sector": "FMCG & Consumer Goods",
+    "industry": "Packaged Foods & Consumer Staples"
+  },
+  {
+    "symbol": "CONSUMER",
+    "name": "MIRAE ASSET MF- MIRAE ASSET NIFTY INDIA NEW AGE CONSUMPTION ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIVALETF",
+    "name": "SBI MUTUAL FUND - SBI NIFTY200 VALUE 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "CEMNTGROWW",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY CEMENTS ETF",
+    "sector": "Capital Goods & Infrastructure",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "AONEGOLD",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EQUAL200",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET BSE 200 EQUAL WEIGHT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOMMIDCAP",
+    "name": "Mirae Asset BSE Midcap 150 Momentum 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "NIFTYJBLK",
+    "name": "JIO BLACKROCK MUTUAL FUND - JIOBLACKROCK NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SML100CASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY SMALLCAP 100 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWN200",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY 200 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "ENERGYAXIS",
+    "name": "AXIS MUTUAL FUND - AXIS NIFTY ENERGY ETF",
+    "sector": "Power & Utilities",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EBANK10",
+    "name": "Edelweiss BSE Top 10 Bank ETF",
+    "sector": "Financial Services",
+    "industry": "Banking"
+  },
+  {
+    "symbol": "MULTICAP",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY 500 MULTICAP 50:25:25 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "VALUE",
+    "name": "Mirae Asset Nifty 500 Value 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "SECLEDBETA",
+    "name": "UTI MUTUAL FUND - UTI BSE INDIA SECTOR LEADERS EXCHANGE TRADED FUND",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "METAL",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY METAL ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "OILIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY OIL & GAS ETF",
+    "sector": "FMCG & Consumer Goods",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWMOM50",
+    "name": "Groww Nifty 500 Momentum 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "AONETMMQ50",
+    "name": "ANGEL ONE MF - ANGEL ONE NIFTY TOTAL MARKET MOMENTUM QUALITY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "AONESILVER",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE SILVER ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HEALTHADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY HEALTHCARE ETF",
+    "sector": "Healthcare & Pharmaceuticals",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MOBANK10",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL BSE TOP 10 BANKS ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "INSUREIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL BSE INSURANCE ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "CONS",
+    "name": "KOTAK NIFTY INDIA CONSUMPTION ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MID150CASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY MIDCAP 150 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MSCI360",
+    "name": "360 ONE MUTUAL FUND - 360 ONE MSCI INDIA ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SMALLADD",
+    "name": "DSP MUTUAL FUND - DSP NIFTY SMALLCAP 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWSC250",
+    "name": "Groww Nifty Smallcap 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "TOP15IETF",
+    "name": "ICICI Prudential Nifty Top 15 Equal Weight ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MOMETAL",
+    "name": "MOTILAL OSWAL MUTUAL FUND - MOTILAL OSWAL NIFTY METAL ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "FLEXIADD",
+    "name": "DSP Nifty500 Flexicap Quality 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "AONENIFTY",
+    "name": "ANGEL ONE MUTUAL FUND - ANGEL ONE NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SMALL250",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY SMALLCAP 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "EMETAL",
+    "name": "EDELWEISS MUTUAL FUND - EDELWEISS NIFTY METAL ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SMALLIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY SMALLCAP 250 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWMETAL",
+    "name": "GROWW MUTUAL FUND - GROWW NIFTY METAL ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HYBRIDETF",
+    "name": "MIRAE MF-MIRAE ASSET NIFTY200 MOMENTUM 30PLUS 8-13 YR G-SEC 50:50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "MIDSELIETF",
+    "name": "ICICI PRUDENTIAL BSE MIDCAP SELECT ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "TATAGOLD",
+    "name": "TATA MUTUAL FUND TATA GOLD EXCHANGE TRADED FUND",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "INTERNET",
+    "name": "MIRAE ASSET MUTUAL FUND - MIRAE ASSET NIFTY INDIA INTERNET ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NIFTYCASE",
+    "name": "ZERODHA FUND HOUSE - ZERODHA NIFTY 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "HDFCLOWVOL",
+    "name": "HDFC MUTUAL FUND - HDFC NIFTY100 LOW VOLATILITY 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "METALIETF",
+    "name": "ICICI Prudential Nifty Metal ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "MIDCAP",
+    "name": "KOTAK NIFTY MIDCAP 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BANK10ADD",
+    "name": "DSP MUTUAL FUND - DSP BSE TOP 10 BANKS ETF",
+    "sector": "Financial Services",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "VAL30IETF",
+    "name": "ICICI Prudential Nifty200 Value 30 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GOLDADD",
+    "name": "DSP MUTUAL FUND - DSP GOLD ETF",
+    "sector": "Consumer Discretionary",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "GROWWNET",
+    "name": "Groww Nifty India Internet ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "GROWWLOVOL",
+    "name": "Groww Nifty 500 Low Volatility 50 ETF",
+    "sector": "Diversified Industrials",
+    "industry": "Diversified Commercial Operations"
+  },
+  {
+    "symbol": "INSURADD",
+    "name": "DSP MUTUAL FUND - DSP BSE INSURANCE ETF",
+    "sector": "General",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "NXT100CASE",
+    "name": "ZERODHA MUTUAL FUND - ZERODHA NIFTY NEXT 100 ETF",
+    "sector": "General",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "BIRLATOTAL",
+    "name": "ADITYA BIRLA SUN LIFE MF - ADITYA BIRLA SUN LIFE BSE TOTAL MARKET ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations"
+  },
+  {
+    "symbol": "FARBEES",
+    "name": "NIPPON INDIA MUTUAL FUND - NIPPON INDIA CRISIL-IBX FAR GILT ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations"
+  },
+  {
+    "symbol": "HFTSEINDIA",
+    "name": "HDFC MUTUAL FUND - HDFC FTSE INDIA EQUITY ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations"
+  },
+  {
+    "symbol": "PHARMAIETF",
+    "name": "ICICI PRUDENTIAL MUTUAL FUND - ICICI PRUDENTIAL NIFTY PHARMA ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations"
+  },
+  {
+    "symbol": "SBIBANKNIF",
+    "name": "SBI NIFTY BANK ETF",
+    "sector": "General",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIDEFETF",
+    "name": "SBI MUTUAL FUND - SBI BSE INDIA DEFENCE ETF",
+    "sector": "General",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBIGOLD",
+    "name": "SBI GOLD ETF",
+    "sector": "General",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBINEXT50",
+    "name": "SBI NIFTY NEXT 50 ETF",
+    "sector": "General",
+    "industry": "Equities"
+  },
+  {
+    "symbol": "SBINIFTY50",
+    "name": "SBI NIFTY 50 ETF",
+    "sector": "General",
+    "industry": "Equities"
+  }
+]

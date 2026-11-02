@@ -238,10 +238,11 @@
       <span id="market-status-dot" class="feed-dot"></span>
       <span id="market-status-text">NSE LIVE</span>
       <span style="opacity: 0.3;">|</span>
-      <div id="eod-sync-badge-container" class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold cursor-help" title="Daily End-Of-Day Baseline Calculation Status">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="eod-sync-text">EOD Synced: 13 Oct, 4:30 PM</span>
-      </div>
+      <button id="eod-sync-badge-container" onclick="triggerManualEodSync(event)" class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 text-[10.5px] font-semibold cursor-pointer transition-all duration-150 shadow-sm group select-none" title="Click to manually synchronize universe stock data, prices & technical baselines (EOD)">
+        <i data-lucide="refresh-cw" id="eod-sync-icon" class="w-3 h-3 text-emerald-400 group-hover:rotate-180 transition-transform duration-300"></i>
+        <span id="eod-sync-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="eod-sync-text">EOD Synced: Checking...</span>
+      </button>
     </div>
   </div>
 
@@ -390,9 +391,18 @@
             </div>
 
             <!-- Quick Filter Pills -->
-            <div class="rec-filter-strip">
+            <div class="rec-filter-strip" id="rec-filter-pills-bar">
               <button data-filter="all" class="rec-pill active" onclick="setRecommendedFilter('all')">All Stocks</button>
               <button data-filter="emas-aligned" class="rec-pill" onclick="setRecommendedFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
+              <select id="select-screener-index" onchange="setScreenerIndexFilter(this.value)" class="px-2 py-0.5 text-[11px] font-bold bg-dark-bg border border-dark-border rounded text-amber-300 focus:outline-none focus:border-amber-400 cursor-pointer ml-auto" title="Filter stocks by Index Category">
+                <option value="all">⚡ All Indices</option>
+                <option value="nifty50">👑 Nifty 50 (Nifty50i)</option>
+                <option value="nifty100">🏛️ Nifty 100 (nifty100i)</option>
+                <option value="mc150">📈 Midcap 150 (MC150i)</option>
+                <option value="sc250">🚀 Smallcap 250 (SC250i)</option>
+                <option value="midsml400">🌐 MidSmall 400 (MIDSML400i)</option>
+                <option value="micro250">🔬 Microcap 250 (MiCRO250i)</option>
+              </select>
             </div>
           </div>
 
@@ -405,7 +415,7 @@
                   <th class="num cursor-pointer col-close" data-sort="close" title="Close Price (Sort)">Close (₹)</th>
                   <th class="num cursor-pointer col-chg" data-sort="changePercent" title="Change % (Sort)">Chg %</th>
                   <th class="num cursor-pointer col-vol" data-sort="volume" title="Volume (Sort)">Vol</th>
-                  <th class="num cursor-pointer col-rvol" data-sort="rvol" title="Relative Volume (Sort)">RVOL</th>
+                  <th class="num cursor-pointer col-rvol" data-sort="rvol" title="Relative Volume (RVOL): Today's Volume vs 20-Day Average Volume (e.g. 2.0x = 2x average volume). Click to sort.">RVOL</th>
                   <th style="text-align: center;" class="col-emas">
                     EMAs<br><span style="font-size: 8.5px; font-weight: normal; color: var(--text-muted);">10 20 50 150</span>
                   </th>
@@ -473,8 +483,8 @@
 
             <!-- Capacity Bar & Slots Left -->
             <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
-              <span id="wl-capacity-label">0 of 500 stocks filled</span>
-              <span id="wl-slots-left" class="text-amber-400 font-semibold">500 slots free</span>
+              <span id="wl-capacity-label">0 of 1000 stocks filled</span>
+              <span id="wl-slots-left" class="text-amber-400 font-semibold">1000 slots free</span>
             </div>
 
             <!-- Watchlist Quick Filter Pills (All Stocks / EMAs Aligned) -->
@@ -516,7 +526,7 @@
                       <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
                     </div>
                   </th>
-                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-amber-300 text-amber-400 font-bold transition-colors" data-wlsort="rvol" title="Sort by Relative Volume (RVOL)">
+                  <th class="py-2.5 px-2 text-right cursor-pointer hover:text-amber-300 text-amber-400 font-bold transition-colors" data-wlsort="rvol" title="Relative Volume (RVOL): Current Volume vs 20-Day Average Volume (e.g. 2.0x = 2x average volume). Click to sort.">
                     <div class="flex items-center justify-end gap-1">
                       <span>RVOL</span>
                       <i data-lucide="arrow-up-down" class="w-3 h-3 opacity-60"></i>
@@ -564,18 +574,15 @@
               </select>
             </div>
 
-            <!-- Middle: Compact Scope Dropdown with All 7 Options -->
-            <div class="flex items-center gap-1.5 flex-1 min-w-[130px] max-w-[210px]">
-              <select id="select-pricescan-scope" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
-                <option value="fno" selected>🎯 F&O Stocks (~200)</option>
-                <option value="current">⚡ Current Screener</option>
-                <option value="large">🏢 Large Cap (Top 100)</option>
-                <option value="mid">📈 Mid Cap (150)</option>
-                <option value="small">🚀 Small Cap (250)</option>
-                <option value="micro">🔬 Micro Cap</option>
-                <option value="midsmall400">🌐 MidSmall400 (400)</option>
-                <option value="universe">🌍 Full Universe (1.1k)</option>
-              </select>
+            <!-- Middle: Multi-Select Scope Picker -->
+            <div class="relative flex items-center flex-1 min-w-[140px] max-w-[230px]" id="wrapper-pricescan-scope">
+              <select id="select-pricescan-scope" class="hidden" multiple></select>
+              <button type="button" id="btn-pricescan-scope" onclick="toggleScopeDropdown('pricescan', event)" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 hover:border-blue-500 focus:outline-none focus:border-blue-500 flex items-center justify-between text-left truncate transition-colors shadow-sm cursor-pointer" title="Click to select multiple indices, watchlists, or screener">
+                <span class="truncate" id="label-pricescan-scope">🎯 F&O Stocks (~200)</span>
+                <svg class="w-3.5 h-3.5 ml-1 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+              <div id="dropdown-pricescan-scope" class="hidden absolute top-full left-0 mt-1 w-72 max-h-80 overflow-y-auto bg-dark-card border border-dark-border rounded-xl shadow-2xl z-50 p-2 text-xs divide-y divide-dark-border/40">
+              </div>
             </div>
 
             <!-- Market Cap 1k & 2k Toggles (Compact Space-saving UI) -->
@@ -595,11 +602,20 @@
             <div class="rec-filter-strip shrink-0" id="pricescan-filter-pills-bar">
               <button type="button" data-psfilter="all" class="rec-pill active" onclick="setPricescanFilter('all')">All Stocks</button>
               <button type="button" data-psfilter="emas-aligned" class="rec-pill" onclick="setPricescanFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
+              <select id="select-pricescan-index" onchange="setPricescanIndexFilter(this.value)" class="px-2 py-0.5 text-[11px] font-bold bg-dark-bg border border-dark-border rounded text-amber-300 focus:outline-none focus:border-amber-400 cursor-pointer" title="Filter Dscan matches by Index">
+                <option value="all">⚡ All Indices</option>
+                <option value="nifty50">👑 Nifty 50 (Nifty50i)</option>
+                <option value="nifty100">🏛️ Nifty 100 (nifty100i)</option>
+                <option value="mc150">📈 Midcap 150 (MC150i)</option>
+                <option value="sc250">🚀 Smallcap 250 (SC250i)</option>
+                <option value="midsml400">🌐 MidSmall 400 (MIDSML400i)</option>
+                <option value="micro250">🔬 Microcap 250 (MiCRO250i)</option>
+              </select>
             </div>
 
             <!-- Right: Compact Run Button, Copy Button & Match Count Badge -->
             <div class="flex items-center gap-1.5 shrink-0">
-              <button id="btn-run-pricescan" class="px-3 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer">
+              <button id="btn-run-pricescan" onclick="runPricePositionScan()" class="px-3 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer">
                 <i data-lucide="play" class="w-3 h-3 fill-current"></i>
                 <span>RUN</span>
               </button>
@@ -684,18 +700,15 @@
               </label>
             </div>
 
-            <!-- Middle: Scope Dropdown -->
-            <div class="flex items-center gap-1.5 flex-1 min-w-[130px] max-w-[190px]">
-              <select id="select-ssrvol-scope" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
-                <option value="current">⚡ Current Screener</option>
-                <option value="fno">🎯 F&O Stocks (~200)</option>
-                <option value="large">🏢 Large Cap (Top 100)</option>
-                <option value="mid">📈 Mid Cap (150)</option>
-                <option value="small">🚀 Small Cap (250)</option>
-                <option value="micro">🔬 Micro Cap</option>
-                <option value="midsmall400">🌐 MidSmall400 (400)</option>
-                <option value="universe">🌍 Full Universe (1.1k)</option>
-              </select>
+            <!-- Middle: Multi-Select Scope Picker -->
+            <div class="relative flex items-center flex-1 min-w-[140px] max-w-[230px]" id="wrapper-ssrvol-scope">
+              <select id="select-ssrvol-scope" class="hidden" multiple></select>
+              <button type="button" id="btn-ssrvol-scope" onclick="toggleScopeDropdown('ssrvol', event)" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 hover:border-amber-500 focus:outline-none focus:border-amber-500 flex items-center justify-between text-left truncate transition-colors shadow-sm cursor-pointer" title="Click to select multiple indices, watchlists, or screener">
+                <span class="truncate" id="label-ssrvol-scope">⚡ Current Screener</span>
+                <svg class="w-3.5 h-3.5 ml-1 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+              <div id="dropdown-ssrvol-scope" class="hidden absolute top-full left-0 mt-1 w-72 max-h-80 overflow-y-auto bg-dark-card border border-dark-border rounded-xl shadow-2xl z-50 p-2 text-xs divide-y divide-dark-border/40">
+              </div>
             </div>
 
             <!-- Market Cap 1k & 2k Toggles -->
@@ -713,7 +726,7 @@
 
             <!-- Right: Run Button, Copy Button & Count Badge -->
             <div class="flex items-center gap-1.5 shrink-0">
-              <button id="btn-run-ssrvol" class="px-3 py-1 text-xs font-bold bg-amber-500 hover:bg-amber-400 active:scale-95 text-black rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer font-sans">
+              <button id="btn-run-ssrvol" onclick="runSsRvolScan()" class="px-3 py-1 text-xs font-bold bg-amber-500 hover:bg-amber-400 active:scale-95 text-black rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer font-sans">
                 <i data-lucide="play" class="w-3 h-3 fill-current"></i>
                 <span>RUN</span>
               </button>
@@ -793,18 +806,15 @@
               </select>
             </div>
 
-            <!-- Middle: Scope Dropdown -->
-            <div class="flex items-center gap-1.5 flex-1 min-w-[130px] max-w-[210px]">
-              <select id="select-vcpscan-scope" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 focus:outline-none focus:border-purple-500 cursor-pointer">
-                <option value="current">⚡ Current Screener</option>
-                <option value="fno">🎯 F&O Stocks (~200)</option>
-                <option value="large">🏢 Large Cap (Top 100)</option>
-                <option value="mid">📈 Mid Cap (150)</option>
-                <option value="small">🚀 Small Cap (250)</option>
-                <option value="micro">🔬 Micro Cap</option>
-                <option value="midsmall400">🌐 MidSmall400 (400)</option>
-                <option value="universe">🌍 Full Universe (1.1k)</option>
-              </select>
+            <!-- Middle: Multi-Select Scope Picker -->
+            <div class="relative flex items-center flex-1 min-w-[140px] max-w-[230px]" id="wrapper-vcpscan-scope">
+              <select id="select-vcpscan-scope" class="hidden" multiple></select>
+              <button type="button" id="btn-vcpscan-scope" onclick="toggleScopeDropdown('vcpscan', event)" class="w-full px-2 py-1 text-xs font-medium bg-dark-bg border border-dark-border rounded-lg text-slate-200 hover:border-purple-500 focus:outline-none focus:border-purple-500 flex items-center justify-between text-left truncate transition-colors shadow-sm cursor-pointer" title="Click to select multiple indices, watchlists, or screener">
+                <span class="truncate" id="label-vcpscan-scope">⚡ Current Screener</span>
+                <svg class="w-3.5 h-3.5 ml-1 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+              <div id="dropdown-vcpscan-scope" class="hidden absolute top-full left-0 mt-1 w-72 max-h-80 overflow-y-auto bg-dark-card border border-dark-border rounded-xl shadow-2xl z-50 p-2 text-xs divide-y divide-dark-border/40">
+              </div>
             </div>
 
             <!-- Market Cap 1k & 2k Toggles -->
@@ -822,7 +832,7 @@
 
             <!-- Right: Run Button, Copy Button & Count Badge -->
             <div class="flex items-center gap-1.5 shrink-0">
-              <button id="btn-run-vcpscan" class="px-3 py-1 text-xs font-bold bg-purple-600 hover:bg-purple-500 active:scale-95 text-white rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer">
+              <button id="btn-run-vcpscan" onclick="runVcpScan()" class="px-3 py-1 text-xs font-bold bg-purple-600 hover:bg-purple-500 active:scale-95 text-white rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer">
                 <i data-lucide="play" class="w-3 h-3 fill-current"></i>
                 <span>RUN</span>
               </button>
@@ -1118,11 +1128,11 @@
 
                 <!-- Floating Live Volume Badge on Chart (Below AVWAP) -->
                 <div id="floating-volume-badge" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-lg px-2.5 py-1 shadow-xl text-[11px] font-mono gap-1.5 text-slate-300 w-fit flex-wrap">
-                  <span class="text-teal-400 font-semibold">Vol:</span>
-                  <strong id="vol-live-badge" class="text-teal-300">--</strong>
+                  <span class="text-teal-400 font-semibold cursor-help" title="Volume of currently hovered or latest candle">Vol:</span>
+                  <strong id="vol-live-badge" class="text-teal-300 cursor-help" title="Volume of currently hovered or latest candle">--</strong>
                   <span class="text-slate-600">|</span>
-                  <span id="badge-vol-ma-label" class="text-amber-400 font-medium">Avg:</span>
-                  <strong id="vol-avg-live-badge" class="text-amber-300">--</strong>
+                  <span id="badge-vol-ma-label" class="text-amber-400 font-medium cursor-help" title="Average Volume: 50-period Volume SMA by default (customizable in ⚙️ Indicators > Volume Intelligence)">Avg:</span>
+                  <strong id="vol-avg-live-badge" class="text-amber-300 cursor-help" title="Average Volume: 50-period Volume SMA by default (customizable in ⚙️ Indicators > Volume Intelligence)">--</strong>
                   <span id="badge-vi-divider" class="hidden text-slate-600">|</span>
                   <span id="badge-vi-pp-wrap" class="hidden text-sky-400 font-medium cursor-help" title="Pocket Pivot (PP): Count of Up days where Volume > highest down-day volume of the past 10 sessions (Cyan/Sky Blue Bar)">PP: <strong id="vi-pp-badge" class="text-sky-300">--</strong></span>
                   <span id="badge-vi-bs-wrap" class="hidden text-purple-400 font-medium cursor-help" title="Bull Snort (BS): Count of Up candles with monster volume surge >= 3.0x 50-VolMA (Purple Marker below candle)">BS: <strong id="vi-bs-badge" class="text-purple-300">--</strong></span>
@@ -3359,8 +3369,10 @@
 
   <!-- Global Reusable Company Info Component -->
   <script src="company-info.js?v=1.0.0"></script>
+  <!-- Client-Side Progressive Candle IndexedDB Cache -->
+  <script src="candle-cache.js?v=1.0.1"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.3.4"></script>
+  <script src="app.js?v=3.3.7"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->

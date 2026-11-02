@@ -106,6 +106,7 @@
       <div class="hidden md:flex items-center gap-1.5 ml-3 font-mono">
         <span id="badge-total" class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">0 Stocks</span>
         <span id="badge-fno" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">0 F&amp;O</span>
+        <span id="badge-indices" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">750 Indices</span>
         <span id="badge-sectors" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30">0 Sectors</span>
       </div>
     </div>
@@ -124,9 +125,16 @@
         <span>Copy Symbols</span>
       </button>
 
+      <!-- EOD Sync Button -->
+      <button id="eod-sync-badge-container" onclick="triggerManualEodSync(event)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 text-[11px] font-semibold cursor-pointer transition-all duration-150 shadow-sm group select-none" title="Click to manually synchronize latest universe stock data, prices & technical baselines (EOD)">
+        <i data-lucide="refresh-cw" id="eod-sync-icon" class="w-3 h-3 text-emerald-400 group-hover:rotate-180 transition-transform duration-300"></i>
+        <span id="eod-sync-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="eod-sync-text">EOD Synced</span>
+      </button>
+
       <!-- Reload -->
-      <button onclick="loadMasterUniverse(true)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer" title="Reload live data">
-        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+      <button onclick="loadMasterUniverse(true)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer" title="Reload table data">
+        <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
       </button>
 
       <!-- Back to App -->
@@ -160,6 +168,20 @@
         <option value="ALL">All Instruments</option>
         <option value="FNO_ONLY">F&amp;O Derivatives Only</option>
         <option value="NON_FNO">Cash / Non-F&amp;O Only</option>
+      </select>
+    </div>
+
+    <!-- Official Index Category Filter -->
+    <div>
+      <select id="filter-index" onchange="handleFilterChange()" class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-400 cursor-pointer" title="Filter stocks by official NSE Index membership">
+        <option value="ALL">⚡ All Indices</option>
+        <option value="Nifty50i">👑 Nifty 50 (Nifty50i)</option>
+        <option value="nifty100i">🏛️ Nifty 100 (nifty100i)</option>
+        <option value="MC150i">📈 Midcap 150 (MC150i)</option>
+        <option value="SC250i">🚀 Smallcap 250 (SC250i)</option>
+        <option value="MIDSML400i">🌐 MidSmall 400 (MIDSML400i)</option>
+        <option value="MiCRO250i">🔬 Microcap 250 (MiCRO250i)</option>
+        <option value="NON_INDEX">Non-Index Stocks</option>
       </select>
     </div>
 
@@ -219,6 +241,7 @@
           <th class="py-2 px-3 freeze-3 cursor-pointer hover:text-white min-w-[200px]" onclick="handleSort('name')">Company Name ⬍</th>
           <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('exchange')">Exch</th>
           <th class="py-2 px-3 text-center cursor-pointer hover:text-white" onclick="handleSort('fno')">F&amp;O</th>
+          <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('indexCategory')">Index / Tags ⬍</th>
           <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('sector')">Sector</th>
           <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('industry')">Industry</th>
           <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('marketCap')">Market Cap (₹ Cr) ⬍</th>
@@ -240,14 +263,14 @@
           <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('darvasGreen_weekly')">Darvas Green (W)</th>
           <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('darvasBottom_weekly')">Darvas Bot (W)</th>
           <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('rsi')">RSI (14)</th>
-          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('rvol')">RVOL</th>
+          <th class="py-2 px-3 text-right cursor-pointer hover:text-white" onclick="handleSort('rvol')" title="Relative Volume (RVOL): Today's Volume vs 20-Day Average Volume. Click to sort.">RVOL</th>
           <th class="py-2 px-3 cursor-pointer hover:text-white" onclick="handleSort('autoAdded')">Source</th>
           <th class="py-2 px-3">Last Synced</th>
         </tr>
       </thead>
       <tbody id="sheet-tbody">
         <tr>
-          <td colspan="29" class="py-16 text-center text-slate-400 font-sans">
+          <td colspan="30" class="py-16 text-center text-slate-400 font-sans">
             <div class="flex flex-col items-center gap-2">
               <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-sky-400"></i>
               <span>Loading authentic Master Universe (3,600+ securities)...</span>
@@ -284,6 +307,7 @@
       sectors: {},
       search: '',
       fnoFilter: 'ALL',
+      indexFilter: 'ALL',
       capFilter: 'ALL',
       sectorFilter: 'ALL',
       circuitFilter: 'ALL',
@@ -301,7 +325,7 @@
 
     async function loadMasterUniverse(forceRefresh = false) {
       const tbody = document.getElementById('sheet-tbody');
-      tbody.innerHTML = `<tr><td colspan="29" class="py-16 text-center text-slate-400 font-sans">
+      tbody.innerHTML = `<tr><td colspan="30" class="py-16 text-center text-slate-400 font-sans">
         <div class="flex flex-col items-center gap-2">
           <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-sky-400"></i>
           <span>Loading Master Universe...</span>
@@ -326,12 +350,15 @@
         // Update Badges
         document.getElementById('badge-total').textContent = `${state.totalCount.toLocaleString()} Stocks`;
         document.getElementById('badge-fno').textContent = `${(data.fnoCount || 0).toLocaleString()} F&O Active`;
+        if (document.getElementById('badge-indices')) {
+          document.getElementById('badge-indices').textContent = `${(data.indexStocksCount || 500).toLocaleString()} Indices`;
+        }
         document.getElementById('badge-sectors').textContent = `${Object.keys(state.sectors).length} Sectors`;
 
         populateSectorOptions();
         applyFilters();
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="29" class="py-12 text-center text-rose-400 font-sans">
+        tbody.innerHTML = `<tr><td colspan="30" class="py-12 text-center text-rose-400 font-sans">
           Error loading Master Universe: ${err.message}. If authentication is required, log in as admin.
         </td></tr>`;
       }
@@ -353,6 +380,7 @@
     function handleFilterChange() {
       state.search = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
       state.fnoFilter = document.getElementById('filter-fno')?.value || 'ALL';
+      state.indexFilter = document.getElementById('filter-index')?.value || 'ALL';
       state.capFilter = document.getElementById('filter-cap')?.value || 'ALL';
       state.sectorFilter = document.getElementById('filter-sector')?.value || 'ALL';
       state.circuitFilter = document.getElementById('filter-circuit')?.value || 'ALL';
@@ -402,6 +430,25 @@
         // FNO
         if (fnoFilter === 'FNO_ONLY' && !s.fno) return false;
         if (fnoFilter === 'NON_FNO' && s.fno) return false;
+
+        // Official Index Filter
+        if (state.indexFilter && state.indexFilter !== 'ALL') {
+          if (state.indexFilter === 'NON_INDEX') {
+            if ((s.indexTags && s.indexTags.length > 0) || s.indexCategory) return false;
+          } else {
+            const req = state.indexFilter.toLowerCase();
+            const tags = (s.indexTags || []).map(t => String(t).toLowerCase());
+            const cat = String(s.indexCategory || '').toLowerCase();
+            const matches = tags.includes(req) || cat.includes(req) ||
+              (req === 'nifty50i' && s.isNifty50) ||
+              (req === 'nifty100i' && s.isNifty100) ||
+              (req === 'mc150i' && s.isMidcap150) ||
+              (req === 'sc250i' && s.isSmallcap250) ||
+              (req === 'midsml400i' && s.isMidSmall400) ||
+              (req === 'micro250i' && (s.isMicrocap250 || (Array.isArray(s.indexTags) && s.indexTags.includes('MiCRO250i'))));
+            if (!matches) return false;
+          }
+        }
 
         // Cap tier
         if (capFilter !== 'ALL') {
@@ -469,7 +516,7 @@
       document.getElementById('btn-next').disabled = curPage >= totalPages;
 
       if (items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="29" class="py-12 text-center text-slate-500 font-sans">
+        tbody.innerHTML = `<tr><td colspan="30" class="py-12 text-center text-slate-500 font-sans">
           No stocks matched the active filters.
         </td></tr>`;
         return;
@@ -487,6 +534,21 @@
           ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-slate-800 text-slate-400 border border-slate-700">NO BAND</span>'
           : `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">${cb}</span>`;
 
+        const tags = s.indexTags || [];
+        let indexBadgeHtml = '<span class="text-slate-600 text-[10px]">—</span>';
+        if (tags.length > 0) {
+          indexBadgeHtml = tags.map(tag => {
+            let color = 'bg-slate-800 text-slate-300 border-slate-700';
+            if (tag === 'Nifty50i') color = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+            else if (tag === 'nifty100i') color = 'bg-blue-500/20 text-blue-300 border-blue-500/40';
+            else if (tag === 'MC150i') color = 'bg-purple-500/20 text-purple-300 border-purple-500/40';
+            else if (tag === 'SC250i') color = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+            else if (tag === 'MIDSML400i') color = 'bg-teal-500/20 text-teal-300 border-teal-500/40';
+            else if (tag === 'MiCRO250i') color = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+            return `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold border font-mono tracking-tight mr-1 ${color}">${tag}</span>`;
+          }).join('');
+        }
+
         return `
           <tr class="sheet-row border-b border-slate-900">
             <td class="py-1.5 px-2 text-center text-slate-500 freeze-1">${rowNum}</td>
@@ -503,6 +565,7 @@
             <td class="py-1.5 px-3 text-center">
               ${isFno ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">F&amp;O</span>' : '<span class="px-1.5 py-0.2 rounded text-[9px] text-slate-500">Cash</span>'}
             </td>
+            <td class="py-1.5 px-3 font-mono">${indexBadgeHtml}</td>
             <td class="py-1.5 px-3 font-semibold text-teal-300">${s.sector || 'General'}</td>
             <td class="py-1.5 px-3 text-slate-400 truncate max-w-[160px]">${s.industry || 'Diversified'}</td>
             <td class="py-1.5 px-3 text-right font-bold text-slate-200">${mcap}</td>
@@ -524,7 +587,7 @@
             <td class="py-1.5 px-3 text-right font-semibold text-emerald-400">${s.darvasGreen_weekly ? '₹' + Number(s.darvasGreen_weekly).toFixed(1) : '--'}</td>
             <td class="py-1.5 px-3 text-right text-rose-400">${s.darvasBottom_weekly ? '₹' + Number(s.darvasBottom_weekly).toFixed(1) : '--'}</td>
             <td class="py-1.5 px-3 text-right text-slate-300">${s.rsi ? Number(s.rsi).toFixed(1) : '--'}</td>
-            <td class="py-1.5 px-3 text-right text-cyan-400">${s.rvol ? Number(s.rvol).toFixed(2) + 'x' : '--'}</td>
+            <td class="py-1.5 px-3 text-right text-cyan-400" title="Relative Volume (RVOL): ${s.rvol ? Number(s.rvol).toFixed(2) + 'x vs 20-Day Average Volume' : '--'}">${s.rvol ? Number(s.rvol).toFixed(2) + 'x' : '--'}</td>
             <td class="py-1.5 px-3">${s.autoAdded ? '<span class="text-purple-400 font-semibold">Auto</span>' : (s.adminAdded ? '<span class="text-amber-400 font-semibold">Admin</span>' : '<span class="text-slate-500">Base</span>')}</td>
             <td class="py-1.5 px-3 text-slate-500 text-[10px]">${(s.lastPriceUpdated || '').split('T')[0]}</td>
           </tr>
@@ -549,9 +612,132 @@
       });
     }
 
+    // EOD Sync Handlers
+    let eodSyncPollingInterval = null;
+
+    function formatEodSyncDate(dateStr) {
+      if (!dateStr || dateStr === 'NEVER' || dateStr === 'Today') return '';
+      try {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        }
+      } catch (_) {}
+      return dateStr;
+    }
+
+    function renderEodBadgeSyncingState(progress) {
+      const elBtn = document.getElementById('eod-sync-badge-container');
+      const elText = document.getElementById('eod-sync-text');
+      const elIcon = document.getElementById('eod-sync-icon');
+      const elDot = document.getElementById('eod-sync-dot');
+
+      if (elBtn) {
+        elBtn.disabled = true;
+        elBtn.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'hover:bg-emerald-500/20');
+        elBtn.classList.add('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30', 'cursor-wait');
+      }
+      if (elIcon) elIcon.classList.add('animate-spin');
+      if (elDot) {
+        elDot.classList.remove('bg-emerald-400');
+        elDot.classList.add('bg-amber-400');
+      }
+      if (elText) {
+        const count = progress?.syncedCount || 0;
+        const total = progress?.totalCount || 3739;
+        elText.textContent = count > 0 ? `Syncing EOD (${count}/${total})...` : 'Syncing EOD Data...';
+      }
+    }
+
+    function renderEodBadgeCompletedState(data) {
+      const elBtn = document.getElementById('eod-sync-badge-container');
+      const elText = document.getElementById('eod-sync-text');
+      const elIcon = document.getElementById('eod-sync-icon');
+      const elDot = document.getElementById('eod-sync-dot');
+
+      if (elBtn) {
+        elBtn.disabled = false;
+        elBtn.classList.remove('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30', 'cursor-wait');
+        elBtn.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'hover:bg-emerald-500/20');
+      }
+      if (elIcon) elIcon.classList.remove('animate-spin');
+      if (elDot) {
+        elDot.classList.remove('bg-amber-400');
+        elDot.classList.add('bg-emerald-400');
+      }
+      if (elText && data) {
+        const timeStr = data.lastSyncTimeIST || '4:30 PM';
+        const dateStr = formatEodSyncDate(data.lastSyncDateIST);
+        const label = dateStr ? `EOD Synced: ${dateStr}, ${timeStr}` : `EOD Synced: ${timeStr}`;
+        elText.textContent = label;
+        if (elBtn) {
+          elBtn.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST). Click to manually sync latest data.`;
+        }
+      }
+    }
+
+    async function fetchAndRenderEodSyncStatus() {
+      try {
+        const res = await fetch(`/api/system/eod-status?t=${Date.now()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success) {
+          if (data.isSyncing) {
+            renderEodBadgeSyncingState(data.progress);
+            if (!eodSyncPollingInterval) startEodStatusPolling();
+          } else {
+            renderEodBadgeCompletedState(data);
+          }
+        }
+      } catch (_) {}
+    }
+
+    function startEodStatusPolling() {
+      if (eodSyncPollingInterval) clearInterval(eodSyncPollingInterval);
+      eodSyncPollingInterval = setInterval(async () => {
+        try {
+          const sRes = await fetch(`/api/system/eod-status?t=${Date.now()}`);
+          if (!sRes.ok) return;
+          const statusData = await sRes.json();
+          if (statusData.isSyncing) {
+            renderEodBadgeSyncingState(statusData.progress);
+          } else {
+            clearInterval(eodSyncPollingInterval);
+            eodSyncPollingInterval = null;
+            renderEodBadgeCompletedState(statusData);
+            loadMasterUniverse(true);
+          }
+        } catch (_) {}
+      }, 3000);
+    }
+
+    async function triggerManualEodSync(e) {
+      if (e) e.preventDefault();
+      const elBtn = document.getElementById('eod-sync-badge-container');
+      if (elBtn && elBtn.disabled) return;
+
+      renderEodBadgeSyncingState({ syncedCount: 0, totalCount: 3739 });
+
+      try {
+        const res = await fetch('/api/system/eod-sync/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (!res.ok && !data.isSyncing) {
+          throw new Error(data.error || 'Failed to start EOD sync');
+        }
+        startEodStatusPolling();
+      } catch (err) {
+        alert('Failed to trigger EOD sync: ' + err.message);
+        fetchAndRenderEodSyncStatus();
+      }
+    }
+
     // Auto-run on mount
     document.addEventListener('DOMContentLoaded', () => {
       loadMasterUniverse();
+      fetchAndRenderEodSyncStatus();
     });
   </script>
 </body>

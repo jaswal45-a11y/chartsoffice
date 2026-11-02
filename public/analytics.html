@@ -284,79 +284,112 @@
             <div>
               <div class="flex items-center gap-2">
                 <h2 class="text-sm font-bold text-white tracking-wide uppercase">Market Breadth Diagnostics</h2>
-                <span id="badge-breadth-summary" class="hidden text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"></span>
+                <span id="badge-breadth-latest-date" class="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  Daily History Matrix
+                </span>
               </div>
-              <p class="text-xs text-slate-400">20 SMA & 50 SMA institutional participation analysis across universe & sectors</p>
+              <p class="text-xs text-slate-400">Daily Institutional Participation · Advances/Declines, 4% Thrust & Moving Average Participation (Universe & MidSmall 400)</p>
             </div>
           </div>
 
-          <!-- Sector Breadth Filter & Controls -->
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-slate-400 font-medium hidden sm:inline" title="Filter breadth across universe or by specific sector">Filter:</label>
-            <select id="select-breadth-sector" onchange="handleBreadthSectorChange(this.value)" class="px-2.5 py-1.5 text-xs font-semibold bg-dark-bg border border-dark-border rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer" title="Select sector or universe">
-              <option value="all">Universe (All Stocks)</option>
-            </select>
-            <button onclick="loadAnalyticsData()" class="p-1.5 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-400 hover:text-white transition-colors cursor-pointer" title="Refresh Breadth Data">
-              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <!-- Controls: Range Filter, Search, CSV Export, Sync, Collapse -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Range Selector Pills -->
+            <div class="flex items-center bg-dark-bg p-1 rounded-xl border border-dark-border text-xs" id="breadth-range-pills">
+              <button onclick="setBreadthRange('1m')" data-range="1m" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-semibold cursor-pointer">1M</button>
+              <button onclick="setBreadthRange('3m')" data-range="3m" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-semibold cursor-pointer">3M</button>
+              <button onclick="setBreadthRange('6m')" data-range="6m" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-semibold cursor-pointer">6M</button>
+              <button onclick="setBreadthRange('1y')" data-range="1y" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold shadow-sm transition-all cursor-pointer">1Y</button>
+              <button onclick="setBreadthRange('2y')" data-range="2y" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-semibold cursor-pointer">2Y</button>
+              <button onclick="setBreadthRange('all')" data-range="all" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-semibold cursor-pointer">All</button>
+            </div>
+
+            <!-- Search Date / Day -->
+            <div class="relative">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="breadth-search-input" oninput="handleBreadthSearch(this.value)" placeholder="Search Date / Day..." class="pl-8 pr-3 py-1.5 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-36 sm:w-44 transition-all">
+            </div>
+
+            <!-- Export to CSV Button -->
+            <button onclick="exportBreadthCsv()" class="p-1.5 px-3 rounded-xl bg-dark-bg hover:bg-emerald-500/10 border border-dark-border hover:border-emerald-500/30 text-slate-300 hover:text-emerald-400 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold" title="Export Market Breadth History to CSV">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Export CSV</span>
             </button>
+
+            <!-- Refresh / Sync Button -->
+            <button onclick="syncTodayBreadth()" class="p-1.5 px-3 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold" title="Compute & Record Today's Breadth Snapshot">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-blue-400" id="icon-sync-breadth"></i>
+              <span>Sync Today</span>
+            </button>
+
+            <!-- Collapse / Expand Button -->
             <button onclick="toggleAnalyticsSection('breadth')" class="p-1.5 px-2 rounded-xl bg-dark-bg hover:bg-dark-accent border border-dark-border text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 text-xs" title="Collapse / Expand Breadth Matrix">
               <i data-lucide="chevron-up" id="icon-collapse-breadth" class="w-4 h-4 text-emerald-400 transition-transform"></i>
             </button>
           </div>
         </div>
 
-        <!-- Breadth Diagnostics 3-Card Matrix Content -->
-        <div id="content-breadth" class="grid grid-cols-1 md:grid-cols-3 gap-4 transition-all duration-200">
-          
-          <!-- DIAL 1: 20 SMA Breadth -->
-          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-4" title="Percentage of stocks trading above their 20-day Simple Moving Average">
-            <div class="flex flex-col gap-1">
-              <span class="text-xs font-semibold text-slate-400">Stocks &gt; 20 SMA</span>
-              <span class="text-2xl font-mono font-bold text-blue-400" id="val-breadth-20sma">--%</span>
-              <span class="text-[11px] text-slate-500">Short-Term Momentum</span>
-            </div>
-            <div class="relative w-16 h-16 flex items-center justify-center">
-              <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-                <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="circle-breadth-20sma" class="text-blue-500 transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-              <i data-lucide="trending-up" class="w-4 h-4 text-blue-400 absolute"></i>
-            </div>
+        <!-- Latest Session Quick Summary Highlights -->
+        <div id="breadth-quick-summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+          <!-- Dynamically Populated -->
+        </div>
+
+        <!-- Daily Market Breadth History Table -->
+        <div id="content-breadth" class="relative rounded-xl border border-dark-border overflow-hidden bg-dark-bg/40">
+          <div class="overflow-x-auto max-h-[580px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse" id="table-market-breadth">
+              <thead class="sticky top-0 z-20 bg-dark-card/95 backdrop-blur border-b border-dark-border shadow-md">
+                <!-- Super Group Headers -->
+                <tr class="text-[10px] uppercase font-bold text-slate-400 border-b border-dark-border/60">
+                  <th colspan="2" class="px-3 py-1.5 text-center bg-slate-800/40 border-r border-dark-border/50 text-slate-300">
+                    Calendar
+                  </th>
+                  <th colspan="4" class="px-3 py-1.5 text-center bg-blue-900/10 border-r border-dark-border/50 text-blue-300">
+                    Market Momentum
+                  </th>
+                  <th colspan="5" class="px-3 py-1.5 text-center bg-emerald-900/10 border-r border-dark-border/50 text-emerald-300">
+                    Clean Universe Breadth (Ex-ETFs/Indices · 3,321 Stocks)
+                  </th>
+                  <th colspan="5" class="px-3 py-1.5 text-center bg-purple-900/10 text-purple-300">
+                    Nifty MidSmall 400 Breadth (400 Stocks)
+                  </th>
+                </tr>
+                <!-- Column Headers (16 Columns) -->
+                <tr class="text-[11px] font-semibold text-slate-300 border-b border-dark-border">
+                  <th class="px-3 py-2 text-left sticky left-0 z-10 bg-dark-card border-r border-dark-border/40">Date</th>
+                  <th class="px-2.5 py-2 text-center sticky left-[95px] z-10 bg-dark-card border-r border-dark-border/60">Day</th>
+                  
+                  <th class="px-3 py-2 text-right text-emerald-400">Advances</th>
+                  <th class="px-3 py-2 text-right text-rose-400">Declines</th>
+                  <th class="px-3 py-2 text-right text-emerald-400">4%+ Up</th>
+                  <th class="px-3 py-2 text-right text-rose-400 border-r border-dark-border/50">4%+ Down</th>
+
+                  <th class="px-2.5 py-2 text-center text-slate-200">% &gt; 10 MA</th>
+                  <th class="px-2.5 py-2 text-center text-slate-200">% &gt; 20 MA</th>
+                  <th class="px-2.5 py-2 text-center text-slate-200">% &gt; 50 MA</th>
+                  <th class="px-2.5 py-2 text-center text-slate-200">% &gt; 150 MA</th>
+                  <th class="px-2.5 py-2 text-center text-slate-200 border-r border-dark-border/50">% &gt; 200 MA</th>
+
+                  <th class="px-2.5 py-2 text-center text-purple-200">MS400 % &gt; 10</th>
+                  <th class="px-2.5 py-2 text-center text-purple-200">MS400 % &gt; 20</th>
+                  <th class="px-2.5 py-2 text-center text-purple-200">MS400 % &gt; 50</th>
+                  <th class="px-2.5 py-2 text-center text-purple-200">MS400 % &gt; 150</th>
+                  <th class="px-2.5 py-2 text-center text-purple-200">MS400 % &gt; 200</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-market-breadth" class="divide-y divide-dark-border/30 font-mono text-[11px]">
+                <!-- Rows loaded via JS -->
+              </tbody>
+            </table>
           </div>
 
-          <!-- DIAL 2: 50 SMA Breadth -->
-          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex items-center justify-between gap-4" title="Percentage of stocks trading above their 50-day Simple Moving Average">
-            <div class="flex flex-col gap-1">
-              <span class="text-xs font-semibold text-slate-400">Stocks &gt; 50 SMA</span>
-              <span class="text-2xl font-mono font-bold text-emerald-400" id="val-breadth-50sma">--%</span>
-              <span class="text-[11px] text-slate-500">Intermediate Trend Health</span>
-            </div>
-            <div class="relative w-16 h-16 flex items-center justify-center">
-              <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-                <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="circle-breadth-50sma" class="text-emerald-500 transition-all duration-700" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-              <i data-lucide="activity" class="w-4 h-4 text-emerald-400 absolute"></i>
+          <!-- Table Footer & Pagination -->
+          <div class="px-4 py-2.5 bg-dark-card/90 border-t border-dark-border flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+            <div id="breadth-pagination-info">Showing 0 rows</div>
+            <div class="flex items-center gap-1.5" id="breadth-pagination-controls">
+              <!-- Pagination buttons -->
             </div>
           </div>
-
-          <!-- CARD 3: Market Sentiment & Advance/Decline -->
-          <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-2.5" title="Overall market momentum diagnosis and advance/decline ratio">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-xs font-semibold text-slate-400">Market Regime:</span>
-              <span id="badge-sentiment-status" class="px-2 py-0.5 rounded-md text-[11px] font-bold border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-                Healthy Bullish ⚡
-              </span>
-            </div>
-            <p id="text-sentiment-desc" class="text-[11px] text-slate-400 line-clamp-1">
-              Strong participation above 20 & 50 SMAs. High probability pullback buys.
-            </p>
-            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1.5 border-t border-dark-border/40">
-              <span>A/D Ratio: <strong id="val-ad-ratio" class="text-emerald-400">2.95</strong></span>
-              <span>52W H/L: <strong id="val-high-low" class="text-white">42 / 8</strong></span>
-            </div>
-          </div>
-
         </div>
       </section>
 
@@ -674,7 +707,7 @@
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('ltp')">LTP (₹) ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('changePercent')">1D % ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('rsi')">RSI(14) ⇅</th>
-                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('rvol')">RVOL ⇅</th>
+                  <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('rvol')" title="Relative Volume (RVOL): Volume compared to Average Volume (Default: 20-Day baseline). Click to sort.">RVOL ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-center" title="10, 20, 50, 150 EMA Traffic Light Posture (🟢 Above / 🔴 Below)">EMAs (10/20/50/150)</th>
                   <th id="th-explore-ema-cross" class="py-2.5 px-3 font-semibold text-center cursor-pointer hover:text-white" onclick="handleExploreSort('crossDaysAgo')" title="Days elapsed since the selected EMA crossover occurred">EMA Cross (10/20) ⇅</th>
                   <th class="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white" onclick="handleExploreSort('pctFrom52wHigh')">% 52WH ⇅</th>
@@ -1123,11 +1156,11 @@
 
             <!-- Floating Live Volume Badge on Chart -->
             <div id="floating-volume-badge" class="pointer-events-auto flex items-center bg-slate-900/85 backdrop-blur-md border border-slate-700/80 rounded-lg px-2.5 py-1 shadow-xl text-[11px] font-mono gap-1.5 text-slate-300 w-fit flex-wrap">
-              <span class="text-teal-400 font-semibold">Vol:</span>
-              <strong id="vol-live-badge" class="text-teal-300">--</strong>
+              <span class="text-teal-400 font-semibold cursor-help" title="Volume of currently hovered or latest candle">Vol:</span>
+              <strong id="vol-live-badge" class="text-teal-300 cursor-help" title="Volume of currently hovered or latest candle">--</strong>
               <span class="text-slate-600">|</span>
-              <span id="badge-vol-ma-label" class="text-amber-400 font-medium">Avg:</span>
-              <strong id="vol-avg-live-badge" class="text-amber-300">--</strong>
+              <span id="badge-vol-ma-label" class="text-amber-400 font-medium cursor-help" title="Average Volume: 50-period Volume SMA by default (customizable in ⚙️ Indicators > Volume Intelligence)">Avg:</span>
+              <strong id="vol-avg-live-badge" class="text-amber-300 cursor-help" title="Average Volume: 50-period Volume SMA by default (customizable in ⚙️ Indicators > Volume Intelligence)">--</strong>
               <span id="badge-vi-divider" class="hidden text-slate-600">|</span>
               <span id="badge-vi-pp-wrap" class="hidden text-sky-400 font-medium cursor-help" title="Pocket Pivot (PP): Count of Up days where Volume > highest down-day volume of the past 10 sessions (Cyan/Sky Blue Bar)">PP: <strong id="vi-pp-badge" class="text-sky-300">--</strong></span>
               <span id="badge-vi-bs-wrap" class="hidden text-purple-400 font-medium cursor-help" title="Bull Snort (BS): Count of Up candles with monster volume surge >= 3.0x 50-VolMA (Purple Marker below candle)">BS: <strong id="vi-bs-badge" class="text-purple-300">--</strong></span>
@@ -2431,8 +2464,10 @@
 
   <!-- Global Reusable Company Info Component -->
   <script src="company-info.js?v=1.0.0"></script>
+  <!-- Client-Side Progressive Candle IndexedDB Cache -->
+  <script src="candle-cache.js?v=1.0.1"></script>
   <!-- Dedicated Analytics JS Script -->
-  <script src="analytics.js?v=2.7.4"></script>
+  <script src="analytics.js?v=2.7.7"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
 

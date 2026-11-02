@@ -73,9 +73,9 @@ function formatRvolBadge(rvol) {
   const val = typeof rvol === 'number' && !isNaN(rvol) ? rvol : 1.0;
   const isHigh = val >= 1.20;
   if (isHigh) {
-    return `<span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30" title="RVOL ≥ 1.20x (${(val * 100).toFixed(0)}%)">${val.toFixed(2)}x</span>`;
+    return `<span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30" title="Relative Volume (RVOL): ${val.toFixed(2)}x vs 20-Day Avg Volume (Surge ≥ 1.20x)">${val.toFixed(2)}x</span>`;
   }
-  return `<span class="font-mono text-[11px] text-slate-300" title="RVOL: ${val.toFixed(2)}x">${val.toFixed(2)}x</span>`;
+  return `<span class="font-mono text-[11px] text-slate-300" title="Relative Volume (RVOL): ${val.toFixed(2)}x vs 20-Day Avg Volume">${val.toFixed(2)}x</span>`;
 }
 window.formatRvolBadge = formatRvolBadge;
 
@@ -131,6 +131,52 @@ function updateOnChartCircuitBadge(stockOrData) {
   }
 }
 
+function stockMatchesIndex(stock, indexKey) {
+  if (!stock || !indexKey || indexKey === 'all') return true;
+  const k = String(indexKey).toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (k === 'nifty50' || k === 'nifty50i') return stock.isNifty50 === true || (Array.isArray(stock.indexTags) && stock.indexTags.includes('Nifty50i'));
+  if (k === 'nifty100' || k === 'nifty100i') return stock.isNifty100 === true || (Array.isArray(stock.indexTags) && stock.indexTags.includes('nifty100i'));
+  if (k === 'mc150' || k === 'mc150i' || k === 'midcap150') return stock.isMidcap150 === true || (Array.isArray(stock.indexTags) && stock.indexTags.includes('MC150i'));
+  if (k === 'sc250' || k === 'sc250i' || k === 'smallcap250') return stock.isSmallcap250 === true || (Array.isArray(stock.indexTags) && stock.indexTags.includes('SC250i'));
+  if (k === 'midsml400' || k === 'midsml400i' || k === 'midsmall400' || k === 'midsmall400i') return stock.isMidSmall400 === true || (Array.isArray(stock.indexTags) && stock.indexTags.includes('MIDSML400i'));
+  if (k === 'micro250' || k === 'micro250i' || k === 'microcap250') return stock.isMicrocap250 === true || (Array.isArray(stock.indexTags) && stock.indexTags.includes('MiCRO250i'));
+  return false;
+}
+
+function getIndexBadgeHtml(stockOrSymbol, extraClass = '') {
+  if (!stockOrSymbol) return '';
+  let stock = null;
+  if (typeof stockOrSymbol === 'object') {
+    stock = stockOrSymbol;
+  } else if (typeof stockOrSymbol === 'string') {
+    const sym = stockOrSymbol.toUpperCase().trim();
+    stock = (state.currentStocks || []).find(s => (s.symbol || '').toUpperCase() === sym) ||
+            (state.masterUniverse || []).find(s => (s.symbol || '').toUpperCase() === sym);
+  }
+  if (!stock) return '';
+
+  const tags = stock.indexTags || [];
+  if (stock.isNifty50 || tags.includes('Nifty50i')) {
+    return `<span class="px-1 py-0.2 rounded text-[8.5px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono tracking-tight ${extraClass}" title="Official NSE Index: NIFTY 50 (Nifty50i)">N50</span>`;
+  }
+  if (stock.isNifty100 || tags.includes('nifty100i')) {
+    return `<span class="px-1 py-0.2 rounded text-[8.5px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono tracking-tight ${extraClass}" title="Official NSE Index: NIFTY 100 (nifty100i)">N100</span>`;
+  }
+  if (stock.isMidcap150 || tags.includes('MC150i')) {
+    return `<span class="px-1 py-0.2 rounded text-[8.5px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono tracking-tight ${extraClass}" title="Official NSE Index: NIFTY MIDCAP 150 (MC150i)">MC150</span>`;
+  }
+  if (stock.isSmallcap250 || tags.includes('SC250i')) {
+    return `<span class="px-1 py-0.2 rounded text-[8.5px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono tracking-tight ${extraClass}" title="Official NSE Index: NIFTY SMALLCAP 250 (SC250i)">SC250</span>`;
+  }
+  if (stock.isMidSmall400 || tags.includes('MIDSML400i')) {
+    return `<span class="px-1 py-0.2 rounded text-[8.5px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40 font-mono tracking-tight ${extraClass}" title="Official NSE Index: NIFTY MIDSMALLCAP 400 (MIDSML400i)">MS400</span>`;
+  }
+  if (stock.isMicrocap250 || tags.includes('MiCRO250i')) {
+    return `<span class="px-1 py-0.2 rounded text-[8.5px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono tracking-tight ${extraClass}" title="Official NSE Index: NIFTY MICROCAP 250 (MiCRO250i)">MIC250</span>`;
+  }
+  return '';
+}
+
 // Application State
 const state = {
   screeners: [],
@@ -143,6 +189,7 @@ const state = {
   activeRange: '6mo', // '3mo', '6mo', '1y', '2y' (Default 6 Months)
   filterMc1000: false, // Filter stocks with Market Cap > 1000 Cr
   filterMc2000: false, // Filter stocks with Market Cap > 2000 Cr
+  screenerIndexFilter: 'all', // Official Index Category filter ('all', 'nifty50', 'nifty100', 'mc150', 'sc250', 'midsml400')
   searchQuery: '',
   sortField: 'changePercent',
   sortAscending: false,
@@ -156,6 +203,7 @@ const state = {
   pricescanFilterMc1000: false,
   pricescanFilterMc2000: false,
   pricescanFilter: 'all',
+  pricescanIndexFilter: 'all',
   pricescanEmasAligned: false,
   // SS_RVOL Scanner State
   ssrvolResults: [],
@@ -743,6 +791,11 @@ async function init() {
 
   // Initialize Screener Command Deck Collapsed/Expanded State
   initScreenerDeckState();
+
+  // Initialize Scanner Multi-Select Scope Pickers
+  populatePricescanScopeOptions();
+  populateSsrvolScopeOptions();
+  populateVcpscanScopeOptions();
 
   lucide.createIcons();
 }
@@ -2913,7 +2966,7 @@ function renderWatchlistSelector() {
   state.watchlists.forEach(w => {
     const opt = document.createElement('option');
     opt.value = w.id;
-    opt.textContent = `⭐ ${w.name} (${w.stocks.length}/500)`;
+    opt.textContent = `⭐ ${w.name} (${w.stocks.length}/1000)`;
     if (w.id === state.activeWatchlistId) opt.selected = true;
     el.selectActiveWatchlist.appendChild(opt);
   });
@@ -2921,8 +2974,8 @@ function renderWatchlistSelector() {
   const activeWl = getActiveWatchlist();
   if (activeWl) {
     const count = activeWl.stocks.length;
-    const slotsLeft = 500 - count;
-    if (el.wlCapacityLabel) el.wlCapacityLabel.textContent = `${count} of 500 stocks filled`;
+    const slotsLeft = 1000 - count;
+    if (el.wlCapacityLabel) el.wlCapacityLabel.textContent = `${count} of 1000 stocks filled`;
     if (el.wlSlotsLeft) {
       el.wlSlotsLeft.textContent = slotsLeft === 0 ? 'Full capacity' : `${slotsLeft} slot${slotsLeft > 1 ? 's' : ''} free`;
       el.wlSlotsLeft.className = slotsLeft === 0 ? 'text-rose-400 font-semibold' : 'text-amber-400 font-semibold';
@@ -3222,8 +3275,8 @@ async function addStockToActiveWatchlist(symbolOrSymbols, name = '') {
 
   if (cleanSymbols.length === 1) {
     const cleanSymbol = cleanSymbols[0];
-    if (activeWl.stocks.length >= 500) {
-      showToast(`Watchlist "${activeWl.name}" is at full capacity (500/500 stocks)`, 'error');
+    if (activeWl.stocks.length >= 1000) {
+      showToast(`Watchlist "${activeWl.name}" is at full capacity (1000/1000 stocks)`, 'error');
       return;
     }
 
@@ -3255,7 +3308,7 @@ async function addStockToActiveWatchlist(symbolOrSymbols, name = '') {
       renderWatchlistStocks();
       renderChartWatchlistDropdown();
       refreshWatchlistQuotes();
-      showToast(`Added ${cleanSymbol} to "${activeWl.name}" (${activeWl.stocks.length}/500)`, 'success');
+      showToast(`Added ${cleanSymbol} to "${activeWl.name}" (${activeWl.stocks.length}/1000)`, 'success');
 
       if (el.wlQuickAddInput) el.wlQuickAddInput.value = '';
     } catch (err) {
@@ -3287,12 +3340,12 @@ async function addStockToActiveWatchlist(symbolOrSymbols, name = '') {
         refreshWatchlistQuotes();
       }
 
-      let toastMsg = `Added ${data.addedCount || 0} stocks to "${activeWl.name}" (${activeWl.stocks.length}/500)`;
+      let toastMsg = `Added ${data.addedCount || 0} stocks to "${activeWl.name}" (${activeWl.stocks.length}/1000)`;
       if (data.skippedDuplicates > 0) {
         toastMsg += ` (${data.skippedDuplicates} duplicates skipped)`;
       }
       if (data.capacityReached) {
-        toastMsg += ` (Capacity limit 500 reached)`;
+        toastMsg += ` (Capacity limit 1000 reached)`;
       }
       showToast(toastMsg, (data.addedCount > 0 ? 'success' : 'info'));
 
@@ -3571,7 +3624,7 @@ function renderChartWatchlistDropdown() {
 
   state.watchlists.forEach(wl => {
     const isPresent = wl.stocks.some(s => (s.symbol || '').toUpperCase() === activeSym);
-    const isFull = wl.stocks.length >= 500 && !isPresent;
+    const isFull = wl.stocks.length >= 1000 && !isPresent;
 
     const label = document.createElement('label');
     label.className = `flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer select-none transition-colors ${
@@ -3585,7 +3638,7 @@ function renderChartWatchlistDropdown() {
         <span class="text-slate-200 font-medium">${wl.name}</span>
       </div>
       <span class="text-[10px] font-mono ${isPresent ? 'text-amber-400 font-bold' : 'text-slate-500'}">
-        ${wl.stocks.length}/500
+        ${wl.stocks.length}/1000
       </span>
     `;
 
@@ -3627,7 +3680,7 @@ async function addStockToSpecificWatchlist(wlId, symbol, name) {
     renderWatchlistStocks();
     renderChartWatchlistDropdown();
     refreshWatchlistQuotes();
-    showToast(`Added ${symbol} to "${wl.name}" (${wl.stocks.length}/500)`, 'success');
+    showToast(`Added ${symbol} to "${wl.name}" (${wl.stocks.length}/1000)`, 'success');
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -4309,12 +4362,19 @@ function updateDefaultVolumeBadges() {
   const maLabel = document.getElementById('badge-vol-ma-label');
 
   if (mode === 'volintel' && viData?.meta) {
-    if (maLabel) maLabel.textContent = `${state.volIntelSettings?.volMaPeriod || 50}-SMA:`;
+    const viPeriod = state.volIntelSettings?.volMaPeriod || 50;
+    const viTitle = `Average Volume: ${viPeriod}-period Volume SMA (${viPeriod} days on daily chart). Customizable in ⚙️ Indicators > Volume Intelligence.`;
+    if (maLabel) {
+      maLabel.textContent = `${viPeriod}-SMA:`;
+      maLabel.title = viTitle;
+    }
     if (el.volLiveBadge && volArr && volArr.length > 0) {
       el.volLiveBadge.textContent = fmt.volume(volArr[volArr.length - 1]?.value || 0);
+      el.volLiveBadge.title = 'Volume of current / hovered candle';
     }
     if (el.volAvgLiveBadge && viData.volMaSeries && viData.volMaSeries.length > 0) {
       el.volAvgLiveBadge.textContent = fmt.volume(viData.volMaSeries[viData.volMaSeries.length - 1]?.value || 0);
+      el.volAvgLiveBadge.title = viTitle;
     }
     if (el.viPpBadge) el.viPpBadge.textContent = viData.meta.ppCount || 0;
     if (el.viBsBadge) el.viBsBadge.textContent = viData.meta.bsCount || 0;
@@ -4335,12 +4395,18 @@ function updateDefaultVolumeBadges() {
       }
     }
   } else {
-    if (maLabel) maLabel.textContent = 'Avg:';
+    const simpleTitle = 'Average Volume: 9-period Volume SMA (9 days on daily chart).';
+    if (maLabel) {
+      maLabel.textContent = 'Avg:';
+      maLabel.title = simpleTitle;
+    }
     if (volArr && volArr.length > 0 && el.volLiveBadge) {
       el.volLiveBadge.textContent = fmt.volume(volArr[volArr.length - 1]?.value || 0);
+      el.volLiveBadge.title = 'Volume of current / hovered candle';
     }
     if (volAvgArr && volAvgArr.length > 0 && el.volAvgLiveBadge) {
       el.volAvgLiveBadge.textContent = fmt.volume(volAvgArr[volAvgArr.length - 1]?.value || 0);
+      el.volAvgLiveBadge.title = simpleTitle;
     }
     if (badgeDivider) badgeDivider.classList.add('hidden');
     if (ppWrap) ppWrap.classList.add('hidden');
@@ -6897,13 +6963,19 @@ function handleCopyStocks() {
       }
       if (state.recFilter && state.recFilter !== 'all') {
         if (state.recFilter === 'emas-aligned') {
-          return isStockEmaAligned(stock);
+          if (!isStockEmaAligned(stock)) return false;
         }
+      }
+      if (state.screenerIndexFilter && state.screenerIndexFilter !== 'all') {
+        if (!stockMatchesIndex(stock, state.screenerIndexFilter)) return false;
       }
       return true;
     });
     if (state.recFilter && state.recFilter !== 'all') {
-      filterContext = ` (${state.recFilter.toUpperCase()})`;
+      filterContext += ` (${state.recFilter.toUpperCase()})`;
+    }
+    if (state.screenerIndexFilter && state.screenerIndexFilter !== 'all') {
+      filterContext += ` (${state.screenerIndexFilter.toUpperCase()})`;
     }
   }
 
@@ -7203,181 +7275,306 @@ function updateOption1LegendLine(hoverTime) {
 }
 
 // -------------------------------------------------------------
-// Load Stock Data & Populate 3 Panes
+// Load Stock Data & Populate Panes (Progressive Historical Loading)
 // -------------------------------------------------------------
+
+let chartAbortController = null;
+
+function applyChartPayload(data, cleanSymbol) {
+  if (Array.isArray(data.candles)) {
+    data.candles = data.candles.filter(c => {
+      if (!c) return false;
+      if ((!state.activeInterval || state.activeInterval === '1d') && isNSEHolidayDate(c.time)) return false;
+      return !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
+    });
+  }
+
+  state.currentStockData = data;
+
+  // Update Header & On-Chart Details
+  if (el.chartSymbolAvatar) el.chartSymbolAvatar.textContent = cleanSymbol.substring(0, 3);
+  if (el.manualStockInput) el.manualStockInput.value = cleanSymbol;
+  if (el.onchartStockSymbol) el.onchartStockSymbol.textContent = cleanSymbol;
+  if (el.chartStockSymbol) {
+    if ('value' in el.chartStockSymbol) el.chartStockSymbol.value = cleanSymbol;
+    else el.chartStockSymbol.textContent = cleanSymbol;
+  }
+  if (el.chartStockLtp) el.chartStockLtp.textContent = fmt.currency(data.ltp);
+
+  const chartProfileSymbol = document.getElementById('chart-profile-symbol');
+  if (chartProfileSymbol) chartProfileSymbol.textContent = cleanSymbol;
+
+  // Day Range Slider update
+  const elDayLow = document.getElementById('chart-day-low');
+  const elDayHigh = document.getElementById('chart-day-high');
+  const elDayThumb = document.getElementById('chart-day-slider-thumb');
+  const dLow = Number(data.dayLow || (data.low != null ? data.low : 0));
+  const dHigh = Number(data.dayHigh || (data.high != null ? data.high : 0));
+  if (elDayLow && elDayHigh) {
+    if (dLow > 0 && dHigh > 0) {
+      elDayLow.textContent = fmt.currency(dLow);
+      elDayHigh.textContent = fmt.currency(dHigh);
+      if (elDayThumb && dHigh > dLow) {
+        const ltpVal = Number(data.ltp || 0);
+        const pct = Math.max(0, Math.min(100, ((ltpVal - dLow) / (dHigh - dLow)) * 100));
+        elDayThumb.style.left = `${pct}%`;
+      }
+    } else {
+      elDayLow.textContent = '--';
+      elDayHigh.textContent = '--';
+    }
+  }
+
+  if (el.chartStockExchange) {
+    const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
+    el.chartStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+  }
+  
+  // Percent change pill
+  if (el.chartStockChange) {
+    const isBull = (data.changePercent || 0) >= 0;
+    el.chartStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md font-mono ${
+      isBull ? 'badge-gain-v2' : 'badge-loss-v2'
+    }`;
+    el.chartStockChange.textContent = fmt.percent(data.changePercent);
+  }
+
+  // External link shortcuts
+  if (el.linkTradingview) el.linkTradingview.href = `https://in.tradingview.com/chart/?symbol=${data.exchange || 'NSE'}:${cleanSymbol}`;
+  if (el.linkChartink) el.linkChartink.href = `https://chartink.com/stocks/${cleanSymbol.toLowerCase()}.html`;
+
+  // Update Metric Badges (52W High & All-Time High only)
+  const el52wHigh = document.getElementById('val-52w-high');
+  const elAth = document.getElementById('val-ath');
+  if (el52wHigh) {
+    const dist52w = data.pctFrom52wHigh !== undefined ? ` (${data.pctFrom52wHigh >= 0 ? '+' : ''}${data.pctFrom52wHigh}%)` : '';
+    el52wHigh.textContent = data.high52w ? `₹${data.high52w.toLocaleString('en-IN')}${dist52w}` : '--';
+  }
+  if (elAth) {
+    const distAth = data.pctFromAth !== undefined ? ` (${data.pctFromAth >= 0 ? '+' : ''}${data.pctFromAth}%)` : '';
+    elAth.textContent = data.allTimeHigh ? `₹${data.allTimeHigh.toLocaleString('en-IN')}${distAth}` : '--';
+  }
+  if (el.chartStockName) el.chartStockName.textContent = data.name || cleanSymbol;
+  updateOnChartCircuitBadge(data);
+
+  // Configure timeScale visibility for intraday vs daily/higher
+  updateTimeScalesVisibility();
+
+  // 1. POPULATE PANE 1: Candlesticks & Overlays
+  if (state.charts.series.candles && data.candles) {
+    state.charts.series.candles.setData(data.candles);
+  }
+  if (state.charts.series.ema10 && data.ema10) state.charts.series.ema10.setData(data.ema10);
+  if (state.charts.series.ema20 && data.ema20) state.charts.series.ema20.setData(data.ema20);
+  if (state.charts.series.ema50 && data.ema50) state.charts.series.ema50.setData(data.ema50);
+  if (state.charts.series.ema150 && data.ema150) state.charts.series.ema150.setData(data.ema150);
+  if (state.charts.series.ema200 && data.ema200) state.charts.series.ema200.setData(data.ema200);
+  if (state.charts.series.vwap && data.vwapSeries) state.charts.series.vwap.setData(data.vwapSeries);
+
+  // Populate Darvas Box Lines (Top: Green, Bottom: Red)
+  if (state.charts.series.darvasTop && data.darvasBox?.topBox) {
+    state.charts.series.darvasTop.setData(data.darvasBox.topBox);
+  }
+  if (state.charts.series.darvasBottom && data.darvasBox?.bottomBox) {
+    state.charts.series.darvasBottom.setData(data.darvasBox.bottomBox);
+  }
+
+  // Populate Pivot Point Lines (P, R1, S1 only)
+  updatePivotLines();
+
+  // 2. POPULATE PANE 2: Dedicated Volume & 9-Period AVG Volume SMA
+  if (state.charts.series.volume && data.volumeSeries) {
+    state.charts.series.volume.setData(data.volumeSeries);
+  }
+  if (state.charts.series.volAvg && data.volAvg9) {
+    state.charts.series.volAvg.setData(data.volAvg9);
+  }
+  updateEarningsVolumeMarkers();
+
+  // 3. POPULATE PANE 3: Dedicated RSI (14) + RSI SMA (14)
+  if (state.charts.series.rsi && data.rsi14) {
+    state.charts.series.rsi.setData(data.rsi14);
+    if (el.rsiLiveBadge) {
+      el.rsiLiveBadge.textContent = data.latestRSI || '--';
+    }
+  }
+  if (state.charts.series.rsiSma && data.rsiSma14) {
+    state.charts.series.rsiSma.setData(data.rsiSma14);
+    if (el.rsiSmaLiveBadge) {
+      el.rsiSmaLiveBadge.textContent = data.latestRsiSMA || '--';
+    }
+  }
+
+  // 4. POPULATE PANE 4: Dedicated Volume Intelligence (50-SMA, PP, BS, RVol, Dry Vol, HV/LV, Paint Bars)
+  renderVolumeIntelligence();
+  syncChartIndicatorsWithPermissions();
+
+  // Render any active drawings (AVWAPs, H-lines, V-lines) for this stock
+  renderPersistedDrawings();
+
+  applyActiveRangeZoom();
+  syncChartPriceScales();
+  setTimeout(syncChartPriceScales, 50);
+
+  if (el.manualStockInput) {
+    el.manualStockInput.value = cleanSymbol;
+    adjustStockInputWidth();
+  }
+  
+  updateDefaultVolumeBadges();
+  updateOption1LegendLine();
+}
+
+async function triggerBackgroundHistoryLoading(cleanSymbol, currentData, signal) {
+  try {
+    const oldestCandle = currentData.candles ? currentData.candles[0] : null;
+    if (!oldestCandle || !oldestCandle.time) return;
+
+    const bgRes = await fetch(`/api/stocks/${encodeURIComponent(cleanSymbol)}/history?interval=1d&range=2y&before=${encodeURIComponent(oldestCandle.time)}`, { signal });
+    const bgData = await bgRes.json();
+
+    if (!bgRes.ok || !bgData.success || !Array.isArray(bgData.candles) || bgData.candles.length === 0) {
+      return;
+    }
+
+    // Verify user hasn't switched stocks
+    const activeSym = (state.selectedStock?.symbol || state.currentStockData?.symbol || '').toUpperCase();
+    if (activeSym !== cleanSymbol) return;
+
+    // Merge older candles with current dataset
+    const mergedCandles = window.CandleCache 
+      ? CandleCache.mergeCandles(currentData.candles, bgData.candles)
+      : [...bgData.candles, ...currentData.candles];
+
+    const addedBars = Math.max(0, mergedCandles.length - (currentData.candles ? currentData.candles.length : 0));
+
+    const indicators = window.CandleCache
+      ? CandleCache.computeIndicators(mergedCandles)
+      : {};
+
+    const fullData = {
+      ...currentData,
+      candles: mergedCandles,
+      candlesCount: mergedCandles.length,
+      ...indicators
+    };
+
+    // Capture user's viewport state: check if they manually scrolled back into history
+    const timeScale = state.charts.main ? state.charts.main.timeScale() : (state.charts.chart ? state.charts.chart.timeScale() : null);
+    const visibleRange = timeScale ? timeScale.getVisibleLogicalRange() : null;
+    const isAtRightEdge = !visibleRange || (visibleRange.to >= (currentData.candles ? currentData.candles.length - 8 : 0));
+
+    // Seamlessly apply complete 3-year data payload: updates series, volume intelligence, markers, and preserves viewport
+    applyChartPayload(fullData, cleanSymbol);
+
+    // If user was actively viewing an older historical section, preserve their exact view window
+    if (timeScale && visibleRange && !isAtRightEdge && addedBars > 0) {
+      try {
+        timeScale.setVisibleLogicalRange({
+          from: visibleRange.from + addedBars,
+          to: visibleRange.to + addedBars
+        });
+        if (state.charts.rsi) {
+          state.charts.rsi.timeScale().setVisibleLogicalRange({
+            from: visibleRange.from + addedBars,
+            to: visibleRange.to + addedBars
+          });
+        }
+      } catch (_) {}
+    }
+
+    // Persist complete 3-year dataset to browser IndexedDB
+    if (window.CandleCache) {
+      CandleCache.set(cleanSymbol, '1d', fullData);
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    console.warn('[Chart] Background history sync notice:', err.message);
+  }
+}
 
 async function loadStockChart(rawSymbol) {
   if (!rawSymbol) return;
   const cleanSymbol = rawSymbol.trim().toUpperCase();
 
+  // Cancel prior in-flight chart request
+  if (chartAbortController) {
+    try { chartAbortController.abort(); } catch (_) {}
+  }
+  chartAbortController = new AbortController();
+  const signal = chartAbortController.signal;
+
   // Clear prior measurement on stock switch
   clearChartMeasurement();
 
-  // Show loading spinner
-  el.chartLoadingOverlay.classList.remove('hidden');
-  el.chartLoadingOverlay.classList.add('flex');
+  // 1. Instant Cache Check (<15ms)
+  let renderedFromCache = false;
+  if (window.CandleCache) {
+    try {
+      const cached = await CandleCache.get(cleanSymbol, state.activeInterval);
+      if (cached && cached.candles && cached.candles.length > 0) {
+        applyChartPayload(cached, cleanSymbol);
+        renderedFromCache = true;
+        pollActiveStockLiveQuote();
+
+        // If we already have the full dataset in cache (>= 450 candles for 1d, or intraday),
+        // we already rendered instantly from cache! Do not overwrite with truncated 1y data!
+        if (state.activeInterval !== '1d' || cached.candles.length >= 450) {
+          if (el.chartLoadingOverlay) {
+            el.chartLoadingOverlay.classList.remove('flex');
+            el.chartLoadingOverlay.classList.add('hidden');
+          }
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (!renderedFromCache && el.chartLoadingOverlay) {
+    el.chartLoadingOverlay.classList.remove('hidden');
+    el.chartLoadingOverlay.classList.add('flex');
+  }
 
   try {
-    const res = await fetch(`/api/stocks/${encodeURIComponent(cleanSymbol)}/history?interval=${state.activeInterval}&range=${state.activeRange}`);
+    // 2. Initial Progressive Fetch: 1 year (~250 trading candles) for instant render
+    const reqRange = state.activeInterval === '1d' ? '1y' : (state.activeRange || '2y');
+    const res = await fetch(`/api/stocks/${encodeURIComponent(cleanSymbol)}/history?interval=${state.activeInterval}&range=${reqRange}`, { signal });
     const data = await res.json();
 
     if (!res.ok || !data.success) {
       throw new Error(data.error || 'Historical data not available for this stock');
     }
 
-    if (Array.isArray(data.candles)) {
-      data.candles = data.candles.filter(c => {
-        if (!c) return false;
-        if ((!state.activeInterval || state.activeInterval === '1d') && isNSEHolidayDate(c.time)) return false;
-        return !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
-      });
+    // Ignore late responses if stock selection changed
+    if (state.selectedStock && state.selectedStock.symbol && state.selectedStock.symbol.toUpperCase() !== cleanSymbol) {
+      return;
     }
 
-    state.currentStockData = data;
+    applyChartPayload(data, cleanSymbol);
 
-    // Update Header & On-Chart Details
-    if (el.chartSymbolAvatar) el.chartSymbolAvatar.textContent = cleanSymbol.substring(0, 3);
-    if (el.manualStockInput) el.manualStockInput.value = cleanSymbol;
-    if (el.onchartStockSymbol) el.onchartStockSymbol.textContent = cleanSymbol;
-    if (el.chartStockSymbol) {
-      if ('value' in el.chartStockSymbol) el.chartStockSymbol.value = cleanSymbol;
-      else el.chartStockSymbol.textContent = cleanSymbol;
+    // Only cache directly if not daily (daily will be cached with full 3-year data once merged)
+    if (window.CandleCache && state.activeInterval !== '1d') {
+      CandleCache.set(cleanSymbol, state.activeInterval, data);
     }
-    if (el.chartStockLtp) el.chartStockLtp.textContent = fmt.currency(data.ltp);
-
-    const chartProfileSymbol = document.getElementById('chart-profile-symbol');
-    if (chartProfileSymbol) chartProfileSymbol.textContent = cleanSymbol;
-
-    // Day Range Slider update
-    const elDayLow = document.getElementById('chart-day-low');
-    const elDayHigh = document.getElementById('chart-day-high');
-    const elDayThumb = document.getElementById('chart-day-slider-thumb');
-    const dLow = Number(data.dayLow || (data.low != null ? data.low : 0));
-    const dHigh = Number(data.dayHigh || (data.high != null ? data.high : 0));
-    if (elDayLow && elDayHigh) {
-      if (dLow > 0 && dHigh > 0) {
-        elDayLow.textContent = fmt.currency(dLow);
-        elDayHigh.textContent = fmt.currency(dHigh);
-        if (elDayThumb && dHigh > dLow) {
-          const ltpVal = Number(data.ltp || 0);
-          const pct = Math.max(0, Math.min(100, ((ltpVal - dLow) / (dHigh - dLow)) * 100));
-          elDayThumb.style.left = `${pct}%`;
-        }
-      } else {
-        elDayLow.textContent = '--';
-        elDayHigh.textContent = '--';
-      }
-    }
-
-    if (el.chartStockExchange) {
-      const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
-      el.chartStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
-    }
-    
-    // Percent change pill
-    if (el.chartStockChange) {
-      const isBull = (data.changePercent || 0) >= 0;
-      el.chartStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md font-mono ${
-        isBull ? 'badge-gain-v2' : 'badge-loss-v2'
-      }`;
-      el.chartStockChange.textContent = fmt.percent(data.changePercent);
-    }
-
-    // External link shortcuts
-    if (el.linkTradingview) el.linkTradingview.href = `https://in.tradingview.com/chart/?symbol=${data.exchange}:${cleanSymbol}`;
-    if (el.linkChartink) el.linkChartink.href = `https://chartink.com/stocks/${cleanSymbol.toLowerCase()}.html`;
-
-    // Update Metric Badges (52W High & All-Time High only)
-    const el52wHigh = document.getElementById('val-52w-high');
-    const elAth = document.getElementById('val-ath');
-    if (el52wHigh) {
-      const dist52w = data.pctFrom52wHigh !== undefined ? ` (${data.pctFrom52wHigh >= 0 ? '+' : ''}${data.pctFrom52wHigh}%)` : '';
-      el52wHigh.textContent = data.high52w ? `₹${data.high52w.toLocaleString('en-IN')}${dist52w}` : '--';
-    }
-    if (elAth) {
-      const distAth = data.pctFromAth !== undefined ? ` (${data.pctFromAth >= 0 ? '+' : ''}${data.pctFromAth}%)` : '';
-      elAth.textContent = data.allTimeHigh ? `₹${data.allTimeHigh.toLocaleString('en-IN')}${distAth}` : '--';
-    }
-    if (el.chartStockName) el.chartStockName.textContent = data.name || cleanSymbol;
-    updateOnChartCircuitBadge(data);
-
-    // Configure timeScale visibility for intraday vs daily/higher
-    updateTimeScalesVisibility();
-
-    // 1. POPULATE PANE 1: Candlesticks & Overlays (Clean, NO text)
-    if (state.charts.series.candles && data.candles) {
-      state.charts.series.candles.setData(data.candles);
-    }
-    if (state.charts.series.ema10 && data.ema10) state.charts.series.ema10.setData(data.ema10);
-    if (state.charts.series.ema20 && data.ema20) state.charts.series.ema20.setData(data.ema20);
-    if (state.charts.series.ema50 && data.ema50) state.charts.series.ema50.setData(data.ema50);
-    if (state.charts.series.ema150 && data.ema150) state.charts.series.ema150.setData(data.ema150);
-    if (state.charts.series.ema200 && data.ema200) state.charts.series.ema200.setData(data.ema200);
-    if (state.charts.series.vwap && data.vwapSeries) state.charts.series.vwap.setData(data.vwapSeries);
-
-    // Populate Darvas Box Lines (Top: Green, Bottom: Red)
-    if (state.charts.series.darvasTop && data.darvasBox?.topBox) {
-      state.charts.series.darvasTop.setData(data.darvasBox.topBox);
-    }
-    if (state.charts.series.darvasBottom && data.darvasBox?.bottomBox) {
-      state.charts.series.darvasBottom.setData(data.darvasBox.bottomBox);
-    }
-
-    // Populate Pivot Point Lines (P, R1, S1 only)
-    updatePivotLines();
-
-    // 2. POPULATE PANE 2: Dedicated Volume & 9-Period AVG Volume SMA
-    if (state.charts.series.volume && data.volumeSeries) {
-      state.charts.series.volume.setData(data.volumeSeries);
-    }
-    if (state.charts.series.volAvg && data.volAvg9) {
-      state.charts.series.volAvg.setData(data.volAvg9);
-    }
-    updateEarningsVolumeMarkers();
-
-    // 3. POPULATE PANE 3: Dedicated RSI (14) + RSI SMA (14)
-    if (state.charts.series.rsi && data.rsi14) {
-      state.charts.series.rsi.setData(data.rsi14);
-      if (el.rsiLiveBadge) {
-        el.rsiLiveBadge.textContent = data.latestRSI || '--';
-      }
-    }
-    if (state.charts.series.rsiSma && data.rsiSma14) {
-      state.charts.series.rsiSma.setData(data.rsiSma14);
-      if (el.rsiSmaLiveBadge) {
-        el.rsiSmaLiveBadge.textContent = data.latestRsiSMA || '--';
-      }
-    }
-
-    // 4. POPULATE PANE 4: Dedicated Volume Intelligence (50-SMA, PP, BS, RVol, Dry Vol, HV/LV, Paint Bars)
-    renderVolumeIntelligence();
-    syncChartIndicatorsWithPermissions();
-
-    // Render any active drawings (AVWAPs, H-lines, V-lines) for this stock
-    renderPersistedDrawings();
-
-    // Set initial visible range based on activeRange (3M, 6M, 12M)
-    // while keeping all full history available for backwards scrolling
-    applyActiveRangeZoom();
-    syncChartPriceScales();
-    setTimeout(syncChartPriceScales, 50);
-
-    if (el.manualStockInput) {
-      el.manualStockInput.value = cleanSymbol;
-      adjustStockInputWidth();
-    }
-    
-    updateDefaultVolumeBadges();
-    updateOption1LegendLine();
 
     // Trigger immediate live quote verification for the chart
     pollActiveStockLiveQuote();
 
+    // 3. Progressive Background History: fetch preceding 2 years without blocking
+    if (state.activeInterval === '1d' && data.candles && data.candles.length > 0) {
+      triggerBackgroundHistoryLoading(cleanSymbol, data, signal);
+    }
+
   } catch (err) {
-    showToast(`Chart error for ${cleanSymbol}: ${err.message}`, 'error');
+    if (err.name === 'AbortError') return;
+    if (!renderedFromCache) {
+      showToast(`Chart error for ${cleanSymbol}: ${err.message}`, 'error');
+    }
   } finally {
-    el.chartLoadingOverlay.classList.remove('flex');
-    el.chartLoadingOverlay.classList.add('hidden');
+    if (el.chartLoadingOverlay) {
+      el.chartLoadingOverlay.classList.remove('flex');
+      el.chartLoadingOverlay.classList.add('hidden');
+    }
   }
 }
 
@@ -7390,7 +7587,7 @@ function startActiveChartLiveTicker() {
   if (activeChartTickerInterval) clearInterval(activeChartTickerInterval);
   activeChartTickerInterval = setInterval(() => {
     pollActiveStockLiveQuote();
-  }, 4000); // Poll active stock every 4s for zero-lag intraday precision
+  }, 4000); // Poll active stock every 4s for zero-lag precision
 }
 
 async function pollActiveStockLiveQuote() {
@@ -7429,17 +7626,63 @@ async function pollActiveStockLiveQuote() {
       el.chartStockChange.textContent = fmt.percent(newChange);
     }
 
-    // Update the last candle on the chart in real-time
+    // Update the last candle on the chart incrementally in real-time
     const candles = state.currentStockData.candles;
     if (candles && candles.length > 0 && state.charts.series.candles) {
-      const lastC = { ...candles[candles.length - 1] };
-      lastC.close = newPrice;
-      lastC.high = Math.max(lastC.high, newPrice);
-      lastC.low = Math.min(lastC.low, newPrice);
-      if (q.volume) lastC.volume = Math.max(lastC.volume || 0, q.volume);
-      candles[candles.length - 1] = lastC;
+      const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      let lastC = candles[candles.length - 1];
+      const isDaily = (!state.activeInterval || state.activeInterval === '1d');
+
+      // Only create provisional daily candle during active weekday trading session (09:15-15:30 IST)
+      const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const istDay = istNow.getDay();
+      const istMins = istNow.getHours() * 60 + istNow.getMinutes();
+      const isMarketSession = (istDay >= 1 && istDay <= 5) && (istMins >= 555 && istMins <= 930);
+
+      if (isDaily && lastC.time !== todayIST && isMarketSession) {
+        lastC = {
+          time: todayIST,
+          open: newPrice,
+          high: Math.max(newPrice, Number(q.dayHigh || newPrice)),
+          low: Math.min(newPrice, Number(q.dayLow || newPrice)),
+          close: newPrice,
+          volume: Number(q.volume || 0)
+        };
+        candles.push(lastC);
+      } else if (lastC.time === todayIST || !isDaily) {
+        lastC = { ...lastC };
+        lastC.close = newPrice;
+        lastC.high = Math.max(lastC.high, newPrice, Number(q.dayHigh || newPrice));
+        lastC.low = Math.min(lastC.low, newPrice, Number(q.dayLow || newPrice));
+        if (q.volume) lastC.volume = Math.max(lastC.volume || 0, Number(q.volume));
+        candles[candles.length - 1] = lastC;
+      }
+
       try {
         state.charts.series.candles.update(lastC);
+
+        if (state.charts.series.volume) {
+          state.charts.series.volume.update({
+            time: lastC.time,
+            value: lastC.volume || 0,
+            color: lastC.close >= lastC.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
+          });
+        }
+
+        // Incremental provisional EMAs update
+        if (isDaily && window.CandleCache) {
+          const p10 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA10, 10);
+          const p20 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA20, 20);
+          const p50 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA50, 50);
+          const p150 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA150, 150);
+          const p200 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA200, 200);
+
+          if (state.charts.series.ema10) state.charts.series.ema10.update({ time: lastC.time, value: p10 });
+          if (state.charts.series.ema20) state.charts.series.ema20.update({ time: lastC.time, value: p20 });
+          if (state.charts.series.ema50) state.charts.series.ema50.update({ time: lastC.time, value: p50 });
+          if (state.charts.series.ema150) state.charts.series.ema150.update({ time: lastC.time, value: p150 });
+          if (state.charts.series.ema200) state.charts.series.ema200.update({ time: lastC.time, value: p200 });
+        }
       } catch (e) {}
     }
 
@@ -7518,43 +7761,258 @@ function selectStock(stock) {
   loadStockChart(stock.symbol);
 }
 
+// =============================================================
+// REUSABLE MULTI-SELECT SCOPE PICKER CONTROLLER
+// =============================================================
+
+const OFFICIAL_INDICES = [
+  { id: 'nifty50', label: '👑 Nifty 50 (Nifty50i)', short: 'Nifty 50', approxCount: 50 },
+  { id: 'nifty100', label: '🏛️ Nifty 100 (nifty100i)', short: 'Nifty 100', approxCount: 100 },
+  { id: 'mc150', label: '📈 Midcap 150 (MC150i)', short: 'Midcap 150', approxCount: 150 },
+  { id: 'sc250', label: '🚀 Smallcap 250 (SC250i)', short: 'Smallcap 250', approxCount: 250 },
+  { id: 'midsml400', label: '🌐 MidSmall 400 (MIDSML400i)', short: 'MidSmall 400', approxCount: 400 },
+  { id: 'micro250', label: '🔬 Microcap 250 (MiCRO250i)', short: 'Microcap 250', approxCount: 250 }
+];
+
+const MARKET_SEGMENTS = [
+  { id: 'fno', label: '🎯 F&O Stocks (~200)', short: 'F&O', approxCount: 200 },
+  { id: 'large', label: '🏢 Large Cap (Top 100)', short: 'Large Cap', approxCount: 100 },
+  { id: 'mid', label: '📈 Mid Cap (150)', short: 'Mid Cap', approxCount: 150 },
+  { id: 'small', label: '🚀 Small Cap (250)', short: 'Small Cap', approxCount: 250 },
+  { id: 'micro', label: '🔬 Micro Cap', short: 'Micro Cap', approxCount: 250 },
+  { id: 'universe', label: '🌍 Full Universe', short: 'Universe', approxCount: 500 }
+];
+
+function getSelectedScopes(prefix) {
+  if (!Array.isArray(state[prefix + 'Scopes'])) {
+    if (prefix === 'pricescan') {
+      state.pricescanScopes = ['fno'];
+    } else {
+      state.ssrvolScopes = ['current'];
+      state.vcpscanScopes = ['current'];
+    }
+  }
+  return state[prefix + 'Scopes'] || [];
+}
+
+function setSelectedScopes(prefix, scopes) {
+  state[prefix + 'Scopes'] = Array.isArray(scopes) ? scopes : [];
+  updateScopePickerLabel(prefix);
+  const selEl = document.getElementById(`select-${prefix}-scope`);
+  if (selEl) {
+    selEl.innerHTML = '';
+    state[prefix + 'Scopes'].forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.selected = true;
+      selEl.appendChild(opt);
+    });
+    selEl.value = state[prefix + 'Scopes'][0] || '';
+  }
+}
+
+function toggleScopeDropdown(prefix, e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  const dropdown = document.getElementById(`dropdown-${prefix}-scope`);
+  if (!dropdown) return;
+  const isHidden = dropdown.classList.contains('hidden');
+  
+  // Close other scope dropdowns
+  ['pricescan', 'ssrvol', 'vcpscan'].forEach(p => {
+    const d = document.getElementById(`dropdown-${p}-scope`);
+    if (d) d.classList.add('hidden');
+  });
+
+  if (isHidden) {
+    populateScopePicker(prefix);
+    dropdown.classList.remove('hidden');
+  } else {
+    dropdown.classList.add('hidden');
+  }
+}
+
+// Global click outside to dismiss popover
+window.addEventListener('click', (e) => {
+  ['pricescan', 'ssrvol', 'vcpscan'].forEach(prefix => {
+    const wrap = document.getElementById(`wrapper-${prefix}-scope`);
+    const dd = document.getElementById(`dropdown-${prefix}-scope`);
+    if (wrap && dd && !wrap.contains(e.target)) {
+      dd.classList.add('hidden');
+    }
+  });
+});
+
+function onScopeItemToggle(prefix, scopeId, checked) {
+  let scopes = [...getSelectedScopes(prefix)];
+  if (checked) {
+    if (!scopes.includes(scopeId)) scopes.push(scopeId);
+  } else {
+    scopes = scopes.filter(s => s !== scopeId);
+  }
+  setSelectedScopes(prefix, scopes);
+  const badge = document.getElementById(`${prefix}-scope-badge`);
+  if (badge) badge.textContent = scopes.length;
+}
+
+function scopePickerSelectAllIndices(prefix) {
+  const targetIndices = ['nifty50', 'mc150', 'sc250', 'micro250'];
+  setSelectedScopes(prefix, targetIndices);
+  populateScopePicker(prefix);
+}
+
+function scopePickerClearAll(prefix) {
+  setSelectedScopes(prefix, []);
+  populateScopePicker(prefix);
+}
+
+function getScopeFriendlyInfo(scopeId) {
+  if (scopeId === 'current') {
+    const count = (state.currentStocks || []).length;
+    return { label: `⚡ Current Screener (${count})`, short: `Screener (${count})` };
+  }
+  if (scopeId.startsWith('wl_') || scopeId === 'watchlist') {
+    const w = (state.watchlists || []).find(wl => wl.id === scopeId);
+    if (w) return { label: `⭐ Watchlist: ${w.name} (${(w.stocks || []).length})`, short: `"${w.name}"` };
+    return { label: '⭐ Watchlist', short: 'Watchlist' };
+  }
+  const idx = OFFICIAL_INDICES.find(i => i.id === scopeId);
+  if (idx) return { label: idx.label, short: idx.short };
+  const seg = MARKET_SEGMENTS.find(s => s.id === scopeId);
+  if (seg) return { label: seg.label, short: seg.short };
+  return { label: scopeId.toUpperCase(), short: scopeId.toUpperCase() };
+}
+
+function updateScopePickerLabel(prefix) {
+  const lbl = document.getElementById(`label-${prefix}-scope`);
+  const btn = document.getElementById(`btn-${prefix}-scope`);
+  if (!lbl) return;
+
+  const scopes = getSelectedScopes(prefix);
+  if (scopes.length === 0) {
+    lbl.innerHTML = '<span class="text-amber-400 font-semibold">⚠️ Select scope(s)</span>';
+    if (btn) btn.title = 'No scope selected. Please select at least one scope to scan.';
+    return;
+  }
+
+  if (scopes.length === 1) {
+    const info = getScopeFriendlyInfo(scopes[0]);
+    lbl.textContent = info.label;
+    if (btn) btn.title = `Scanning: ${info.label}`;
+    return;
+  }
+
+  if (scopes.length === 2) {
+    const info1 = getScopeFriendlyInfo(scopes[0]);
+    const info2 = getScopeFriendlyInfo(scopes[1]);
+    lbl.textContent = `${info1.short} + ${info2.short}`;
+    if (btn) btn.title = `Scanning: ${info1.label}, ${info2.label}`;
+    return;
+  }
+
+  const first = getScopeFriendlyInfo(scopes[0]);
+  lbl.textContent = `${scopes.length} Scopes (${first.short} + ${scopes.length - 1} more)`;
+  if (btn) btn.title = `Scanning: ${scopes.map(s => getScopeFriendlyInfo(s).short).join(', ')}`;
+}
+
+function populateScopePicker(prefix) {
+  const dd = document.getElementById(`dropdown-${prefix}-scope`);
+  if (!dd) return;
+
+  const scopes = getSelectedScopes(prefix);
+  const screenerStockCount = (state.currentStocks || []).length;
+
+  let html = `
+    <div class="pb-2 mb-2 flex items-center justify-between border-b border-dark-border/60">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[11px] font-bold text-slate-200">Scope Selection</span>
+        <span id="${prefix}-scope-badge" class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-400 font-bold">${scopes.length}</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-[10px]">
+        <button type="button" class="text-blue-400 hover:text-blue-300 font-medium cursor-pointer" onclick="scopePickerSelectAllIndices('${prefix}')" title="Select Non-Overlapping Indices (50 + 150 + 250 + Micro = ~900 Stocks)">+ Indices</button>
+        <span class="text-slate-600">|</span>
+        <button type="button" class="text-slate-400 hover:text-rose-400 font-medium cursor-pointer" onclick="scopePickerClearAll('${prefix}')">Clear</button>
+      </div>
+    </div>
+
+    <!-- Active Workspace -->
+    <div class="py-1">
+      <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 px-1 mb-1">Active Workspace</div>
+      <label class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-slate-800/60 cursor-pointer select-none text-slate-200 text-xs transition-colors">
+        <input type="checkbox" value="current" ${scopes.includes('current') ? 'checked' : ''} onchange="onScopeItemToggle('${prefix}', 'current', this.checked)" class="rounded border-slate-700 bg-dark-bg text-blue-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+        <span class="truncate">⚡ Current Screener (${screenerStockCount} stocks)</span>
+      </label>
+  `;
+
+  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
+    state.watchlists.forEach(w => {
+      const isChecked = scopes.includes(w.id);
+      html += `
+        <label class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-slate-800/60 cursor-pointer select-none text-slate-200 text-xs transition-colors">
+          <input type="checkbox" value="${w.id}" ${isChecked ? 'checked' : ''} onchange="onScopeItemToggle('${prefix}', '${w.id}', this.checked)" class="rounded border-slate-700 bg-dark-bg text-blue-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+          <span class="truncate">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</span>
+        </label>
+      `;
+    });
+  }
+
+  html += `
+    </div>
+
+    <!-- Official NSE Indices -->
+    <div class="py-1.5 border-t border-dark-border/40">
+      <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 px-1 mb-1">Official NSE Indices</div>
+  `;
+
+  OFFICIAL_INDICES.forEach(idx => {
+    const isChecked = scopes.includes(idx.id);
+    html += `
+      <label class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-slate-800/60 cursor-pointer select-none text-slate-200 text-xs transition-colors">
+        <input type="checkbox" value="${idx.id}" ${isChecked ? 'checked' : ''} onchange="onScopeItemToggle('${prefix}', '${idx.id}', this.checked)" class="rounded border-slate-700 bg-dark-bg text-blue-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+        <span class="truncate">${idx.label}</span>
+      </label>
+    `;
+  });
+
+  html += `
+    </div>
+
+    <!-- Market Segments & Universes -->
+    <div class="py-1.5 border-t border-dark-border/40">
+      <div class="text-[10px] uppercase tracking-wider font-bold text-slate-500 px-1 mb-1">Market Segments & Universes</div>
+  `;
+
+  MARKET_SEGMENTS.forEach(seg => {
+    const isChecked = scopes.includes(seg.id);
+    html += `
+      <label class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-slate-800/60 cursor-pointer select-none text-slate-200 text-xs transition-colors">
+        <input type="checkbox" value="${seg.id}" ${isChecked ? 'checked' : ''} onchange="onScopeItemToggle('${prefix}', '${seg.id}', this.checked)" class="rounded border-slate-700 bg-dark-bg text-blue-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+        <span class="truncate">${seg.label}</span>
+      </label>
+    `;
+  });
+
+  html += '</div>';
+
+  dd.innerHTML = html;
+  updateScopePickerLabel(prefix);
+}
+
+// Attach helpers to window
+window.toggleScopeDropdown = toggleScopeDropdown;
+window.onScopeItemToggle = onScopeItemToggle;
+window.scopePickerSelectAllIndices = scopePickerSelectAllIndices;
+window.scopePickerClearAll = scopePickerClearAll;
+window.populateScopePicker = populateScopePicker;
+
 // -------------------------------------------------------------
 // DarvasScan Controller (Darvas Green ↔ EMA 10 / 20) (Registered Users Only)
 // -------------------------------------------------------------
 
 function populatePricescanScopeOptions() {
-  if (!el.selectPricescanScope) return;
-  const screenerStockCount = (state.currentStocks || []).length;
-  const currentVal = el.selectPricescanScope.value || (screenerStockCount > 0 ? 'current' : 'fno');
-
-  let html = `<optgroup label="Active Workspace">`;
-  html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
-
-  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
-    state.watchlists.forEach(w => {
-      html += `<option value="${w.id}">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</option>`;
-    });
-  }
-
-  html += `
-    </optgroup>
-    <optgroup label="Market Indices & Universes">
-      <option value="fno" ${currentVal === 'fno' ? 'selected' : ''}>🎯 F&O Stocks (~200)</option>
-      <option value="large">🏢 Large Cap (Top 100)</option>
-      <option value="mid">📈 Mid Cap (150)</option>
-      <option value="small">🚀 Small Cap (250)</option>
-      <option value="micro">🔬 Micro Cap</option>
-      <option value="midsmall400">🌐 MidSmall400 (400)</option>
-      <option value="universe">🌍 Full Universe (1.1k)</option>
-    </optgroup>
-  `;
-
-  el.selectPricescanScope.innerHTML = html;
-
-  const exists = Array.from(el.selectPricescanScope.options).some(o => o.value === currentVal);
-  if (exists) {
-    el.selectPricescanScope.value = currentVal;
-  }
+  populateScopePicker('pricescan');
 }
 
 function updatePricescanConditionLabels(val, tfCode) {
@@ -7591,45 +8049,39 @@ async function runPricePositionScan() {
   const interval = el.selectPricescanTimeframe?.value || '1d';
   const tfCode = interval === '1wk' ? 'W' : 'D';
   const tfLabel = interval === '1wk' ? 'Weekly' : 'Daily';
-  let scope = el.selectPricescanScope?.value || 'fno';
-  const btn = el.btnRunPricescan;
-  const tbody = el.pricescanTbody;
-  const statusBadge = el.pricescanStatusBadge;
-  const countEl = el.pricescanResultsCount;
+  const btn = el.btnRunPricescan || document.getElementById('btn-run-pricescan');
+  const tbody = el.pricescanTbody || document.getElementById('pricescan-tbody');
+  const statusBadge = el.pricescanStatusBadge || document.getElementById('pricescan-status-badge');
+  const countEl = el.pricescanResultsCount || document.getElementById('pricescan-results-count');
 
-  // Update dynamic labels
+  // Update dynamic condition labels
   updatePricescanConditionLabels(selectedCondition, tfCode);
 
-  // Determine stock list & scanning label based on scope
-  let stockList = [];
-  let scanScopeLabel = '';
-
-  if (scope === 'current') {
-    stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
-    if (stockList.length === 0) {
-      scope = 'fno';
-      if (el.selectPricescanScope) el.selectPricescanScope.value = 'fno';
-      scanScopeLabel = 'F&O Stocks';
-    } else {
-      scanScopeLabel = `${stockList.length} Screener Stocks`;
-    }
-  } else if (scope.startsWith('wl_') || scope === 'watchlist') {
-    const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
-    if (targetWl) {
-      stockList = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
-      scanScopeLabel = `Watchlist "${targetWl.name}" (${stockList.length} stocks)`;
-    } else {
-      scanScopeLabel = 'Watchlist Stocks';
-    }
-    if (stockList.length === 0) {
-      showToast('Selected watchlist is empty. Add stocks to this watchlist first.', 'warning');
-      return;
-    }
-  } else if (scope === 'universe') {
-    scanScopeLabel = 'Universe Stocks';
-  } else {
-    scanScopeLabel = `${scope.toUpperCase()} Stocks`;
+  const scopes = getSelectedScopes('pricescan');
+  if (scopes.length === 0) {
+    showToast('Please select at least one scope (Index, Watchlist, or Screener) to scan.', 'warning');
+    return;
   }
+
+  let stockList = [];
+  const scopeNames = [];
+  for (const sc of scopes) {
+    if (sc === 'current') {
+      const scr = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+      for (const s of scr) { if (!stockList.includes(s)) stockList.push(s); }
+      scopeNames.push(`Screener (${scr.length})`);
+    } else if (sc.startsWith('wl_') || sc === 'watchlist') {
+      const targetWl = (state.watchlists || []).find(w => w.id === sc) || getActiveWatchlist();
+      if (targetWl) {
+        const wl = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
+        for (const s of wl) { if (!stockList.includes(s)) stockList.push(s); }
+        scopeNames.push(`"${targetWl.name}" (${wl.length})`);
+      }
+    } else {
+      scopeNames.push(getScopeFriendlyInfo(sc).short);
+    }
+  }
+  const scanScopeLabel = scopeNames.join(' + ');
 
   if (btn) {
     btn.disabled = true;
@@ -7674,7 +8126,8 @@ async function runPricePositionScan() {
       body: JSON.stringify({
         targetEma: selectedCondition,
         interval,
-        scope,
+        scope: scopes.join(','),
+        scopes,
         stockList
       })
     });
@@ -7750,6 +8203,13 @@ function togglePricescanEmasAligned() {
   setPricescanFilter(state.pricescanFilter === 'emas-aligned' ? 'all' : 'emas-aligned');
 }
 
+function setPricescanIndexFilter(indexKey) {
+  state.pricescanIndexFilter = indexKey || 'all';
+  const elSelect = document.getElementById('select-pricescan-index');
+  if (elSelect) elSelect.value = state.pricescanIndexFilter;
+  renderPricescanTable();
+}
+
 // -------------------------------------------------------------
 // Render DarvasScan Table with Dynamic Sorting
 // -------------------------------------------------------------
@@ -7773,6 +8233,11 @@ function renderPricescanTable() {
     }
     if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) {
       return false;
+    }
+    if (state.pricescanIndexFilter && state.pricescanIndexFilter !== 'all') {
+      if (!stockMatchesIndex(stock, state.pricescanIndexFilter)) {
+        return false;
+      }
     }
     return true;
   });
@@ -7927,6 +8392,7 @@ function renderPricescanTable() {
               ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
               ${getFnoBadgeHtml(m.symbol)}
               ${getCircuitBadgeHtml(m)}
+              ${getIndexBadgeHtml(m)}
               ${mcBadgeHtml}
             </div>
             <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
@@ -8002,80 +8468,45 @@ function renderPricescanTable() {
 // -------------------------------------------------------------
 
 function populateSsrvolScopeOptions() {
-  if (!el.selectSsrvolScope) return;
-  const currentVal = el.selectSsrvolScope.value || 'current';
-
-  let html = `<optgroup label="Active Workspace">`;
-  const screenerStockCount = (state.currentStocks || []).length;
-  html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
-
-  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
-    state.watchlists.forEach(w => {
-      html += `<option value="${w.id}">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</option>`;
-    });
-  }
-
-  html += `
-    </optgroup>
-    <optgroup label="Market Indices & Universes">
-      <option value="fno">🎯 F&O Stocks (~200)</option>
-      <option value="large">🏢 Large Cap (Top 100)</option>
-      <option value="mid">📈 Mid Cap (150)</option>
-      <option value="small">🚀 Small Cap (250)</option>
-      <option value="micro">🔬 Micro Cap</option>
-      <option value="midsmall400">🌐 MidSmall400 (400)</option>
-      <option value="universe">🌍 Full Universe (1.1k)</option>
-    </optgroup>
-  `;
-
-  el.selectSsrvolScope.innerHTML = html;
-
-  const exists = Array.from(el.selectSsrvolScope.options).some(o => o.value === currentVal);
-  if (exists) {
-    el.selectSsrvolScope.value = currentVal;
-  }
+  populateScopePicker('ssrvol');
 }
 
 async function runSsRvolScan() {
   const lookback = parseInt(el.inputSsrvolLookback?.value || state.ssrvolLookback || '20', 10);
-  const scope = el.selectSsrvolScope?.value || 'current';
   const ssOnly = Boolean(el.chkSsrvolSsOnly?.checked || state.ssrvolFilterSsOnly);
-  const btn = el.btnRunSsrvol;
-  const tbody = el.ssrvolTbody;
-  const countBadge = el.ssrvolResultsCountBadge;
+  const btn = el.btnRunSsrvol || document.getElementById('btn-run-ssrvol');
+  const tbody = el.ssrvolTbody || document.getElementById('ssrvol-tbody');
+  const countBadge = el.ssrvolResultsCountBadge || document.getElementById('ssrvol-results-count-badge');
 
-  // Update dynamic column header
   if (el.ssrvolDynamicAvgvolCol) {
     el.ssrvolDynamicAvgvolCol.textContent = `Avg Vol (${lookback}D)`;
   }
 
-  let stockList = [];
-  let scanScopeLabel = '';
-
-  if (scope === 'current') {
-    stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
-    scanScopeLabel = `${stockList.length} Screener Stocks`;
-    if (stockList.length === 0) {
-      showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
-      return;
-    }
-  } else if (scope.startsWith('wl_') || scope === 'watchlist') {
-    const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
-    if (targetWl) {
-      stockList = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
-      scanScopeLabel = `Watchlist "${targetWl.name}" (${stockList.length} stocks)`;
-    } else {
-      scanScopeLabel = 'Watchlist Stocks';
-    }
-    if (stockList.length === 0) {
-      showToast('Selected watchlist is empty. Add stocks to this watchlist first.', 'warning');
-      return;
-    }
-  } else if (scope === 'universe') {
-    scanScopeLabel = 'Universe Stocks';
-  } else {
-    scanScopeLabel = `${scope.toUpperCase()} Stocks`;
+  const scopes = getSelectedScopes('ssrvol');
+  if (scopes.length === 0) {
+    showToast('Please select at least one scope (Index, Watchlist, or Screener) to scan.', 'warning');
+    return;
   }
+
+  let stockList = [];
+  const scopeNames = [];
+  for (const sc of scopes) {
+    if (sc === 'current') {
+      const scr = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+      for (const s of scr) { if (!stockList.includes(s)) stockList.push(s); }
+      scopeNames.push(`Screener (${scr.length})`);
+    } else if (sc.startsWith('wl_') || sc === 'watchlist') {
+      const targetWl = (state.watchlists || []).find(w => w.id === sc) || getActiveWatchlist();
+      if (targetWl) {
+        const wl = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
+        for (const s of wl) { if (!stockList.includes(s)) stockList.push(s); }
+        scopeNames.push(`"${targetWl.name}" (${wl.length})`);
+      }
+    } else {
+      scopeNames.push(getScopeFriendlyInfo(sc).short);
+    }
+  }
+  const scanScopeLabel = scopeNames.join(' + ');
 
   if (btn) {
     btn.disabled = true;
@@ -8108,7 +8539,8 @@ async function runSsRvolScan() {
       },
       body: JSON.stringify({
         lookback,
-        scope,
+        scope: scopes.join(','),
+        scopes,
         stockList,
         ssOnly
       })
@@ -8292,6 +8724,7 @@ function renderSsrvolTable() {
               ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
               ${getFnoBadgeHtml(m.symbol)}
               ${getCircuitBadgeHtml(m)}
+              ${getIndexBadgeHtml(m)}
               ${mcBadgeHtml}
             </div>
             <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
@@ -8360,76 +8793,42 @@ function handleCopySsrvolStocks() {
 // -------------------------------------------------------------
 
 function populateVcpscanScopeOptions() {
-  if (!el.selectVcpscanScope) return;
-  const currentVal = el.selectVcpscanScope.value || 'current';
-
-  let html = `<optgroup label="Active Workspace">`;
-  const screenerStockCount = (state.currentStocks || []).length;
-  html += `<option value="current">⚡ Current Screener (${screenerStockCount} stocks)</option>`;
-
-  if (Array.isArray(state.watchlists) && state.watchlists.length > 0) {
-    state.watchlists.forEach(w => {
-      html += `<option value="${w.id}">⭐ Watchlist: ${w.name} (${(w.stocks || []).length} stocks)</option>`;
-    });
-  }
-
-  html += `
-    </optgroup>
-    <optgroup label="Market Indices & Universes">
-      <option value="fno">🎯 F&O Stocks (~200)</option>
-      <option value="large">🏢 Large Cap (Top 100)</option>
-      <option value="mid">📈 Mid Cap (150)</option>
-      <option value="small">🚀 Small Cap (250)</option>
-      <option value="micro">🔬 Micro Cap</option>
-      <option value="midsmall400">🌐 MidSmall400 (400)</option>
-      <option value="universe">🌍 Full Universe (1.1k)</option>
-    </optgroup>
-  `;
-
-  el.selectVcpscanScope.innerHTML = html;
-
-  const exists = Array.from(el.selectVcpscanScope.options).some(o => o.value === currentVal);
-  if (exists) {
-    el.selectVcpscanScope.value = currentVal;
-  }
+  populateScopePicker('vcpscan');
 }
 
 async function runVcpScan() {
   const stage = el.selectVcpscanStage?.value || 'all';
   const interval = el.selectVcpscanTimeframe?.value || '1d';
   const tfLabel = interval === '1wk' ? 'Weekly' : 'Daily';
-  const scope = el.selectVcpscanScope?.value || 'current';
-  const btn = el.btnRunVcpscan;
-  const tbody = el.vcpscanTbody;
-  const countBadge = el.vcpscanResultsCountBadge;
+  const btn = el.btnRunVcpscan || document.getElementById('btn-run-vcpscan');
+  const tbody = el.vcpscanTbody || document.getElementById('vcpscan-tbody');
+  const countBadge = el.vcpscanResultsCountBadge || document.getElementById('vcpscan-results-count-badge');
+
+  const scopes = getSelectedScopes('vcpscan');
+  if (scopes.length === 0) {
+    showToast('Please select at least one scope (Index, Watchlist, or Screener) to scan.', 'warning');
+    return;
+  }
 
   let stockList = [];
-  let scanScopeLabel = '';
-
-  if (scope === 'current') {
-    stockList = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
-    scanScopeLabel = `${stockList.length} Screener Stocks`;
-    if (stockList.length === 0) {
-      showToast('No stocks loaded in current screener. Switch scope or run a screener first.', 'warning');
-      return;
-    }
-  } else if (scope.startsWith('wl_') || scope === 'watchlist') {
-    const targetWl = (state.watchlists || []).find(w => w.id === scope) || getActiveWatchlist();
-    if (targetWl) {
-      stockList = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
-      scanScopeLabel = `Watchlist "${targetWl.name}" (${stockList.length} stocks)`;
+  const scopeNames = [];
+  for (const sc of scopes) {
+    if (sc === 'current') {
+      const scr = (state.currentStocks || []).map(s => s.symbol).filter(Boolean);
+      for (const s of scr) { if (!stockList.includes(s)) stockList.push(s); }
+      scopeNames.push(`Screener (${scr.length})`);
+    } else if (sc.startsWith('wl_') || sc === 'watchlist') {
+      const targetWl = (state.watchlists || []).find(w => w.id === sc) || getActiveWatchlist();
+      if (targetWl) {
+        const wl = (targetWl.stocks || []).map(s => s.symbol).filter(Boolean);
+        for (const s of wl) { if (!stockList.includes(s)) stockList.push(s); }
+        scopeNames.push(`"${targetWl.name}" (${wl.length})`);
+      }
     } else {
-      scanScopeLabel = 'Watchlist Stocks';
+      scopeNames.push(getScopeFriendlyInfo(sc).short);
     }
-    if (stockList.length === 0) {
-      showToast('Selected watchlist is empty. Add stocks to this watchlist first.', 'warning');
-      return;
-    }
-  } else if (scope === 'universe') {
-    scanScopeLabel = 'Universe Stocks';
-  } else {
-    scanScopeLabel = `${scope.toUpperCase()} Stocks`;
   }
+  const scanScopeLabel = scopeNames.join(' + ');
 
   if (btn) {
     btn.disabled = true;
@@ -8463,7 +8862,8 @@ async function runVcpScan() {
       body: JSON.stringify({
         stage,
         interval,
-        scope,
+        scope: scopes.join(','),
+        scopes,
         stockList
       })
     });
@@ -8617,6 +9017,7 @@ function renderVcpscanTable() {
               ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
               ${getFnoBadgeHtml(m.symbol)}
               ${getCircuitBadgeHtml(m)}
+              ${getIndexBadgeHtml(m)}
               ${mcBadgeHtml}
             </div>
             <span class="text-[10px] text-slate-400 truncate max-w-[130px]">${m.name || m.symbol}</span>
@@ -9061,6 +9462,11 @@ function renderStocksTable() {
       }
     }
 
+    // 4. Official Index Category Filter
+    if (state.screenerIndexFilter && state.screenerIndexFilter !== 'all') {
+      if (!stockMatchesIndex(stock, state.screenerIndexFilter)) return false;
+    }
+
     return true;
   });
 
@@ -9196,6 +9602,7 @@ function renderStocksTable() {
             ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
             ${getFnoBadgeHtml(stock.symbol)}
             ${getCircuitBadgeHtml(stock)}
+            ${getIndexBadgeHtml(stock)}
             ${confluenceHtml}
           </div>
           <span class="sym-sub block line-clamp-1 max-w-[160px]" title="${stock.name ? stock.name + (stock.sector ? ' • ' + stock.sector : '') : (stock.sector || stock.symbol)}">
@@ -9300,6 +9707,13 @@ function setRecommendedFilter(filterKey) {
     }
   });
 
+  renderStocksTable();
+}
+
+function setScreenerIndexFilter(indexKey) {
+  state.screenerIndexFilter = indexKey || 'all';
+  const elSelect = document.getElementById('select-screener-index');
+  if (elSelect) elSelect.value = state.screenerIndexFilter;
   renderStocksTable();
 }
 
@@ -9442,25 +9856,126 @@ function formatEodSyncDate(dateStr) {
   return dateStr;
 }
 
+let eodSyncPollingInterval = null;
+
+function renderEodBadgeSyncingState(progress) {
+  const elBtn = document.getElementById('eod-sync-badge-container');
+  const elText = document.getElementById('eod-sync-text');
+  const elIcon = document.getElementById('eod-sync-icon');
+  const elDot = document.getElementById('eod-sync-dot');
+
+  if (elBtn) {
+    elBtn.disabled = true;
+    elBtn.classList.remove('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'hover:bg-emerald-500/20');
+    elBtn.classList.add('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30', 'cursor-wait');
+    elBtn.title = 'Manual EOD synchronization in progress... Please wait.';
+  }
+  if (elIcon) elIcon.classList.add('animate-spin');
+  if (elDot) {
+    elDot.classList.remove('bg-emerald-400');
+    elDot.classList.add('bg-amber-400');
+  }
+  if (elText) {
+    const count = progress?.syncedCount || 0;
+    const total = progress?.totalCount || 3739;
+    elText.textContent = count > 0 ? `Syncing EOD (${count}/${total})...` : 'Syncing EOD Data...';
+  }
+}
+
+function renderEodBadgeCompletedState(data) {
+  const elBtn = document.getElementById('eod-sync-badge-container');
+  const elText = document.getElementById('eod-sync-text');
+  const elIcon = document.getElementById('eod-sync-icon');
+  const elDot = document.getElementById('eod-sync-dot');
+
+  if (elBtn) {
+    elBtn.disabled = false;
+    elBtn.classList.remove('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30', 'cursor-wait');
+    elBtn.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'hover:bg-emerald-500/20');
+  }
+  if (elIcon) elIcon.classList.remove('animate-spin');
+  if (elDot) {
+    elDot.classList.remove('bg-amber-400');
+    elDot.classList.add('bg-emerald-400');
+  }
+  if (elText && data) {
+    const timeStr = data.lastSyncTimeIST || '4:30 PM';
+    const dateStr = formatEodSyncDate(data.lastSyncDateIST);
+    const label = dateStr ? `EOD Synced: ${dateStr}, ${timeStr}` : `EOD Synced: ${timeStr}`;
+    elText.textContent = label;
+    if (elBtn) {
+      elBtn.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST). Click to manually sync latest data.`;
+    }
+  }
+}
+
 async function fetchAndRenderEodSyncStatus() {
   try {
     const res = await fetch(`/api/system/eod-status?t=${Date.now()}`);
     if (!res.ok) return;
     const data = await res.json();
-    const elText = document.getElementById('eod-sync-text');
-    const elContainer = document.getElementById('eod-sync-badge-container');
-    if (data.success && elText) {
-      const timeStr = data.lastSyncTimeIST || '4:30 PM';
-      const dateStr = formatEodSyncDate(data.lastSyncDateIST);
-      const label = dateStr ? `EOD Synced: ${dateStr}, ${timeStr}` : `EOD Synced: ${timeStr}`;
-      elText.textContent = label;
-      if (elContainer) {
-        elContainer.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST)`;
+    if (data.success) {
+      if (data.isSyncing) {
+        renderEodBadgeSyncingState(data.progress);
+        if (!eodSyncPollingInterval) {
+          startEodStatusPolling();
+        }
+      } else {
+        renderEodBadgeCompletedState(data);
       }
     }
   } catch (_) {}
 }
 window.fetchAndRenderEodSyncStatus = fetchAndRenderEodSyncStatus;
+
+function startEodStatusPolling() {
+  if (eodSyncPollingInterval) clearInterval(eodSyncPollingInterval);
+  eodSyncPollingInterval = setInterval(async () => {
+    try {
+      const sRes = await fetch(`/api/system/eod-status?t=${Date.now()}`);
+      if (!sRes.ok) return;
+      const statusData = await sRes.json();
+      if (statusData.isSyncing) {
+        renderEodBadgeSyncingState(statusData.progress);
+      } else {
+        clearInterval(eodSyncPollingInterval);
+        eodSyncPollingInterval = null;
+        renderEodBadgeCompletedState(statusData);
+        const timeStr = statusData.lastSyncTimeIST || 'Just now';
+        const dateStr = formatEodSyncDate(statusData.lastSyncDateIST) || 'Today';
+        showToast(`✅ EOD Baseline successfully synced to latest data (${dateStr}, ${timeStr})`, 'success');
+        if (typeof loadScreenerData === 'function' && state && state.activeScreenerId) {
+          loadScreenerData(state.activeScreenerId, false);
+        }
+      }
+    } catch (_) {}
+  }, 3000);
+}
+
+async function triggerManualEodSync(e) {
+  if (e) e.preventDefault();
+  const elBtn = document.getElementById('eod-sync-badge-container');
+  if (elBtn && elBtn.disabled) return;
+
+  renderEodBadgeSyncingState({ syncedCount: 0, totalCount: 3739 });
+
+  try {
+    const res = await fetch('/api/system/eod-sync/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    if (!res.ok && !data.isSyncing) {
+      throw new Error(data.error || 'Failed to start EOD sync');
+    }
+    showToast('🚀 EOD Baseline synchronization initiated in background...', 'info');
+    startEodStatusPolling();
+  } catch (err) {
+    showToast('Failed to trigger EOD sync: ' + err.message, 'error');
+    fetchAndRenderEodSyncStatus();
+  }
+}
+window.triggerManualEodSync = triggerManualEodSync;
 
 async function fetchMarketIndices(isManual = false) {
   try {
@@ -9556,8 +10071,11 @@ function exportToCsv() {
     }
     if (state.recFilter && state.recFilter !== 'all') {
       if (state.recFilter === 'emas-aligned') {
-        return isStockEmaAligned(stock);
+        if (!isStockEmaAligned(stock)) return false;
       }
+    }
+    if (state.screenerIndexFilter && state.screenerIndexFilter !== 'all') {
+      if (!stockMatchesIndex(stock, state.screenerIndexFilter)) return false;
     }
     return true;
   });
@@ -9570,9 +10088,12 @@ function exportToCsv() {
   const baseScreenerName = state.isAggregatedMode 
     ? 'All_Screeners_Confluence' 
     : (state.screeners.find(s => s.id === state.activeScreenerId)?.name || 'Screener_Results');
-  const screenerName = state.recFilter === 'emas-aligned' ? `${baseScreenerName}_EMAs_Aligned` : baseScreenerName;
+  let screenerName = state.recFilter === 'emas-aligned' ? `${baseScreenerName}_EMAs_Aligned` : baseScreenerName;
+  if (state.screenerIndexFilter && state.screenerIndexFilter !== 'all') {
+    screenerName += `_${state.screenerIndexFilter.toUpperCase()}`;
+  }
 
-  const headers = ['Sr', 'Symbol', 'Name', 'Close Price (INR)', 'Change (%)', 'Volume', 'Confluence Count'];
+  const headers = ['Sr', 'Symbol', 'Name', 'Close Price (INR)', 'Change (%)', 'Volume', 'Confluence Count', 'Index Category', 'Index Tags'];
   const rows = list.map((s, idx) => [
     idx + 1,
     `"${s.symbol}"`,
@@ -9580,7 +10101,9 @@ function exportToCsv() {
     s.close || '',
     s.changePercent || '',
     s.volume || '',
-    s.matchCount || 1
+    s.matchCount || 1,
+    `"${s.indexCategory || ''}"`,
+    `"${(s.indexTags || []).join('; ')}"`
   ]);
 
   const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -12047,10 +12570,14 @@ window.refreshJournalBadgeCount = refreshJournalBadgeCount;
 // High-Density ScreeningMantis Layout & Columns Window Exports
 window.handleWatchlistDotClick = handleWatchlistDotClick;
 window.setRecommendedFilter = setRecommendedFilter;
+window.setScreenerIndexFilter = setScreenerIndexFilter;
 window.setWatchlistFilter = setWatchlistFilter;
 window.isStockEmaAligned = isStockEmaAligned;
 window.togglePricescanEmasAligned = togglePricescanEmasAligned;
 window.setPricescanFilter = setPricescanFilter;
+window.setPricescanIndexFilter = setPricescanIndexFilter;
+window.stockMatchesIndex = stockMatchesIndex;
+window.getIndexBadgeHtml = getIndexBadgeHtml;
 window.openColumnsCustomizerModal = openColumnsCustomizerModal;
 window.closeColumnsCustomizerModal = closeColumnsCustomizerModal;
 window.handleColumnToggle = handleColumnToggle;
@@ -12064,3 +12591,8 @@ window.addEventListener('DOMContentLoaded', init);
 
 
 
+
+// Export Scanner Functions to Window
+window.runPricePositionScan = runPricePositionScan;
+window.runSsRvolScan = runSsRvolScan;
+window.runVcpScan = runVcpScan;

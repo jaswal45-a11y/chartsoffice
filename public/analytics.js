@@ -189,6 +189,11 @@ const state = {
   watchlists: [],
   breadthData: null,
   activeBreadthSector: 'all',
+  breadthRange: '1y',
+  breadthSearch: '',
+  breadthPage: 1,
+  breadthPageSize: 40,
+  breadthHistoryRecords: [],
   subSectors: [],
   activeSectorCategory: 'all',
   indicesData: [],
@@ -992,8 +997,8 @@ async function loadAnalyticsData() {
 
     if (breadthData.success) {
       state.breadthData = breadthData;
-      renderBreadthDiagnostics(breadthData);
     }
+    await fetchAndRenderBreadthHistory();
 
     if (sectoralBreadthData.success) {
       state.sectoralBreadthData = sectoralBreadthData.sectors || [];
@@ -1027,103 +1032,319 @@ async function loadAnalyticsData() {
   }
 }
 
-async function handleBreadthSectorChange(sectorId) {
-  state.activeBreadthSector = sectorId;
+// -------------------------------------------------------------
+// Daily Market Breadth History Controller (16 Columns Matrix)
+// -------------------------------------------------------------
+
+function formatBreadthDate(dateStr) {
+  if (!dateStr) return '--';
   try {
-    const res = await fetch(`/api/analytics/breadth?sector=${encodeURIComponent(sectorId)}`);
-    const data = await res.json();
-    if (data.success) {
-      state.breadthData = data;
-      renderBreadthDiagnostics(data);
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const mIdx = parseInt(parts[1], 10) - 1;
+      return `${parts[2]}-${months[mIdx] || parts[1]}-${parts[0]}`;
     }
   } catch (e) {}
+  return dateStr;
 }
 
-function renderBreadthDiagnostics(data) {
-  const u = data.universe || {};
-  const s = data.sentiment || {};
+function getDayBadge(day) {
+  const d = day || '--';
+  let color = 'text-slate-300';
+  if (d === 'Mon') color = 'text-blue-400 font-semibold';
+  else if (d === 'Fri') color = 'text-purple-400 font-semibold';
+  else if (d === 'Wed') color = 'text-amber-400 font-medium';
+  return `<span class="${color}">${d}</span>`;
+}
 
-  const el20Val = document.getElementById('val-breadth-20sma');
-  const el50Val = document.getElementById('val-breadth-50sma');
-  const elCircle20 = document.getElementById('circle-breadth-20sma');
-  const elCircle50 = document.getElementById('circle-breadth-50sma');
-  const elBadgeStatus = document.getElementById('badge-sentiment-status');
-  const elDesc = document.getElementById('text-sentiment-desc');
-  const elAdRatio = document.getElementById('val-ad-ratio');
-  const elHighLow = document.getElementById('val-high-low');
-  const selectSector = document.getElementById('select-breadth-sector');
-  const badgeSummary = document.getElementById('badge-breadth-summary');
-
-  if (el20Val) el20Val.textContent = `${u.above20SmaPct ?? 74.5}%`;
-  if (el50Val) el50Val.textContent = `${u.above50SmaPct ?? 81.2}%`;
-  
-  if (elCircle20) elCircle20.setAttribute('stroke-dasharray', `${u.above20SmaPct ?? 74.5}, 100`);
-  if (elCircle50) elCircle50.setAttribute('stroke-dasharray', `${u.above50SmaPct ?? 81.2}, 100`);
-
-  if (elBadgeStatus) {
-    elBadgeStatus.textContent = s.status || 'Bullish Expansion ⚡';
-    elBadgeStatus.className = `px-2 py-0.5 rounded-md text-[11px] font-bold border ${s.badge || 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`;
+function getBreadthPctBadge(val) {
+  if (val === undefined || val === null || isNaN(val)) return '<span class="text-slate-500 font-mono text-[10px]">--</span>';
+  const num = Number(val);
+  let colorClass = 'text-rose-400 bg-rose-500/10 border-rose-500/25';
+  if (num >= 60) {
+    colorClass = 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30';
+  } else if (num >= 40) {
+    colorClass = 'text-amber-400 bg-amber-500/15 border-amber-500/30';
   }
-  if (elDesc) elDesc.textContent = s.description || 'Strong broad market participation above moving averages.';
-  if (elAdRatio) elAdRatio.textContent = `${u.advanceDeclineRatio || 2.95} (${u.advances || 112}A / ${u.declines || 38}D)`;
-  if (elHighLow) elHighLow.textContent = `${u.new52wHighs || 42} Highs / ${u.new52wLows || 8} Lows`;
+  return `<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-mono font-bold border ${colorClass}">${num.toFixed(1)}%</span>`;
+}
 
-  if (badgeSummary) {
-    badgeSummary.textContent = `${u.above20SmaPct ?? 74.5}% > 20SMA · ${u.above50SmaPct ?? 81.2}% > 50SMA · ${u.advances || 112}A / ${u.declines || 38}D`;
+async function setBreadthRange(range) {
+  state.breadthRange = range;
+  state.breadthPage = 1;
+
+  const pillContainer = document.getElementById('breadth-range-pills');
+  if (pillContainer) {
+    const buttons = pillContainer.querySelectorAll('button');
+    buttons.forEach(btn => {
+      if (btn.getAttribute('data-range') === range) {
+        btn.className = 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold shadow-sm transition-all cursor-pointer';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all font-semibold cursor-pointer';
+      }
+    });
   }
 
-  if (selectSector && (data.sectoralBreadth || data.indicesBreadth) && selectSector.options.length <= 1) {
-    selectSector.innerHTML = '';
-    
-    // Group 1: Broad Market & Universe
-    const grpUniverse = document.createElement('optgroup');
-    grpUniverse.label = '🌐 Benchmark & Broad Market';
-    
-    const optAll = document.createElement('option');
-    optAll.value = 'all';
-    optAll.textContent = 'Universe (All Stocks)';
-    grpUniverse.appendChild(optAll);
+  await fetchAndRenderBreadthHistory();
+}
 
-    const broadIds = ['idx_nifty50', 'idx_midcap100', 'idx_smallcap100', 'idx_midsmall400'];
-    (data.indicesBreadth || []).filter(i => broadIds.includes(i.id)).forEach(idx => {
-      const opt = document.createElement('option');
-      opt.value = idx.id;
-      opt.textContent = `${idx.name} (${idx.above50SmaPct}% > 50 SMA)`;
-      grpUniverse.appendChild(opt);
+function handleBreadthSearch(query) {
+  state.breadthSearch = (query || '').toLowerCase().trim();
+  state.breadthPage = 1;
+  renderMarketBreadthRows();
+}
+
+function handleBreadthPageChange(page) {
+  state.breadthPage = page;
+  renderMarketBreadthRows();
+}
+
+async function syncTodayBreadth() {
+  const icon = document.getElementById('icon-sync-breadth');
+  if (icon) icon.classList.add('animate-spin');
+
+  try {
+    const res = await fetch('/api/analytics/breadth-history/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
     });
-    selectSector.appendChild(grpUniverse);
-
-    // Group 2: Sectoral Indices
-    const grpSectoral = document.createElement('optgroup');
-    grpSectoral.label = '🏢 Nifty Sectoral Indices';
-    (data.indicesBreadth || []).filter(i => !broadIds.includes(i.id)).forEach(idx => {
-      const opt = document.createElement('option');
-      opt.value = idx.id;
-      opt.textContent = `${idx.name} (${idx.above50SmaPct}% > 50 SMA)`;
-      grpSectoral.appendChild(opt);
-    });
-    selectSector.appendChild(grpSectoral);
-
-    // Group 3: Sub-Sectors
-    if (data.sectoralBreadth && data.sectoralBreadth.length > 0) {
-      const grpSub = document.createElement('optgroup');
-      grpSub.label = '🔬 Growth Sub-Sectors';
-      data.sectoralBreadth.forEach(sub => {
-        const opt = document.createElement('option');
-        opt.value = sub.id;
-        opt.textContent = `${sub.name} (${sub.above50SmaPct}% > 50 SMA)`;
-        grpSub.appendChild(opt);
-      });
-      selectSector.appendChild(grpSub);
+    const data = await res.json();
+    if (data.success) {
+      await fetchAndRenderBreadthHistory();
+      if (typeof showToast === 'function') {
+        showToast('Daily market breadth updated successfully!', 'success');
+      }
     }
-
-    selectSector.value = state.activeBreadthSector || 'all';
+  } catch (err) {
+    console.error('Error syncing today breadth:', err);
+  } finally {
+    if (icon) icon.classList.remove('animate-spin');
   }
 }
 
-// -------------------------------------------------------------
-// NSE Sectoral Indices Advance / Decline Leaderboard Controller (Option B)
-// -------------------------------------------------------------
+function exportBreadthCsv() {
+  const range = state.breadthRange || 'all';
+  window.open(`/api/analytics/breadth-history/export?range=${encodeURIComponent(range)}`, '_blank');
+}
+
+async function fetchAndRenderBreadthHistory() {
+  const range = state.breadthRange || '1y';
+  try {
+    const res = await fetch(`/api/analytics/breadth-history?range=${encodeURIComponent(range)}`);
+    const json = await res.json();
+    if (json.success && Array.isArray(json.data)) {
+      state.breadthHistoryRecords = json.data;
+      renderMarketBreadthQuickSummary(json.latest || json.data[0]);
+      renderMarketBreadthRows();
+    }
+  } catch (err) {
+    console.error('Error fetching market breadth history:', err);
+  }
+}
+
+function renderMarketBreadthQuickSummary(latest) {
+  const badgeDate = document.getElementById('badge-breadth-latest-date');
+  if (badgeDate && latest) {
+    badgeDate.textContent = `Latest: ${formatBreadthDate(latest.date)} (${latest.day})`;
+  }
+
+  const container = document.getElementById('breadth-quick-summary');
+  if (!container) return;
+  if (!latest) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const adRatio = latest.declines > 0 ? (latest.advances / latest.declines).toFixed(2) : (latest.advances > 0 ? '10.0' : '1.0');
+  const adColor = Number(adRatio) >= 1.5 ? 'text-emerald-400' : (Number(adRatio) >= 0.8 ? 'text-amber-400' : 'text-rose-400');
+
+  let regimeText = 'Defensive Regime ❄️';
+  let regimeClass = 'border-rose-500/30 bg-rose-500/10 text-rose-400';
+  if (latest.universe_pctAbove20 >= 60) {
+    regimeText = 'Healthy Bullish ⚡';
+    regimeClass = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+  } else if (latest.universe_pctAbove20 >= 40) {
+    regimeText = 'Neutral Divergence ⚖️';
+    regimeClass = 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+  }
+
+  container.innerHTML = `
+    <!-- Card 1: Advances & Declines -->
+    <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-1">
+      <span class="text-[10px] uppercase font-bold text-slate-400">Advances / Declines</span>
+      <div class="flex items-baseline gap-1.5 font-mono">
+        <span class="text-base font-bold text-emerald-400">${latest.advances?.toLocaleString()}</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-base font-bold text-rose-400">${latest.declines?.toLocaleString()}</span>
+      </div>
+      <span class="text-[10px] text-slate-400 font-mono">A/D Ratio: <strong class="${adColor}">${adRatio}</strong></span>
+    </div>
+
+    <!-- Card 2: 4% Thrust Activity -->
+    <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-1">
+      <span class="text-[10px] uppercase font-bold text-slate-400">4%+ Momentum Thrust</span>
+      <div class="flex items-baseline gap-1.5 font-mono">
+        <span class="text-base font-bold text-emerald-400">+${latest.up4pct?.toLocaleString()}</span>
+        <span class="text-xs text-slate-500">/</span>
+        <span class="text-base font-bold text-rose-400">-${latest.down4pct?.toLocaleString()}</span>
+      </div>
+      <span class="text-[10px] text-slate-400">Day Velocity Movers</span>
+    </div>
+
+    <!-- Card 3: Universe 20 & 50 MA -->
+    <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-1">
+      <span class="text-[10px] uppercase font-bold text-slate-400">Universe % &gt; 20 / 50 MA</span>
+      <div class="flex items-baseline gap-2 font-mono">
+        <span class="text-base font-bold text-slate-100">${latest.universe_pctAbove20}%</span>
+        <span class="text-xs text-slate-400">/ ${latest.universe_pctAbove50}%</span>
+      </div>
+      <span class="text-[10px] text-slate-400">3,321 Clean Operating Stocks</span>
+    </div>
+
+    <!-- Card 4: Universe 200 MA -->
+    <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-1">
+      <span class="text-[10px] uppercase font-bold text-slate-400">Universe % &gt; 200 MA</span>
+      <span class="text-base font-bold font-mono text-slate-100">${latest.universe_pctAbove200}%</span>
+      <span class="text-[10px] text-slate-400">Long-Term Market Floor</span>
+    </div>
+
+    <!-- Card 5: MidSmall 400 Breadth -->
+    <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col gap-1">
+      <span class="text-[10px] uppercase font-bold text-purple-400">MS400 % &gt; 20 / 50 MA</span>
+      <div class="flex items-baseline gap-2 font-mono">
+        <span class="text-base font-bold text-purple-300">${latest.ms400_pctAbove20}%</span>
+        <span class="text-xs text-purple-400/80">/ ${latest.ms400_pctAbove50}%</span>
+      </div>
+      <span class="text-[10px] text-slate-400">400 Mid & Small Leaders</span>
+    </div>
+
+    <!-- Card 6: Market Regime -->
+    <div class="p-3 rounded-xl bg-dark-bg/60 border border-dark-border flex flex-col justify-between gap-1">
+      <span class="text-[10px] uppercase font-bold text-slate-400">Institutional Regime</span>
+      <span class="px-2 py-0.5 rounded text-[11px] font-bold border text-center ${regimeClass}">
+        ${regimeText}
+      </span>
+      <span class="text-[10px] text-slate-400 text-center font-mono">${latest.universe_pctAbove10}% &gt; 10MA</span>
+    </div>
+  `;
+}
+
+function renderMarketBreadthRows() {
+  const tbody = document.getElementById('tbody-market-breadth');
+  if (!tbody) return;
+
+  const records = state.breadthHistoryRecords || [];
+  const query = state.breadthSearch || '';
+
+  let filtered = records;
+  if (query) {
+    filtered = filtered.filter(r => 
+      (r.date && r.date.toLowerCase().includes(query)) ||
+      (r.day && r.day.toLowerCase().includes(query)) ||
+      formatBreadthDate(r.date).toLowerCase().includes(query)
+    );
+  }
+
+  const total = filtered.length;
+  const pageSize = state.breadthPageSize || 40;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (state.breadthPage > totalPages) state.breadthPage = totalPages;
+  const curPage = Math.max(1, state.breadthPage || 1);
+
+  const startIdx = (curPage - 1) * pageSize;
+  const pageRows = filtered.slice(startIdx, startIdx + pageSize);
+
+  if (pageRows.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="16" class="px-4 py-8 text-center text-slate-500 font-sans">
+          No market breadth records found matching "${query}".
+        </td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = pageRows.map(r => {
+      const formattedDate = formatBreadthDate(r.date);
+      const dayBadge = getDayBadge(r.day);
+
+      return `
+        <tr class="hover:bg-dark-accent/40 transition-colors">
+          <!-- Calendar -->
+          <td class="px-3 py-2 text-left sticky left-0 z-10 bg-dark-card/95 border-r border-dark-border/40 font-semibold text-slate-200">
+            ${formattedDate}
+          </td>
+          <td class="px-2.5 py-2 text-center sticky left-[95px] z-10 bg-dark-card/95 border-r border-dark-border/60">
+            ${dayBadge}
+          </td>
+
+          <!-- Momentum -->
+          <td class="px-3 py-2 text-right text-emerald-400 font-semibold">
+            ${r.advances?.toLocaleString() ?? '--'}
+          </td>
+          <td class="px-3 py-2 text-right text-rose-400 font-semibold">
+            ${r.declines?.toLocaleString() ?? '--'}
+          </td>
+          <td class="px-3 py-2 text-right text-emerald-400 font-mono">
+            ${r.up4pct?.toLocaleString() ?? '--'}
+          </td>
+          <td class="px-3 py-2 text-right text-rose-400 font-mono border-r border-dark-border/50">
+            ${r.down4pct?.toLocaleString() ?? '--'}
+          </td>
+
+          <!-- Clean Universe Breadth -->
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.universe_pctAbove10)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.universe_pctAbove20)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.universe_pctAbove50)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.universe_pctAbove150)}</td>
+          <td class="px-2.5 py-2 text-center border-r border-dark-border/50">${getBreadthPctBadge(r.universe_pctAbove200)}</td>
+
+          <!-- Nifty MidSmall 400 Breadth -->
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.ms400_pctAbove10)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.ms400_pctAbove20)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.ms400_pctAbove50)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.ms400_pctAbove150)}</td>
+          <td class="px-2.5 py-2 text-center">${getBreadthPctBadge(r.ms400_pctAbove200)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const infoEl = document.getElementById('breadth-pagination-info');
+  if (infoEl) {
+    const endRow = Math.min(startIdx + pageSize, total);
+    infoEl.textContent = total > 0 ? `Showing ${startIdx + 1}–${endRow} of ${total} trading sessions` : 'No trading sessions';
+  }
+
+  const paginationEl = document.getElementById('breadth-pagination-controls');
+  if (paginationEl) {
+    if (totalPages <= 1) {
+      paginationEl.innerHTML = '';
+    } else {
+      let btns = `
+        <button onclick="handleBreadthPageChange(${curPage - 1})" ${curPage === 1 ? 'disabled class="px-2 py-1 rounded bg-dark-bg text-slate-600 cursor-not-allowed"' : 'class="px-2 py-1 rounded bg-dark-bg hover:bg-dark-accent text-slate-300 transition cursor-pointer"'}>
+          Prev
+        </button>
+        <span class="px-2 text-slate-400">Page ${curPage} of ${totalPages}</span>
+        <button onclick="handleBreadthPageChange(${curPage + 1})" ${curPage === totalPages ? 'disabled class="px-2 py-1 rounded bg-dark-bg text-slate-600 cursor-not-allowed"' : 'class="px-2 py-1 rounded bg-dark-bg hover:bg-dark-accent text-slate-300 transition cursor-pointer"'}>
+          Next
+        </button>
+      `;
+      paginationEl.innerHTML = btns;
+    }
+  }
+
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
+// Backwards compatibility stub if anything calls old renderBreadthDiagnostics
+function renderBreadthDiagnostics(data) {
+  // Handled by fetchAndRenderBreadthHistory
+}
+function handleBreadthSectorChange() {}
+
 
 function renderSectoralBreadthGrid() {
   const container = document.getElementById('sectoral-breadth-grid');
@@ -3298,12 +3519,19 @@ function updateDefaultVolumeBadges() {
   const viSignalsBadge = document.getElementById('vi-signals-badge');
 
   if (mode === 'volintel' && viData?.stats) {
-    if (maLabel) maLabel.textContent = `${state.volIntelSettings?.volMaPeriod || 50}-SMA:`;
+    const viPeriod = state.volIntelSettings?.volMaPeriod || 50;
+    const viTitle = `Average Volume: ${viPeriod}-period Volume SMA (${viPeriod} days on daily chart). Customizable in ⚙️ Indicators > Volume Intelligence.`;
+    if (maLabel) {
+      maLabel.textContent = `${viPeriod}-SMA:`;
+      maLabel.title = viTitle;
+    }
     if (volBadge && volArr && volArr.length > 0) {
       volBadge.textContent = fmt.volume(volArr[volArr.length - 1]?.value || 0);
+      volBadge.title = 'Volume of current / hovered candle';
     }
     if (volAvgBadge && viData.volMaSeries && viData.volMaSeries.length > 0) {
       volAvgBadge.textContent = fmt.volume(viData.volMaSeries[viData.volMaSeries.length - 1]?.value || 0);
+      volAvgBadge.title = viTitle;
     }
     if (viPpBadge) viPpBadge.textContent = viData.stats.ppCount || 0;
     if (viBsBadge) viBsBadge.textContent = viData.stats.bsCount || 0;
@@ -3324,12 +3552,18 @@ function updateDefaultVolumeBadges() {
       }
     }
   } else {
-    if (maLabel) maLabel.textContent = 'Avg:';
+    const simpleTitle = 'Average Volume: 9-period Volume SMA (9 days on daily chart).';
+    if (maLabel) {
+      maLabel.textContent = 'Avg:';
+      maLabel.title = simpleTitle;
+    }
     if (volArr && volArr.length > 0 && volBadge) {
       volBadge.textContent = fmt.volume(volArr[volArr.length - 1]?.value || 0);
+      volBadge.title = 'Volume of current / hovered candle';
     }
     if (volAvgArr && volAvgArr.length > 0 && volAvgBadge) {
       volAvgBadge.textContent = fmt.volume(volAvgArr[volAvgArr.length - 1]?.value || 0);
+      volAvgBadge.title = simpleTitle;
     }
     if (badgeDivider) badgeDivider.classList.add('hidden');
     if (ppWrap) ppWrap.classList.add('hidden');
@@ -5100,157 +5334,287 @@ function updateDefaultLegend() {
   }
 }
 
+let chartAbortController = null;
+
+function applyChartPayload(data, cleanSymbol) {
+  if (Array.isArray(data.candles)) {
+    data.candles = data.candles.filter(c => {
+      if (!c) return false;
+      if ((!state.activeInterval || state.activeInterval === '1d') && isNSEHolidayDate(c.time)) return false;
+      return !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
+    });
+  }
+
+  state.currentStockData = data;
+
+  // Direct synchronization: Ensure Explore table row and in-memory universe match chart modal 100%
+  const expTarget = (state.exploreStocks || []).find(s => (s.symbol || '').toUpperCase() === cleanSymbol);
+  if (expTarget && data) {
+    if (typeof data.latestRSI === 'number') expTarget.rsi = Number(data.latestRSI.toFixed(1));
+    if (typeof data.latestEMA10 === 'number') expTarget.ema10 = Number(data.latestEMA10.toFixed(2));
+    if (typeof data.latestEMA20 === 'number') expTarget.ema20 = Number(data.latestEMA20.toFixed(2));
+    if (typeof data.latestEMA50 === 'number') expTarget.ema50 = Number(data.latestEMA50.toFixed(2));
+    if (typeof data.latestEMA150 === 'number') expTarget.ema150 = Number(data.latestEMA150.toFixed(2));
+    if (typeof data.latestEMA200 === 'number') expTarget.ema200 = Number(data.latestEMA200.toFixed(2));
+    if (data.ltp) {
+      expTarget.ltp = data.ltp;
+      expTarget.price = data.ltp;
+    }
+    expTarget.aboveEma10 = expTarget.ema10 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema10) : null;
+    expTarget.aboveEma20 = expTarget.ema20 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema20) : null;
+    expTarget.aboveEma50 = expTarget.ema50 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema50) : null;
+    expTarget.aboveEma150 = expTarget.ema150 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema150) : null;
+    if (typeof updateExploreTableRowDirectly === 'function') {
+      updateExploreTableRowDirectly(cleanSymbol, expTarget);
+    }
+  }
+
+  const elAvatar = document.getElementById('chart-symbol-avatar');
+  const elManualInput = document.getElementById('manual-stock-input');
+  const elOnchartSym = document.getElementById('onchart-stock-symbol');
+  const elStockLtp = document.getElementById('chart-stock-ltp');
+  const elStockExchange = document.getElementById('chart-stock-exchange');
+  const elStockChange = document.getElementById('chart-stock-change');
+  const elStockName = document.getElementById('chart-stock-name');
+  const elLinkTv = document.getElementById('link-tradingview');
+  const elLinkCi = document.getElementById('link-chartink');
+
+  if (elAvatar) elAvatar.textContent = cleanSymbol.substring(0, 3);
+  if (elManualInput) elManualInput.value = cleanSymbol;
+  if (elOnchartSym) elOnchartSym.textContent = cleanSymbol;
+  if (elStockLtp) elStockLtp.textContent = fmt.currency(data.ltp);
+  if (elStockExchange) {
+    const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
+    elStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
+  }
+  
+  if (elStockChange) {
+    const isBull = (data.changePercent || 0) >= 0;
+    elStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md ${
+      isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+    }`;
+    elStockChange.textContent = fmt.percent(data.changePercent);
+  }
+
+  if (elLinkTv) elLinkTv.href = `https://in.tradingview.com/chart/?symbol=${data.exchange || 'NSE'}:${cleanSymbol}`;
+  if (elLinkCi) elLinkCi.href = `https://chartink.com/stocks/${cleanSymbol.toLowerCase()}.html`;
+
+  const el52wHigh = document.getElementById('val-52w-high');
+  const elAth = document.getElementById('val-ath');
+  if (el52wHigh) {
+    const dist52w = data.pctFrom52wHigh !== undefined ? ` (${data.pctFrom52wHigh >= 0 ? '+' : ''}${data.pctFrom52wHigh}%)` : '';
+    el52wHigh.textContent = data.high52w ? `₹${data.high52w.toLocaleString('en-IN')}${dist52w}` : '--';
+  }
+  if (elAth) {
+    const distAth = data.pctFromAth !== undefined ? ` (${data.pctFromAth >= 0 ? '+' : ''}${data.pctFromAth}%)` : '';
+    elAth.textContent = data.allTimeHigh ? `₹${data.allTimeHigh.toLocaleString('en-IN')}${distAth}` : '--';
+  }
+  if (elStockName) elStockName.textContent = data.name || cleanSymbol;
+  updateOnChartCircuitBadge(data);
+
+  updateTimeScalesVisibility();
+
+  if (state.charts.series.candles && data.candles) {
+    state.charts.series.candles.setData(data.candles);
+  }
+  if (state.charts.series.ema10 && data.ema10) state.charts.series.ema10.setData(data.ema10);
+  if (state.charts.series.ema20 && data.ema20) state.charts.series.ema20.setData(data.ema20);
+  if (state.charts.series.ema50 && data.ema50) state.charts.series.ema50.setData(data.ema50);
+  if (state.charts.series.ema150 && data.ema150) state.charts.series.ema150.setData(data.ema150);
+  if (state.charts.series.ema200 && data.ema200) state.charts.series.ema200.setData(data.ema200);
+  if (state.charts.series.vwap && data.vwapSeries) state.charts.series.vwap.setData(data.vwapSeries);
+
+  if (state.charts.series.darvasTop && data.darvasBox?.topBox) {
+    state.charts.series.darvasTop.setData(data.darvasBox.topBox);
+  }
+  if (state.charts.series.darvasBottom && data.darvasBox?.bottomBox) {
+    state.charts.series.darvasBottom.setData(data.darvasBox.bottomBox);
+  }
+
+  updatePivotLines();
+
+  if (state.charts.series.volume && data.volumeSeries) {
+    state.charts.series.volume.setData(data.volumeSeries);
+  }
+  if (state.charts.series.volAvg && data.volAvg9) {
+    state.charts.series.volAvg.setData(data.volAvg9);
+  }
+  updateEarningsVolumeMarkers();
+
+  if (state.charts.series.rsi && data.rsi14) {
+    state.charts.series.rsi.setData(data.rsi14);
+    const rsiBadge = document.getElementById('rsi-live-badge');
+    if (rsiBadge) rsiBadge.textContent = data.latestRSI || '--';
+  }
+  if (state.charts.series.rsiSma && data.rsiSma14) {
+    state.charts.series.rsiSma.setData(data.rsiSma14);
+    const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');
+    if (rsiSmaBadge) rsiSmaBadge.textContent = data.latestRsiSMA || '--';
+  }
+
+  renderVolumeIntelligence();
+  syncChartIndicatorsWithPermissions();
+  renderPersistedDrawings();
+
+  applyActiveRangeZoom();
+  syncChartPriceScales();
+  setTimeout(syncChartPriceScales, 50);
+
+  if (elManualInput) {
+    elManualInput.value = cleanSymbol;
+    adjustStockInputWidth();
+  }
+  
+  updateDefaultVolumeBadges();
+}
+
+async function triggerBackgroundHistoryLoading(cleanSymbol, currentData, signal) {
+  try {
+    const oldestCandle = currentData.candles ? currentData.candles[0] : null;
+    if (!oldestCandle || !oldestCandle.time) return;
+
+    const bgRes = await fetch(`/api/stocks/${encodeURIComponent(cleanSymbol)}/history?interval=1d&range=2y&before=${encodeURIComponent(oldestCandle.time)}`, { signal });
+    const bgData = await bgRes.json();
+
+    if (!bgRes.ok || !bgData.success || !Array.isArray(bgData.candles) || bgData.candles.length === 0) {
+      return;
+    }
+
+    // Verify user hasn't switched stocks
+    const activeSym = (state.selectedStock?.symbol || state.currentStockData?.symbol || '').toUpperCase();
+    if (activeSym !== cleanSymbol) return;
+
+    // Merge older candles with current dataset
+    const mergedCandles = window.CandleCache 
+      ? CandleCache.mergeCandles(currentData.candles, bgData.candles)
+      : [...bgData.candles, ...currentData.candles];
+
+    const addedBars = Math.max(0, mergedCandles.length - (currentData.candles ? currentData.candles.length : 0));
+
+    const indicators = window.CandleCache
+      ? CandleCache.computeIndicators(mergedCandles)
+      : {};
+
+    const fullData = {
+      ...currentData,
+      candles: mergedCandles,
+      candlesCount: mergedCandles.length,
+      ...indicators
+    };
+
+    // Capture user's viewport state: check if they manually scrolled back into history
+    const timeScale = state.charts.main ? state.charts.main.timeScale() : (state.charts.chart ? state.charts.chart.timeScale() : null);
+    const visibleRange = timeScale ? timeScale.getVisibleLogicalRange() : null;
+    const isAtRightEdge = !visibleRange || (visibleRange.to >= (currentData.candles ? currentData.candles.length - 8 : 0));
+
+    // Seamlessly apply complete 3-year data payload: updates series, volume intelligence, markers, and preserves viewport
+    applyChartPayload(fullData, cleanSymbol);
+
+    // If user was actively viewing an older historical section, preserve their exact view window
+    if (timeScale && visibleRange && !isAtRightEdge && addedBars > 0) {
+      try {
+        timeScale.setVisibleLogicalRange({
+          from: visibleRange.from + addedBars,
+          to: visibleRange.to + addedBars
+        });
+        if (state.charts.rsi) {
+          state.charts.rsi.timeScale().setVisibleLogicalRange({
+            from: visibleRange.from + addedBars,
+            to: visibleRange.to + addedBars
+          });
+        }
+      } catch (_) {}
+    }
+
+    // Persist complete 3-year dataset to browser IndexedDB
+    if (window.CandleCache) {
+      CandleCache.set(cleanSymbol, '1d', fullData);
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    console.warn('[Chart] Background history sync notice:', err.message);
+  }
+}
+
 async function loadStockChart(rawSymbol) {
   if (!rawSymbol) return;
   const cleanSymbol = rawSymbol.trim().toUpperCase();
 
+  // Cancel prior in-flight chart request
+  if (chartAbortController) {
+    try { chartAbortController.abort(); } catch (_) {}
+  }
+  chartAbortController = new AbortController();
+  const signal = chartAbortController.signal;
+
+  // Clear prior measurement on stock switch
+  
+
+  // 1. Instant Cache Check (<15ms)
+  let renderedFromCache = false;
+  if (window.CandleCache) {
+    try {
+      const cached = await CandleCache.get(cleanSymbol, state.activeInterval);
+      if (cached && cached.candles && cached.candles.length > 0) {
+        applyChartPayload(cached, cleanSymbol);
+        renderedFromCache = true;
+        pollActiveStockLiveQuote();
+
+        // If we already have the full dataset in cache (>= 450 candles for 1d, or intraday),
+        // we already rendered instantly from cache! Do not overwrite with truncated 1y data!
+        if (state.activeInterval !== '1d' || cached.candles.length >= 450) {
+          const loadingOverlay = document.getElementById('chart-loading-overlay');
+          if (loadingOverlay) {
+            loadingOverlay.classList.remove('flex');
+            loadingOverlay.classList.add('hidden');
+          }
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
   const loadingOverlay = document.getElementById('chart-loading-overlay');
-  if (loadingOverlay) {
+  if (!renderedFromCache && loadingOverlay) {
     loadingOverlay.classList.remove('hidden');
     loadingOverlay.classList.add('flex');
   }
 
   try {
-    const res = await fetch(`/api/stocks/${encodeURIComponent(cleanSymbol)}/history?interval=${state.activeInterval}&range=${state.activeRange}`);
+    // 2. Initial Progressive Fetch: 1 year (~250 trading candles) for instant render
+    const reqRange = state.activeInterval === '1d' ? '1y' : (state.activeRange || '2y');
+    const res = await fetch(`/api/stocks/${encodeURIComponent(cleanSymbol)}/history?interval=${state.activeInterval}&range=${reqRange}`, { signal });
     const data = await res.json();
 
     if (!res.ok || !data.success) {
       throw new Error(data.error || 'Historical data not available for this stock');
     }
 
-    if (Array.isArray(data.candles)) {
-      data.candles = data.candles.filter(c => {
-        if (!c) return false;
-        if ((!state.activeInterval || state.activeInterval === '1d') && isNSEHolidayDate(c.time)) return false;
-        return !(c.volume === 0 && (c.high === c.low || Math.abs(c.high - c.low) < 0.001));
-      });
+    // Ignore late responses if stock selection changed
+    if (state.selectedStock && state.selectedStock.symbol && state.selectedStock.symbol.toUpperCase() !== cleanSymbol) {
+      return;
     }
 
-    state.currentStockData = data;
+    applyChartPayload(data, cleanSymbol);
 
-    // Direct synchronization: Ensure Explore table row and in-memory universe match chart modal 100%
-    const expTarget = (state.exploreStocks || []).find(s => (s.symbol || '').toUpperCase() === cleanSymbol);
-    if (expTarget && data) {
-      if (typeof data.latestRSI === 'number') expTarget.rsi = Number(data.latestRSI.toFixed(1));
-      if (typeof data.latestEMA10 === 'number') expTarget.ema10 = Number(data.latestEMA10.toFixed(2));
-      if (typeof data.latestEMA20 === 'number') expTarget.ema20 = Number(data.latestEMA20.toFixed(2));
-      if (typeof data.latestEMA50 === 'number') expTarget.ema50 = Number(data.latestEMA50.toFixed(2));
-      if (typeof data.latestEMA150 === 'number') expTarget.ema150 = Number(data.latestEMA150.toFixed(2));
-      if (typeof data.latestEMA200 === 'number') expTarget.ema200 = Number(data.latestEMA200.toFixed(2));
-      if (data.ltp) {
-        expTarget.ltp = data.ltp;
-        expTarget.price = data.ltp;
-      }
-      expTarget.aboveEma10 = expTarget.ema10 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema10) : null;
-      expTarget.aboveEma20 = expTarget.ema20 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema20) : null;
-      expTarget.aboveEma50 = expTarget.ema50 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema50) : null;
-      expTarget.aboveEma150 = expTarget.ema150 != null && expTarget.ltp != null ? (expTarget.ltp >= expTarget.ema150) : null;
-      if (typeof updateExploreTableRowDirectly === 'function') {
-        updateExploreTableRowDirectly(cleanSymbol, expTarget);
-      }
+    // Only cache directly if not daily (daily will be cached with full 3-year data once merged)
+    if (window.CandleCache && state.activeInterval !== '1d') {
+      CandleCache.set(cleanSymbol, state.activeInterval, data);
     }
 
-    const elAvatar = document.getElementById('chart-symbol-avatar');
-    const elManualInput = document.getElementById('manual-stock-input');
-    const elOnchartSym = document.getElementById('onchart-stock-symbol');
-    const elStockLtp = document.getElementById('chart-stock-ltp');
-    const elStockExchange = document.getElementById('chart-stock-exchange');
-    const elStockChange = document.getElementById('chart-stock-change');
-    const elStockName = document.getElementById('chart-stock-name');
-    const elLinkTv = document.getElementById('link-tradingview');
-    const elLinkCi = document.getElementById('link-chartink');
-
-    if (elAvatar) elAvatar.textContent = cleanSymbol.substring(0, 3);
-    if (elManualInput) elManualInput.value = cleanSymbol;
-    if (elOnchartSym) elOnchartSym.textContent = cleanSymbol;
-    if (elStockLtp) elStockLtp.textContent = fmt.currency(data.ltp);
-    if (elStockExchange) {
-      const exchHtml = (data.exchange && data.exchange !== 'NSE') ? `<span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-dark-bg text-slate-400 rounded border border-dark-border mr-1">${data.exchange}</span>` : '';
-      elStockExchange.innerHTML = `${exchHtml}${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(cleanSymbol, data.name, 'ml-1') : ''}${getFnoBadgeHtml(cleanSymbol, 'ml-1')}`;
-    }
-    
-    if (elStockChange) {
-      const isBull = (data.changePercent || 0) >= 0;
-      elStockChange.className = `px-2 py-0.5 text-xs font-semibold rounded-md ${
-        isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-      }`;
-      elStockChange.textContent = fmt.percent(data.changePercent);
-    }
-
-    if (elLinkTv) elLinkTv.href = `https://in.tradingview.com/chart/?symbol=${data.exchange || 'NSE'}:${cleanSymbol}`;
-    if (elLinkCi) elLinkCi.href = `https://chartink.com/stocks/${cleanSymbol.toLowerCase()}.html`;
-
-    const el52wHigh = document.getElementById('val-52w-high');
-    const elAth = document.getElementById('val-ath');
-    if (el52wHigh) {
-      const dist52w = data.pctFrom52wHigh !== undefined ? ` (${data.pctFrom52wHigh >= 0 ? '+' : ''}${data.pctFrom52wHigh}%)` : '';
-      el52wHigh.textContent = data.high52w ? `₹${data.high52w.toLocaleString('en-IN')}${dist52w}` : '--';
-    }
-    if (elAth) {
-      const distAth = data.pctFromAth !== undefined ? ` (${data.pctFromAth >= 0 ? '+' : ''}${data.pctFromAth}%)` : '';
-      elAth.textContent = data.allTimeHigh ? `₹${data.allTimeHigh.toLocaleString('en-IN')}${distAth}` : '--';
-    }
-    if (elStockName) elStockName.textContent = data.name || cleanSymbol;
-    updateOnChartCircuitBadge(data);
-
-    updateTimeScalesVisibility();
-
-    if (state.charts.series.candles && data.candles) {
-      state.charts.series.candles.setData(data.candles);
-    }
-    if (state.charts.series.ema10 && data.ema10) state.charts.series.ema10.setData(data.ema10);
-    if (state.charts.series.ema20 && data.ema20) state.charts.series.ema20.setData(data.ema20);
-    if (state.charts.series.ema50 && data.ema50) state.charts.series.ema50.setData(data.ema50);
-    if (state.charts.series.ema150 && data.ema150) state.charts.series.ema150.setData(data.ema150);
-    if (state.charts.series.ema200 && data.ema200) state.charts.series.ema200.setData(data.ema200);
-    if (state.charts.series.vwap && data.vwapSeries) state.charts.series.vwap.setData(data.vwapSeries);
-
-    if (state.charts.series.darvasTop && data.darvasBox?.topBox) {
-      state.charts.series.darvasTop.setData(data.darvasBox.topBox);
-    }
-    if (state.charts.series.darvasBottom && data.darvasBox?.bottomBox) {
-      state.charts.series.darvasBottom.setData(data.darvasBox.bottomBox);
-    }
-
-    updatePivotLines();
-
-    if (state.charts.series.volume && data.volumeSeries) {
-      state.charts.series.volume.setData(data.volumeSeries);
-    }
-    if (state.charts.series.volAvg && data.volAvg9) {
-      state.charts.series.volAvg.setData(data.volAvg9);
-    }
-    updateEarningsVolumeMarkers();
-
-    const rsiBadge = document.getElementById('rsi-live-badge');
-    const rsiSmaBadge = document.getElementById('rsi-sma-live-badge');
-
-    if (state.charts.series.rsi && data.rsi14) {
-      state.charts.series.rsi.setData(data.rsi14);
-      if (rsiBadge) rsiBadge.textContent = data.latestRSI || '--';
-    }
-    if (state.charts.series.rsiSma && data.rsiSma14) {
-      state.charts.series.rsiSma.setData(data.rsiSma14);
-      if (rsiSmaBadge) rsiSmaBadge.textContent = data.latestRsiSMA || '--';
-    }
-
-    renderVolumeIntelligence();
-
-    renderPersistedDrawings();
-    applyActiveRangeZoom();
-    syncChartPriceScales();
-    setTimeout(syncChartPriceScales, 50);
-
-    if (elManualInput) {
-      elManualInput.value = cleanSymbol;
-      adjustStockInputWidth();
-    }
-    
-    updateDefaultVolumeBadges();
+    // Trigger immediate live quote verification for the chart
     pollActiveStockLiveQuote();
 
+    // 3. Progressive Background History: fetch preceding 2 years without blocking
+    if (state.activeInterval === '1d' && data.candles && data.candles.length > 0) {
+      triggerBackgroundHistoryLoading(cleanSymbol, data, signal);
+    }
+
   } catch (err) {
-    showToast(`Chart error for ${cleanSymbol}: ${err.message}`, 'error');
+    if (err.name === 'AbortError') return;
+    if (!renderedFromCache) {
+      showToast(`Chart error for ${cleanSymbol}: ${err.message}`, 'error');
+    }
   } finally {
     if (loadingOverlay) {
       loadingOverlay.classList.remove('flex');
@@ -5306,14 +5670,59 @@ async function pollActiveStockLiveQuote() {
 
     const candles = state.currentStockData.candles;
     if (candles && candles.length > 0 && state.charts.series.candles) {
-      const lastC = { ...candles[candles.length - 1] };
-      lastC.close = newPrice;
-      lastC.high = Math.max(lastC.high, newPrice);
-      lastC.low = Math.min(lastC.low, newPrice);
-      if (q.volume) lastC.volume = Math.max(lastC.volume || 0, q.volume);
-      candles[candles.length - 1] = lastC;
+      const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      let lastC = candles[candles.length - 1];
+      const isDaily = (!state.activeInterval || state.activeInterval === '1d');
+
+      // Only create provisional daily candle during active weekday trading session (09:15-15:30 IST)
+      const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const istDay = istNow.getDay();
+      const istMins = istNow.getHours() * 60 + istNow.getMinutes();
+      const isMarketSession = (istDay >= 1 && istDay <= 5) && (istMins >= 555 && istMins <= 930);
+
+      if (isDaily && lastC.time !== todayIST && isMarketSession) {
+        lastC = {
+          time: todayIST,
+          open: newPrice,
+          high: Math.max(newPrice, Number(q.dayHigh || newPrice)),
+          low: Math.min(newPrice, Number(q.dayLow || newPrice)),
+          close: newPrice,
+          volume: Number(q.volume || 0)
+        };
+        candles.push(lastC);
+      } else if (lastC.time === todayIST || !isDaily) {
+        lastC = { ...lastC };
+        lastC.close = newPrice;
+        lastC.high = Math.max(lastC.high, newPrice, Number(q.dayHigh || newPrice));
+        lastC.low = Math.min(lastC.low, newPrice, Number(q.dayLow || newPrice));
+        if (q.volume) lastC.volume = Math.max(lastC.volume || 0, Number(q.volume));
+        candles[candles.length - 1] = lastC;
+      }
+
       try {
         state.charts.series.candles.update(lastC);
+
+        if (state.charts.series.volume) {
+          state.charts.series.volume.update({
+            time: lastC.time,
+            value: lastC.volume || 0,
+            color: lastC.close >= lastC.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
+          });
+        }
+
+        if (isDaily && window.CandleCache) {
+          const p10 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA10, 10);
+          const p20 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA20, 20);
+          const p50 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA50, 50);
+          const p150 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA150, 150);
+          const p200 = CandleCache.calcProvisionalEMA(newPrice, state.currentStockData.latestEMA200, 200);
+
+          if (state.charts.series.ema10) state.charts.series.ema10.update({ time: lastC.time, value: p10 });
+          if (state.charts.series.ema20) state.charts.series.ema20.update({ time: lastC.time, value: p20 });
+          if (state.charts.series.ema50) state.charts.series.ema50.update({ time: lastC.time, value: p50 });
+          if (state.charts.series.ema150) state.charts.series.ema150.update({ time: lastC.time, value: p150 });
+          if (state.charts.series.ema200) state.charts.series.ema200.update({ time: lastC.time, value: p200 });
+        }
       } catch (e) {}
     }
 
@@ -7758,7 +8167,7 @@ function renderExploreTable() {
           <span class="text-slate-500 font-mono text-[10px]" title="Calculating in background (or click row to view chart)">--</span>
         `}
       </td>
-      <td class="text-right font-mono text-[10.5px] ${isHighRvol ? 'text-amber-400 font-bold' : 'text-slate-300'}">
+      <td class="text-right font-mono text-[10.5px] ${isHighRvol ? 'text-amber-400 font-bold' : 'text-slate-300'}" title="Relative Volume (RVOL): ${currentRvol}x vs ${state.exploreFilters?.rvolPeriod ? state.exploreFilters.rvolPeriod.replace('d', '') : '20'}-Day Average Volume">
         ${currentRvol}x
       </td>
       <td class="text-center col-explore-emas">
@@ -7953,6 +8362,12 @@ document.getElementById('explore-segment-pills')?.addEventListener('click', (e) 
 // Window Globals for HTML onclick listeners
 window.toggleAnalyticsSection = toggleAnalyticsSection;
 window.handleBreadthSectorChange = handleBreadthSectorChange;
+window.setBreadthRange = setBreadthRange;
+window.handleBreadthSearch = handleBreadthSearch;
+window.handleBreadthPageChange = handleBreadthPageChange;
+window.syncTodayBreadth = syncTodayBreadth;
+window.exportBreadthCsv = exportBreadthCsv;
+window.fetchAndRenderBreadthHistory = fetchAndRenderBreadthHistory;
 window.loadAnalyticsData = loadAnalyticsData;
 window.handleIndicesCategoryChange = handleIndicesCategoryChange;
 window.handleIndicesSort = handleIndicesSort;
