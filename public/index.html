@@ -988,6 +988,10 @@
 
           <!-- Chart External Links & Fullscreen Maximize -->
           <div class="flex items-center gap-1.5 ml-auto">
+            <span id="chart-data-date-pill" class="text-[10.5px] font-mono font-medium px-2 py-0.5 rounded bg-dark-bg/80 text-emerald-400 border border-emerald-500/30 hidden sm:inline-flex items-center gap-1 select-none" title="Latest candle date available for this stock chart">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span id="chart-data-date-text">Data: --</span>
+            </span>
             <button onclick="toggleDashboardChartMaximize()" id="btn-dashboard-chart-maximize" class="sb-action-btn" title="Toggle Fullscreen Maximize Chart">
               ⛶
             </button>
@@ -3372,7 +3376,7 @@
   <!-- Client-Side Progressive Candle IndexedDB Cache -->
   <script src="candle-cache.js?v=1.0.1"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.3.7"></script>
+  <script src="app.js?v=3.3.9"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->

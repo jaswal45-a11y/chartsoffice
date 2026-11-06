@@ -512,10 +512,12 @@ function updateAuthUI(user) {
     closeCircuitModal();
     closeChangePasswordModal();
 
-    authGuard?.classList.remove('hidden');
-    authGuard?.classList.add('flex');
-    authContent?.classList.add('hidden');
-    authContent?.classList.remove('flex');
+    // Guest Mode: Allow full interactive viewing of Market Breadth Diagnostics & Sector Analytics
+    authGuard?.classList.add('hidden');
+    authGuard?.classList.remove('flex');
+    authContent?.classList.remove('hidden');
+    authContent?.classList.add('flex');
+    loadAnalyticsData();
   }
 
   lucide.createIcons();
@@ -977,7 +979,7 @@ async function handleLogout() {
 // -------------------------------------------------------------
 
 async function loadAnalyticsData() {
-  if (!state.user && !state.isAdmin) return;
+  // Allow authenticated members and guest visitors to view market breadth & sector analytics
   try {
     const [breadthRes, sectorsRes, indicesRes, sectoralBreadthRes, exploreRes, feedRes] = await Promise.all([
       fetch(`/api/analytics/breadth?sector=${encodeURIComponent(state.activeBreadthSector || 'all')}`),
@@ -3687,28 +3689,89 @@ function initNativeCharts() {
   const borderColor = themeCfg.border;
 
   const formatIstTime = (businessDayOrTimestamp) => {
+    if (!businessDayOrTimestamp) return '';
+
+    // 1. BusinessDay object: { year: 2026, month: 11, day: 5 }
+    if (typeof businessDayOrTimestamp === 'object') {
+      if (businessDayOrTimestamp.year && businessDayOrTimestamp.month && businessDayOrTimestamp.day) {
+        const y = businessDayOrTimestamp.year;
+        const m = businessDayOrTimestamp.month;
+        const d = businessDayOrTimestamp.day;
+        const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+        return dt.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+      if (businessDayOrTimestamp instanceof Date) {
+        return businessDayOrTimestamp.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+    }
+
+    // 2. UNIX timestamp in seconds or milliseconds
     if (typeof businessDayOrTimestamp === 'number') {
-      const d = new Date(businessDayOrTimestamp * 1000);
+      const ms = businessDayOrTimestamp > 1e11 ? businessDayOrTimestamp : businessDayOrTimestamp * 1000;
+      const d = new Date(ms);
       const dateStr = d.toLocaleDateString('en-IN', {
         timeZone: 'Asia/Kolkata',
         day: '2-digit',
         month: 'short',
         year: 'numeric'
       });
-      const timeStr = d.toLocaleTimeString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-      return `${dateStr} ${timeStr}`;
+      if (typeof state !== 'undefined' && state.activeInterval && state.activeInterval !== '1d' && state.activeInterval !== '1w' && state.activeInterval !== '1M') {
+        const timeStr = d.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        return `${dateStr} ${timeStr}`;
+      }
+      return dateStr;
     }
+
+    // 3. Date string 'YYYY-MM-DD'
+    if (typeof businessDayOrTimestamp === 'string') {
+      const parts = businessDayOrTimestamp.split('-');
+      if (parts.length === 3) {
+        const dt = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0));
+        if (!isNaN(dt.getTime())) {
+          return dt.toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
+        }
+      }
+      return businessDayOrTimestamp;
+    }
+
     return String(businessDayOrTimestamp);
   };
 
   const istTickMarkFormatter = (time, tickMarkType, locale) => {
+    let d = null;
     if (typeof time === 'number') {
-      const d = new Date(time * 1000);
+      const ms = time > 1e11 ? time : time * 1000;
+      d = new Date(ms);
+    } else if (typeof time === 'object' && time && time.year && time.month && time.day) {
+      d = new Date(Date.UTC(time.year, time.month - 1, time.day, 12, 0, 0));
+    } else if (typeof time === 'string') {
+      const parts = time.split('-');
+      if (parts.length === 3) {
+        d = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0));
+      }
+    }
+
+    if (d && !isNaN(d.getTime())) {
       if (tickMarkType === 3 || tickMarkType === 4) {
         return d.toLocaleTimeString('en-IN', {
           timeZone: 'Asia/Kolkata',
@@ -3737,11 +3800,10 @@ function initNativeCharts() {
           year: 'numeric'
         });
       }
-      return d.toLocaleTimeString('en-IN', {
+      return d.toLocaleDateString('en-IN', {
         timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+        day: '2-digit',
+        month: 'short'
       });
     }
     return null;

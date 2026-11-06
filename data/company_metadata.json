@@ -82617,5 +82617,376 @@
     "last_updated": "Sep 2026",
     "ai_generated": true,
     "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTYHEALTHCARE",
+    "exchange": "NSE",
+    "company_name": "NIFTYHEALTHCARE",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTYHEALTHCARE is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTYMIDLIQ15",
+    "exchange": "NSE",
+    "company_name": "NIFTY MID LIQ 15",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "NIFTY MID LIQ 15 is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "ENERGYAXIS",
+    "exchange": "NSE",
+    "company_name": "Axis Nifty Energy ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Axis Nifty Energy ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "BHARATBOND-APR32",
+    "exchange": "NSE",
+    "company_name": "BHARATBOND-APR32",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "BHARATBOND-APR32 is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTYAXIS",
+    "exchange": "NSE",
+    "company_name": "Axis NIFTY 50 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Axis NIFTY 50 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "BHARATBOND-APR33",
+    "exchange": "NSE",
+    "company_name": "BHARATBOND-APR33",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "BHARATBOND-APR33 is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "GROWWNIFTY",
+    "exchange": "NSE",
+    "company_name": "Groww Nifty 50 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Groww Nifty 50 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "DEFENCE",
+    "exchange": "NSE",
+    "company_name": "Mirae Asset BSE India Defence ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Mirae Asset BSE India Defence ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTY1",
+    "exchange": "NSE",
+    "company_name": "Kotak Nifty 50 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Kotak Nifty 50 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "ENIFTY",
+    "exchange": "NSE",
+    "company_name": "Edelweiss Nifty 50 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Edelweiss Nifty 50 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "NIFTYSMALLCAP250",
+    "exchange": "NSE",
+    "company_name": "NIFTYSMALLCAP250",
+    "sector": "General",
+    "industry": "Diversified",
+    "description": "NIFTYSMALLCAP250 is an established enterprise listed on the NSE, operating in the General sector with core commercial expertise centered in Diversified.",
+    "business_type": "Industrial & Commercial Operations",
+    "products": [
+      "Diversified",
+      "General Solutions"
+    ],
+    "themes": [
+      "General",
+      "Diversified",
+      "Small Cap"
+    ],
+    "geographic_exposure": "Domestic & International Markets",
+    "key_revenue_driver": "Core operational revenue from Diversified",
+    "source": "Verified Exchange Classification",
+    "last_updated": "Sep 2026",
+    "ai_generated": true,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "AONENIFTY",
+    "exchange": "NSE",
+    "company_name": "Angel One Nifty 50 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Angel One Nifty 50 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "MACROTECH",
+    "exchange": "NSE",
+    "company_name": "Lodha Developers Limited",
+    "sector": "Real Estate",
+    "industry": "Real Estate - Development",
+    "description": "Lodha Developers Limited, through its subsidiaries, engages in the development of real estate properties in India. It is involved in the development of residential, office, and retail properties, as well as leasing of retail and office spaces.",
+    "business_type": "Real Estate - Development",
+    "products": [
+      "Real Estate - Development",
+      "Real Estate Solutions"
+    ],
+    "themes": [
+      "Real Estate",
+      "Real Estate - Development",
+      "lodhagroup.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Real Estate - Development",
+    "website": "https://www.lodhagroup.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "SBIMIDMOM",
+    "exchange": "NSE",
+    "company_name": "SBI Nifty Midcap 150 Momentum 50 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "SBI Nifty Midcap 150 Momentum 50 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "ENERGY",
+    "exchange": "NSE",
+    "company_name": "Mirae Asset Nifty Energy ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Mirae Asset Nifty Energy ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "SMALLCAP",
+    "exchange": "NSE",
+    "company_name": "Mirae Asset Nifty Smallcap 250 Momentum Quality 100 ETF",
+    "sector": "Diversified",
+    "industry": "Commercial Operations",
+    "description": "Mirae Asset Nifty Smallcap 250 Momentum Quality 100 ETF is an enterprise listed on the NSE, operating in the Diversified sector with core commercial focus on Commercial Operations.",
+    "business_type": "Commercial Operations",
+    "products": [
+      "Commercial Operations",
+      "Diversified Operations"
+    ],
+    "themes": [],
+    "geographic_exposure": "Domestic & Global Markets",
+    "key_revenue_driver": "Operations in Commercial Operations",
+    "website": null,
+    "source": "Verified Exchange Profile",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
+  },
+  {
+    "ticker": "SFCTECH",
+    "exchange": "NSE",
+    "company_name": "SFC Environmental Technologies Limited",
+    "sector": "Industrials",
+    "industry": "Pollution & Treatment Controls",
+    "description": "SFC Environmental Technologies Limited engages in the design, technology, manufacturing, supply and supervision for installation and commissioning of equipment for the treatment of wastewater and solid waste in India and internationally.",
+    "business_type": "Pollution & Treatment Controls",
+    "products": [
+      "Pollution & Treatment Controls",
+      "Industrials Solutions"
+    ],
+    "themes": [
+      "Industrials",
+      "Pollution & Treatment Controls",
+      "sfcenvironment.com"
+    ],
+    "geographic_exposure": "India & Global",
+    "key_revenue_driver": "Operations in Pollution & Treatment Controls",
+    "website": "https://sfcenvironment.com",
+    "source": "Verified Financial Disclosures",
+    "last_updated": "Sep 2026",
+    "ai_generated": false,
+    "data_version": "2.0"
   }
 ]

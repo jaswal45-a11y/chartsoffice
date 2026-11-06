@@ -4153,9 +4153,7 @@ function setupEventListeners() {
     const tf = el.selectPricescanTimeframe?.value || '1d';
     const tfCode = tf === '1wk' ? 'W' : 'D';
     updatePricescanConditionLabels(vStr, tfCode);
-    if (state.pricescanResults && state.pricescanResults.length > 0) {
-      renderPricescanTable();
-    }
+    runPricePositionScan();
   };
 
   if (el.selectPricescanEma) {
@@ -4168,6 +4166,7 @@ function setupEventListeners() {
       const tfCode = tf === '1wk' ? 'W' : 'D';
       const cond = el.selectPricescanEma?.value || '10';
       updatePricescanConditionLabels(cond, tfCode);
+      runPricePositionScan();
     });
   }
 
@@ -4558,28 +4557,89 @@ function initNativeCharts() {
   const borderColor = themeCfg.border;
 
   const formatIstTime = (businessDayOrTimestamp) => {
+    if (!businessDayOrTimestamp) return '';
+
+    // 1. BusinessDay object: { year: 2026, month: 11, day: 5 }
+    if (typeof businessDayOrTimestamp === 'object') {
+      if (businessDayOrTimestamp.year && businessDayOrTimestamp.month && businessDayOrTimestamp.day) {
+        const y = businessDayOrTimestamp.year;
+        const m = businessDayOrTimestamp.month;
+        const d = businessDayOrTimestamp.day;
+        const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+        return dt.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+      if (businessDayOrTimestamp instanceof Date) {
+        return businessDayOrTimestamp.toLocaleDateString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+    }
+
+    // 2. UNIX timestamp in seconds or milliseconds
     if (typeof businessDayOrTimestamp === 'number') {
-      const d = new Date(businessDayOrTimestamp * 1000);
+      const ms = businessDayOrTimestamp > 1e11 ? businessDayOrTimestamp : businessDayOrTimestamp * 1000;
+      const d = new Date(ms);
       const dateStr = d.toLocaleDateString('en-IN', {
         timeZone: 'Asia/Kolkata',
         day: '2-digit',
         month: 'short',
         year: 'numeric'
       });
-      const timeStr = d.toLocaleTimeString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-      return `${dateStr} ${timeStr}`;
+      if (typeof state !== 'undefined' && state.activeInterval && state.activeInterval !== '1d' && state.activeInterval !== '1w' && state.activeInterval !== '1M') {
+        const timeStr = d.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        return `${dateStr} ${timeStr}`;
+      }
+      return dateStr;
     }
+
+    // 3. Date string 'YYYY-MM-DD'
+    if (typeof businessDayOrTimestamp === 'string') {
+      const parts = businessDayOrTimestamp.split('-');
+      if (parts.length === 3) {
+        const dt = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0));
+        if (!isNaN(dt.getTime())) {
+          return dt.toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
+        }
+      }
+      return businessDayOrTimestamp;
+    }
+
     return String(businessDayOrTimestamp);
   };
 
   const istTickMarkFormatter = (time, tickMarkType, locale) => {
+    let d = null;
     if (typeof time === 'number') {
-      const d = new Date(time * 1000);
+      const ms = time > 1e11 ? time : time * 1000;
+      d = new Date(ms);
+    } else if (typeof time === 'object' && time && time.year && time.month && time.day) {
+      d = new Date(Date.UTC(time.year, time.month - 1, time.day, 12, 0, 0));
+    } else if (typeof time === 'string') {
+      const parts = time.split('-');
+      if (parts.length === 3) {
+        d = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0));
+      }
+    }
+
+    if (d && !isNaN(d.getTime())) {
       if (tickMarkType === 3 || tickMarkType === 4) {
         return d.toLocaleTimeString('en-IN', {
           timeZone: 'Asia/Kolkata',
@@ -4608,11 +4668,10 @@ function initNativeCharts() {
           year: 'numeric'
         });
       }
-      return d.toLocaleTimeString('en-IN', {
+      return d.toLocaleDateString('en-IN', {
         timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+        day: '2-digit',
+        month: 'short'
       });
     }
     return null;
@@ -4903,6 +4962,16 @@ function initNativeCharts() {
       return;
     }
 
+    const normalizeTimeKey = (t) => {
+      if (!t) return '';
+      if (typeof t === 'string') return t;
+      if (typeof t === 'object' && t.year) {
+        return `${t.year}-${String(t.month).padStart(2, '0')}-${String(t.day).padStart(2, '0')}`;
+      }
+      return String(t);
+    };
+    const pTimeKey = normalizeTimeKey(param.time);
+
     // Track price at current mouse crosshair point for Alt+H
     if (param.point && candlestickSeries) {
       const p = candlestickSeries.coordinateToPrice(param.point.y);
@@ -4911,10 +4980,10 @@ function initNativeCharts() {
       }
     }
 
-    const vol = param.seriesData.get(volumeSeries) || state.currentStockData?.volumeSeries?.find(v => v.time === param.time);
-    const volAvg = param.seriesData.get(volAvgSeries) || state.currentStockData?.volAvg9?.find(v => v.time === param.time);
-    const rsiVal = state.currentStockData?.rsi14?.find(r => r.time === param.time)?.value;
-    const rsiSmaVal = state.currentStockData?.rsiSma14?.find(r => r.time === param.time)?.value;
+    const vol = param.seriesData.get(volumeSeries) || state.currentStockData?.volumeSeries?.find(v => normalizeTimeKey(v.time) === pTimeKey);
+    const volAvg = param.seriesData.get(volAvgSeries) || state.currentStockData?.volAvg9?.find(v => normalizeTimeKey(v.time) === pTimeKey);
+    const rsiVal = state.currentStockData?.rsi14?.find(r => normalizeTimeKey(r.time) === pTimeKey)?.value;
+    const rsiSmaVal = state.currentStockData?.rsiSma14?.find(r => normalizeTimeKey(r.time) === pTimeKey)?.value;
 
     if (vol && el.volLiveBadge) {
       el.volLiveBadge.textContent = fmt.volume(vol.value);
@@ -4924,7 +4993,7 @@ function initNativeCharts() {
     }
     if (el.candleChgBadge && state.currentStockData?.candles) {
       const candles = state.currentStockData.candles;
-      const candleIdx = candles.findIndex(c => c.time === param.time);
+      const candleIdx = candles.findIndex(c => normalizeTimeKey(c.time) === pTimeKey);
       if (candleIdx !== -1) {
         const c = candles[candleIdx];
         let chgPercent = 0;
@@ -5137,8 +5206,10 @@ function applyActiveRangeZoom() {
     barCount = isWeekly ? 26 : 130;
   } else if (state.activeRange === '1y') {
     barCount = isWeekly ? 52 : 250;
-  } else { // 2y / Default (2 Years)
+  } else if (state.activeRange === '2y') {
     barCount = isWeekly ? 104 : 500;
+  } else { // 3y / All
+    barCount = totalCandles;
   }
 
   const fromIndex = Math.max(0, totalCandles - barCount);
@@ -7026,10 +7097,17 @@ function getActiveDisplayedStocksList() {
     const activeWl = getActiveWatchlist();
     list = activeWl ? activeWl.stocks || [] : [];
   } else if (state.activeSidebarTab === 'pricescan') {
+    const selectedCond = el.selectPricescanEma?.value || '10';
     list = [...(state.pricescanResults || [])].filter(stock => {
+      if (selectedCond === 'cross_today' && stock.crossedDaysAgo !== 0) return false;
+      if (selectedCond === 'cross_5d' && (typeof stock.crossedDaysAgo !== 'number' || stock.crossedDaysAgo > 5)) return false;
+      if ((selectedCond === '10' || selectedCond === '20') && (stock.scanMode === 'cross_today' || stock.scanMode === 'cross_5d')) return false;
       if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) return false;
+      if (state.pricescanIndexFilter && state.pricescanIndexFilter !== 'all') {
+        if (!stockMatchesIndex(stock, state.pricescanIndexFilter)) return false;
+      }
       return true;
     });
     const sortField = state.pricescanSortField || 'spreadPercent';
@@ -7235,11 +7313,20 @@ function updateOption1LegendLine(hoverTime) {
   const d = state.currentStockData;
   if (!d) return;
 
-  const targetTime = hoverTime;
+  const normalizeTimeKey = (t) => {
+    if (!t) return '';
+    if (typeof t === 'string') return t;
+    if (typeof t === 'object' && t.year) {
+      return `${t.year}-${String(t.month).padStart(2, '0')}-${String(t.day).padStart(2, '0')}`;
+    }
+    return String(t);
+  };
+  const targetKey = normalizeTimeKey(hoverTime);
+
   const findVal = (series) => {
     if (!series || !series.length) return null;
-    if (targetTime) {
-      const match = series.find(item => item.time === targetTime);
+    if (targetKey) {
+      const match = series.find(item => normalizeTimeKey(item.time) === targetKey);
       if (match && typeof match.value === 'number') return match.value;
     }
     return series[series.length - 1]?.value;
@@ -7252,8 +7339,8 @@ function updateOption1LegendLine(hoverTime) {
   const e200Val = findVal(d.ema200);
 
   let volVal = '--';
-  if (targetTime && d.candles) {
-    const cMatch = d.candles.find(c => c.time === targetTime);
+  if (targetKey && d.candles) {
+    const cMatch = d.candles.find(c => normalizeTimeKey(c.time) === targetKey);
     if (cMatch && cMatch.volume) volVal = fmt.volume(cMatch.volume);
   } else if (d.candles && d.candles.length > 0) {
     volVal = fmt.volume(d.candles[d.candles.length - 1].volume);
@@ -7360,23 +7447,35 @@ function applyChartPayload(data, cleanSymbol) {
   // Configure timeScale visibility for intraday vs daily/higher
   updateTimeScalesVisibility();
 
-  // 1. POPULATE PANE 1: Candlesticks & Overlays
-  if (state.charts.series.candles && data.candles) {
-    state.charts.series.candles.setData(data.candles);
+  // 1. POPULATE PANE 1: Candlesticks & Overlays (Protected with isolated error guards)
+  try {
+    if (state.charts.series.candles && Array.isArray(data.candles)) {
+      state.charts.series.candles.setData(data.candles);
+    }
+  } catch (err) {
+    console.warn('[Chart] Candlestick setData warning:', err.message);
   }
-  if (state.charts.series.ema10 && data.ema10) state.charts.series.ema10.setData(data.ema10);
-  if (state.charts.series.ema20 && data.ema20) state.charts.series.ema20.setData(data.ema20);
-  if (state.charts.series.ema50 && data.ema50) state.charts.series.ema50.setData(data.ema50);
-  if (state.charts.series.ema150 && data.ema150) state.charts.series.ema150.setData(data.ema150);
-  if (state.charts.series.ema200 && data.ema200) state.charts.series.ema200.setData(data.ema200);
-  if (state.charts.series.vwap && data.vwapSeries) state.charts.series.vwap.setData(data.vwapSeries);
+  try {
+    if (state.charts.series.ema10 && Array.isArray(data.ema10)) state.charts.series.ema10.setData(data.ema10);
+    if (state.charts.series.ema20 && Array.isArray(data.ema20)) state.charts.series.ema20.setData(data.ema20);
+    if (state.charts.series.ema50 && Array.isArray(data.ema50)) state.charts.series.ema50.setData(data.ema50);
+    if (state.charts.series.ema150 && Array.isArray(data.ema150)) state.charts.series.ema150.setData(data.ema150);
+    if (state.charts.series.ema200 && Array.isArray(data.ema200)) state.charts.series.ema200.setData(data.ema200);
+    if (state.charts.series.vwap && Array.isArray(data.vwapSeries)) state.charts.series.vwap.setData(data.vwapSeries);
+  } catch (err) {
+    console.warn('[Chart] EMA/VWAP setData warning:', err.message);
+  }
 
   // Populate Darvas Box Lines (Top: Green, Bottom: Red)
-  if (state.charts.series.darvasTop && data.darvasBox?.topBox) {
-    state.charts.series.darvasTop.setData(data.darvasBox.topBox);
-  }
-  if (state.charts.series.darvasBottom && data.darvasBox?.bottomBox) {
-    state.charts.series.darvasBottom.setData(data.darvasBox.bottomBox);
+  try {
+    if (state.charts.series.darvasTop && Array.isArray(data.darvasBox?.topBox)) {
+      state.charts.series.darvasTop.setData(data.darvasBox.topBox);
+    }
+    if (state.charts.series.darvasBottom && Array.isArray(data.darvasBox?.bottomBox)) {
+      state.charts.series.darvasBottom.setData(data.darvasBox.bottomBox);
+    }
+  } catch (err) {
+    console.warn('[Chart] DarvasBox setData warning:', err.message);
   }
 
   // Populate Pivot Point Lines (P, R1, S1 only)
@@ -7412,9 +7511,33 @@ function applyChartPayload(data, cleanSymbol) {
   // Render any active drawings (AVWAPs, H-lines, V-lines) for this stock
   renderPersistedDrawings();
 
+  // Force price scale to autoscale mode immediately to prevent canvas blanking
+  try {
+    if (state.charts.main) state.charts.main.priceScale('right').applyOptions({ autoScale: true });
+    if (state.charts.rsi) state.charts.rsi.priceScale('right').applyOptions({ autoScale: true });
+  } catch (e) {}
+
   applyActiveRangeZoom();
   syncChartPriceScales();
-  setTimeout(syncChartPriceScales, 50);
+  handleResize();
+
+  requestAnimationFrame(() => {
+    try {
+      if (state.charts.main) state.charts.main.priceScale('right').applyOptions({ autoScale: true });
+      if (state.charts.rsi) state.charts.rsi.priceScale('right').applyOptions({ autoScale: true });
+      applyActiveRangeZoom();
+      handleResize();
+      syncChartPriceScales();
+    } catch (e) {}
+  });
+
+  setTimeout(() => {
+    try {
+      if (state.charts.main) state.charts.main.priceScale('right').applyOptions({ autoScale: true });
+      applyActiveRangeZoom();
+      syncChartPriceScales();
+    } catch (e) {}
+  }, 50);
 
   if (el.manualStockInput) {
     el.manualStockInput.value = cleanSymbol;
@@ -7423,6 +7546,17 @@ function applyChartPayload(data, cleanSymbol) {
   
   updateDefaultVolumeBadges();
   updateOption1LegendLine();
+
+  // Acknowledge latest candle date on the chart header
+  const chartDatePill = document.getElementById('chart-data-date-pill');
+  const chartDateText = document.getElementById('chart-data-date-text');
+  if (chartDateText && Array.isArray(data.candles) && data.candles.length > 0) {
+    const lastDate = data.candles[data.candles.length - 1]?.time;
+    if (lastDate) {
+      chartDateText.textContent = `Data: ${formatEodSyncDate(lastDate)}`;
+      if (chartDatePill) chartDatePill.classList.remove('hidden');
+    }
+  }
 }
 
 async function triggerBackgroundHistoryLoading(cleanSymbol, currentData, signal) {
@@ -7535,6 +7669,14 @@ async function loadStockChart(rawSymbol) {
     el.chartLoadingOverlay.classList.add('flex');
   }
 
+  // Safety timer: Never allow loading overlay to stay stuck for > 5 seconds
+  const overlaySafetyTimer = setTimeout(() => {
+    if (el.chartLoadingOverlay) {
+      el.chartLoadingOverlay.classList.remove('flex');
+      el.chartLoadingOverlay.classList.add('hidden');
+    }
+  }, 5000);
+
   try {
     // 2. Initial Progressive Fetch: 1 year (~250 trading candles) for instant render
     const reqRange = state.activeInterval === '1d' ? '1y' : (state.activeRange || '2y');
@@ -7552,8 +7694,8 @@ async function loadStockChart(rawSymbol) {
 
     applyChartPayload(data, cleanSymbol);
 
-    // Only cache directly if not daily (daily will be cached with full 3-year data once merged)
-    if (window.CandleCache && state.activeInterval !== '1d') {
+    // Persist to browser IndexedDB for instant sub-10ms cache retrieval
+    if (window.CandleCache) {
       CandleCache.set(cleanSymbol, state.activeInterval, data);
     }
 
@@ -7561,7 +7703,7 @@ async function loadStockChart(rawSymbol) {
     pollActiveStockLiveQuote();
 
     // 3. Progressive Background History: fetch preceding 2 years without blocking
-    if (state.activeInterval === '1d' && data.candles && data.candles.length > 0) {
+    if (state.activeInterval === '1d' && data.candles && data.candles.length < 450 && data.candles.length > 0) {
       triggerBackgroundHistoryLoading(cleanSymbol, data, signal);
     }
 
@@ -7571,6 +7713,7 @@ async function loadStockChart(rawSymbol) {
       showToast(`Chart error for ${cleanSymbol}: ${err.message}`, 'error');
     }
   } finally {
+    clearTimeout(overlaySafetyTimer);
     if (el.chartLoadingOverlay) {
       el.chartLoadingOverlay.classList.remove('flex');
       el.chartLoadingOverlay.classList.add('hidden');
@@ -7639,21 +7782,27 @@ async function pollActiveStockLiveQuote() {
       const istMins = istNow.getHours() * 60 + istNow.getMinutes();
       const isMarketSession = (istDay >= 1 && istDay <= 5) && (istMins >= 555 && istMins <= 930);
 
+      const incomingOpen = (q.open != null && !isNaN(Number(q.open)) && Number(q.open) > 0) ? Number(q.open) : null;
+
       if (isDaily && lastC.time !== todayIST && isMarketSession) {
+        const cOpen = incomingOpen !== null ? incomingOpen : newPrice;
         lastC = {
           time: todayIST,
-          open: newPrice,
-          high: Math.max(newPrice, Number(q.dayHigh || newPrice)),
-          low: Math.min(newPrice, Number(q.dayLow || newPrice)),
+          open: cOpen,
+          high: Math.max(newPrice, Number(q.dayHigh || newPrice), cOpen),
+          low: Math.min(newPrice, Number(q.dayLow || newPrice), cOpen),
           close: newPrice,
           volume: Number(q.volume || 0)
         };
         candles.push(lastC);
       } else if (lastC.time === todayIST || !isDaily) {
         lastC = { ...lastC };
+        if (incomingOpen !== null) {
+          lastC.open = incomingOpen;
+        }
         lastC.close = newPrice;
-        lastC.high = Math.max(lastC.high, newPrice, Number(q.dayHigh || newPrice));
-        lastC.low = Math.min(lastC.low, newPrice, Number(q.dayLow || newPrice));
+        lastC.high = Math.max(lastC.high, newPrice, Number(q.dayHigh || newPrice), lastC.open);
+        lastC.low = Math.min(lastC.low, newPrice, Number(q.dayLow || newPrice), lastC.open);
         if (q.volume) lastC.volume = Math.max(lastC.volume || 0, Number(q.volume));
         candles[candles.length - 1] = lastC;
       }
@@ -7758,6 +7907,10 @@ function selectStock(stock) {
 
   if (el.chartStockName) el.chartStockName.textContent = stock.name || stock.symbol;
   updateOnChartCircuitBadge(stock);
+  try {
+    if (state.charts.main) state.charts.main.priceScale('right').applyOptions({ autoScale: true });
+    if (state.charts.rsi) state.charts.rsi.priceScale('right').applyOptions({ autoScale: true });
+  } catch (e) {}
   loadStockChart(stock.symbol);
 }
 
@@ -8225,6 +8378,16 @@ function renderPricescanTable() {
   const tfCode = interval === '1wk' ? 'W' : 'D';
 
   const matches = [...(state.pricescanResults || [])].filter(stock => {
+    // Strict Condition Matching
+    if (isCrossToday) {
+      if (stock.crossedDaysAgo !== 0) return false;
+    } else if (isCross5d) {
+      if (typeof stock.crossedDaysAgo !== 'number' || stock.crossedDaysAgo > 5) return false;
+    } else {
+      // Channel mode: exclude crossover-only rows if condition switched
+      if (stock.scanMode === 'cross_today' || stock.scanMode === 'cross_5d') return false;
+    }
+
     if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) {
       return false;
     }
@@ -9840,17 +10003,17 @@ function initMarketIndicesStrip() {
 function formatEodSyncDate(dateStr) {
   if (!dateStr || dateStr === 'NEVER') return '';
   try {
-    const parts = dateStr.split('-');
+    const parts = String(dateStr).split('-');
     if (parts.length === 3) {
       const year = parseInt(parts[0], 10);
       const month = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
       const d = new Date(year, month, day);
-      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     }
     const d = new Date(dateStr);
     if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     }
   } catch (_) {}
   return dateStr;
@@ -9900,11 +10063,22 @@ function renderEodBadgeCompletedState(data) {
   }
   if (elText && data) {
     const timeStr = data.lastSyncTimeIST || '4:30 PM';
-    const dateStr = formatEodSyncDate(data.lastSyncDateIST);
-    const label = dateStr ? `EOD Synced: ${dateStr}, ${timeStr}` : `EOD Synced: ${timeStr}`;
+    const rawDate = data.dataUpdatedTill || data.lastSyncDateIST;
+    const dateStr = formatEodSyncDate(rawDate);
+    const label = dateStr ? `Data Updated: ${dateStr}` : `Data Updated: ${timeStr}`;
     elText.textContent = label;
     if (elBtn) {
-      elBtn.title = `Daily EOD Baseline synchronized for ${data.syncedStocksCount || 'all'} stocks (${data.lastSyncDateIST || 'Today'} at ${timeStr} IST). Click to manually sync latest data.`;
+      elBtn.title = `Market Data synchronized & verified till ${dateStr || 'Latest'} (${timeStr} IST). Click to check for updates.`;
+    }
+  }
+
+  // Acknowledge data updated date in screener header for all users
+  const elLastUpdated = document.getElementById('last-updated-time');
+  if (elLastUpdated && data) {
+    const rawDate = data.dataUpdatedTill || data.lastSyncDateIST;
+    const dateStr = formatEodSyncDate(rawDate);
+    if (dateStr) {
+      elLastUpdated.textContent = `• Data updated till: ${dateStr}`;
     }
   }
 }

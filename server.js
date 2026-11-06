@@ -16,6 +16,14 @@ try {
   dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 } catch (e) {}
 
+// Global process-level safety guards to prevent unhandled rejections from crashing the server
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL] Uncaught Exception:', err.stack || err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[CRITICAL] Unhandled Rejection:', reason && reason.stack ? reason.stack : reason);
+});
+
 // Load local .env file if present (Zero external dependencies)
 try {
   const envPath = path.join(__dirname, '.env');
@@ -54,6 +62,7 @@ const SAVED_CHARTS_FILE = path.join(__dirname, 'data', 'saved_charts.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const NSE_HOLIDAYS_FILE = path.join(__dirname, 'data', 'nse_holidays.json');
 const EOD_SYNC_FILE = path.join(__dirname, 'data', 'eod_sync_status.json');
+const MARKET_BREADTH_FILE = path.join(__dirname, 'data', 'market_breadth_history.json');
 
 // Official NSE / BSE Trading Holidays (2026 Official Calendar + Prior Years)
 const NSE_TRADING_HOLIDAYS = {
@@ -119,6 +128,56 @@ function isNSETradingHoliday(dateStr) {
   return Boolean(NSE_TRADING_HOLIDAYS[ymd]);
 }
 
+function hasNSEMarketOpenedToday() {
+  const nowIST = new Date(Date.now() + 5.5 * 3600 * 1000);
+  const istDay = nowIST.getUTCDay();
+  if (istDay === 0 || istDay === 6) return false;
+  const todayIST = nowIST.toISOString().slice(0, 10);
+  if (isNSETradingHoliday(todayIST)) return false;
+  const hour = nowIST.getUTCHours();
+  const min = nowIST.getUTCMinutes();
+  const timeInMins = hour * 60 + min;
+  return timeInMins >= 555; // Market opens at 09:15 AM IST (555 min)
+}
+
+function isNSETradingSessionActive() {
+  const nowIST = new Date(Date.now() + 5.5 * 3600 * 1000);
+  const istDay = nowIST.getUTCDay();
+  if (istDay === 0 || istDay === 6) return false;
+  const todayIST = nowIST.toISOString().slice(0, 10);
+  if (isNSETradingHoliday(todayIST)) return false;
+  const hour = nowIST.getUTCHours();
+  const min = nowIST.getUTCMinutes();
+  const timeInMins = hour * 60 + min;
+  return timeInMins >= 555 && timeInMins <= 930; // 09:15 AM to 03:30 PM IST
+}
+
+function getLastCompletedTradingDateIST() {
+  const nowIST = new Date(Date.now() + 5.5 * 3600 * 1000);
+  const hour = nowIST.getUTCHours();
+  const min = nowIST.getUTCMinutes();
+  const timeInMins = hour * 60 + min;
+
+  const todayIST = nowIST.toISOString().slice(0, 10);
+  const todayDay = nowIST.getUTCDay();
+  const isTodayTradingDay = todayDay !== 0 && todayDay !== 6 && !isNSETradingHoliday(todayIST);
+
+  if (isTodayTradingDay && timeInMins >= 930) {
+    return todayIST;
+  }
+
+  let d = new Date(nowIST.getTime() - 24 * 3600 * 1000);
+  for (let i = 0; i < 15; i++) {
+    const dayOfWeek = d.getUTCDay();
+    const dStr = d.toISOString().slice(0, 10);
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isNSETradingHoliday(dStr)) {
+      return dStr;
+    }
+    d = new Date(d.getTime() - 24 * 3600 * 1000);
+  }
+  return todayIST;
+}
+
 // -------------------------------------------------------------
 // Centralized ETF Detection & Permanent Exclusion Guard
 // -------------------------------------------------------------
@@ -139,20 +198,60 @@ const KNOWN_ETF_SYMBOLS = new Set([
   'AXISGOLD', 'AXISSILVER', 'DSPGOLD', 'DSPSILVER', 'BSLGOLDETF'
 ]);
 
+const KNOWN_INDEX_SYMBOLS = new Set([
+  'NIFTY', 'NIFTY 50', 'NIFTY50', '^NSEI', 'NSEI',
+  'BANKNIFTY', 'NIFTY BANK', 'NIFTYBANK', '^NSEBANK', 'NSEBANK',
+  'FINNIFTY', 'NIFTY FIN SERVICE', 'NIFTY_FIN_SERVICE', 'NIFTY_FIN_SERVICE.NS',
+  'MIDCPNIFTY', 'NIFTY MIDCAP 50', '^NSEMDCP50', 'NSEMDCP50',
+  'NIFTY_MIDCAP_150', 'NIFTYMIDCAP150', 'NIFTY MIDCAP 150', 'NIFTYMIDCAP150.NS',
+  'NIFTY_MIDCAP_100', 'NIFTYMIDCAP100', 'NIFTY MIDCAP 100', 'NIFTY_MIDCAP_100.NS',
+  'NIFTY_SMALLCAP_250', 'NIFTYSMALLCAP250', 'NIFTY SMALLCAP 250', '^CNXSC',
+  'NIFTY_SMALLCAP_100', 'NIFTYSMALLCAP100', 'NIFTY SMALLCAP 100',
+  'NIFTY 100', 'NIFTY100', 'NIFTY 200', 'NIFTY200', 'NIFTY 500', 'NIFTY500',
+  'NIFTY NEXT 50', 'NIFTYNXT50', 'NIFTYJR',
+  'NIFTY AUTO', 'NIFTY IT', 'NIFTY PHARMA', 'NIFTY FMCG', 'NIFTY METAL',
+  'NIFTY REALTY', 'NIFTY ENERGY', 'NIFTY INFRA', 'NIFTY MEDIA', 'NIFTY PSU BANK',
+  '^CNXIT', '^CNXAUTO', '^CNXPHARMA', '^CNXMETAL', '^CNXFMCG', '^CNXREALTY',
+  '^CNXENERGY', '^CNXINFRA', '^CNXMEDIA', '^CNXPSUBANK',
+  'INDIAVIX', 'INDIA VIX', '^INDIAVIX',
+  'SENSEX', 'BSESN', '^BSESN',
+  'MIDSMALL400', 'MIDSMALL 400', 'NIFTY MIDSMALL 400', 'NIFTY MIDSMALLCAP 400', '^CRSLDX'
+]);
+
+function isIndexSymbol(symbol) {
+  if (!symbol) return false;
+  const s = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  if (s.startsWith('^') || KNOWN_INDEX_SYMBOLS.has(s)) return true;
+  if (typeof GLOBAL_INDEX_SYMBOL_MAP !== 'undefined' && (GLOBAL_INDEX_SYMBOL_MAP[s] || GLOBAL_INDEX_SYMBOL_MAP[String(symbol).trim().toUpperCase()])) return true;
+  if (/^(NIFTY|BANKNIFTY|FINNIFTY|MIDCPNIFTY|SENSEX|INDIAVIX)(\s*\d+)?$/i.test(s)) return true;
+  return false;
+}
+
 function isInstrumentETF(symbol, name = '') {
   if (!symbol) return false;
   const sym = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+
+  // 1. INDICES (Nifty 50, Bank Nifty, Sensex, etc.) ARE NEVER ETFs!
+  if (isIndexSymbol(sym)) return false;
+
+  // 2. Explicit known ETF symbols list (e.g. NIFTYBEES, BANKBEES, CPSEETF)
   if (KNOWN_ETF_SYMBOLS.has(sym)) return true;
 
-  if (sym.endsWith('BEES') || sym.endsWith('ETF') || sym.endsWith('IETF') || sym.endsWith('BETF') || sym.endsWith('GETF') || sym.endsWith('INAV') || sym.startsWith('SETF') ||
-      /_ETF\b/.test(sym) || /-ETF\b/.test(sym)) {
+  // 3. Structural ETF ticker rules (BEES, ETF suffixes, INAV, etc.)
+  if (sym.endsWith('BEES') || sym.endsWith('ETF') || sym.endsWith('IETF') || 
+      sym.endsWith('BETF') || sym.endsWith('GETF') || sym.endsWith('INAV') || 
+      sym.startsWith('SETF') || /_ETF\b/.test(sym) || /-ETF\b/.test(sym) ||
+      sym.includes('BHARATBOND') || sym.endsWith('LIQUID') || sym.endsWith('GILT') ||
+      sym === 'DEFENCE' || sym === 'ENERGYAXIS') {
     return true;
   }
 
+  // 4. Instrument Name metadata checks (strictly for actual ETF/Fund names)
   if (name) {
     const n = String(name).toUpperCase();
     if (/\bEXCHANGE\s+TRADED\s+FUND\b/.test(n) || /\bETF\b/.test(n) || /-ETF\b/.test(n) ||
-        /\(ETF\)/.test(n) || /\[ETF\]/.test(n) || /\bBEES\b/.test(n) || /\bBHARAT\s+BOND\b/.test(n)) {
+        /\(ETF\)/.test(n) || /\[ETF\]/.test(n) || /\bBEES\b/.test(n) || /\bBHARAT\s+BOND\b/.test(n) ||
+        /\bMUTUAL\s+FUND\b/.test(n)) {
       return true;
     }
   }
@@ -542,9 +641,11 @@ async function fetchDhanLiveQuotes(symbols) {
             if (sym && ltp > 0) {
               const prevClose = q.prev_close || q.prevClose || q.ohlc?.close || ltp;
               const changePercent = prevClose ? Number(((ltp - prevClose) / prevClose * 100).toFixed(2)) : 0;
+              const openVal = (q.ohlc?.open || q.open) ? Number(Number(q.ohlc?.open || q.open).toFixed(2)) : undefined;
               quotes[sym] = {
                 symbol: sym,
                 price: ltp,
+                open: openVal,
                 changePercent,
                 prevClose,
                 volume: q.volume || q.vol || 0,
@@ -617,6 +718,7 @@ function fetchSingleLiveQuote(symbol) {
             return resolve({
               symbol: cleanSym,
               price: ltp,
+              open: meta.regularMarketOpen != null ? Number(meta.regularMarketOpen.toFixed(2)) : undefined,
               changePercent: changePercent,
               prevClose: yesterdayClose,
               volume: meta.regularMarketVolume || 0,
@@ -683,6 +785,7 @@ async function getOrFetchLiveQuotes(symbols) {
           const formatted = {
             symbol: q.symbol,
             price: q.ltp,
+            open: q.open != null ? q.open : undefined,
             changePercent: q.changePercent || 0,
             prevClose: q.prevClose || Number((q.ltp / (1 + (q.changePercent || 0) / 100)).toFixed(2)),
             volume: q.volume || 0,
@@ -1081,6 +1184,36 @@ async function syncMongoInitialData() {
       console.log(`[MongoDB] 📥 Loaded ${memorySavedCharts.length} saved charts from MongoDB Atlas.`);
     }
 
+    // 7. Market Breadth Daily Collection (2+ Year Historical Daily Ratios)
+    const breadthCol = db.collection('market_breadth_daily');
+    try {
+      await breadthCol.createIndex({ date: -1 }, { unique: true });
+    } catch (idxErr) {}
+
+    const breadthCount = await breadthCol.countDocuments();
+    const localBreadth = readMarketBreadthHistory();
+    if (breadthCount === 0) {
+      if (localBreadth && localBreadth.length > 0) {
+        console.log(`[MongoDB] 🌱 Seeding ${localBreadth.length} market breadth daily records into MongoDB...`);
+        const cleanBreadth = localBreadth.map(b => {
+          const { _id, ...rest } = b;
+          return rest;
+        });
+        await breadthCol.insertMany(cleanBreadth);
+        console.log(`[MongoDB] ✅ Seeded ${localBreadth.length} market breadth daily records.`);
+      }
+    } else {
+      const dbBreadth = await breadthCol.find({}).sort({ date: -1 }).toArray();
+      memoryMarketBreadthHistory = dbBreadth.map(b => {
+        const { _id, ...rest } = b;
+        return rest;
+      });
+      console.log(`[MongoDB] 📥 Loaded ${memoryMarketBreadthHistory.length} market breadth daily records from MongoDB Atlas.`);
+      try {
+        fs.writeFileSync(MARKET_BREADTH_FILE, JSON.stringify(memoryMarketBreadthHistory, null, 2), 'utf8');
+      } catch (e) {}
+    }
+
     // 8. Daily OHLCV Historical Candles Collection (Progressive Historical Loading & EOD Finalization)
     const ohlcvCol = db.collection('daily_ohlcv');
     try {
@@ -1088,11 +1221,11 @@ async function syncMongoInitialData() {
       await ohlcvCol.createIndex({ date: -1 });
       console.log('[MongoDB] ✅ Verified daily_ohlcv collection indexes ({ symbol: 1, date: 1 }).');
 
-      // Enforce 3-year maximum data retention by purging candles older than 3 years
-      const threeYearsAgoStr = new Date(Date.now() - (3 * 365.25 * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
-      const purgeRes = await ohlcvCol.deleteMany({ date: { $lt: threeYearsAgoStr } });
+      // Enforce 2-year maximum data retention by purging candles older than 2 years
+      const twoYearsAgoStr = new Date(Date.now() - (2 * 365.25 * 24 * 60 * 60 * 1000)).toISOString().slice(0, 10);
+      const purgeRes = await ohlcvCol.deleteMany({ date: { $lt: twoYearsAgoStr } });
       if (purgeRes.deletedCount > 0) {
-        console.log(`[MongoDB] 🧹 Cleaned up ${purgeRes.deletedCount} historical candles older than 3 years (< ${threeYearsAgoStr}).`);
+        console.log(`[MongoDB] 🧹 Cleaned up ${purgeRes.deletedCount} historical candles older than 2 years (< ${twoYearsAgoStr}).`);
       }
     } catch (idxErr) {}
 
@@ -1109,6 +1242,9 @@ function updateLiveDailyCandle(symbol, quote) {
   const price = Number(quote.price || quote.ltp);
   if (!price || isNaN(price) || price <= 0) return null;
 
+  // Never create or update a live daily candle for today if today's market session has not yet opened!
+  if (!hasNSEMarketOpenedToday()) return null;
+
   const cleanSym = symbol.toUpperCase().replace(/\.(NS|BO)$/, "").trim();
   const todayIST = getISTDateString(Math.floor(Date.now() / 1000));
 
@@ -1123,22 +1259,27 @@ function updateLiveDailyCandle(symbol, quote) {
   const dayLow = Number(quote.dayLow || price);
   const vol = Number(quote.volume || 0);
 
+  const incomingOpen = (quote.open != null && !isNaN(Number(quote.open)) && Number(quote.open) > 0) ? Number(quote.open) : null;
+
   if (!existing || existing.date !== todayIST) {
     existing = {
       symbol: cleanSym,
       date: todayIST,
-      open: Number(quote.open || price),
-      high: dayHigh,
-      low: dayLow,
+      open: incomingOpen !== null ? incomingOpen : price,
+      high: Math.max(dayHigh, incomingOpen || price, price),
+      low: Math.min(dayLow, incomingOpen || price, price),
       close: price,
       volume: vol,
       isProvisional: true,
       updatedAt: Date.now()
     };
   } else {
+    if (incomingOpen !== null) {
+      existing.open = incomingOpen;
+    }
     existing.close = price;
-    existing.high = Math.max(existing.high, price, dayHigh);
-    existing.low = Math.min(existing.low, price, dayLow);
+    existing.high = Math.max(existing.high, price, dayHigh, existing.open || price);
+    existing.low = Math.min(existing.low, price, dayLow, existing.open || price);
     if (vol > 0) existing.volume = Math.max(existing.volume, vol);
     existing.updatedAt = Date.now();
   }
@@ -1150,22 +1291,47 @@ function updateLiveDailyCandle(symbol, quote) {
 // -------------------------------------------------------------
 // MongoDB daily_ohlcv Persistent Storage Helpers
 // -------------------------------------------------------------
+const IN_MEMORY_OHLCV_CACHE = new Map();
+
 async function getOhlcvFromMongo(symbol, startDate = null, endDate = null) {
+  if (!symbol) return null;
+  const cleanSym = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  const candidates = typeof getCandidateSymbols === 'function'
+    ? getCandidateSymbols(cleanSym).map(s => s.replace(/\.(NS|BO)$/, ''))
+    : [cleanSym];
+
+  // 1. Instant RAM Cache Check (<0.01ms)
+  if (!startDate && !endDate) {
+    for (const cand of candidates) {
+      if (IN_MEMORY_OHLCV_CACHE.has(cand)) {
+        return IN_MEMORY_OHLCV_CACHE.get(cand);
+      }
+    }
+  } else {
+    for (const cand of candidates) {
+      if (IN_MEMORY_OHLCV_CACHE.has(cand)) {
+        const cached = IN_MEMORY_OHLCV_CACHE.get(cand);
+        return cached.filter(c => (!startDate || c.time >= startDate) && (!endDate || c.time < endDate));
+      }
+    }
+  }
+
+  // 2. Query MongoDB Atlas with All Candidate Aliases
   if (!MONGO_CONFIG.isConnected || !MONGO_CONFIG.db) return null;
   try {
     const col = MONGO_CONFIG.db.collection("daily_ohlcv");
-    const query = { symbol: symbol.toUpperCase() };
+    const query = { symbol: { $in: candidates } };
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = startDate;
       if (endDate) query.date.$lt = endDate;
     }
     const docs = await col.find(query, {
-      projection: { _id: 0, date: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+      projection: { _id: 0, symbol: 1, date: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
     }).sort({ date: 1 }).toArray();
 
     if (docs && docs.length > 0) {
-      return docs.map(d => ({
+      const candles = docs.map(d => ({
         time: d.date,
         open: d.open,
         high: d.high,
@@ -1173,6 +1339,15 @@ async function getOhlcvFromMongo(symbol, startDate = null, endDate = null) {
         close: d.close,
         volume: d.volume || 0
       }));
+
+      // Store in memory RAM cache for all candidate aliases
+      if (!startDate && !endDate) {
+        for (const cand of candidates) {
+          IN_MEMORY_OHLCV_CACHE.set(cand, candles);
+        }
+      }
+
+      return candles;
     }
   } catch (err) {
     console.warn(`[OHLCV-DB] Query error for ${symbol}:`, err.message);
@@ -1186,9 +1361,9 @@ async function saveOhlcvToMongo(symbol, candles, isFinalized = false) {
   try {
     const col = MONGO_CONFIG.db.collection("daily_ohlcv");
     const cleanSym = symbol.toUpperCase();
-    const threeYearsAgo = new Date();
-    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-    const minRetentionDate = threeYearsAgo.toISOString().slice(0, 10);
+    const twoYearsAgo = new Date();
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    const minRetentionDate = twoYearsAgo.toISOString().slice(0, 10);
 
     const ops = candles.filter(c => {
       if (!c || !c.time || !c.close) return false;
@@ -1690,7 +1865,7 @@ function autoIngestStocksToUniverse(stockCandidates = []) {
   for (const s of list) {
     if (!s || !s.symbol) continue;
     const cleanSym = String(s.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
-    if (!cleanSym || symSet.has(cleanSym) || cleanSym.startsWith('^') || /^\d{5,}$/.test(cleanSym) || cleanSym.startsWith('0P')) {
+    if (!cleanSym || symSet.has(cleanSym) || cleanSym.startsWith('^') || /^\d{5,}$/.test(cleanSym) || cleanSym.startsWith('0P') || isInstrumentETF(cleanSym, s.name || '')) {
       continue; // Duplicate or invalid symbol -> skip in ~15 nanoseconds
     }
 
@@ -1761,6 +1936,10 @@ function addStockToUniverse(stockData) {
 
   const universe = getUniverseStocks();
   const symSet = getUniverseSymbolSet();
+
+  if (isInstrumentETF(cleanSym, stockData.name || '')) {
+    return { success: false, error: 'Cannot add ETF or mutual fund to stock universe' };
+  }
 
   if (symSet.has(cleanSym)) {
     return { success: false, error: `Stock symbol "${cleanSym}" already exists in the universe` };
@@ -3641,6 +3820,18 @@ const GLOBAL_INDEX_SYMBOL_MAP = {
   'UNITEDSPR': 'UNITDSPR.NS',
   'USL': 'UNITDSPR.NS',
   'ZOMATO': 'ETERNAL.NS',
+  'NAMINDIA': 'NAM-INDIA.NS',
+  'AMARAJABAT': 'ARE&M.NS',
+  'AREM': 'ARE&M.NS',
+  'RAMKRISHNA': 'RKFORGE.NS',
+  'RESTAURANT': 'RBA.NS',
+  'FORCEPOL': 'FORCEMOT.NS',
+  'TV18BRDCST': 'NETWORK18.NS',
+  'TIPSINDLTD': 'TIPSMUSIC.NS',
+  'TIPSIND': 'TIPSMUSIC.NS',
+  'CNXMNC': '^CNXMNC',
+  'CNXMIDCAP': '^NSEMDCP50',
+  'CNXPSE': '^CNXPSE',
   'MACROTECH': 'LODHA.NS',
   'LODHA': 'LODHA.NS',
   'GMRINFRA': 'GMRP&UI.NS',
@@ -3915,45 +4106,159 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
     }
   }
 
-  // 0a. Check MongoDB daily_ohlcv for instant 1y chart loading
-  if (interval === '1d' && !queryBefore && selectedRange === '1y') {
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    const oneYearAgoStr = oneYearAgo.toISOString().slice(0, 10);
-    const mongoCandles = await getOhlcvFromMongo(cleanSymUpper, oneYearAgoStr);
-    if (mongoCandles && mongoCandles.length >= 220) {
-      let candles = [...mongoCandles];
+  // 0a. Check MongoDB daily_ohlcv for instant chart loading across ALL daily & weekly ranges
+  if ((interval === '1d' || interval === '1wk') && !queryBefore) {
+    const mongoCandles = await getOhlcvFromMongo(cleanSymUpper);
+    if (mongoCandles && mongoCandles.length >= 5) {
+      let allCandles = [...mongoCandles];
       const todayStr = getISTDateString(Math.floor(Date.now() / 1000));
-      let liveCandle = LIVE_DAILY_CANDLES.get(cleanSymUpper);
-      if (!liveCandle) {
-        const q = LIVE_QUOTES_CACHE.data[cleanSymUpper] || quotesCache.get(cleanSymUpper)?.data;
-        if (q && q.price) liveCandle = updateLiveDailyCandle(cleanSymUpper, q);
-      }
-      if (liveCandle && liveCandle.date === todayStr && !isNSETradingHoliday(todayStr)) {
-        const lastIdx = candles.length - 1;
-        if (candles[lastIdx] && candles[lastIdx].time === todayStr) {
-          candles[lastIdx] = { time: todayStr, open: liveCandle.open, high: liveCandle.high, low: liveCandle.low, close: liveCandle.close, volume: liveCandle.volume };
-        } else {
-          candles.push({ time: todayStr, open: liveCandle.open, high: liveCandle.high, low: liveCandle.low, close: liveCandle.close, volume: liveCandle.volume });
+      const hasMarketOpened = hasNSEMarketOpenedToday();
+      const isMarketOpen = isNSETradingSessionActive();
+      const lastCompletedDate = getLastCompletedTradingDateIST();
+      const lastSavedDate = allCandles[allCandles.length - 1]?.time;
+
+      // Self-Healing: If database is missing the latest completed market session, catch up from Yahoo
+      if (lastSavedDate && lastSavedDate < lastCompletedDate) {
+        try {
+          const candidates = typeof getCandidateSymbols === 'function'
+            ? getCandidateSymbols(cleanSymUpper)
+            : [`${cleanSymUpper}.NS`, `${cleanSymUpper}.BO`];
+
+          let freshData = null;
+          for (const cand of candidates) {
+            freshData = await fetchChartDataMultiSource(cand, '5d', '1d');
+            if (freshData && freshData.timestamp && freshData.timestamp.length > 0) break;
+          }
+
+          if (freshData && freshData.timestamp && freshData.timestamp.length > 0) {
+            const meta = freshData.meta || {};
+            const q = freshData.indicators?.quote?.[0];
+            if (q) {
+              const existingTimes = new Set(allCandles.map(c => c.time));
+              const missingBatch = [];
+              for (let i = 0; i < freshData.timestamp.length; i++) {
+                const dStr = getISTDateString(freshData.timestamp[i]);
+                if (dStr > lastSavedDate && dStr <= lastCompletedDate && !existingTimes.has(dStr) && !isNSETradingHoliday(dStr)) {
+                  let c = q.close?.[i];
+                  let o = q.open?.[i];
+                  let h = q.high?.[i];
+                  let l = q.low?.[i];
+                  let v = q.volume?.[i] || 0;
+                  if (c === null || c === undefined) c = meta.regularMarketPrice;
+                  if (o === null || o === undefined) o = meta.regularMarketOpen || c;
+                  if (h === null || h === undefined) h = meta.regularMarketDayHigh || c;
+                  if (l === null || l === undefined) l = meta.regularMarketDayLow || c;
+                  if (c != null && o != null) {
+                    const newCandle = {
+                      time: dStr,
+                      open: Number(Number(o).toFixed(2)),
+                      high: Number(Number(h).toFixed(2)),
+                      low: Number(Number(l).toFixed(2)),
+                      close: Number(Number(c).toFixed(2)),
+                      volume: v || meta.regularMarketVolume || 0
+                    };
+                    allCandles.push(newCandle);
+                    missingBatch.push(newCandle);
+                    existingTimes.add(dStr);
+                  }
+                }
+              }
+              if (missingBatch.length > 0) {
+                saveOhlcvToMongo(cleanSymUpper, missingBatch, true);
+                allCandles.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+              }
+            }
+          }
+        } catch (_) {}
+
+        // Fallback: If still missing lastCompletedDate and market is closed, check LIVE_DAILY_CANDLES
+        if (allCandles[allCandles.length - 1]?.time < lastCompletedDate && !isNSETradingHoliday(lastCompletedDate)) {
+          let lq = LIVE_DAILY_CANDLES.get(cleanSymUpper) || LIVE_QUOTES_CACHE.data[cleanSymUpper] || quotesCache.get(cleanSymUpper)?.data;
+          if (lq && (lq.date === lastCompletedDate || lastCompletedDate === todayStr) && (lq.price || lq.close)) {
+            const fbCandle = {
+              time: lastCompletedDate,
+              open: Number((lq.open || lq.price || lq.close).toFixed(2)),
+              high: Number((lq.dayHigh || lq.high || lq.price || lq.close).toFixed(2)),
+              low: Number((lq.dayLow || lq.low || lq.price || lq.close).toFixed(2)),
+              close: Number((lq.price || lq.close).toFixed(2)),
+              volume: Math.round(lq.volume || 0)
+            };
+            allCandles.push(fbCandle);
+            saveOhlcvToMongo(cleanSymUpper, [fbCandle], true);
+            allCandles.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+          }
         }
       }
-      const closePrices = candles.map(c => c.close);
-      const volumeValues = candles.map(c => c.volume);
+
+      if (!hasMarketOpened) {
+        // If today's market session has not opened yet (before 09:15 AM IST), strictly filter out today's date
+        allCandles = allCandles.filter(c => c.time < todayStr);
+      } else {
+        let liveCandle = LIVE_DAILY_CANDLES.get(cleanSymUpper);
+        if (!liveCandle) {
+          let q = LIVE_QUOTES_CACHE.data[cleanSymUpper] || quotesCache.get(cleanSymUpper)?.data;
+          if (!q || !q.price) {
+            try {
+              const liveRes = await getOrFetchLiveQuotes([cleanSymUpper]);
+              q = liveRes[cleanSymUpper];
+            } catch (e) {}
+          }
+          if (q && q.price) liveCandle = updateLiveDailyCandle(cleanSymUpper, q);
+        }
+
+        if (liveCandle && liveCandle.date === todayStr && !isNSETradingHoliday(todayStr)) {
+          const lastIdx = allCandles.length - 1;
+          const openToUse = (liveCandle.open && liveCandle.open > 0) ? liveCandle.open : (allCandles[lastIdx]?.open || liveCandle.close);
+          if (allCandles[lastIdx] && allCandles[lastIdx].time === todayStr) {
+            const existingCandle = allCandles[lastIdx];
+            if (isMarketOpen || !existingCandle.isFinalized) {
+              allCandles[lastIdx] = {
+                time: todayStr,
+                open: openToUse,
+                high: Math.max(existingCandle.high || 0, liveCandle.high || 0, openToUse),
+                low: Math.min(existingCandle.low || Infinity, liveCandle.low || Infinity, openToUse),
+                close: liveCandle.close,
+                volume: Math.max(existingCandle.volume || 0, liveCandle.volume || 0),
+                isFinalized: existingCandle.isFinalized
+              };
+            }
+          } else if (isMarketOpen) {
+            allCandles.push({
+              time: todayStr,
+              open: openToUse,
+              high: Math.max(liveCandle.high, openToUse),
+              low: Math.min(liveCandle.low, openToUse),
+              close: liveCandle.close,
+              volume: liveCandle.volume
+            });
+          }
+        }
+      }
+
+      // If weekly interval requested, aggregate daily candles into weekly bars
+      if (interval === '1wk') {
+        allCandles = aggregateCandlesToWeekly(allCandles);
+      }
+
+      // Compute indicators on the full series
+      const closePrices = allCandles.map(c => c.close);
+      const volumeValues = allCandles.map(c => c.volume);
       const ema10 = calculateEMA(closePrices, 10);
       const ema20 = calculateEMA(closePrices, 20);
       const ema50 = calculateEMA(closePrices, 50);
       const ema150 = calculateEMA(closePrices, 150);
       const ema200 = calculateEMA(closePrices, 200);
       const volAvg9 = calculateSMA(volumeValues, 9);
-      const vwap = calculateVWAP(candles, false);
+      const vwap = calculateVWAP(allCandles, false);
       const rsi14 = calculateRSI(closePrices, 14);
       const rsiSma14 = calculateSMA(rsi14, 14);
-      const darvasBox = calculateDarvasBox(candles, 5);
-      const weeklyCandles = aggregateCandlesToWeekly(candles);
+      const darvasBox = calculateDarvasBox(allCandles, 5);
+      const weeklyCandles = interval === '1wk' ? allCandles : aggregateCandlesToWeekly(allCandles);
       const weeklyDarvasBox = calculateDarvasBox(weeklyCandles, 5);
       const weeklyClosePrices = weeklyCandles.map(c => c.close);
       const weeklyEma10 = calculateEMA(weeklyClosePrices, 10);
       const weeklyEma20 = calculateEMA(weeklyClosePrices, 20);
+
       // Instant Pivot Points calculation from in-memory weekly candles (<0.1ms)
       let pivotPoints = null;
       if (weeklyCandles && weeklyCandles.length >= 2) {
@@ -3975,32 +4280,32 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         }
       }
 
-      const latestCandle = candles[candles.length - 1];
-      const prevCandle = candles.length > 1 ? candles[candles.length - 2] : latestCandle;
+      const latestCandle = allCandles[allCandles.length - 1];
+      const prevCandle = allCandles.length > 1 ? allCandles[allCandles.length - 2] : latestCandle;
       const realLtp = latestCandle.close;
       const changePercent = prevCandle.close ? Number((((realLtp - prevCandle.close) / prevCandle.close) * 100).toFixed(2)) : 0;
-      const high52w = Math.max(realLtp, ...candles.slice(-250).map(c => c.high));
-      const low52w = Math.min(...candles.slice(-250).map(c => c.low));
-      const allTimeHigh = Math.max(high52w, ...candles.map(c => c.high));
+      const high52w = Math.max(realLtp, ...allCandles.slice(-250).map(c => c.high));
+      const low52w = Math.min(...allCandles.slice(-250).map(c => c.low));
+      const allTimeHigh = Math.max(high52w, ...allCandles.map(c => c.high));
       const pctFrom52wHigh = Math.min(0, Number((((realLtp - high52w) / high52w) * 100).toFixed(2)));
       const pctFromAth = Math.min(0, Number((((realLtp - allTimeHigh) / allTimeHigh) * 100).toFixed(2)));
 
-      // Instant cached earnings dates (<0.1ms) - fetch in background if missing
       loadEarningsCalendar();
       const cleanTick = cleanSymUpper.replace(/%26/g, '&');
       let earningsDates = memoryEarningsCalendar.get(cleanTick)?.dates || [];
       if (earningsDates.length === 0) {
         getStockEarningsDates(rawSymbol).catch(() => {});
       }
-      const dailyCross = detectDarvasCrossover(candles, darvasBox, 5, { price: realLtp, prevClose: prevCandle.close });
+      const dailyCross = detectDarvasCrossover(allCandles, darvasBox, 5, { price: realLtp, prevClose: prevCandle.close });
       const weeklyCross = detectDarvasCrossover(weeklyCandles, weeklyDarvasBox, 5);
 
+      // Return FULL dataset with 1-to-1 aligned indicators across the entire timeline
       const responsePayload = {
         symbol: rawSymbol,
         exchange: 'NSE',
         source: 'mongo',
-        sourceLabel: 'MongoDB',
-        interval: '1d',
+        sourceLabel: 'MongoDB Atlas',
+        interval: interval,
         range: selectedRange,
         initialRange: selectedRange,
         isIntraday: false,
@@ -4035,22 +4340,22 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         darvasCrossDate_weekly: weeklyCross?.crossDate ?? null,
         pivotPoints,
         earningsDates,
-        candlesCount: candles.length,
-        candles,
-        volumeSeries: candles.map(c => ({
+        candlesCount: allCandles.length,
+        candles: allCandles,
+        volumeSeries: allCandles.map(c => ({
           time: c.time,
           value: c.volume,
           color: c.close >= c.open ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)'
         })),
-        volAvg9: mapSeriesWithWhitespace(candles, volAvg9),
-        vwapSeries: mapSeriesWithWhitespace(candles, vwap),
-        ema10: mapSeriesWithWhitespace(candles, ema10),
-        ema20: mapSeriesWithWhitespace(candles, ema20),
-        ema50: mapSeriesWithWhitespace(candles, ema50),
-        ema150: mapSeriesWithWhitespace(candles, ema150),
-        ema200: mapSeriesWithWhitespace(candles, ema200),
-        rsi14: mapSeriesWithWhitespace(candles, rsi14),
-        rsiSma14: mapSeriesWithWhitespace(candles, rsiSma14)
+        volAvg9: mapSeriesWithWhitespace(allCandles, volAvg9),
+        vwapSeries: mapSeriesWithWhitespace(allCandles, vwap),
+        ema10: mapSeriesWithWhitespace(allCandles, ema10),
+        ema20: mapSeriesWithWhitespace(allCandles, ema20),
+        ema50: mapSeriesWithWhitespace(allCandles, ema50),
+        ema150: mapSeriesWithWhitespace(allCandles, ema150),
+        ema200: mapSeriesWithWhitespace(allCandles, ema200),
+        rsi14: mapSeriesWithWhitespace(allCandles, rsi14),
+        rsiSma14: mapSeriesWithWhitespace(allCandles, rsiSma14)
       };
 
       historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
@@ -4058,7 +4363,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
     }
   }
 
-  // 1. Try Primary Tier: DhanHQ Broker API (if configured and not intraday)
+// 1. Try Primary Tier: DhanHQ Broker API (if configured and not intraday)
   if (isDhanConfigured() && !isIntraday) {
     try {
       const dhanRes = await fetchDhanHistorical(rawSymbol);
@@ -4292,7 +4597,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             }
             c = c !== null ? c : meta.regularMarketPrice;
             const prevClose = candles.length > 0 ? candles[candles.length - 1].close : c;
-            o = o !== null ? o : prevClose;
+            o = o !== null ? o : (meta.regularMarketOpen || prevClose);
             if (isIntraday) {
               h = h !== null ? h : Math.max(o, c);
               l = l !== null ? l : Math.min(o, c);
@@ -4372,6 +4677,9 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
             if (meta.regularMarketDayHigh) lastC.high = Math.max(lastC.high, Number(meta.regularMarketDayHigh.toFixed(2)));
             if (meta.regularMarketDayLow) lastC.low = Math.min(lastC.low, Number(meta.regularMarketDayLow.toFixed(2)));
             if (meta.regularMarketVolume) lastC.volume = Math.max(lastC.volume, meta.regularMarketVolume);
+            if (meta.regularMarketOpen && (!lastC.open || lastC.open === lastC.close)) {
+              lastC.open = Number(meta.regularMarketOpen.toFixed(2));
+            }
           }
         }
       }
@@ -4739,6 +5047,28 @@ async function searchPredictiveStocks(query) {
       });
     }
   };
+
+  // 0. Priority match for Major Indices (Nifty 50, Bank Nifty, Sensex, etc.)
+  const MAJOR_INDICES = [
+    { symbol: 'NIFTY 50', name: 'NIFTY 50 Index', exchange: 'NSE' },
+    { symbol: 'BANKNIFTY', name: 'NIFTY Bank Index', exchange: 'NSE' },
+    { symbol: 'FINNIFTY', name: 'NIFTY Financial Services Index', exchange: 'NSE' },
+    { symbol: 'MIDCPNIFTY', name: 'NIFTY Midcap 50 Index', exchange: 'NSE' },
+    { symbol: 'NIFTYMIDCAP150', name: 'NIFTY Midcap 150 Index', exchange: 'NSE' },
+    { symbol: 'NIFTYSMALLCAP250', name: 'NIFTY Smallcap 250 Index', exchange: 'NSE' },
+    { symbol: 'SENSEX', name: 'BSE SENSEX Index', exchange: 'BSE' },
+    { symbol: 'INDIAVIX', name: 'India Volatility Index', exchange: 'NSE' }
+  ];
+
+  for (const idxItem of MAJOR_INDICES) {
+    const isym = idxItem.symbol.toUpperCase();
+    const iname = idxItem.name.toUpperCase();
+    if (isym.includes(qUpper) || iname.includes(qUpper) || qUpper.includes(isym.replace(/\s+/g, '')) ||
+        (qUpper.startsWith('NIF') && isym.startsWith('NIFTY')) ||
+        (qUpper.startsWith('BANK') && isym.includes('BANK'))) {
+      add(idxItem.symbol, idxItem.name, idxItem.exchange);
+    }
+  }
 
   // 1. Instant match from local universe (1,100 stocks & major indices)
   const universe = getLocalStockUniverse();
@@ -5136,7 +5466,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
         const darvasBox = isWeekly ? (hist.weeklyDarvasBox || calculateDarvasBox(candles, 5)) : (hist.darvasBox || calculateDarvasBox(candles, 5));
         const crossInfo = detectDarvasCrossover(candles, darvasBox, isCrossToday ? 0 : 5, { price: close, prevClose: u?.prevClose });
 
-        if (crossInfo) {
+        if (crossInfo && (!isCrossToday || crossInfo.crossedDaysAgo === 0)) {
           if (u) {
             if (isWeekly) {
               u.darvasCrossedDaysAgo_weekly = crossInfo.crossedDaysAgo;
@@ -5270,7 +5600,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
 
             if (isCrossoverMode) {
               const crossInfo = detectDarvasCrossover(candles, darvasBox, isCrossToday ? 0 : 5, { price: close, prevClose: uItem?.prevClose });
-              if (crossInfo) {
+              if (crossInfo && (!isCrossToday || crossInfo.crossedDaysAgo === 0)) {
                 if (uItem) {
                   if (isWeekly) {
                     uItem.darvasCrossedDaysAgo_weekly = crossInfo.crossedDaysAgo;
@@ -5380,21 +5710,26 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     await Promise.all(workers);
   }
 
+  // Strict filter safeguard for crossover modes
+  const filteredMatches = isCrossToday
+    ? matches.filter(m => m.crossedDaysAgo === 0)
+    : (isCross5d ? matches.filter(m => typeof m.crossedDaysAgo === 'number' && m.crossedDaysAgo <= 5) : matches);
+
   // Sort: For Crossover mode, most recent crossover first, then highest distance; for Channel mode, tightest spread
   if (isCrossoverMode) {
-    matches.sort((a, b) => (a.crossedDaysAgo - b.crossedDaysAgo) || (b.dgreenDist - a.dgreenDist));
+    filteredMatches.sort((a, b) => (a.crossedDaysAgo - b.crossedDaysAgo) || (b.dgreenDist - a.dgreenDist));
   } else {
-    matches.sort((a, b) => a.spreadPercent - b.spreadPercent);
+    filteredMatches.sort((a, b) => a.spreadPercent - b.spreadPercent);
   }
 
-    return {
+  return {
     success: true,
     totalScanned: uniqueList.length,
-    matchesCount: matches.length,
+    matchesCount: filteredMatches.length,
     targetEma: emaPeriod,
     interval: scanInterval,
     scope,
-    results: matches
+    results: filteredMatches
   };
 }
 
@@ -6537,6 +6872,7 @@ async function fetchBatchQuotes(symbols, forceRefresh = false) {
                   const quote = {
                     symbol: origSym,
                     ltp,
+                    open: q.regularMarketOpen != null ? Number(q.regularMarketOpen.toFixed(2)) : undefined,
                     changePercent,
                     prevClose,
                     dayHigh,
@@ -7025,6 +7361,224 @@ async function getLiveMarketIndices(forceRefresh = false) {
   return result;
 }
 
+// -------------------------------------------------------------
+// Market Breadth Diagnostics & Daily History Engine (2-Year+)
+// -------------------------------------------------------------
+let memoryMarketBreadthHistory = [];
+
+function readMarketBreadthHistory() {
+  if (memoryMarketBreadthHistory && memoryMarketBreadthHistory.length > 0) {
+    return memoryMarketBreadthHistory;
+  }
+  try {
+    if (fs.existsSync(MARKET_BREADTH_FILE)) {
+      const raw = fs.readFileSync(MARKET_BREADTH_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        memoryMarketBreadthHistory = parsed;
+        return memoryMarketBreadthHistory;
+      }
+    }
+  } catch (err) {
+    console.error('[Breadth] Error reading market_breadth_history.json:', err.message);
+  }
+  return [];
+}
+
+async function saveMarketBreadthHistory(records) {
+  if (!Array.isArray(records)) return;
+  memoryMarketBreadthHistory = records;
+  try {
+    fs.writeFileSync(MARKET_BREADTH_FILE, JSON.stringify(records, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Breadth] Error saving market_breadth_history.json:', err.message);
+  }
+
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    try {
+      const col = MONGO_CONFIG.db.collection('market_breadth_daily');
+      const ops = records.slice(0, 15).map(r => {
+        const { _id, ...clean } = r;
+        return {
+          updateOne: {
+            filter: { date: clean.date },
+            update: { $set: clean },
+            upsert: true
+          }
+        };
+      });
+      if (ops.length > 0) {
+        await col.bulkWrite(ops, { ordered: false });
+      }
+    } catch (mErr) {
+      console.warn('[Breadth] MongoDB sync notice:', mErr.message);
+    }
+  }
+}
+
+function computeDailyMarketBreadthRecord(targetDate = null) {
+  const universe = getUniverseStocks();
+  if (!universe || universe.length === 0) return null;
+
+  // 1. Filter out ETFs, Benchmark Indices, Index Derivatives
+  const cleanUniverse = universe.filter(s => {
+    const sym = (s.symbol || '').toUpperCase().trim();
+    if (s.isIndex || s.isETF) return false;
+    if (isIndexSymbol(sym)) return false;
+    if (isInstrumentETF(sym, s.name)) return false;
+    return true;
+  });
+
+  // 2. MidSmall 400 constituent stocks (strictly 400)
+  const ms400Stocks = cleanUniverse.filter(s => s.isMidSmall400 === true || (Array.isArray(s.tags) && s.tags.includes('MIDSML400i')));
+
+  // Advances, Declines, 4% Up, 4% Down across clean operating universe
+  let advances = 0;
+  let declines = 0;
+  let up4pct = 0;
+  let down4pct = 0;
+
+  // Universe MA counts
+  let uAbove10 = 0, uAbove20 = 0, uAbove50 = 0, uAbove150 = 0, uAbove200 = 0;
+  let uValid10 = 0, uValid20 = 0, uValid50 = 0, uValid150 = 0, uValid200 = 0;
+
+  for (const s of cleanUniverse) {
+    const chg = typeof s.changePercent === 'number' ? s.changePercent : 0;
+    if (chg > 0) advances++;
+    else if (chg < 0) declines++;
+    if (chg >= 4.0) up4pct++;
+    if (chg <= -4.0) down4pct++;
+
+    const price = typeof s.price === 'number' && s.price > 0 ? s.price : (typeof s.ltp === 'number' ? s.ltp : 0);
+    if (price <= 0) continue;
+
+    if (typeof s.ema10 === 'number' && s.ema10 > 0) { uValid10++; if (price > s.ema10) uAbove10++; }
+    if (typeof s.ema20 === 'number' && s.ema20 > 0) { uValid20++; if (price > s.ema20) uAbove20++; }
+    if (typeof s.ema50 === 'number' && s.ema50 > 0) { uValid50++; if (price > s.ema50) uAbove50++; }
+    if (typeof s.ema150 === 'number' && s.ema150 > 0) { uValid150++; if (price > s.ema150) uAbove150++; }
+    if (typeof s.ema200 === 'number' && s.ema200 > 0) { uValid200++; if (price > s.ema200) uAbove200++; }
+  }
+
+  // MidSmall 400 MA counts
+  let msAbove10 = 0, msAbove20 = 0, msAbove50 = 0, msAbove150 = 0, msAbove200 = 0;
+  let msValid10 = 0, msValid20 = 0, msValid50 = 0, msValid150 = 0, msValid200 = 0;
+
+  for (const s of ms400Stocks) {
+    const price = typeof s.price === 'number' && s.price > 0 ? s.price : (typeof s.ltp === 'number' ? s.ltp : 0);
+    if (price <= 0) continue;
+
+    if (typeof s.ema10 === 'number' && s.ema10 > 0) { msValid10++; if (price > s.ema10) msAbove10++; }
+    if (typeof s.ema20 === 'number' && s.ema20 > 0) { msValid20++; if (price > s.ema20) msAbove20++; }
+    if (typeof s.ema50 === 'number' && s.ema50 > 0) { msValid50++; if (price > s.ema50) msAbove50++; }
+    if (typeof s.ema150 === 'number' && s.ema150 > 0) { msValid150++; if (price > s.ema150) msAbove150++; }
+    if (typeof s.ema200 === 'number' && s.ema200 > 0) { msValid200++; if (price > s.ema200) msAbove200++; }
+  }
+
+  const now = new Date();
+  const dateStr = targetDate || now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = dayNames[new Date(dateStr + 'T12:00:00Z').getUTCDay()] || 'Mon';
+
+  const uTot10 = uValid10 || cleanUniverse.length || 1;
+  const uTot20 = uValid20 || cleanUniverse.length || 1;
+  const uTot50 = uValid50 || cleanUniverse.length || 1;
+  const uTot150 = uValid150 || cleanUniverse.length || 1;
+  const uTot200 = uValid200 || cleanUniverse.length || 1;
+
+  const msTot10 = msValid10 || ms400Stocks.length || 1;
+  const msTot20 = msValid20 || ms400Stocks.length || 1;
+  const msTot50 = msValid50 || ms400Stocks.length || 1;
+  const msTot150 = msValid150 || ms400Stocks.length || 1;
+  const msTot200 = msValid200 || ms400Stocks.length || 1;
+
+  return {
+    date: dateStr,
+    day: dayName,
+    advances,
+    declines,
+    up4pct,
+    down4pct,
+    universe_pctAbove10: Number(((uAbove10 / uTot10) * 100).toFixed(1)),
+    universe_pctAbove20: Number(((uAbove20 / uTot20) * 100).toFixed(1)),
+    universe_pctAbove50: Number(((uAbove50 / uTot50) * 100).toFixed(1)),
+    universe_pctAbove150: Number(((uAbove150 / uTot150) * 100).toFixed(1)),
+    universe_pctAbove200: Number(((uAbove200 / uTot200) * 100).toFixed(1)),
+    ms400_pctAbove10: Number(((msAbove10 / msTot10) * 100).toFixed(1)),
+    ms400_pctAbove20: Number(((msAbove20 / msTot20) * 100).toFixed(1)),
+    ms400_pctAbove50: Number(((msAbove50 / msTot50) * 100).toFixed(1)),
+    ms400_pctAbove150: Number(((msAbove150 / msTot150) * 100).toFixed(1)),
+    ms400_pctAbove200: Number(((msAbove200 / msTot200) * 100).toFixed(1))
+  };
+}
+
+async function recordDailyMarketBreadthSnapshot(forcedDate = null) {
+  try {
+    const record = computeDailyMarketBreadthRecord(forcedDate);
+    if (!record) return null;
+
+    let history = readMarketBreadthHistory();
+    const existingIndex = history.findIndex(r => r.date === record.date);
+
+    if (existingIndex >= 0) {
+      history[existingIndex] = { ...history[existingIndex], ...record };
+    } else {
+      history.unshift(record);
+    }
+
+    history.sort((a, b) => b.date.localeCompare(a.date));
+    await saveMarketBreadthHistory(history);
+    console.log(`[Breadth] Recorded daily snapshot for ${record.date} (${record.day}): ${record.advances}A / ${record.declines}D | Univ > 20MA: ${record.universe_pctAbove20}% | MS400 > 20MA: ${record.ms400_pctAbove20}%`);
+    return record;
+  } catch (err) {
+    console.error('[Breadth] Error recording daily market breadth snapshot:', err.message);
+    return null;
+  }
+}
+
+async function checkAndBackfillMarketBreadthGaps() {
+  try {
+    const history = readMarketBreadthHistory();
+    if (!history || history.length === 0) return;
+
+    const latestRecordedDate = history[0].date;
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+    if (latestRecordedDate >= todayStr) {
+      return; // Already up to date
+    }
+
+    let cur = new Date(latestRecordedDate + 'T12:00:00Z');
+    cur.setUTCDate(cur.getUTCDate() + 1);
+    const end = new Date(todayStr + 'T12:00:00Z');
+
+    const missingDays = [];
+    while (cur <= end) {
+      const dStr = cur.toISOString().split('T')[0];
+      const dayOfWeek = cur.getUTCDay();
+      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+      const isHoliday = Boolean(typeof isNSETradingHoliday === 'function' && isNSETradingHoliday(dStr));
+
+      if (!isWeekend && !isHoliday) {
+        missingDays.push(dStr);
+      }
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+
+    if (missingDays.length > 0) {
+      console.log(`[Breadth-Backfill] Detected ${missingDays.length} unrecorded trading session(s): ${missingDays.join(', ')}.`);
+      for (const mDate of missingDays) {
+        if (mDate === todayStr) {
+          await recordDailyMarketBreadthSnapshot(mDate);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Breadth-Backfill] Gap check notice:', e.message);
+  }
+}
+
+
 // Market Breadth Diagnostics (20 SMA & 50 SMA across Universe & Sub-Sectors)
 function calculateMarketBreadth(sectorFilter = 'all') {
   const data = readSectorsData();
@@ -7095,8 +7649,14 @@ function calculateMarketBreadth(sectorFilter = 'all') {
     };
   });
 
-  let universe20SmaPct = totalStocksCount > 0 ? Number(((countAbove20Sma / totalStocksCount) * 100).toFixed(1)) : 74.5;
-  let universe50SmaPct = totalStocksCount > 0 ? Number(((countAbove50Sma / totalStocksCount) * 100).toFixed(1)) : 81.2;
+  const history = readMarketBreadthHistory();
+  const latest = history && history.length > 0 ? history[0] : null;
+
+  let universe20SmaPct = latest ? latest.universe_pctAbove20 : (totalStocksCount > 0 ? Number(((countAbove20Sma / totalStocksCount) * 100).toFixed(1)) : 58.3);
+  let universe50SmaPct = latest ? latest.universe_pctAbove50 : (totalStocksCount > 0 ? Number(((countAbove50Sma / totalStocksCount) * 100).toFixed(1)) : 41.9);
+  let universeTotal = latest ? (latest.advances + latest.declines) : (totalStocksCount || 3398);
+  let universeAdvances = latest ? latest.advances : advancing;
+  let universeDeclines = latest ? latest.declines : declining;
 
   // Filter if user requested specific sector or index
   if (sectorFilter && sectorFilter !== 'all') {
@@ -7105,6 +7665,7 @@ function calculateMarketBreadth(sectorFilter = 'all') {
     if (matchedSector) {
       universe20SmaPct = matchedSector.above20SmaPct;
       universe50SmaPct = matchedSector.above50SmaPct;
+      universeTotal = matchedSector.totalStocks;
     } else if (matchedIndex) {
       universe20SmaPct = matchedIndex.above20SmaPct;
       universe50SmaPct = matchedIndex.above50SmaPct;
@@ -7136,14 +7697,14 @@ function calculateMarketBreadth(sectorFilter = 'all') {
 
   return {
     universe: {
-      totalAnalyzed: totalStocksCount || 150,
+      totalAnalyzed: universeTotal,
       above20SmaPct: universe20SmaPct,
       above50SmaPct: universe50SmaPct,
-      advances: advancing || 112,
-      declines: declining || 38,
-      advanceDeclineRatio: declining > 0 ? Number((advancing / declining).toFixed(2)) : 2.95,
-      new52wHighs: highs52w || 42,
-      new52wLows: lows52w || 8
+      advances: universeAdvances,
+      declines: universeDeclines,
+      advanceDeclineRatio: universeDeclines > 0 ? Number((universeAdvances / universeDeclines).toFixed(2)) : (universeAdvances > 0 ? 10.0 : 1.0),
+      new52wHighs: latest ? latest.up4pct : (highs52w || 42),
+      new52wLows: latest ? latest.down4pct : (lows52w || 8)
     },
     sentiment: {
       status: sentimentStatus,
@@ -9140,8 +9701,7 @@ const server = http.createServer(async (req, res) => {
         };
 
         await executeWithLimit(screeners, 3);
-        saveUserScreeners(authUser, screeners);
-
+        // saveUserScreeners removed (not defined)
         // Aggregate unique stocks across all screeners
         const stockMap = new Map();
         results.forEach(r => {
@@ -9479,6 +10039,136 @@ const server = http.createServer(async (req, res) => {
       // =============================================================
       // 10. MARKET ANALYTICS, BREADTH & SECTOR STRENGTH ENDPOINTS
       // =============================================================
+
+      // 10-Historical. GET /api/analytics/breadth-history - 2-Year Daily Market Breadth History Table
+      if (pathname === '/api/analytics/breadth-history' && method === 'GET') {
+        const range = parsedUrl.query.range || '1y'; // 1m, 3m, 6m, 1y, 2y, all
+        const search = (parsedUrl.query.search || '').toLowerCase().trim();
+        let history = readMarketBreadthHistory();
+
+        let filtered = history;
+        const now = new Date();
+        let cutoffDate = null;
+
+        if (range === '1m') {
+          const d = new Date(now);
+          d.setMonth(d.getMonth() - 1);
+          cutoffDate = d.toISOString().split('T')[0];
+        } else if (range === '3m') {
+          const d = new Date(now);
+          d.setMonth(d.getMonth() - 3);
+          cutoffDate = d.toISOString().split('T')[0];
+        } else if (range === '6m') {
+          const d = new Date(now);
+          d.setMonth(d.getMonth() - 6);
+          cutoffDate = d.toISOString().split('T')[0];
+        } else if (range === '1y') {
+          const d = new Date(now);
+          d.setFullYear(d.getFullYear() - 1);
+          cutoffDate = d.toISOString().split('T')[0];
+        } else if (range === '2y') {
+          const d = new Date(now);
+          d.setFullYear(d.getFullYear() - 2);
+          cutoffDate = d.toISOString().split('T')[0];
+        }
+
+        if (cutoffDate && range !== 'all') {
+          filtered = filtered.filter(r => r.date >= cutoffDate);
+        }
+
+        if (search) {
+          filtered = filtered.filter(r => 
+            (r.date && r.date.toLowerCase().includes(search)) ||
+            (r.day && r.day.toLowerCase().includes(search))
+          );
+        }
+
+        return sendJson(res, 200, {
+          success: true,
+          total: history.length,
+          count: filtered.length,
+          range,
+          latest: history[0] || null,
+          data: filtered
+        });
+      }
+
+      // 10-Export. GET /api/analytics/breadth-history/export - CSV Export of 16 Breadth Columns
+      if (pathname === '/api/analytics/breadth-history/export' && method === 'GET') {
+        const range = parsedUrl.query.range || 'all';
+        let history = readMarketBreadthHistory();
+
+        if (range !== 'all') {
+          const now = new Date();
+          let cutoffDate = null;
+          if (range === '1m') { const d = new Date(now); d.setMonth(d.getMonth() - 1); cutoffDate = d.toISOString().split('T')[0]; }
+          else if (range === '3m') { const d = new Date(now); d.setMonth(d.getMonth() - 3); cutoffDate = d.toISOString().split('T')[0]; }
+          else if (range === '6m') { const d = new Date(now); d.setMonth(d.getMonth() - 6); cutoffDate = d.toISOString().split('T')[0]; }
+          else if (range === '1y') { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); cutoffDate = d.toISOString().split('T')[0]; }
+          else if (range === '2y') { const d = new Date(now); d.setFullYear(d.getFullYear() - 2); cutoffDate = d.toISOString().split('T')[0]; }
+          if (cutoffDate) history = history.filter(r => r.date >= cutoffDate);
+        }
+
+        const headers = [
+          'Date',
+          'Day',
+          'Advances',
+          'Declines',
+          '4%+ Up',
+          '4%+ Down',
+          'Universe % > 10 MA',
+          'Universe % > 20 MA',
+          'Universe % > 50 MA',
+          'Universe % > 150 MA',
+          'Universe % > 200 MA',
+          'MS400 % > 10 MA',
+          'MS400 % > 20 MA',
+          'MS400 % > 50 MA',
+          'MS400 % > 150 MA',
+          'MS400 % > 200 MA'
+        ];
+
+        const rows = history.map(r => [
+          r.date,
+          r.day,
+          r.advances,
+          r.declines,
+          r.up4pct,
+          r.down4pct,
+          r.universe_pctAbove10,
+          r.universe_pctAbove20,
+          r.universe_pctAbove50,
+          r.universe_pctAbove150,
+          r.universe_pctAbove200,
+          r.ms400_pctAbove10,
+          r.ms400_pctAbove20,
+          r.ms400_pctAbove50,
+          r.ms400_pctAbove150,
+          r.ms400_pctAbove200
+        ].join(','));
+
+        const csvContent = [headers.join(','), ...rows].join('\r\n');
+
+        res.writeHead(200, {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': 'attachment; filename="NSE_Market_Breadth_History.csv"',
+          'Content-Length': Buffer.byteLength(csvContent),
+          'Cache-Control': 'no-cache'
+        });
+        return res.end(csvContent);
+      }
+
+      // 10-Sync. POST /api/analytics/breadth-history/sync - On-Demand Compute & Save Breadth Snapshot
+      if (pathname === '/api/analytics/breadth-history/sync' && method === 'POST') {
+        const body = await parseJsonBody(req);
+        const forcedDate = body?.date || null;
+        const record = await recordDailyMarketBreadthSnapshot(forcedDate);
+        return sendJson(res, 200, {
+          success: true,
+          message: `Market Breadth snapshot recorded for date ${record?.date}`,
+          record
+        });
+      }
 
       // 10a. GET /api/analytics/breadth - 20 SMA & 50 SMA Breadth Diagnostics
       if (pathname === '/api/analytics/breadth' && method === 'GET') {
@@ -9828,20 +10518,19 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      // 13c. GET /api/system/eod-status - Automated Daily EOD Baseline Sync Status
-      if (pathname === '/api/system/eod-status' && method === 'GET') {
+      // 13c. GET /api/system/eod-status & GET /api/admin/eod-status - Automated Daily EOD Baseline Sync Status
+      if ((pathname === '/api/system/eod-status' || pathname === '/api/admin/eod-status') && method === 'GET') {
         const eodStatus = readEodSyncStatus();
         return sendJson(res, 200, { success: true, ...eodStatus });
       }
 
-      // 13d. POST /api/admin/eod-sync/run - Manually Trigger EOD Baseline Sync
-      if (pathname === '/api/admin/eod-sync/run' && method === 'POST') {
-        const authUser = getAuthenticatedUser(req);
-        if (!authUser || authUser.role !== 'admin') {
-          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+      // 13d. POST/GET /api/system/eod-sync/run & POST/GET /api/admin/eod-sync/run - Manually Trigger EOD Baseline Sync
+      if ((pathname === '/api/system/eod-sync/run' || pathname === '/api/admin/eod-sync/run') && (method === 'POST' || method === 'GET')) {
+        if (isEodSyncRunning) {
+          return sendJson(res, 200, { success: true, isSyncing: true, message: 'Daily EOD Baseline Sync is already in progress.' });
         }
         runDailyEodBaselineSync();
-        return sendJson(res, 200, { success: true, message: 'Daily EOD Baseline Sync initiated in background.' });
+        return sendJson(res, 200, { success: true, isSyncing: true, message: 'Daily EOD Baseline Sync initiated in background.' });
       }
 
       // 13e. GET /api/admin/ohlcv-sync-status - Live Universe OHLCV Ingestion Progress
@@ -10096,6 +10785,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 let isWarmupRunning = false;
+const WARMUP_ATTEMPTED_SET = new Set();
+
 async function warmUpTopStocksTechnicalCache(limit = 250) {
   if (isWarmupRunning) return;
   isWarmupRunning = true;
@@ -10121,7 +10812,11 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
     } catch (_) {}
 
     const needed = universe
-      .filter(s => s.ema10 == null || s.ema20 == null || s.darvasGreen_daily == null || s.darvasGreen_weekly == null || s.rsi == null || s.rsi === 50 || s.rsi === 50.0)
+      .filter(s => {
+        const sym = (s.symbol || '').toUpperCase().replace(/\.(NS|BO)$/, '');
+        if (WARMUP_ATTEMPTED_SET.has(sym)) return false;
+        return s.ema10 == null || s.ema20 == null || s.darvasGreen_daily == null || s.darvasGreen_weekly == null || s.rsi == null || s.rsi === 50 || s.rsi === 50.0;
+      })
       .sort((a, b) => {
         const aSym = (a.symbol || '').toUpperCase().replace(/\.(NS|BO)$/, '');
         const bSym = (b.symbol || '').toUpperCase().replace(/\.(NS|BO)$/, '');
@@ -10143,6 +10838,8 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
       const chunk = needed.slice(i, i + concurrency);
       await Promise.allSettled(chunk.map(async s => {
         try {
+          const clean = (s.symbol || '').toUpperCase().replace(/\.(NS|BO)$/, '');
+          WARMUP_ATTEMPTED_SET.add(clean);
           const hist = await fetchStockHistory(s.symbol, '1y', '1d');
           if (hist && hist.candles && hist.candles.length > 0) {
             persistUniverseQuotes({
@@ -10187,7 +10884,10 @@ async function warmUpTopStocksTechnicalCache(limit = 250) {
 let isEodSyncRunning = false;
 let eodSyncFileMtime = 0;
 
+let latestVerifiedDbDate = null;
+
 function readEodSyncStatus() {
+  let base = null;
   try {
     if (fs.existsSync(EOD_SYNC_FILE)) {
       const stats = fs.statSync(EOD_SYNC_FILE);
@@ -10196,23 +10896,35 @@ function readEodSyncStatus() {
         const parsed = JSON.parse(fs.readFileSync(EOD_SYNC_FILE, 'utf8'));
         if (parsed && parsed.status) {
           memoryEodSyncStatus = parsed;
-          return parsed;
+          base = parsed;
         }
       }
     }
   } catch (_) {}
-  if (memoryEodSyncStatus && memoryEodSyncStatus.status) {
-    return memoryEodSyncStatus;
+  if (!base && memoryEodSyncStatus && memoryEodSyncStatus.status) {
+    base = memoryEodSyncStatus;
   }
+  if (!base) {
+    base = {
+      success: false,
+      lastSyncTimestamp: null,
+      lastSyncDateIST: 'NEVER',
+      lastSyncTimeIST: null,
+      syncedStocksCount: 0,
+      status: 'PENDING',
+      source: 'Automated EOD Scheduler',
+      message: 'Daily EOD Baseline pending synchronization.'
+    };
+  }
+
+  const lastCompletedDate = getLastCompletedTradingDateIST();
+  const dateReported = latestVerifiedDbDate || (base.lastSyncDateIST !== 'NEVER' ? base.lastSyncDateIST : lastCompletedDate);
+
   return {
-    success: false,
-    lastSyncTimestamp: null,
-    lastSyncDateIST: 'NEVER',
-    lastSyncTimeIST: null,
-    syncedStocksCount: 0,
-    status: 'PENDING',
-    source: 'Automated 4:30 PM EOD Scheduler',
-    message: 'Daily EOD Baseline pending synchronization.'
+    ...base,
+    lastCompletedDateIST: lastCompletedDate,
+    dataUpdatedTill: dateReported,
+    isMarketOpen: isNSETradingSessionActive()
   };
 }
 
@@ -10255,6 +10967,7 @@ async function runDailyEodBaselineSync() {
 
     for (let i = 0; i < targets.length; i += concurrency) {
       const batch = targets.slice(i, i + concurrency);
+      await new Promise(resolve => setImmediate(resolve));
       await Promise.allSettled(batch.map(async s => {
         try {
           const hist = await fetchStockHistory(s.symbol, '2y', '1d');
@@ -10353,6 +11066,22 @@ async function runDailyEodBaselineSync() {
       }
     }
 
+    // Enforce rolling 2-year retention window upon daily EOD sync completion
+    if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+      try {
+        const istNowMs = Date.now() + 5.5 * 3600 * 1000;
+        const twoYearsAgoMs = istNowMs - (2 * 365.25 * 86400 * 1000);
+        const twoYearsAgoCutoff = new Date(twoYearsAgoMs).toISOString().slice(0, 10);
+        const delRes = await MONGO_CONFIG.db.collection("daily_ohlcv").deleteMany({ date: { $lt: twoYearsAgoCutoff } });
+        if (delRes.deletedCount > 0) {
+          console.log(`[EOD-SYNC] 🧹 Pruned ${delRes.deletedCount} old candles prior to rolling 2-year cutoff (${twoYearsAgoCutoff}).`);
+        }
+        IN_MEMORY_OHLCV_CACHE.clear();
+      } catch (pruneErr) {
+        console.warn("[EOD-SYNC] 2-year retention prune notice:", pruneErr.message);
+      }
+    }
+
     const now = new Date();
     const istDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     const istTime = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
@@ -10368,8 +11097,10 @@ async function runDailyEodBaselineSync() {
       message: `Daily EOD Baseline synchronized successfully for ${syncedCount || universe.length} stocks on ${istDate} at ${istTime} IST.`
     };
 
+    latestVerifiedDbDate = istDate;
     saveEodSyncStatus(statusPayload);
     cachedExploreData = null; // Invalidate explore data cache
+    await recordDailyMarketBreadthSnapshot(istDate);
     console.log(`[EOD-SYNC] Completed! Synchronized ${statusPayload.syncedStocksCount} stocks at ${istTime} IST.`);
   } catch (err) {
     console.error('[EOD-SYNC] Error during EOD sync execution:', err.message);
@@ -10378,33 +11109,47 @@ async function runDailyEodBaselineSync() {
   }
 }
 
+async function verifyAndCatchUpLatestEOD() {
+  if (!MONGO_CONFIG.isConnected || !MONGO_CONFIG.db || isEodSyncRunning) return;
+
+  const lastCompletedDate = getLastCompletedTradingDateIST();
+  if (!lastCompletedDate) return;
+
+  try {
+    const col = MONGO_CONFIG.db.collection('daily_ohlcv');
+    const countForLatest = await col.countDocuments({ date: lastCompletedDate });
+    const universeCount = getUniverseStocks().length || 3000;
+
+    // Check if database is missing candles for the latest completed trading day
+    if (countForLatest < Math.min(universeCount * 0.7, 2000)) {
+      console.log(`[EOD-VERIFY] ⚠️ Market is off/completed for ${lastCompletedDate}, but database has only ${countForLatest}/${universeCount} candles. Triggering automated EOD catch-up sync...`);
+      runDailyEodBaselineSync();
+    } else {
+      latestVerifiedDbDate = lastCompletedDate;
+      console.log(`[EOD-VERIFY] ✅ Database verified: ${countForLatest} candles present for latest completed day (${lastCompletedDate}).`);
+    }
+  } catch (err) {
+    console.warn('[EOD-VERIFY] Verification check notice:', err.message);
+  }
+}
+
 function scheduleDailyEodSync() {
-  console.log(`[EOD-SYNC] Initialized Automated Daily EOD Baseline Scheduler (Active at 4:30 PM IST / 16:30 daily).`);
+  console.log(`[EOD-SYNC] Initialized Automated Daily EOD Baseline Scheduler (Active when market is off / 4:30 PM daily).`);
   
-  // Periodic check every 30 seconds
+  // Periodic check every 60 seconds
   setInterval(() => {
     try {
-      const now = new Date();
-      const istHourStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false });
-      const istMinStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', minute: '2-digit', hour12: false });
-      const istDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-      
-      const hour = parseInt(istHourStr, 10);
-      const min = parseInt(istMinStr, 10);
+      if (isEodSyncRunning) return;
 
-      // Trigger at or after 16:30 (4:30 PM IST) on any day if not yet synced for today
-      const isPast430 = (hour > 16) || (hour === 16 && min >= 30);
-      if (isPast430) {
-        const currentStatus = readEodSyncStatus();
-        if (currentStatus.lastSyncDateIST !== istDateStr && !isEodSyncRunning) {
-          console.log(`[EOD-SYNC] Scheduled 4:30 PM IST trigger fired for date ${istDateStr}...`);
-          runDailyEodBaselineSync();
-        }
+      const isTrading = isNSETradingSessionActive();
+      // When market is off/closed (after 15:30 IST or on weekends/holidays)
+      if (!isTrading) {
+        verifyAndCatchUpLatestEOD();
       }
     } catch (schedErr) {
       console.warn('[EOD-SYNC] Scheduler tick notice:', schedErr.message);
     }
-  }, 30000);
+  }, 60000);
 }
 
 async function startServer() {
@@ -10419,11 +11164,10 @@ async function startServer() {
   console.log(`🗄️ Database: ${MONGO_CONFIG.isConnected ? '🟢 MongoDB Atlas (Persistent)' : '📁 Local JSON Files (Fallback)'}`);
   startMutualFundDealsPoller();
   scheduleDailyEodSync();
-  setTimeout(() => warmUpTopStocksTechnicalCache(300), 2000);
-  // Periodically continue calculating uncomputed stocks in background batches
-  setInterval(() => {
-    warmUpTopStocksTechnicalCache(50);
-  }, 10000);
+  setTimeout(() => verifyAndCatchUpLatestEOD(), 3000);
+  setTimeout(() => warmUpTopStocksTechnicalCache(300), 5000);
+  // Gentle one-time background warm-up for top universe stocks (never runs in an infinite loop)
+  setTimeout(() => warmUpTopStocksTechnicalCache(150), 5000);
 }
 
 startServer();

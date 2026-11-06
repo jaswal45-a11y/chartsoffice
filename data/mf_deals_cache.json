@@ -1,9 +1,39 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-11-02T19:49:22.216Z",
-  "latestDealId": "1be8cd746968",
+  "lastUpdated": "2026-11-06T12:44:26.809Z",
+  "latestDealId": "530036fe06f5",
   "deals": [
+    {
+      "id": "530036fe06f5",
+      "exchange": "NSE",
+      "date": "05-Nov-26",
+      "clientName": "WHITEOAK CAPITAL MULTI ASSET ALLOCATION FUND",
+      "companyName": "Anantam Highways",
+      "dealType": "SELL",
+      "volume": "1183828",
+      "dealPrice": "100.01"
+    },
+    {
+      "id": "72dc8e0f7f19",
+      "exchange": "NSE",
+      "date": "03-Nov-26",
+      "clientName": "ABAKKUS INVESTMENT MANAGERS PRIVATE LIMITED",
+      "companyName": "SFC Environmental",
+      "dealType": "BUY",
+      "volume": "1315000",
+      "dealPrice": "379"
+    },
+    {
+      "id": "c9dc5aed7d92",
+      "exchange": "NSE",
+      "date": "03-Nov-26",
+      "clientName": "TRUST MUTUAL FUND",
+      "companyName": "SFC Environmental",
+      "dealType": "BUY",
+      "volume": "602572",
+      "dealPrice": "426.1"
+    },
     {
       "id": "1be8cd746968",
       "exchange": "NSE",
@@ -173,36 +203,6 @@
       "dealType": "SELL",
       "volume": "1100000",
       "dealPrice": "915"
-    },
-    {
-      "id": "38fa8811fac3",
-      "exchange": "BSE",
-      "date": "12-Oct-26",
-      "clientName": "MOTILAL OSWAL MUTUAL FUND",
-      "companyName": "Religare Enterprises",
-      "dealType": "SELL",
-      "volume": "4619521",
-      "dealPrice": "216.12"
-    },
-    {
-      "id": "aa7cc770654f",
-      "exchange": "NSE",
-      "date": "08-Oct-26",
-      "clientName": "BANK OF INDIA SMALL CAP FUND",
-      "companyName": "One Mobikwik Systems",
-      "dealType": "BUY",
-      "volume": "448582",
-      "dealPrice": "240.48"
-    },
-    {
-      "id": "cfe750e995da",
-      "exchange": "BSE",
-      "date": "30-Sep-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Molbio Diagnostics",
-      "dealType": "BUY",
-      "volume": "2300000",
-      "dealPrice": "1315"
     }
   ]
 }
