@@ -7987,7 +7987,7 @@ const MARKET_SEGMENTS = [
   { id: 'mid', label: '📈 Mid Cap (150)', short: 'Mid Cap', approxCount: 150 },
   { id: 'small', label: '🚀 Small Cap (250)', short: 'Small Cap', approxCount: 250 },
   { id: 'micro', label: '🔬 Micro Cap', short: 'Micro Cap', approxCount: 250 },
-  { id: 'universe', label: '🌍 Full Universe', short: 'Universe', approxCount: 500 }
+  { id: 'universe', label: '🌍 Full Universe (All 3,400+ Stocks)', short: 'Universe', approxCount: 3419 }
 ];
 
 function getSelectedScopes(prefix) {
@@ -8478,8 +8478,16 @@ function renderPricescanTable() {
       const c = stock.close || stock.ltp;
       if (!top || !bot || !c || c > top || c < bot || c < top * 0.90) return false;
     } else {
-      // Channel mode: exclude crossover-only and within-box rows if condition switched
+      // Channel mode: exclude crossover-only and within-box rows, match target EMA, and verify channel bounds strictly
       if (stock.scanMode === 'cross_today' || stock.scanMode === 'cross_5d' || stock.scanMode === 'within_5pct' || stock.scanMode === 'within_10pct') return false;
+      if (stock.selectedEma && String(stock.selectedEma) !== String(selectedCondition)) return false;
+      const top = stock.darvasGreen;
+      const ema = selectedCondition === '20' ? stock.ema20 : stock.ema10;
+      const c = stock.close || stock.ltp;
+      if (!top || !ema || !c || top <= 0 || ema <= 0 || c <= 0) return false;
+      const minB = Math.min(top, ema);
+      const maxB = Math.max(top, ema);
+      if (c < minB || c > maxB) return false;
     }
 
     if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) {

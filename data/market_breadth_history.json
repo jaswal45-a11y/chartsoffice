@@ -1,5 +1,23 @@
 [
   {
+    "date": "2026-11-23",
+    "advances": 880,
+    "day": "Mon",
+    "declines": 1795,
+    "down4pct": 69,
+    "ms400_pctAbove10": 51.9,
+    "ms400_pctAbove150": 44,
+    "ms400_pctAbove20": 58.7,
+    "ms400_pctAbove200": 43.6,
+    "ms400_pctAbove50": 50.1,
+    "universe_pctAbove10": 38.9,
+    "universe_pctAbove150": 37.7,
+    "universe_pctAbove20": 42,
+    "universe_pctAbove200": 38,
+    "universe_pctAbove50": 37.8,
+    "up4pct": 66
+  },
+  {
     "date": "2026-11-20",
     "advances": 936,
     "day": "Fri",
