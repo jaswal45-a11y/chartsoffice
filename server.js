@@ -4240,6 +4240,20 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         allCandles = aggregateCandlesToWeekly(allCandles);
       }
 
+      // Proactive Candle Sanitizer: Clean any flash anomaly spikes (e.g. needle glitches)
+      for (let i = 0; i < allCandles.length; i++) {
+        const c = allCandles[i];
+        if (!c) continue;
+        const minOC = Math.min(c.open, c.close);
+        const maxOC = Math.max(c.open, c.close);
+        if (minOC > 5 && c.low < minOC * 0.5) {
+          c.low = Number((minOC * 0.985).toFixed(2));
+        }
+        if (maxOC > 5 && c.high > maxOC * 2.0) {
+          c.high = Number((maxOC * 1.015).toFixed(2));
+        }
+      }
+
       // Compute indicators on the full series
       const closePrices = allCandles.map(c => c.close);
       const volumeValues = allCandles.map(c => c.volume);
@@ -5247,6 +5261,10 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
   const isCrossToday = targetEma === 'cross_today';
   const isCross5d = targetEma === 'cross_5d';
   const isCrossoverMode = isCrossToday || isCross5d;
+  const isWithin5 = targetEma === 'within_5pct' || targetEma === 'within_5';
+  const isWithin10 = targetEma === 'within_10pct' || targetEma === 'within_10';
+  const isWithinBoxMode = isWithin5 || isWithin10;
+  const withinThresholdPct = isWithin5 ? 5 : (isWithin10 ? 10 : null);
   const emaPeriod = Number(targetEma) === 20 ? 20 : 10;
   const scanInterval = (interval === '1wk' || interval === 'W' || interval === 'weekly') ? '1wk' : '1d';
   const isWeekly = scanInterval === '1wk';
@@ -5258,60 +5276,45 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
   const { mc1000Set, mc2000Set } = await getMarketCapSets();
 
   let targetSymbols = [];
+  const rawScopes = Array.isArray(scope) 
+    ? scope 
+    : String(scope || 'fno').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
-  switch (scope) {
-    case 'current':
-    case 'watchlist':
+  for (const sc of rawScopes) {
+    if (sc === 'current') {
       if (Array.isArray(stockList) && stockList.length > 0) {
-        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
-      } else {
-        targetSymbols = sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+        targetSymbols.push(...stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr }));
       }
-      break;
-
-    case 'large':
-    case 'large_cap':
-      // Large Cap: Top 100 stocks
-      targetSymbols = sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
-      break;
-
-    case 'mid':
-    case 'mid_cap':
-      // Mid Cap: Rank 101 to 250 (150 stocks)
-      targetSymbols = sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
-      break;
-
-    case 'small':
-    case 'small_cap':
-      // Small Cap: Rank 251 to 500 (250 stocks)
-      targetSymbols = sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
-      break;
-
-    case 'micro':
-    case 'micro_cap':
-      // Micro Cap: Rank 501+
-      targetSymbols = sortedUniverse.slice(500, 700).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
-      break;
-
-    case 'midsmall400':
-    case 'midsmall_400':
-      // MidSmall400: Rank 101 to 500 (Mid 150 + Small 250 = 400 stocks)
-      targetSymbols = sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
-      break;
-
-    case 'fno':
-      targetSymbols = sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
-      break;
-
-    case 'universe':
-    case 'all':
-    default:
-      if (String(scope).startsWith('wl_') && Array.isArray(stockList) && stockList.length > 0) {
-        targetSymbols = stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr });
-      } else {
-        targetSymbols = sortedUniverse.slice(0, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+    } else if (sc.startsWith('wl_') || sc === 'watchlist') {
+      if (Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols.push(...stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr }));
       }
-      break;
+    } else if (sc === 'fno') {
+      targetSymbols.push(...sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'large' || sc === 'large_cap') {
+      targetSymbols.push(...sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'mid' || sc === 'mid_cap' || sc === 'mc150') {
+      targetSymbols.push(...sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'small' || sc === 'small_cap' || sc === 'sc250') {
+      targetSymbols.push(...sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'micro' || sc === 'micro_cap' || sc === 'micro250') {
+      targetSymbols.push(...sortedUniverse.slice(500, 1000).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'midsmall400' || sc === 'midsmall_400' || sc === 'midsml400') {
+      targetSymbols.push(...sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'nifty50') {
+      targetSymbols.push(...sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'nifty100') {
+      targetSymbols.push(...sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'universe' || sc === 'all') {
+      // Full Universe: Uncapped up to 1500 stocks (includes all Large, Mid, Small, and Micro caps)
+      targetSymbols.push(...sortedUniverse.slice(0, 1500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else {
+      targetSymbols.push(...sortedUniverse.slice(0, 1000).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    }
+  }
+
+  if (targetSymbols.length === 0) {
+    targetSymbols = sortedUniverse.slice(0, 1000).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
   }
 
   // Deduplicate symbols
@@ -5520,6 +5523,52 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
       } else {
         cacheMisses.push(item);
       }
+    } else if (isWithinBoxMode) {
+      // Within Box Mode: Price is within the Darvas Box AND within 5% or 10% from Darvas Box Top
+      // Boundaries: darvasBottom <= close <= darvasGreen AND close >= darvasGreen * (1 - withinThresholdPct / 100)
+      if (!isNaN(close) && close > 0 && !isNaN(darvasGreen) && darvasGreen > 0 && !isNaN(darvasBottom) && darvasBottom > 0) {
+        const minThresholdPrice = darvasGreen * (1 - withinThresholdPct / 100);
+        const lowerBound = Math.max(darvasBottom, minThresholdPrice);
+        const upperBound = darvasGreen;
+
+        if (close >= lowerBound && close <= upperBound) {
+          const dgreenDist = Number((((close - darvasGreen) / darvasGreen) * 100).toFixed(2));
+          const boxHeight = darvasGreen - darvasBottom;
+          const positionPercent = boxHeight > 0 ? Number((((close - darvasBottom) / boxHeight) * 100).toFixed(1)) : 100;
+          const spreadPercent = Math.abs(dgreenDist);
+
+          matches.push({
+            symbol: item.symbol,
+            name: u?.name || item.name || item.symbol,
+            exchange: u?.exchange || item.exchange || 'NSE',
+            close: Number(close.toFixed(2)),
+            ltp: Number(close.toFixed(2)),
+            changePercent: u?.changePercent ?? item.changePercent ?? 0,
+            volume,
+            rvol: Number(rvolVal.toFixed(2)),
+            timeframe: scanInterval,
+            mcOver1000Cr: Boolean(isOver1000),
+            mcOver2000Cr: Boolean(isOver2000),
+            ema10: Number(ema10.toFixed(2)),
+            ema20: Number(ema20.toFixed(2)),
+            ema50: u?.ema50 ? Number(Number(u.ema50).toFixed(2)) : (item.ema50 ? Number(Number(item.ema50).toFixed(2)) : null),
+            ema150: u?.ema150 ? Number(Number(u.ema150).toFixed(2)) : (item.ema150 ? Number(Number(item.ema150).toFixed(2)) : null),
+            darvasGreen: Number(darvasGreen.toFixed(2)),
+            darvasBottom: Number(darvasBottom.toFixed(2)),
+            scanMode: isWithin5 ? 'within_5pct' : 'within_10pct',
+            selectedEma: emaPeriod,
+            selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+            spreadPercent,
+            dgreenDist,
+            crossedDaysAgo: null,
+            positionPercent,
+            lowerBound: Number(lowerBound.toFixed(2)),
+            upperBound: Number(upperBound.toFixed(2))
+          });
+        }
+      } else {
+        cacheMisses.push(item);
+      }
     } else {
       // Channel Mode: min(DarvasGreen, EMA) <= Close <= max(DarvasGreen, EMA)
       if (!isNaN(close) && close > 0 && !isNaN(darvasGreen) && darvasGreen > 0 && !isNaN(selectedEmaVal) && selectedEmaVal > 0) {
@@ -5651,6 +5700,48 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
                   }
                 }
               }
+            } else if (isWithinBoxMode) {
+              if (!isNaN(close) && close > 0 && !isNaN(darvasGreen) && darvasGreen > 0 && !isNaN(darvasBottom) && darvasBottom > 0) {
+                const minThresholdPrice = darvasGreen * (1 - withinThresholdPct / 100);
+                const lowerBound = Math.max(darvasBottom, minThresholdPrice);
+                const upperBound = darvasGreen;
+
+                if (close >= lowerBound && close <= upperBound) {
+                  const dgreenDist = Number((((close - darvasGreen) / darvasGreen) * 100).toFixed(2));
+                  const boxHeight = darvasGreen - darvasBottom;
+                  const positionPercent = boxHeight > 0 ? Number((((close - darvasBottom) / boxHeight) * 100).toFixed(1)) : 100;
+                  const spreadPercent = Math.abs(dgreenDist);
+
+                  matches.push({
+                    symbol: item.symbol,
+                    name: item.name,
+                    exchange: item.exchange || 'NSE',
+                    close: Number(close.toFixed(2)),
+                    ltp: Number(close.toFixed(2)),
+                    changePercent: hist.changePercent || 0,
+                    volume,
+                    rvol: Number(rvolVal.toFixed(2)),
+                    timeframe: scanInterval,
+                    mcOver1000Cr: Boolean(isOver1000),
+                    mcOver2000Cr: Boolean(isOver2000),
+                    ema10: Number(ema10.toFixed(2)),
+                    ema20: Number(ema20.toFixed(2)),
+                    ema50: typeof hist.latestEMA50 === 'number' ? Number(hist.latestEMA50.toFixed(2)) : null,
+                    ema150: typeof hist.latestEMA150 === 'number' ? Number(hist.latestEMA150.toFixed(2)) : null,
+                    darvasGreen: Number(darvasGreen.toFixed(2)),
+                    darvasBottom: Number(darvasBottom.toFixed(2)),
+                    scanMode: isWithin5 ? 'within_5pct' : 'within_10pct',
+                    selectedEma: emaPeriod,
+                    selectedEmaValue: Number(selectedEmaVal.toFixed(2)),
+                    spreadPercent,
+                    dgreenDist,
+                    crossedDaysAgo: null,
+                    positionPercent,
+                    lowerBound: Number(lowerBound.toFixed(2)),
+                    upperBound: Number(upperBound.toFixed(2))
+                  });
+                }
+              }
             } else {
               // Channel Mode
               if (!isNaN(close) && !isNaN(darvasGreen) && !isNaN(selectedEmaVal) && darvasGreen > 0 && selectedEmaVal > 0) {
@@ -5710,14 +5801,31 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     await Promise.all(workers);
   }
 
-  // Strict filter safeguard for crossover modes
-  const filteredMatches = isCrossToday
-    ? matches.filter(m => m.crossedDaysAgo === 0)
-    : (isCross5d ? matches.filter(m => typeof m.crossedDaysAgo === 'number' && m.crossedDaysAgo <= 5) : matches);
+  // Strict filter safeguard for crossover and within-box modes
+  let filteredMatches = matches;
+  if (isCrossToday) {
+    filteredMatches = matches.filter(m => m.crossedDaysAgo === 0);
+  } else if (isCross5d) {
+    filteredMatches = matches.filter(m => typeof m.crossedDaysAgo === 'number' && m.crossedDaysAgo <= 5);
+  } else if (isWithinBoxMode) {
+    filteredMatches = matches.filter(m => {
+      const top = m.darvasGreen;
+      const bot = m.darvasBottom;
+      const c = m.close;
+      if (!top || !bot || !c || top <= 0 || bot <= 0) return false;
+      const minThresh = top * (1 - withinThresholdPct / 100);
+      return c <= top && c >= bot && c >= minThresh;
+    });
+  }
 
-  // Sort: For Crossover mode, most recent crossover first, then highest distance; for Channel mode, tightest spread
+  // Sort:
+  // For Crossover mode: most recent crossover first, then highest distance;
+  // For Within Box mode: closest to Darvas Box Top first (lowest spreadPercent / highest dgreenDist);
+  // For Channel mode: tightest spread
   if (isCrossoverMode) {
     filteredMatches.sort((a, b) => (a.crossedDaysAgo - b.crossedDaysAgo) || (b.dgreenDist - a.dgreenDist));
+  } else if (isWithinBoxMode) {
+    filteredMatches.sort((a, b) => a.spreadPercent - b.spreadPercent);
   } else {
     filteredMatches.sort((a, b) => a.spreadPercent - b.spreadPercent);
   }
@@ -5726,7 +5834,7 @@ async function scanDarvasEma(targetEma = 10, scope = 'current', stockList = [], 
     success: true,
     totalScanned: uniqueList.length,
     matchesCount: filteredMatches.length,
-    targetEma: emaPeriod,
+    targetEma: targetEma,
     interval: scanInterval,
     scope,
     results: filteredMatches

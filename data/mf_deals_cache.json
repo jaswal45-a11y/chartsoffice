@@ -1,9 +1,89 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-11-06T12:44:26.809Z",
-  "latestDealId": "530036fe06f5",
+  "lastUpdated": "2026-11-23T03:31:49.596Z",
+  "latestDealId": "da32f1a0d0a2",
   "deals": [
+    {
+      "id": "da32f1a0d0a2",
+      "exchange": "BSE",
+      "date": "18-Nov-26",
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "IIFL Finance",
+      "dealType": "BUY",
+      "volume": "4457050",
+      "dealPrice": "617"
+    },
+    {
+      "id": "2c81a3e45122",
+      "exchange": "BSE",
+      "date": "18-Nov-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "IIFL Finance",
+      "dealType": "BUY",
+      "volume": "8153054",
+      "dealPrice": "617"
+    },
+    {
+      "id": "4558849f2cd7",
+      "exchange": "NSE",
+      "date": "18-Nov-26",
+      "clientName": "INVESCO MUTUAL FUND",
+      "companyName": "Neogen Chemicals",
+      "dealType": "BUY",
+      "volume": "500000",
+      "dealPrice": "2780"
+    },
+    {
+      "id": "d62733cb2970",
+      "exchange": "NSE",
+      "date": "18-Nov-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Neogen Chemicals",
+      "dealType": "SELL",
+      "volume": "648272",
+      "dealPrice": "2780.01"
+    },
+    {
+      "id": "59b4722dd9dc",
+      "exchange": "NSE",
+      "date": "18-Nov-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Greenlam Industries",
+      "dealType": "SELL",
+      "volume": "2000000",
+      "dealPrice": "215.06"
+    },
+    {
+      "id": "eb32ceb0a5aa",
+      "exchange": "BSE",
+      "date": "18-Nov-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Greenlam Industries",
+      "dealType": "SELL",
+      "volume": "3000000",
+      "dealPrice": "203.6"
+    },
+    {
+      "id": "d83e474fa913",
+      "exchange": "NSE",
+      "date": "11-Nov-26",
+      "clientName": "MOTILAL OSWAL MUTUAL FUND",
+      "companyName": "Aditya Infotech",
+      "dealType": "BUY",
+      "volume": "842977",
+      "dealPrice": "4140"
+    },
+    {
+      "id": "57abc444e6da",
+      "exchange": "NSE",
+      "date": "06-Nov-26",
+      "clientName": "BANDHAN MUTUAL FUND",
+      "companyName": "Alivus Life Sciences",
+      "dealType": "BUY",
+      "volume": "855971",
+      "dealPrice": "1370"
+    },
     {
       "id": "530036fe06f5",
       "exchange": "NSE",
@@ -35,16 +115,6 @@
       "dealPrice": "426.1"
     },
     {
-      "id": "1be8cd746968",
-      "exchange": "NSE",
-      "date": "02-Nov-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "EAAA India Alternat.",
-      "dealType": "BUY",
-      "volume": "806167",
-      "dealPrice": "1679.75"
-    },
-    {
       "id": "087095b7aafd",
       "exchange": "NSE",
       "date": "02-Nov-26",
@@ -53,6 +123,16 @@
       "dealType": "BUY",
       "volume": "690120",
       "dealPrice": "225.13"
+    },
+    {
+      "id": "1be8cd746968",
+      "exchange": "NSE",
+      "date": "02-Nov-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "EAAA India Alternat.",
+      "dealType": "BUY",
+      "volume": "806167",
+      "dealPrice": "1679.75"
     },
     {
       "id": "628cb968bd6a",
@@ -123,86 +203,6 @@
       "dealType": "BUY",
       "volume": "2807366",
       "dealPrice": "371.44"
-    },
-    {
-      "id": "5cf0e8297b49",
-      "exchange": "NSE",
-      "date": "23-Oct-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Tonbo Imaging India",
-      "dealType": "BUY",
-      "volume": "500000",
-      "dealPrice": "1154.64"
-    },
-    {
-      "id": "021c54e621fe",
-      "exchange": "NSE",
-      "date": "23-Oct-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Tonbo Imaging India",
-      "dealType": "BUY",
-      "volume": "500000",
-      "dealPrice": "1200"
-    },
-    {
-      "id": "0062aeb76a74",
-      "exchange": "NSE",
-      "date": "15-Oct-26",
-      "clientName": "NIPPON INDIA MUTUAL FUND",
-      "companyName": "NATCO-RE",
-      "dealType": "BUY",
-      "volume": "678946",
-      "dealPrice": "24.88"
-    },
-    {
-      "id": "775b7f8525e1",
-      "exchange": "NSE",
-      "date": "14-Oct-26",
-      "clientName": "NIPPON INDIA MUTUAL FUND",
-      "companyName": "NATCO-RE",
-      "dealType": "BUY",
-      "volume": "232343",
-      "dealPrice": "27"
-    },
-    {
-      "id": "8f80deac382e",
-      "exchange": "NSE",
-      "date": "12-Oct-26",
-      "clientName": "BANK OF INDIA MUTUAL FUND",
-      "companyName": "NATCO-RE",
-      "dealType": "BUY",
-      "volume": "325523",
-      "dealPrice": "32.5"
-    },
-    {
-      "id": "831a94f25fac",
-      "exchange": "NSE",
-      "date": "12-Oct-26",
-      "clientName": "NIPPON INDIA MUTUAL FUND",
-      "companyName": "NATCO-RE",
-      "dealType": "BUY",
-      "volume": "1200000",
-      "dealPrice": "31.99"
-    },
-    {
-      "id": "7a1eacfc3747",
-      "exchange": "BSE",
-      "date": "12-Oct-26",
-      "clientName": "QUANT MUTUAL FUND",
-      "companyName": "Jubilant Pharmova",
-      "dealType": "SELL",
-      "volume": "981704",
-      "dealPrice": "915.01"
-    },
-    {
-      "id": "c89a453a5643",
-      "exchange": "NSE",
-      "date": "12-Oct-26",
-      "clientName": "QUANT MUTUAL FUND",
-      "companyName": "Jubilant Pharmova",
-      "dealType": "SELL",
-      "volume": "1100000",
-      "dealPrice": "915"
     }
   ]
 }

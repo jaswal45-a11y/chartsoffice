@@ -3591,6 +3591,19 @@ function toggleChartWatchlistMenu() {
   if (isHidden) {
     renderChartWatchlistDropdown();
     el.chartWatchlistMenu.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      if (!el.chartWatchlistMenu) return;
+      const rect = el.chartWatchlistMenu.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      if (rect.right > viewportWidth - 8) {
+        el.chartWatchlistMenu.style.left = 'auto';
+        el.chartWatchlistMenu.style.right = '0px';
+      }
+      if (rect.left < 8) {
+        el.chartWatchlistMenu.style.left = '0px';
+        el.chartWatchlistMenu.style.right = 'auto';
+      }
+    });
   } else {
     el.chartWatchlistMenu.classList.add('hidden');
   }
@@ -4948,6 +4961,9 @@ function initNativeCharts() {
           target.timeScale().setVisibleLogicalRange(range);
         }
       });
+      if (typeof updateLockedMeasureOverlay === 'function') {
+        updateLockedMeasureOverlay();
+      }
       isSyncing = false;
     });
   });
@@ -6772,6 +6788,20 @@ function toggleMeasureTool() {
   }
 }
 
+function updateLockedMeasureOverlay() {
+  if (state.measureTool.step !== 2 || !state.charts.main || !state.charts.series?.candles) return;
+  const timeScale = state.charts.main.timeScale();
+  const series = state.charts.series.candles;
+  if (!state.measureTool.startTime || !state.measureTool.endTime) return;
+  const x1 = timeScale.timeToCoordinate(state.measureTool.startTime);
+  const x2 = timeScale.timeToCoordinate(state.measureTool.endTime);
+  const y1 = series.priceToCoordinate(state.measureTool.startPrice);
+  const y2 = series.priceToCoordinate(state.measureTool.endPrice);
+  if (x1 !== null && x2 !== null && y1 !== null && y2 !== null) {
+    renderMeasureOverlay(x1, y1, x2, y2, state.measureTool.startPrice, state.measureTool.endPrice, state.measureTool.startIndex, state.measureTool.endIndex);
+  }
+}
+
 function clearChartMeasurement() {
   const overlay = document.getElementById('chart-measure-overlay');
   const box = document.getElementById('chart-measure-box');
@@ -6864,6 +6894,14 @@ function initMeasureTool() {
         state.measureTool.endIndex
       );
 
+      // Auto-deactivate active drawing mode so chart returns to normal panning/clicking/hovering
+      state.measureTool.active = false;
+      const btn = document.getElementById('btn-measure-tool');
+      if (btn) {
+        btn.className = 'p-1 px-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-500 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm';
+      }
+      pricePane.classList.remove('measuring-cursor');
+
       const deltaPrice = price - state.measureTool.startPrice;
       const pct = state.measureTool.startPrice > 0 ? ((deltaPrice / state.measureTool.startPrice) * 100) : 0;
       const sign = deltaPrice >= 0 ? '+' : '';
@@ -6946,14 +6984,15 @@ function renderMeasureOverlay(x1, y1, x2, y2, price1, price2, idx1, idx2) {
   box.style.width = `${width}px`;
   box.style.height = `${height}px`;
 
+  const pillPointerClass = (state.measureTool.step === 2) ? 'pointer-events-auto' : 'pointer-events-none';
   if (isUp) {
     box.className = 'absolute border border-dashed rounded pointer-events-none up';
-    pill.className = 'pointer-events-auto absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 up';
+    pill.className = `${pillPointerClass} absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 up`;
     pctEl.className = 'font-mono font-bold text-sm leading-none text-emerald-400';
     pctEl.textContent = `+${pct.toFixed(2)}%`;
   } else {
     box.className = 'absolute border border-dashed rounded pointer-events-none down';
-    pill.className = 'pointer-events-auto absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 down';
+    pill.className = `${pillPointerClass} absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 down`;
     pctEl.className = 'font-mono font-bold text-sm leading-none text-rose-400';
     pctEl.textContent = `${pct.toFixed(2)}%`;
   }
@@ -7012,10 +7051,21 @@ function handleCopyStocks() {
       filterContext = ' (EMAs Aligned)';
     }
   } else if (state.activeSidebarTab === 'pricescan') {
+    const selectedCond = el.selectPricescanEma?.value || '10';
+    const isW5 = selectedCond === 'within_5pct' || selectedCond === 'within_5';
+    const isW10 = selectedCond === 'within_10pct' || selectedCond === 'within_10';
     list = (state.pricescanResults || []).filter(stock => {
+      if (selectedCond === 'cross_today' && stock.crossedDaysAgo !== 0) return false;
+      if (selectedCond === 'cross_5d' && (typeof stock.crossedDaysAgo !== 'number' || stock.crossedDaysAgo > 5)) return false;
+      if (isW5 && stock.scanMode !== 'within_5pct') return false;
+      if (isW10 && stock.scanMode !== 'within_10pct' && stock.scanMode !== 'within_5pct') return false;
+      if ((selectedCond === '10' || selectedCond === '20') && stock.scanMode !== 'channel') return false;
       if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) return false;
+      if (state.pricescanIndexFilter && state.pricescanIndexFilter !== 'all') {
+        if (!stockMatchesIndex(stock, state.pricescanIndexFilter)) return false;
+      }
       return true;
     });
     if (state.pricescanEmasAligned) {
@@ -7098,10 +7148,14 @@ function getActiveDisplayedStocksList() {
     list = activeWl ? activeWl.stocks || [] : [];
   } else if (state.activeSidebarTab === 'pricescan') {
     const selectedCond = el.selectPricescanEma?.value || '10';
+    const isW5 = selectedCond === 'within_5pct' || selectedCond === 'within_5';
+    const isW10 = selectedCond === 'within_10pct' || selectedCond === 'within_10';
     list = [...(state.pricescanResults || [])].filter(stock => {
       if (selectedCond === 'cross_today' && stock.crossedDaysAgo !== 0) return false;
       if (selectedCond === 'cross_5d' && (typeof stock.crossedDaysAgo !== 'number' || stock.crossedDaysAgo > 5)) return false;
-      if ((selectedCond === '10' || selectedCond === '20') && (stock.scanMode === 'cross_today' || stock.scanMode === 'cross_5d')) return false;
+      if (isW5 && stock.scanMode !== 'within_5pct') return false;
+      if (isW10 && stock.scanMode !== 'within_10pct' && stock.scanMode !== 'within_5pct') return false;
+      if ((selectedCond === '10' || selectedCond === '20') && stock.scanMode !== 'channel') return false;
       if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
       if (state.pricescanEmasAligned && !isStockEmaAligned(stock)) return false;
@@ -8173,14 +8227,27 @@ function updatePricescanConditionLabels(val, tfCode) {
   const isCrossToday = vStr === 'cross_today';
   const isCross5d = vStr === 'cross_5d';
   const isCrossover = isCrossToday || isCross5d;
+  const isWithin5 = vStr === 'within_5pct' || vStr === 'within_5';
+  const isWithin10 = vStr === 'within_10pct' || vStr === 'within_10';
+  const isWithinBox = isWithin5 || isWithin10;
 
   if (el.pricescanDynamicLastColTitle) {
-    el.pricescanDynamicLastColTitle.textContent = isCrossover ? 'Dist / Cross' : 'Spread %';
+    if (isCrossover) {
+      el.pricescanDynamicLastColTitle.textContent = 'Dist / Cross';
+    } else if (isWithinBox) {
+      el.pricescanDynamicLastColTitle.textContent = 'Dist to Top';
+    } else {
+      el.pricescanDynamicLastColTitle.textContent = 'Spread %';
+    }
   }
   if (el.pricescanDynamicLastColTh) {
-    el.pricescanDynamicLastColTh.title = isCrossover 
-      ? 'Sort by Distance % from Darvas Green Line' 
-      : 'Sort by Spread % between Darvas Green & EMA';
+    if (isCrossover) {
+      el.pricescanDynamicLastColTh.title = 'Sort by Distance % from Darvas Green Line';
+    } else if (isWithinBox) {
+      el.pricescanDynamicLastColTh.title = 'Sort by Distance % to Darvas Box Top';
+    } else {
+      el.pricescanDynamicLastColTh.title = 'Sort by Spread % between Darvas Green & EMA';
+    }
   }
 
   if (el.pricescanFooterInfo) {
@@ -8188,6 +8255,10 @@ function updatePricescanConditionLabels(val, tfCode) {
       el.pricescanFooterInfo.textContent = `Price crossed above DarvasGreen(${tfCode}) today${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
     } else if (isCross5d) {
       el.pricescanFooterInfo.textContent = `Price crossed above DarvasGreen(${tfCode}) in last 5 sessions${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
+    } else if (isWithin5) {
+      el.pricescanFooterInfo.textContent = `Within DarvasBox(${tfCode}) & ≤5% below DarvasTop [max(Bottom, Top×0.95) ≤ Close ≤ Top]${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
+    } else if (isWithin10) {
+      el.pricescanFooterInfo.textContent = `Within DarvasBox(${tfCode}) & ≤10% below DarvasTop [max(Bottom, Top×0.90) ≤ Close ≤ Top]${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
     } else {
       el.pricescanFooterInfo.textContent = `min(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${vStr}(${tfCode}))${state.pricescanEmasAligned ? ' • EMAs Aligned' : ''}`;
     }
@@ -8248,11 +8319,19 @@ async function runPricePositionScan() {
     statusBadge.className = 'text-[11px] text-amber-400 font-mono animate-pulse';
   }
 
+  const isWithin5 = selectedCondition === 'within_5pct' || selectedCondition === 'within_5';
+  const isWithin10 = selectedCondition === 'within_10pct' || selectedCondition === 'within_10';
+  const isWithinBoxMode = isWithin5 || isWithin10;
+
   const scanSubtitle = isCrossToday
     ? `Checking price crossed above Darvas Green Line (${tfLabel}) today`
     : isCross5d
       ? `Checking price crossed above Darvas Green Line (${tfLabel}) in last 5 sessions`
-      : `Checking Darvas Green Line (${tfLabel}) & EMA ${selectedCondition} (${tfLabel}) channel`;
+      : isWithin5
+        ? `Checking prices inside Darvas Box (${tfLabel}) and within 5% from Box Top`
+        : isWithin10
+          ? `Checking prices inside Darvas Box (${tfLabel}) and within 10% from Box Top`
+          : `Checking Darvas Green Line (${tfLabel}) & EMA ${selectedCondition} (${tfLabel}) channel`;
 
   if (tbody) {
     tbody.innerHTML = `
@@ -8374,6 +8453,9 @@ function renderPricescanTable() {
   const isCrossToday = selectedCondition === 'cross_today';
   const isCross5d = selectedCondition === 'cross_5d';
   const isCrossoverMode = isCrossToday || isCross5d;
+  const isWithin5 = selectedCondition === 'within_5pct' || selectedCondition === 'within_5';
+  const isWithin10 = selectedCondition === 'within_10pct' || selectedCondition === 'within_10';
+  const isWithinBoxMode = isWithin5 || isWithin10;
   const interval = el.selectPricescanTimeframe?.value || '1d';
   const tfCode = interval === '1wk' ? 'W' : 'D';
 
@@ -8383,9 +8465,21 @@ function renderPricescanTable() {
       if (stock.crossedDaysAgo !== 0) return false;
     } else if (isCross5d) {
       if (typeof stock.crossedDaysAgo !== 'number' || stock.crossedDaysAgo > 5) return false;
+    } else if (isWithin5) {
+      if (stock.scanMode !== 'within_5pct') return false;
+      const top = stock.darvasGreen;
+      const bot = stock.darvasBottom;
+      const c = stock.close || stock.ltp;
+      if (!top || !bot || !c || c > top || c < bot || c < top * 0.95) return false;
+    } else if (isWithin10) {
+      if (stock.scanMode !== 'within_10pct' && stock.scanMode !== 'within_5pct') return false;
+      const top = stock.darvasGreen;
+      const bot = stock.darvasBottom;
+      const c = stock.close || stock.ltp;
+      if (!top || !bot || !c || c > top || c < bot || c < top * 0.90) return false;
     } else {
-      // Channel mode: exclude crossover-only rows if condition switched
-      if (stock.scanMode === 'cross_today' || stock.scanMode === 'cross_5d') return false;
+      // Channel mode: exclude crossover-only and within-box rows if condition switched
+      if (stock.scanMode === 'cross_today' || stock.scanMode === 'cross_5d' || stock.scanMode === 'within_5pct' || stock.scanMode === 'within_10pct') return false;
     }
 
     if (state.pricescanFilterMc2000 && stock.mcOver2000Cr !== true) {
@@ -8421,6 +8515,10 @@ function renderPricescanTable() {
     conditionDesc = `Price crossed above DarvasGreen(${tfCode}) today`;
   } else if (isCross5d) {
     conditionDesc = `Price crossed above DarvasGreen(${tfCode}) in last 5 sessions`;
+  } else if (isWithin5) {
+    conditionDesc = `Price within DarvasBox(${tfCode}) & within 5% from Box Top`;
+  } else if (isWithin10) {
+    conditionDesc = `Price within DarvasBox(${tfCode}) & within 10% from Box Top`;
   } else {
     conditionDesc = `min(DarvasGreen(${tfCode}), EMA${selectedCondition}(${tfCode})) ≤ Close ≤ max(DarvasGreen(${tfCode}), EMA${selectedCondition}(${tfCode}))`;
   }
@@ -8515,9 +8613,10 @@ function renderPricescanTable() {
       `;
     }
 
-    // Dynamic 6th column: Crossover timing + distance badge vs Channel Spread badge
+    // Dynamic 6th column: Crossover timing vs Within Box vs Channel Spread badge
     let lastColHtml = '';
     const isRowCrossover = m.scanMode === 'cross_today' || m.scanMode === 'cross_5d' || (typeof m.crossedDaysAgo === 'number') || isCrossoverMode;
+    const isRowWithinBox = m.scanMode === 'within_5pct' || m.scanMode === 'within_10pct' || isWithinBoxMode;
 
     if (isRowCrossover && (typeof m.crossedDaysAgo === 'number' || typeof m.dgreenDist === 'number')) {
       const daysAgo = typeof m.crossedDaysAgo === 'number' ? m.crossedDaysAgo : 0;
@@ -8535,6 +8634,16 @@ function renderPricescanTable() {
         <div class="flex items-center justify-center gap-1.5" title="Crossed ${daysAgo === 0 ? 'today' : daysAgo + ' days ago'}${dateSubtitle} | Darvas Green: ₹${m.darvasGreen || '—'} | Distance: ${distSign}${distVal}%">
           ${timingBadge}
           <span class="text-[10px] font-mono font-semibold ${distColor}">${distSign}${distVal}%</span>
+        </div>
+      `;
+    } else if (isRowWithinBox) {
+      const distVal = typeof m.dgreenDist === 'number' ? m.dgreenDist : (-(m.spreadPercent || 0));
+      const distStr = distVal > 0 ? `+${distVal.toFixed(2)}%` : `${distVal.toFixed(2)}%`;
+      const absDist = Math.abs(distVal).toFixed(2);
+      lastColHtml = `
+        <div class="flex items-center justify-center gap-1.5" title="Inside Darvas Box: ₹${m.darvasBottom || '—'} to ₹${m.darvasGreen || '—'} | Distance to Box Top: ${distStr} (${absDist}% below Top)">
+          <span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold font-mono">In Box</span>
+          <span class="text-[10px] font-mono font-semibold text-amber-400">${distStr}</span>
         </div>
       `;
     } else {

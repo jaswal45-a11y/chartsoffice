@@ -565,12 +565,14 @@
                 <option value="1wk">🟢 Darvas (W)</option>
               </select>
               <span class="text-slate-500 font-bold text-xs">↔</span>
-              <!-- Condition Dropdown (EMA 10 | EMA 20 | Today | Last 5) -->
+              <!-- Condition Dropdown (EMA 10 | EMA 20 | Today | Last 5 | Within 5% | Within 10%) -->
               <select id="select-pricescan-ema" class="px-2 py-0.5 text-[11px] font-bold font-mono bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-md focus:outline-none focus:border-blue-400 cursor-pointer shadow-sm hover:bg-blue-500/25 transition-colors" title="Select Scanning Condition">
                 <option value="10">EMA 10</option>
                 <option value="20">EMA 20</option>
                 <option value="cross_today">Today</option>
                 <option value="cross_5d">Last 5</option>
+                <option value="within_5pct">Within 5%</option>
+                <option value="within_10pct">Within 10%</option>
               </select>
             </div>
 
@@ -956,7 +958,7 @@
               </button>
 
               <!-- Watchlists Checklist Dropdown Menu -->
-              <div id="chart-watchlist-menu" class="hidden absolute left-0 top-full mt-1.5 w-64 dropdown-menu-card z-50 p-2.5">
+              <div id="chart-watchlist-menu" class="hidden absolute right-0 top-full mt-1.5 w-64 dropdown-menu-card z-50 p-2.5">
                 <div class="px-1 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                   <span>Save to Watchlist</span>
                   <span class="text-[10px] font-mono font-normal">Max 50/list</span>
@@ -3376,7 +3378,7 @@
   <!-- Client-Side Progressive Candle IndexedDB Cache -->
   <script src="candle-cache.js?v=1.0.1"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.3.9"></script>
+  <script src="app.js?v=3.4.2"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->
