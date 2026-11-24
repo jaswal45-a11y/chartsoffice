@@ -9275,6 +9275,10 @@ function renderDarvaswTable() {
     if (state.darvaswFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
     if (stageFilter === 'ready' || stageFilter === 'stage3') {
       if (stock.stage !== 3) return false;
+    } else if (stageFilter === 'ready_tested' || stageFilter === 'stage3_tested') {
+      if (stock.stage !== 3 || !stock.tested10) return false;
+    } else if (stageFilter === 'ready_shallow' || stageFilter === 'stage3_shallow') {
+      if (stock.stage !== 3 || stock.tested10) return false;
     } else if (stageFilter === 'pullback' || stageFilter === 'stage2') {
       if (stock.stage !== 2) return false;
     } else if (stageFilter === 'weekly' || stageFilter === 'stage1') {
@@ -9349,7 +9353,11 @@ function renderDarvaswTable() {
 
     let stageBadge = '';
     if (m.stage === 3) {
-      stageBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center shadow-sm">🎯 READY TO BUY</span>`;
+      if (m.tested10) {
+        stageBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center shadow-sm" title="Day Low tested 10 EMA (Strict test)">🎯 TESTED 10 EMA</span>`;
+      } else {
+        stageBadge = `<span class="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center shadow-sm" title="Reversal in pullback zone near 10 EMA without touching line (Mid-Air bounce)">🎯 NEAR 10 (MID-AIR)</span>`;
+      }
     } else if (m.stage === 2) {
       stageBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center">⏳ PULLBACK 10 EMA</span>`;
     } else {
@@ -9441,6 +9449,10 @@ function handleCopyDarvaswStocks() {
     if (state.darvaswFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
     if (stageFilter === 'ready' || stageFilter === 'stage3') {
       if (stock.stage !== 3) return false;
+    } else if (stageFilter === 'ready_tested' || stageFilter === 'stage3_tested') {
+      if (stock.stage !== 3 || !stock.tested10) return false;
+    } else if (stageFilter === 'ready_shallow' || stageFilter === 'stage3_shallow') {
+      if (stock.stage !== 3 || stock.tested10) return false;
     } else if (stageFilter === 'pullback' || stageFilter === 'stage2') {
       if (stock.stage !== 2) return false;
     } else if (stageFilter === 'weekly' || stageFilter === 'stage1') {

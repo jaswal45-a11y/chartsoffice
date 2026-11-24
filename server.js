@@ -6466,11 +6466,17 @@ async function scanDarvasW(stageFilter = 'all', scope = 'universe', stockList = 
     let stageLabel = '1. Weekly Crossed';
     let stageBadge = '🚀 WEEKLY CROSSED';
 
-    if (isNear10Ema && isGreenReversal && tested10) {
+    if (isNear10Ema && isGreenReversal) {
       stage = 3;
-      stageCode = 'ready';
-      stageLabel = '3. Ready to Buy (Reversal at 10 EMA)';
-      stageBadge = '🎯 READY TO BUY';
+      if (tested10) {
+        stageCode = 'ready_tested';
+        stageLabel = '3. Ready (Tested 10 EMA)';
+        stageBadge = '🎯 READY (TESTED 10)';
+      } else {
+        stageCode = 'ready_shallow';
+        stageLabel = '3. Ready (Near 10 / Mid-Air)';
+        stageBadge = '🎯 READY (NEAR 10)';
+      }
     } else if (isNear10Ema) {
       stage = 2;
       stageCode = 'pullback';
@@ -6481,6 +6487,10 @@ async function scanDarvasW(stageFilter = 'all', scope = 'universe', stockList = 
     // Filter by stageFilter if specified
     if (stageFilter === 'ready' || stageFilter === 'stage3') {
       if (stage !== 3) continue;
+    } else if (stageFilter === 'ready_tested' || stageFilter === 'stage3_tested') {
+      if (stage !== 3 || !tested10) continue;
+    } else if (stageFilter === 'ready_shallow' || stageFilter === 'stage3_shallow') {
+      if (stage !== 3 || tested10) continue;
     } else if (stageFilter === 'pullback' || stageFilter === 'stage2') {
       if (stage !== 2) continue;
     } else if (stageFilter === 'weekly' || stageFilter === 'stage1') {
@@ -6506,6 +6516,7 @@ async function scanDarvasW(stageFilter = 'all', scope = 'universe', stockList = 
       stageCode,
       stageLabel,
       stageBadge,
+      tested10: Boolean(tested10),
       ema10: Number(ema10.toFixed(2)),
       ema20: Number(ema20.toFixed(2)),
       dist10Pct,
@@ -6523,10 +6534,13 @@ async function scanDarvasW(stageFilter = 'all', scope = 'universe', stockList = 
     });
   }
 
-  // Sort by stage descending (Stage 3 first, then Stage 2, then Stage 1), then by dist10Pct ascending
+  // Sort by stage descending (Stage 3 first, then Stage 2, then Stage 1), with tested 10 EMA prioritized in Stage 3
   matches.sort((a, b) => {
     if (b.stage !== a.stage) return b.stage - a.stage;
-    return a.dist10Pct - b.dist10Pct;
+    if (a.stage === 3 && b.stage === 3) {
+      if (a.tested10 !== b.tested10) return a.tested10 ? -1 : 1;
+    }
+    return Math.abs(a.dist10Pct) - Math.abs(b.dist10Pct);
   });
 
   return {
