@@ -17941,6 +17941,90 @@
             "name": "Indiabulls Limited",
             "addedAt": "2026-10-12T12:24:43.912Z",
             "addedPrice": 38.03
+          },
+          {
+            "symbol": "SCHAEFFLER",
+            "name": "Schaeffler India Limited",
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 3607.9
+          },
+          {
+            "symbol": "POLICYBZR",
+            "name": "PB Fintech Limited",
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 1089.1
+          },
+          {
+            "symbol": "CHALET",
+            "name": "Chalet Hotels Limited",
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 869.25
+          },
+          {
+            "symbol": "CANFINHOME",
+            "name": "Can Fin Homes Limited",
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 796.4
+          },
+          {
+            "symbol": "RATNAVEER",
+            "name": "Ratnaveer Precision Engineering Ltd",
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 403.3
+          },
+          {
+            "symbol": "DABUR",
+            "name": "Dabur India Limited",
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 399
+          },
+          {
+            "symbol": "WINDMACHIN",
+            "name": "WINDSOR MACHINES LIMITED",
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 354.7
+          },
+          {
+            "symbol": "MILKYMIST",
+            "name": "Milky Mist Dairy Food Ltd",
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 339.45
+          },
+          {
+            "symbol": "ITI",
+            "name": "ITI Limited",
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 276.21
+          },
+          {
+            "symbol": "THOMASCOOK",
+            "name": "Thomas Cook  (india)  Limited",
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 129.39
+          },
+          {
+            "symbol": "VMM",
+            "name": "VMM Limited",
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 94.5
+          },
+          {
+            "symbol": "GMRP&UI",
+            "name": "GMR POWER AND URBAN INFRA LIMITED",
+            "addedAt": "2026-11-23T17:08:51.620Z",
+            "addedPrice": 90.1
+          },
+          {
+            "symbol": "HMT",
+            "name": "Hmt Limited",
+            "addedAt": "2026-11-23T17:08:51.620Z",
+            "addedPrice": 51.26
+          },
+          {
+            "symbol": "WELSPLSOL",
+            "name": "Welspun Specialty Solutions Ltd",
+            "addedAt": "2026-11-23T17:08:51.620Z",
+            "addedPrice": 47.66
           }
         ],
         "stockHistory": {
@@ -19835,6 +19919,62 @@
           "IBULLSLTD": {
             "addedAt": "2026-10-12T12:24:43.912Z",
             "addedPrice": 38.03
+          },
+          "SCHAEFFLER": {
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 3607.9
+          },
+          "POLICYBZR": {
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 1089.1
+          },
+          "CHALET": {
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 869.25
+          },
+          "CANFINHOME": {
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 796.4
+          },
+          "RATNAVEER": {
+            "addedAt": "2026-11-23T17:08:51.618Z",
+            "addedPrice": 403.3
+          },
+          "DABUR": {
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 399
+          },
+          "WINDMACHIN": {
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 354.7
+          },
+          "MILKYMIST": {
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 339.45
+          },
+          "ITI": {
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 276.21
+          },
+          "THOMASCOOK": {
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 129.39
+          },
+          "VMM": {
+            "addedAt": "2026-11-23T17:08:51.619Z",
+            "addedPrice": 94.5
+          },
+          "GMRP&UI": {
+            "addedAt": "2026-11-23T17:08:51.620Z",
+            "addedPrice": 90.1
+          },
+          "HMT": {
+            "addedAt": "2026-11-23T17:08:51.620Z",
+            "addedPrice": 51.26
+          },
+          "WELSPLSOL": {
+            "addedAt": "2026-11-23T17:08:51.620Z",
+            "addedPrice": 47.66
           }
         }
       },
@@ -40879,10 +41019,8 @@
       }
     },
     "maxWatchlists": 15,
-    "activeToken": "sess_user_186871f449b5adf400e1edf2ddd4178cee4252dbd9e392d7",
+    "activeToken": "sess_user_76f4197898502927c555a391b2f20f64b41ea518403a0195",
     "tokens": [
-      "sess_user_f2e562b1ec89473227b0720c3c68d9b38adc088f75776769",
-      "sess_user_bd16de0632f73545f5160dcd865f5d08d3fd4600719f5f89",
       "sess_user_01af812e3cca13ce6af90cb6f9dc7ebf7b10196576f312e2",
       "sess_user_e499cde21f0ef58812a2b21160283b47a0dada418d3e9c04",
       "sess_user_42608fd34d3af972ce8c7e5f67b20d3fd89efd9e4abc3da2",
@@ -40891,7 +41029,9 @@
       "sess_user_2fb0bd8e6ef18017123e1e1504284b95656b202cc8ee990e",
       "sess_user_b609d7daebbe34e1821e19ed2425cd8a7392d572f9321c57",
       "sess_user_f255f1b11476941bd2dfd26571b7a003dfe77195e4374b21",
-      "sess_user_186871f449b5adf400e1edf2ddd4178cee4252dbd9e392d7"
+      "sess_user_186871f449b5adf400e1edf2ddd4178cee4252dbd9e392d7",
+      "sess_user_dd949f274264cc6e3d2a25bc5e8277fd264ec077fdd13973",
+      "sess_user_76f4197898502927c555a391b2f20f64b41ea518403a0195"
     ]
   },
   {

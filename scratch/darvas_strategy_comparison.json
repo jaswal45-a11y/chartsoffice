@@ -1,0 +1,56 @@
+{
+  "strategies": [
+    {
+      "name": "1. DARVAS BOX BOTTOM BOUNCE (Support Buy in Uptrend)",
+      "totalTrades": 1885,
+      "winRate": "23.6",
+      "targetHitRate": "20.8",
+      "avgRisk": "3.68",
+      "avgWin": "10.92",
+      "avgLoss": "-3.54",
+      "realizedRR": "3.08",
+      "profitFactor": "0.95",
+      "expectancy": "-0.13",
+      "avgRMultiple": "-0.05"
+    },
+    {
+      "name": "2. DARVAS SPRING / BEAR TRAP RECLAIM (False Breakdown Reversal)",
+      "totalTrades": 2116,
+      "winRate": "22.7",
+      "targetHitRate": "17.2",
+      "avgRisk": "4.33",
+      "avgWin": "11.40",
+      "avgLoss": "-4.07",
+      "realizedRR": "2.80",
+      "profitFactor": "0.82",
+      "expectancy": "-0.56",
+      "avgRMultiple": "-0.16"
+    },
+    {
+      "name": "3. TIGHT BOX SQUEEZE BREAKOUT (Height <= 10% + RVOL >= 2.0x)",
+      "totalTrades": 1606,
+      "winRate": "36.8",
+      "targetHitRate": "23.0",
+      "avgRisk": "5.58",
+      "avgWin": "10.07",
+      "avgLoss": "-5.00",
+      "realizedRR": "2.01",
+      "profitFactor": "1.17",
+      "expectancy": "0.55",
+      "avgRMultiple": "0.09"
+    },
+    {
+      "name": "4. MULTI-TIMEFRAME DARVAS (Weekly Breakout + Daily 10 EMA Pullback)",
+      "totalTrades": 2109,
+      "winRate": "40.3",
+      "targetHitRate": "30.3",
+      "avgRisk": "3.53",
+      "avgWin": "8.79",
+      "avgLoss": "-3.46",
+      "realizedRR": "2.54",
+      "profitFactor": "1.71",
+      "expectancy": "1.47",
+      "avgRMultiple": "0.44"
+    }
+  ]
+}

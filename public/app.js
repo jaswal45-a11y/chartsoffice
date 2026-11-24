@@ -214,7 +214,13 @@ const state = {
   ssrvolFilterMc2000: false,
   ssrvolFilterSsOnly: false,
   ssrvolLookback: 20,
-  // VCP Scanner State
+  // DarvasW Scanner State (Multi-Timeframe Weekly Breakout + Daily 10 EMA Pullback)
+  darvaswResults: [],
+  darvaswSortField: 'stage',
+  darvaswSortAscending: false,
+  darvaswFilterMc1000: false,
+  darvaswFilterMc2000: false,
+  // Legacy VCP Scanner Aliases
   vcpscanResults: [],
   vcpscanSortField: 'tightnessPercent',
   vcpscanSortAscending: true,
@@ -518,12 +524,14 @@ const el = {
   tabBtnWatchlists: document.getElementById('tab-btn-watchlists'),
   tabBtnPricescan: document.getElementById('tab-btn-pricescan'),
   tabBtnSsrvol: document.getElementById('tab-btn-ssrvol'),
-  tabBtnVcpscan: document.getElementById('tab-btn-vcpscan'),
+  tabBtnDarvasw: document.getElementById('tab-btn-darvasw') || document.getElementById('tab-btn-vcpscan'),
+  tabBtnVcpscan: document.getElementById('tab-btn-darvasw') || document.getElementById('tab-btn-vcpscan'),
   sidebarScreenersView: document.getElementById('sidebar-screeners-view'),
   sidebarWatchlistsView: document.getElementById('sidebar-watchlists-view'),
   sidebarPricescanView: document.getElementById('sidebar-pricescan-view'),
   sidebarSsrvolView: document.getElementById('sidebar-ssrvol-view'),
-  sidebarVcpscanView: document.getElementById('sidebar-vcpscan-view'),
+  sidebarDarvaswView: document.getElementById('sidebar-darvasw-view') || document.getElementById('sidebar-vcpscan-view'),
+  sidebarVcpscanView: document.getElementById('sidebar-darvasw-view') || document.getElementById('sidebar-vcpscan-view'),
   selectActiveWatchlist: document.getElementById('select-active-watchlist'),
   btnRenameWatchlist: document.getElementById('btn-rename-watchlist'),
   btnAddNewWatchlist: document.getElementById('btn-add-new-watchlist'),
@@ -575,17 +583,28 @@ const el = {
   ssrvolDynamicAvgvolCol: document.getElementById('ssrvol-dynamic-avgvol-col'),
   ssrvolFooterInfo: document.getElementById('ssrvol-footer-info'),
 
-  // VCP Scanner Elements
-  btnRunVcpscan: document.getElementById('btn-run-vcpscan'),
-  btnCopyVcpscanStocks: document.getElementById('btn-copy-vcpscan-stocks'),
+  // DarvasW Scanner Elements (Weekly Box Breakout + Daily 10 EMA Pullback)
+  btnRunDarvasw: document.getElementById('btn-run-darvasw') || document.getElementById('btn-run-vcpscan'),
+  btnCopyDarvaswStocks: document.getElementById('btn-copy-darvasw-stocks') || document.getElementById('btn-copy-vcpscan-stocks'),
+  selectDarvaswStage: document.getElementById('select-darvasw-stage') || document.getElementById('select-vcpscan-stage'),
+  selectDarvaswScope: document.getElementById('select-darvasw-scope') || document.getElementById('select-vcpscan-scope'),
+  chkDarvaswMc1000: document.getElementById('chk-darvasw-mc1000') || document.getElementById('chk-vcpscan-mc1000'),
+  chkDarvaswMc2000: document.getElementById('chk-darvasw-mc2000') || document.getElementById('chk-vcpscan-mc2000'),
+  darvaswResultsCountBadge: document.getElementById('darvasw-results-count-badge') || document.getElementById('vcpscan-results-count-badge'),
+  darvaswTbody: document.getElementById('darvasw-tbody') || document.getElementById('vcpscan-tbody'),
+  darvaswFooterInfo: document.getElementById('darvasw-footer-info') || document.getElementById('vcpscan-footer-info'),
+
+  // VCP Scanner Elements (Legacy Aliases)
+  btnRunVcpscan: document.getElementById('btn-run-darvasw') || document.getElementById('btn-run-vcpscan'),
+  btnCopyVcpscanStocks: document.getElementById('btn-copy-darvasw-stocks') || document.getElementById('btn-copy-vcpscan-stocks'),
   selectVcpscanTimeframe: document.getElementById('select-vcpscan-timeframe'),
-  selectVcpscanStage: document.getElementById('select-vcpscan-stage'),
-  selectVcpscanScope: document.getElementById('select-vcpscan-scope'),
-  chkVcpscanMc1000: document.getElementById('chk-vcpscan-mc1000'),
-  chkVcpscanMc2000: document.getElementById('chk-vcpscan-mc2000'),
-  vcpscanResultsCountBadge: document.getElementById('vcpscan-results-count-badge'),
-  vcpscanTbody: document.getElementById('vcpscan-tbody'),
-  vcpscanFooterInfo: document.getElementById('vcpscan-footer-info'),
+  selectVcpscanStage: document.getElementById('select-darvasw-stage') || document.getElementById('select-vcpscan-stage'),
+  selectVcpscanScope: document.getElementById('select-darvasw-scope') || document.getElementById('select-vcpscan-scope'),
+  chkVcpscanMc1000: document.getElementById('chk-darvasw-mc1000') || document.getElementById('chk-vcpscan-mc1000'),
+  chkVcpscanMc2000: document.getElementById('chk-darvasw-mc2000') || document.getElementById('chk-vcpscan-mc2000'),
+  vcpscanResultsCountBadge: document.getElementById('darvasw-results-count-badge') || document.getElementById('vcpscan-results-count-badge'),
+  vcpscanTbody: document.getElementById('darvasw-tbody') || document.getElementById('vcpscan-tbody'),
+  vcpscanFooterInfo: document.getElementById('darvasw-footer-info') || document.getElementById('vcpscan-footer-info'),
 
   // Chart Header Watchlist Elements
   chartWatchlistWrapper: document.getElementById('chart-watchlist-wrapper'),
@@ -2841,14 +2860,14 @@ function switchSidebarTab(tab) {
   state.activeSidebarTab = tab;
 
   // Reset tab button states
-  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan, el.tabBtnSsrvol, el.tabBtnVcpscan].forEach(btn => {
+  [el.tabBtnScreeners, el.tabBtnWatchlists, el.tabBtnPricescan, el.tabBtnSsrvol, el.tabBtnDarvasw, el.tabBtnVcpscan].forEach(btn => {
     if (!btn) return;
     btn.classList.remove('active', 'bg-blue-600', 'bg-amber-500', 'bg-emerald-600', 'bg-purple-600', 'text-white', 'text-black', 'shadow-sm');
     btn.classList.add('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
   });
 
   // Reset views
-  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView, el.sidebarSsrvolView, el.sidebarVcpscanView].forEach(v => {
+  [el.sidebarScreenersView, el.sidebarWatchlistsView, el.sidebarPricescanView, el.sidebarSsrvolView, el.sidebarDarvaswView, el.sidebarVcpscanView].forEach(v => {
     if (!v) return;
     v.classList.add('hidden');
     v.classList.remove('flex');
@@ -2898,19 +2917,25 @@ function switchSidebarTab(tab) {
     el.sidebarSsrvolView?.classList.add('flex');
 
     populateSsrvolScopeOptions();
-  } else if (tab === 'vcpscan') {
+  } else if (tab === 'darvasw' || tab === 'vcpscan') {
     if (!state.user) {
-      showToast('Please log in or register to access the VCP Scanner.', 'info');
+      showToast('Please log in or register to access the DarvasW Scanner.', 'info');
       openAuthModal('login');
       return;
     }
 
-    el.tabBtnVcpscan?.classList.add('active', 'bg-purple-600', 'text-white', 'shadow-sm');
-    el.tabBtnVcpscan?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
-    el.sidebarVcpscanView?.classList.remove('hidden');
-    el.sidebarVcpscanView?.classList.add('flex');
+    const dBtn = el.tabBtnDarvasw || el.tabBtnVcpscan;
+    const dView = el.sidebarDarvaswView || el.sidebarVcpscanView;
 
-    populateVcpscanScopeOptions();
+    dBtn?.classList.add('active', 'bg-emerald-600', 'text-white', 'shadow-sm');
+    dBtn?.classList.remove('bg-dark-bg', 'text-slate-400', 'border', 'border-dark-border');
+    dView?.classList.remove('hidden');
+    dView?.classList.add('flex');
+
+    populateDarvaswScopeOptions();
+    if (!state.darvaswResults || state.darvaswResults.length === 0) {
+      runDarvaswScan();
+    }
   }
 }
 
@@ -3967,7 +3992,21 @@ function setupEventListeners() {
     });
   });
 
-  // Table Column Sorting (VCP Scan Table)
+  // Table Column Sorting (DarvasW Table)
+  document.querySelectorAll('th[data-dsort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.dsort;
+      if (state.darvaswSortField === field) {
+        state.darvaswSortAscending = !state.darvaswSortAscending;
+      } else {
+        state.darvaswSortField = field;
+        state.darvaswSortAscending = (field === 'symbol' || field === 'dist10Pct' || field === 'riskPct');
+      }
+      renderDarvaswTable();
+    });
+  });
+
+  // Table Column Sorting (VCP Scan Table - Legacy)
   document.querySelectorAll('th[data-vsort]').forEach(th => {
     th.addEventListener('click', () => {
       const field = th.dataset.vsort;
@@ -4288,39 +4327,45 @@ function setupEventListeners() {
     });
   }
 
-  // VCP Scanner Event Listeners
-  if (el.btnRunVcpscan) {
+  // DarvasW Scanner Event Listeners
+  if (el.btnRunDarvasw) {
+    el.btnRunDarvasw.addEventListener('click', runDarvaswScan);
+  }
+  if (el.btnCopyDarvaswStocks) {
+    el.btnCopyDarvaswStocks.addEventListener('click', handleCopyDarvaswStocks);
+  }
+  if (el.chkDarvaswMc1000) {
+    el.chkDarvaswMc1000.addEventListener('change', e => {
+      state.darvaswFilterMc1000 = e.target.checked;
+      if (state.darvaswFilterMc1000 && state.darvaswFilterMc2000) {
+        if (el.chkDarvaswMc2000) el.chkDarvaswMc2000.checked = false;
+        state.darvaswFilterMc2000 = false;
+      }
+      renderDarvaswTable();
+    });
+  }
+  if (el.chkDarvaswMc2000) {
+    el.chkDarvaswMc2000.addEventListener('change', e => {
+      state.darvaswFilterMc2000 = e.target.checked;
+      if (state.darvaswFilterMc2000 && state.darvaswFilterMc1000) {
+        if (el.chkDarvaswMc1000) el.chkDarvaswMc1000.checked = false;
+        state.darvaswFilterMc1000 = false;
+      }
+      renderDarvaswTable();
+    });
+  }
+  if (el.selectDarvaswStage) {
+    el.selectDarvaswStage.addEventListener('change', () => {
+      renderDarvaswTable();
+    });
+  }
+
+  // VCP Scanner Event Listeners (Legacy Aliases)
+  if (el.btnRunVcpscan && el.btnRunVcpscan !== el.btnRunDarvasw) {
     el.btnRunVcpscan.addEventListener('click', runVcpScan);
   }
-  if (el.btnCopyVcpscanStocks) {
+  if (el.btnCopyVcpscanStocks && el.btnCopyVcpscanStocks !== el.btnCopyDarvaswStocks) {
     el.btnCopyVcpscanStocks.addEventListener('click', handleCopyVcpscanStocks);
-  }
-  if (el.chkVcpscanMc1000) {
-    el.chkVcpscanMc1000.addEventListener('change', e => {
-      state.vcpscanFilterMc1000 = e.target.checked;
-      if (state.vcpscanFilterMc1000 && state.vcpscanFilterMc2000) {
-        if (el.chkVcpscanMc2000) el.chkVcpscanMc2000.checked = false;
-        state.vcpscanFilterMc2000 = false;
-      }
-      renderVcpscanTable();
-    });
-  }
-  if (el.chkVcpscanMc2000) {
-    el.chkVcpscanMc2000.addEventListener('change', e => {
-      state.vcpscanFilterMc2000 = e.target.checked;
-      if (state.vcpscanFilterMc2000 && state.vcpscanFilterMc1000) {
-        if (el.chkVcpscanMc1000) el.chkVcpscanMc1000.checked = false;
-        state.vcpscanFilterMc1000 = false;
-      }
-      renderVcpscanTable();
-    });
-  }
-  if (el.selectVcpscanStage) {
-    el.selectVcpscanStage.addEventListener('change', () => {
-      if (state.vcpscanResults && state.vcpscanResults.length > 0) {
-        runVcpScan();
-      }
-    });
   }
   if (el.selectVcpscanTimeframe) {
     el.selectVcpscanTimeframe.addEventListener('change', () => {
@@ -6987,12 +7032,12 @@ function renderMeasureOverlay(x1, y1, x2, y2, price1, price2, idx1, idx2) {
   const pillPointerClass = (state.measureTool.step === 2) ? 'pointer-events-auto' : 'pointer-events-none';
   if (isUp) {
     box.className = 'absolute border border-dashed rounded pointer-events-none up';
-    pill.className = `${pillPointerClass} absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 up`;
+    pill.className = `${pillPointerClass} absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-opacity duration-150 up`;
     pctEl.className = 'font-mono font-bold text-sm leading-none text-emerald-400';
     pctEl.textContent = `+${pct.toFixed(2)}%`;
   } else {
     box.className = 'absolute border border-dashed rounded pointer-events-none down';
-    pill.className = `${pillPointerClass} absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-all duration-75 down`;
+    pill.className = `${pillPointerClass} absolute z-40 px-2.5 py-1.5 rounded-xl shadow-2xl backdrop-blur-md border text-xs flex flex-col gap-0.5 cursor-default transition-opacity duration-150 down`;
     pctEl.className = 'font-mono font-bold text-sm leading-none text-rose-400';
     pctEl.textContent = `${pct.toFixed(2)}%`;
   }
@@ -7013,16 +7058,36 @@ function renderMeasureOverlay(x1, y1, x2, y2, price1, price2, idx1, idx2) {
     `;
   }
 
-  // Position Pill
-  let pillX = x2 + 10;
-  let pillY = y2 - 20;
+  // Position Pill directly ABOVE the drag selected portion (centered horizontally, above top edge)
+  const pillWidth = pill.offsetWidth || 170;
+  const pillHeight = pill.offsetHeight || 46;
+  const gap = 10;
+
+  // Center horizontally over the measured box
+  let pillX = left + (width / 2) - (pillWidth / 2);
+
+  // Position directly above the top edge of the measured box
+  let pillY = top - pillHeight - gap;
 
   // Clamp within price pane bounds
   const paneRect = overlay.getBoundingClientRect();
-  if (pillX + 160 > paneRect.width) pillX = x2 - 170;
-  if (pillX < 10) pillX = 10;
-  if (pillY < 10) pillY = 10;
-  if (pillY + 60 > paneRect.height) pillY = paneRect.height - 65;
+  const maxPaneWidth = paneRect.width || (overlay.parentElement ? overlay.parentElement.clientWidth : 800);
+  const maxPaneHeight = paneRect.height || (overlay.parentElement ? overlay.parentElement.clientHeight : 500);
+
+  // If there's not enough room above the box (near top edge of chart), place below the selection box
+  if (pillY < 8) {
+    if (top + height + gap + pillHeight <= maxPaneHeight - 8) {
+      pillY = top + height + gap;
+    } else {
+      pillY = Math.max(8, top + 6);
+    }
+  }
+
+  // Clamp horizontally so it never overflows past chart boundaries
+  if (pillX < 8) pillX = 8;
+  if (pillX + pillWidth > maxPaneWidth - 8) {
+    pillX = Math.max(8, maxPaneWidth - pillWidth - 8);
+  }
 
   pill.style.left = `${Math.round(pillX)}px`;
   pill.style.top = `${Math.round(pillY)}px`;
@@ -7994,6 +8059,8 @@ function getSelectedScopes(prefix) {
   if (!Array.isArray(state[prefix + 'Scopes'])) {
     if (prefix === 'pricescan') {
       state.pricescanScopes = ['fno'];
+    } else if (prefix === 'darvasw') {
+      state.darvaswScopes = ['universe'];
     } else {
       state.ssrvolScopes = ['current'];
       state.vcpscanScopes = ['current'];
@@ -8028,7 +8095,7 @@ function toggleScopeDropdown(prefix, e) {
   const isHidden = dropdown.classList.contains('hidden');
   
   // Close other scope dropdowns
-  ['pricescan', 'ssrvol', 'vcpscan'].forEach(p => {
+  ['pricescan', 'ssrvol', 'darvasw', 'vcpscan'].forEach(p => {
     const d = document.getElementById(`dropdown-${p}-scope`);
     if (d) d.classList.add('hidden');
   });
@@ -8043,7 +8110,7 @@ function toggleScopeDropdown(prefix, e) {
 
 // Global click outside to dismiss popover
 window.addEventListener('click', (e) => {
-  ['pricescan', 'ssrvol', 'vcpscan'].forEach(prefix => {
+  ['pricescan', 'ssrvol', 'darvasw', 'vcpscan'].forEach(prefix => {
     const wrap = document.getElementById(`wrapper-${prefix}-scope`);
     const dd = document.getElementById(`dropdown-${prefix}-scope`);
     if (wrap && dd && !wrap.contains(e.target)) {
@@ -9069,24 +9136,26 @@ function handleCopySsrvolStocks() {
 }
 
 // -------------------------------------------------------------
-// VCP Scanner Controller (Minervini Volatility Contraction Pattern)
+// DarvasW Scanner Controller (Multi-Timeframe Weekly Breakout + Daily 10 EMA Pullback)
 // -------------------------------------------------------------
 
-function populateVcpscanScopeOptions() {
-  populateScopePicker('vcpscan');
+function populateDarvaswScopeOptions() {
+  populateScopePicker('darvasw');
 }
 
-async function runVcpScan() {
-  const stage = el.selectVcpscanStage?.value || 'all';
-  const interval = el.selectVcpscanTimeframe?.value || '1d';
-  const tfLabel = interval === '1wk' ? 'Weekly' : 'Daily';
-  const btn = el.btnRunVcpscan || document.getElementById('btn-run-vcpscan');
-  const tbody = el.vcpscanTbody || document.getElementById('vcpscan-tbody');
-  const countBadge = el.vcpscanResultsCountBadge || document.getElementById('vcpscan-results-count-badge');
+function populateVcpscanScopeOptions() {
+  populateDarvaswScopeOptions();
+}
 
-  const scopes = getSelectedScopes('vcpscan');
+async function runDarvaswScan() {
+  const stage = el.selectDarvaswStage?.value || 'all';
+  const btn = el.btnRunDarvasw || document.getElementById('btn-run-darvasw');
+  const tbody = el.darvaswTbody || document.getElementById('darvasw-tbody');
+  const countBadge = el.darvaswResultsCountBadge || document.getElementById('darvasw-results-count-badge');
+
+  const scopes = getSelectedScopes('darvasw');
   if (scopes.length === 0) {
-    showToast('Please select at least one scope (Index, Watchlist, or Screener) to scan.', 'warning');
+    showToast('Please select at least one scope (Index, Watchlist, or Universe) to scan.', 'warning');
     return;
   }
 
@@ -9114,7 +9183,7 @@ async function runVcpScan() {
     btn.disabled = true;
     btn.classList.add('opacity-70', 'cursor-not-allowed');
     btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Scanning...</span>`;
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
   }
 
   if (tbody) {
@@ -9122,26 +9191,25 @@ async function runVcpScan() {
       <tr>
         <td colspan="8" class="p-8 text-center text-slate-400">
           <div class="flex flex-col items-center justify-center gap-3">
-            <i data-lucide="loader-2" class="w-8 h-8 text-purple-400 animate-spin"></i>
-            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel} for VCP Patterns (${tfLabel})...</p>
-            <p class="text-[11px] text-slate-500">Checking Stage 2 trend, progressive contractions (T1→T2→T3), tightness & volume dry-up</p>
+            <i data-lucide="loader-2" class="w-8 h-8 text-emerald-400 animate-spin"></i>
+            <p class="text-xs font-semibold text-slate-200">Scanning ${scanScopeLabel} for DarvasW Setups...</p>
+            <p class="text-[11px] text-slate-500">Checking Weekly Darvas Breakouts & Daily 10 EMA Pullback Confirmation</p>
           </div>
         </td>
       </tr>
     `;
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
   }
 
   try {
-    const res = await fetch('/api/scan/vcp', {
+    const res = await fetch('/api/scan/darvasw', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeaders()
       },
       body: JSON.stringify({
-        stage,
-        interval,
+        stage: 'all',
         scope: scopes.join(','),
         scopes,
         stockList
@@ -9149,8 +9217,8 @@ async function runVcpScan() {
     });
 
     if (res.status === 401) {
-      state.vcpscanResults = [];
-      showToast('Please log in or register to run VCP Scanner.', 'warning');
+      state.darvaswResults = [];
+      showToast('Please log in or register to run DarvasW Scanner.', 'warning');
       openAuthModal('login');
       return;
     }
@@ -9158,60 +9226,71 @@ async function runVcpScan() {
     const data = await res.json();
 
     if (!data.success) {
-      throw new Error(data.error || 'VCP Scan failed');
+      throw new Error(data.error || 'DarvasW Scan failed');
     }
 
     const matches = data.results || [];
+    state.darvaswResults = matches;
     state.vcpscanResults = matches;
 
     if (countBadge) countBadge.textContent = matches.length;
 
-    renderVcpscanTable();
-    showToast(`VCP Scan complete: Found ${matches.length} matching stocks (${tfLabel}).`, 'success');
+    renderDarvaswTable();
+    showToast(`DarvasW Scan complete: Found ${matches.length} matching stocks.`, 'success');
   } catch (err) {
-    console.error('VCP scan error:', err);
-    state.vcpscanResults = [];
+    console.error('DarvasW scan error:', err);
+    state.darvaswResults = [];
     if (tbody) {
       tbody.innerHTML = `
         <tr>
           <td colspan="8" class="p-6 text-center text-rose-400">
-            <p class="text-xs font-semibold">Error running VCP scan: ${err.message}</p>
+            <p class="text-xs font-semibold">Error running DarvasW scan: ${err.message}</p>
           </td>
         </tr>
       `;
     }
-    showToast(`VCP Scan error: ${err.message}`, 'error');
+    showToast(`DarvasW Scan error: ${err.message}`, 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
       btn.classList.remove('opacity-70', 'cursor-not-allowed');
       btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>RUN</span>`;
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
   }
 }
 
-function renderVcpscanTable() {
-  const tbody = el.vcpscanTbody;
+async function runVcpScan() {
+  return runDarvaswScan();
+}
+
+function renderDarvaswTable() {
+  const tbody = el.darvaswTbody || el.vcpscanTbody || document.getElementById('darvasw-tbody');
   if (!tbody) return;
 
-  const matches = [...(state.vcpscanResults || [])].filter(stock => {
-    if (state.vcpscanFilterMc2000 && stock.mcOver2000Cr !== true) {
-      return false;
-    }
-    if (state.vcpscanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) {
-      return false;
+  const stageFilter = el.selectDarvaswStage?.value || 'all';
+
+  const matches = [...(state.darvaswResults || [])].filter(stock => {
+    if (state.darvaswFilterMc2000 && stock.mcOver2000Cr !== true) return false;
+    if (state.darvaswFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+    if (stageFilter === 'ready' || stageFilter === 'stage3') {
+      if (stock.stage !== 3) return false;
+    } else if (stageFilter === 'pullback' || stageFilter === 'stage2') {
+      if (stock.stage !== 2) return false;
+    } else if (stageFilter === 'weekly' || stageFilter === 'stage1') {
+      if (stock.stage !== 1) return false;
     }
     return true;
   });
 
-  if (el.vcpscanResultsCountBadge) el.vcpscanResultsCountBadge.textContent = matches.length;
+  const countBadge = el.darvaswResultsCountBadge || el.vcpscanResultsCountBadge;
+  if (countBadge) countBadge.textContent = matches.length;
 
-  const sortField = state.vcpscanSortField || 'tightnessPercent';
-  const isAsc = state.vcpscanSortAscending;
+  const sortField = state.darvaswSortField || 'stage';
+  const isAsc = state.darvaswSortAscending;
 
-  document.querySelectorAll('th[data-vsort]').forEach(th => {
-    const isThisCol = th.dataset.vsort === sortField;
+  document.querySelectorAll('th[data-dsort]').forEach(th => {
+    const isThisCol = th.dataset.dsort === sortField;
     const icon = th.querySelector('svg, i');
     if (isThisCol) {
       th.classList.add('text-slate-100');
@@ -9232,13 +9311,13 @@ function renderVcpscanTable() {
         <td colspan="8" class="p-8 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
-            <p class="text-xs text-slate-300">No stocks matched the VCP criteria.</p>
-            <p class="text-[11px] text-slate-500">Try adjusting Market Cap filters, selecting "All Stages", or scanning a broader scope (e.g. MidCap or Universe).</p>
+            <p class="text-xs text-slate-300">No stocks matched the DarvasW criteria.</p>
+            <p class="text-[11px] text-slate-500">Try selecting "All Stages", unchecking Market Cap filters, or scanning Full Universe.</p>
           </div>
         </td>
       </tr>
     `;
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
     return;
   }
 
@@ -9269,12 +9348,12 @@ function renderVcpscanTable() {
     const ltpPrice = (typeof m.close === 'number' && m.close > 0) ? m.close : (m.ltp || 0);
 
     let stageBadge = '';
-    if (m.stageCode === 'breakout') {
-      stageBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold">🚀 BREAKOUT</span>`;
-    } else if (m.stageCode === 'squeeze') {
-      stageBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold">🎯 SQUEEZE</span>`;
+    if (m.stage === 3) {
+      stageBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center shadow-sm">🎯 READY TO BUY</span>`;
+    } else if (m.stage === 2) {
+      stageBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center">⏳ PULLBACK 10 EMA</span>`;
     } else {
-      stageBadge = `<span class="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[9px] font-bold">📈 FORMING</span>`;
+      stageBadge = `<span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[9px] font-bold tracking-wide flex items-center gap-1 justify-center">🚀 WEEKLY CROSSED</span>`;
     }
 
     let mcBadgeHtml = '';
@@ -9284,15 +9363,16 @@ function renderVcpscanTable() {
       mcBadgeHtml = `<span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">&gt;1k</span>`;
     }
 
-    const tightClass = m.tightnessPercent <= 3.5 ? 'text-emerald-400 font-bold' : (m.tightnessPercent <= 4.5 ? 'text-amber-300' : 'text-slate-300');
-    const dryVolClass = m.dryVolRatio <= 0.60 ? 'text-emerald-400 font-bold' : (m.dryVolRatio <= 0.80 ? 'text-amber-300' : 'text-slate-300');
+    const distVal = m.dist10Pct;
+    const distClass = (distVal >= -1.0 && distVal <= 2.0) ? 'text-emerald-400 font-bold' : (distVal <= 3.5 ? 'text-amber-300' : 'text-slate-300');
+    const rvolClass = m.rvol <= 0.8 ? 'text-emerald-400 font-bold' : (m.rvol >= 2.0 ? 'text-purple-300 font-bold' : 'text-slate-300');
 
     return `
-      <tr class="vcpscan-stock-row hover:bg-purple-500/10 cursor-pointer transition-colors group select-none ${isSelected ? 'selected bg-purple-600/20' : ''}" data-symbol="${m.symbol}">
+      <tr class="darvasw-stock-row hover:bg-emerald-500/10 cursor-pointer transition-colors group select-none ${isSelected ? 'selected bg-emerald-600/20' : ''}" data-symbol="${m.symbol}">
         <td class="py-2.5 px-3">
           <div class="flex flex-col">
             <div class="flex items-center gap-1.5">
-              <span class="font-mono font-bold text-slate-100 group-hover:text-purple-300 text-xs">${m.symbol}</span>
+              <span class="font-mono font-bold text-slate-100 group-hover:text-emerald-300 text-xs">${m.symbol}</span>
               ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(m.symbol, m.name) : ''}
               ${m.exchange && m.exchange !== 'NSE' ? `<span class="text-[9px] px-1 py-0.2 rounded bg-dark-bg text-slate-400 font-mono">${m.exchange}</span>` : ''}
               ${getFnoBadgeHtml(m.symbol)}
@@ -9312,71 +9392,78 @@ function renderVcpscanTable() {
           </span>
         </td>
         <td class="py-2.5 px-2 text-center">
-          <div class="flex flex-col items-center gap-0.5">
-            <span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-mono font-bold text-[10px]">${m.contractionsCount}</span>
-            ${stageBadge}
+          ${stageBadge}
+        </td>
+        <td class="py-2.5 px-2 text-right font-mono text-xs">
+          <div class="flex flex-col items-end">
+            <span class="text-slate-200">₹${m.ema10}</span>
+            <span class="text-[10px] ${distClass}">${distVal >= 0 ? '+' : ''}${distVal}%</span>
           </div>
         </td>
-        <td class="py-2.5 px-2 text-center font-mono text-[10px] text-slate-300">
-          <span class="px-1.5 py-0.5 rounded bg-dark-bg border border-dark-border" title="Contraction Waves">${m.depths}</span>
+        <td class="py-2.5 px-2 text-right font-mono text-xs ${rvolClass}">
+          ${m.rvol}x
         </td>
-        <td class="py-2.5 px-2 text-right font-mono text-xs ${tightClass}">
-          ${m.tightnessPercent}%
+        <td class="py-2.5 px-2 text-right font-mono text-xs text-slate-300">
+          ₹${m.weeklyTop}
         </td>
-        <td class="py-2.5 px-2 text-right font-mono text-xs ${dryVolClass}">
-          ${m.dryVolRatio}x
-        </td>
-        <td class="py-2.5 px-2 text-right font-mono text-xs font-bold text-purple-300">
-          ${fmt.currency(m.pivotPrice)}
+        <td class="py-2.5 px-2 text-right font-mono text-xs">
+          <div class="flex flex-col items-end">
+            <span class="text-slate-200">₹${m.stopLoss}</span>
+            <span class="text-[10px] text-rose-400 font-semibold">-${m.riskPct}%</span>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
 
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 
-  tbody.querySelectorAll('.vcpscan-stock-row').forEach(row => {
+  tbody.querySelectorAll('.darvasw-stock-row').forEach(row => {
     row.addEventListener('click', () => {
       const sym = row.dataset.symbol;
       if (sym) {
-        tbody.querySelectorAll('.vcpscan-stock-row').forEach(r => r.classList.remove('selected', 'bg-purple-600/20'));
-        row.classList.add('selected', 'bg-purple-600/20');
-
-        const scanTf = el.selectVcpscanTimeframe?.value || '1d';
-        state.selectedInterval = scanTf;
-        document.querySelectorAll('.timeframe-btn').forEach(btn => {
-          if (btn.dataset.interval === scanTf) {
-            btn.classList.add('active', 'bg-blue-600', 'text-white', 'font-semibold', 'shadow');
-            btn.classList.remove('hover:text-white');
-          } else {
-            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'font-semibold', 'shadow');
-          }
-        });
-
+        tbody.querySelectorAll('.darvasw-stock-row').forEach(r => r.classList.remove('selected', 'bg-emerald-600/20'));
+        row.classList.add('selected', 'bg-emerald-600/20');
         selectStock({ symbol: sym, name: sym });
       }
     });
   });
 }
 
-function handleCopyVcpscanStocks() {
-  const matches = (state.vcpscanResults || []).filter(stock => {
-    if (state.vcpscanFilterMc2000 && stock.mcOver2000Cr !== true) return false;
-    if (state.vcpscanFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+function renderVcpscanTable() {
+  return renderDarvaswTable();
+}
+
+function handleCopyDarvaswStocks() {
+  const stageFilter = el.selectDarvaswStage?.value || 'all';
+  const matches = (state.darvaswResults || []).filter(stock => {
+    if (state.darvaswFilterMc2000 && stock.mcOver2000Cr !== true) return false;
+    if (state.darvaswFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
+    if (stageFilter === 'ready' || stageFilter === 'stage3') {
+      if (stock.stage !== 3) return false;
+    } else if (stageFilter === 'pullback' || stageFilter === 'stage2') {
+      if (stock.stage !== 2) return false;
+    } else if (stageFilter === 'weekly' || stageFilter === 'stage1') {
+      if (stock.stage !== 1) return false;
+    }
     return true;
   });
 
   if (matches.length === 0) {
-    showToast('No VCP stocks to copy.', 'info');
+    showToast('No DarvasW stocks to copy.', 'info');
     return;
   }
 
   const symbols = matches.map(s => s.symbol).join(', ');
   navigator.clipboard.writeText(symbols).then(() => {
-    showToast(`Copied ${matches.length} VCP stock symbols to clipboard.`, 'success');
+    showToast(`Copied ${matches.length} DarvasW stock symbols to clipboard.`, 'success');
   }).catch(() => {
     showToast('Failed to copy to clipboard.', 'error');
   });
+}
+
+function handleCopyVcpscanStocks() {
+  return handleCopyDarvaswStocks();
 }
 
 // -------------------------------------------------------------
@@ -11276,6 +11363,9 @@ function renderAdminUniverseTable() {
         </div>
       </td>
       <td class="py-2.5 px-3 text-right whitespace-nowrap">
+        <button onclick="handleAdminEditStock('${stk.symbol}')" class="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/25 text-sky-400 hover:text-sky-200 border border-sky-500/20 transition-all cursor-pointer mr-1" title="Edit Sector, Industry, or Index Tags for ${stk.symbol}">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+        </button>
         <button onclick="handleAdminDeleteStock('${stk.symbol}')" class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-200 border border-rose-500/20 transition-all cursor-pointer" title="Delete stock ${stk.symbol} from Universe">
           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
         </button>
@@ -11382,6 +11472,135 @@ async function handleAdminDeleteStock(symbol) {
     await loadAdminUniverse(true);
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+function handleAdminEditStock(symbol) {
+  const stock = (adminUniverseState.stocks || []).find(s => s.symbol === symbol);
+  if (!stock) {
+    showToast(`Stock ${symbol} not found in universe state`, 'error');
+    return;
+  }
+
+  const modal = document.getElementById('admin-edit-stock-modal');
+  if (!modal) return;
+
+  document.getElementById('admin-edit-symbol').value = stock.symbol;
+  document.getElementById('admin-edit-symbol-badge').textContent = stock.symbol;
+  document.getElementById('admin-edit-name-text').textContent = stock.name || stock.symbol;
+  document.getElementById('admin-edit-sector').value = stock.sector || '';
+  document.getElementById('admin-edit-industry').value = stock.industry || '';
+  document.getElementById('admin-edit-index-category').value = stock.indexCategory || '';
+
+  // Populate sector datalist
+  const datalist = document.getElementById('admin-sector-datalist');
+  if (datalist && adminUniverseState.sectors) {
+    datalist.innerHTML = Object.keys(adminUniverseState.sectors).map(sec => `<option value="${sec}"></option>`).join('');
+  }
+
+  // Pre-fill tag checkboxes
+  const rawTags = Array.isArray(stock.indexTags) ? stock.indexTags : (typeof stock.indexTags === 'string' ? stock.indexTags.split(',') : []);
+  const normalizedTags = rawTags.map(t => String(t).trim().toLowerCase());
+
+  document.getElementById('admin-tag-cb-nifty50').checked = normalizedTags.includes('nifty50i') || normalizedTags.includes('nifty 50');
+  document.getElementById('admin-tag-cb-nifty100').checked = normalizedTags.includes('nifty100i') || normalizedTags.includes('nifty 100');
+  document.getElementById('admin-tag-cb-mc150').checked = normalizedTags.includes('mc150i') || normalizedTags.includes('midcap 150');
+  document.getElementById('admin-tag-cb-sc250').checked = normalizedTags.includes('sc250i') || normalizedTags.includes('smallcap 250');
+  document.getElementById('admin-tag-cb-midsml400').checked = normalizedTags.includes('midsml400i') || normalizedTags.includes('midsmall 400');
+  document.getElementById('admin-tag-cb-micro250').checked = normalizedTags.includes('micro250i') || normalizedTags.includes('microcap 250');
+
+  // Filter out the standard benchmark tags for the custom input
+  const standardBenchmarks = ['nifty50i', 'nifty100i', 'mc150i', 'sc250i', 'midsml400i', 'micro250i', 'nifty 50', 'nifty 100', 'midcap 150', 'smallcap 250'];
+  const customTags = rawTags.filter(t => !standardBenchmarks.includes(String(t).trim().toLowerCase()));
+  document.getElementById('admin-edit-tags-custom').value = customTags.join(', ');
+
+  const alertBox = document.getElementById('admin-edit-stock-alert');
+  if (alertBox) alertBox.classList.add('hidden');
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeAdminEditStockModal() {
+  const modal = document.getElementById('admin-edit-stock-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+async function handleSaveAdminStockMetadata(e) {
+  e.preventDefault();
+  const symbol = document.getElementById('admin-edit-symbol').value;
+  const sector = document.getElementById('admin-edit-sector').value.trim();
+  const industry = document.getElementById('admin-edit-industry').value.trim();
+  const indexCategory = document.getElementById('admin-edit-index-category').value.trim();
+
+  const selectedTags = [];
+  if (document.getElementById('admin-tag-cb-nifty50').checked) selectedTags.push('Nifty50i');
+  if (document.getElementById('admin-tag-cb-nifty100').checked) selectedTags.push('nifty100i');
+  if (document.getElementById('admin-tag-cb-mc150').checked) selectedTags.push('MC150i');
+  if (document.getElementById('admin-tag-cb-sc250').checked) selectedTags.push('SC250i');
+  if (document.getElementById('admin-tag-cb-midsml400').checked) selectedTags.push('MIDSML400i');
+  if (document.getElementById('admin-tag-cb-micro250').checked) selectedTags.push('MiCRO250i');
+
+  const customTagsStr = document.getElementById('admin-edit-tags-custom').value;
+  if (customTagsStr) {
+    customTagsStr.split(',').map(t => t.trim()).filter(Boolean).forEach(t => {
+      if (!selectedTags.includes(t)) selectedTags.push(t);
+    });
+  }
+
+  const saveBtn = document.getElementById('btn-admin-save-stock');
+  const alertBox = document.getElementById('admin-edit-stock-alert');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Syncing...</span>`;
+
+  try {
+    const res = await fetch(`/api/admin/universe/${encodeURIComponent(symbol)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        sector,
+        industry,
+        indexCategory,
+        indexTags: selectedTags
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to update stock metadata');
+    }
+
+    // Update in-memory adminUniverseState
+    const targetStock = (adminUniverseState.stocks || []).find(s => s.symbol === symbol);
+    if (targetStock) {
+      targetStock.sector = sector;
+      targetStock.industry = industry;
+      targetStock.indexCategory = indexCategory;
+      targetStock.indexTags = selectedTags;
+      targetStock.indices = selectedTags;
+    }
+
+    renderAdminUniverseTable();
+    showToast(`Stock ${symbol} successfully updated and synced across all databases!`, 'success');
+    closeAdminEditStockModal();
+  } catch (err) {
+    if (alertBox) {
+      alertBox.textContent = `Error: ${err.message}`;
+      alertBox.className = 'p-2.5 rounded-lg text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30';
+      alertBox.classList.remove('hidden');
+    }
+    showToast(`Update failed: ${err.message}`, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Save &amp; Sync Universe</span>`;
+    if (window.lucide) lucide.createIcons();
   }
 }
 
@@ -12112,6 +12331,9 @@ window.renderAdminUniverseTable = renderAdminUniverseTable;
 window.handleAdminUniversePageChange = handleAdminUniversePageChange;
 window.handleAdminUniversePageSizeChange = handleAdminUniversePageSizeChange;
 window.handleAdminAddStock = handleAdminAddStock;
+window.handleAdminEditStock = handleAdminEditStock;
+window.closeAdminEditStockModal = closeAdminEditStockModal;
+window.handleSaveAdminStockMetadata = handleSaveAdminStockMetadata;
 window.handleAdminDeleteStock = handleAdminDeleteStock;
 window.handleExportUniverseCSV = handleExportUniverseCSV;
 window.handleAdminOpenMasterUniverseSpreadsheet = handleAdminOpenMasterUniverseSpreadsheet;
@@ -12887,3 +13109,5 @@ window.addEventListener('DOMContentLoaded', init);
 window.runPricePositionScan = runPricePositionScan;
 window.runSsRvolScan = runSsRvolScan;
 window.runVcpScan = runVcpScan;
+window.runDarvaswScan = runDarvaswScan;
+window.handleCopyDarvaswStocks = handleCopyDarvaswStocks;

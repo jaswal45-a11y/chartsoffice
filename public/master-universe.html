@@ -550,13 +550,18 @@
         }
 
         return `
-          <tr class="sheet-row border-b border-slate-900">
+          <tr class="sheet-row border-b border-slate-900 group">
             <td class="py-1.5 px-2 text-center text-slate-500 freeze-1">${rowNum}</td>
             <td class="py-1.5 px-3 freeze-2">
-              <a href="/app?symbol=${s.symbol}" target="_blank" class="font-bold text-white hover:text-sky-400 transition-colors flex items-center gap-1">
-                <span>${s.symbol}</span>
-                <i data-lucide="external-link" class="w-3 h-3 text-slate-500"></i>
-              </a>
+              <div class="flex items-center gap-1.5 justify-between">
+                <a href="/app?symbol=${s.symbol}" target="_blank" class="font-bold text-white hover:text-sky-400 transition-colors flex items-center gap-1">
+                  <span>${s.symbol}</span>
+                  <i data-lucide="external-link" class="w-3 h-3 text-slate-500"></i>
+                </a>
+                <button onclick="openEditStockModal('${s.symbol}')" class="p-0.5 rounded hover:bg-sky-500/20 text-slate-600 hover:text-sky-300 transition-colors cursor-pointer group-hover:text-slate-400" title="Edit ${s.symbol} (Sector, Industry, Index Tags)">
+                  <i data-lucide="edit-3" class="w-3 h-3"></i>
+                </button>
+              </div>
             </td>
             <td class="py-1.5 px-3 freeze-3 text-slate-200 font-sans truncate max-w-[240px]" title="${s.name || s.symbol}">
               ${s.name || s.symbol}
@@ -565,9 +570,18 @@
             <td class="py-1.5 px-3 text-center">
               ${isFno ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">F&amp;O</span>' : '<span class="px-1.5 py-0.2 rounded text-[9px] text-slate-500">Cash</span>'}
             </td>
-            <td class="py-1.5 px-3 font-mono">${indexBadgeHtml}</td>
-            <td class="py-1.5 px-3 font-semibold text-teal-300">${s.sector || 'General'}</td>
-            <td class="py-1.5 px-3 text-slate-400 truncate max-w-[160px]">${s.industry || 'Diversified'}</td>
+            <td class="py-1.5 px-3 font-mono cursor-pointer hover:bg-sky-500/10 group/cell" onclick="openEditStockModal('${s.symbol}', 'tags')" title="Click to edit Index / Tags">
+              ${indexBadgeHtml}
+              <i data-lucide="edit-2" class="w-2.5 h-2.5 inline text-slate-600 group-hover/cell:text-sky-400 ml-1"></i>
+            </td>
+            <td class="py-1.5 px-3 font-semibold text-teal-300 cursor-pointer hover:bg-teal-500/10 group/cell" onclick="openEditStockModal('${s.symbol}', 'sector')" title="Click to edit Sector">
+              ${s.sector || 'General'}
+              <i data-lucide="edit-2" class="w-2.5 h-2.5 inline text-teal-800 group-hover/cell:text-teal-300 ml-1"></i>
+            </td>
+            <td class="py-1.5 px-3 text-slate-400 truncate max-w-[160px] cursor-pointer hover:bg-slate-700/20 group/cell" onclick="openEditStockModal('${s.symbol}', 'industry')" title="Click to edit Industry">
+              ${s.industry || 'Diversified'}
+              <i data-lucide="edit-2" class="w-2.5 h-2.5 inline text-slate-600 group-hover/cell:text-slate-200 ml-1"></i>
+            </td>
             <td class="py-1.5 px-3 text-right font-bold text-slate-200">${mcap}</td>
             <td class="py-1.5 px-3 text-slate-300">${s.capCategory || 'Small Cap'}</td>
             <td class="py-1.5 px-3 text-center">${cbBadge}</td>
@@ -734,11 +748,272 @@
       }
     }
 
+    // ======================================================================
+    // Stock Metadata Quick-Edit Engine (Sector, Industry, Index Tags)
+    // ======================================================================
+    function openEditStockModal(symbol, focusField = null) {
+      const stock = state.stocks.find(s => s.symbol === symbol);
+      if (!stock) return alert(`Stock ${symbol} not found`);
+
+      document.getElementById('modal-edit-symbol').value = stock.symbol;
+      document.getElementById('modal-edit-symbol-badge').textContent = stock.symbol;
+      document.getElementById('modal-edit-name-text').textContent = stock.name || stock.symbol;
+      document.getElementById('modal-edit-sector').value = stock.sector || '';
+      document.getElementById('modal-edit-industry').value = stock.industry || '';
+      document.getElementById('modal-edit-index-category').value = stock.indexCategory || '';
+
+      // Populate sector datalist with all unique sectors
+      const datalist = document.getElementById('modal-sector-datalist');
+      if (datalist) {
+        const sectors = Object.keys(state.sectors || {}).sort();
+        datalist.innerHTML = sectors.map(sec => `<option value="${sec}">`).join('');
+      }
+
+      // Checkbox tags
+      const tags = (stock.indexTags || []).map(t => String(t).trim());
+      document.getElementById('tag-cb-nifty50').checked = tags.includes('Nifty50i') || Boolean(stock.isNifty50);
+      document.getElementById('tag-cb-nifty100').checked = tags.includes('nifty100i') || Boolean(stock.isNifty100);
+      document.getElementById('tag-cb-mc150').checked = tags.includes('MC150i') || Boolean(stock.isMidcap150);
+      document.getElementById('tag-cb-sc250').checked = tags.includes('SC250i') || Boolean(stock.isSmallcap250);
+      document.getElementById('tag-cb-midsml400').checked = tags.includes('MIDSML400i') || Boolean(stock.isMidSmall400);
+      document.getElementById('tag-cb-micro250').checked = tags.includes('MiCRO250i') || Boolean(stock.isMicrocap250);
+
+      const standardTags = ['Nifty50i', 'nifty100i', 'MC150i', 'SC250i', 'MIDSML400i', 'MiCRO250i'];
+      const customTags = tags.filter(t => !standardTags.includes(t));
+      document.getElementById('modal-edit-tags-custom').value = customTags.join(', ');
+
+      const modal = document.getElementById('edit-stock-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (focusField === 'sector') {
+        setTimeout(() => document.getElementById('modal-edit-sector').focus(), 60);
+      } else if (focusField === 'industry') {
+        setTimeout(() => document.getElementById('modal-edit-industry').focus(), 60);
+      } else if (focusField === 'tags') {
+        setTimeout(() => document.getElementById('modal-edit-tags-custom').focus(), 60);
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeEditStockModal() {
+      const modal = document.getElementById('edit-stock-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function handleSaveStockMetadata(e) {
+      e.preventDefault();
+      const symbol = document.getElementById('modal-edit-symbol').value;
+      const sector = document.getElementById('modal-edit-sector').value.trim();
+      const industry = document.getElementById('modal-edit-industry').value.trim();
+      const indexCategory = document.getElementById('modal-edit-index-category').value.trim();
+
+      const selectedTags = [];
+      if (document.getElementById('tag-cb-nifty50').checked) selectedTags.push('Nifty50i');
+      if (document.getElementById('tag-cb-nifty100').checked) selectedTags.push('nifty100i');
+      if (document.getElementById('tag-cb-mc150').checked) selectedTags.push('MC150i');
+      if (document.getElementById('tag-cb-sc250').checked) selectedTags.push('SC250i');
+      if (document.getElementById('tag-cb-midsml400').checked) selectedTags.push('MIDSML400i');
+      if (document.getElementById('tag-cb-micro250').checked) selectedTags.push('MiCRO250i');
+
+      const customTagsStr = document.getElementById('modal-edit-tags-custom').value;
+      if (customTagsStr) {
+        customTagsStr.split(',').forEach(t => {
+          const clean = t.trim();
+          if (clean && !selectedTags.includes(clean)) selectedTags.push(clean);
+        });
+      }
+
+      const saveBtn = document.getElementById('modal-save-btn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> Saving &amp; Syncing...';
+
+      try {
+        const token = getAuthToken();
+        const res = await fetch(`/api/admin/universe/${encodeURIComponent(symbol)}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          body: JSON.stringify({
+            sector,
+            industry,
+            indexCategory,
+            indexTags: selectedTags
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to update stock');
+        }
+
+        // Update in local state
+        const stock = state.stocks.find(s => s.symbol === symbol);
+        if (stock) {
+          stock.sector = sector;
+          stock.industry = industry;
+          stock.indexCategory = indexCategory;
+          stock.indexTags = selectedTags;
+          if (data.stock) Object.assign(stock, data.stock);
+        }
+
+        closeEditStockModal();
+        applyFilters();
+        alert(`✅ Successfully updated ${symbol}!\n• Sector: "${sector}"\n• Industry: "${industry}"\n• Index Tags: [${selectedTags.join(', ')}]\n\nSynchronized across RAM, Local JSON files & MongoDB Atlas!`);
+      } catch (err) {
+        alert(`❌ Error saving metadata: ${err.message}`);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Save &amp; Sync Everywhere</span>';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
     // Auto-run on mount
     document.addEventListener('DOMContentLoaded', () => {
       loadMasterUniverse();
       fetchAndRenderEodSyncStatus();
     });
   </script>
+
+  <!-- ====================================================================== -->
+  <!-- Stock Metadata Quick-Edit Modal                                         -->
+  <!-- ====================================================================== -->
+  <div id="edit-stock-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col text-slate-200">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div class="flex items-center gap-2.5">
+          <div class="p-1.5 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Edit Metadata for</span>
+              <span id="modal-edit-symbol-badge" class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-sky-500/20 text-sky-300 border border-sky-500/40">PWL</span>
+            </h3>
+            <p id="modal-edit-name-text" class="text-[11px] text-slate-400 truncate max-w-xs">Physicswallah Ltd</p>
+          </div>
+        </div>
+        <button onclick="closeEditStockModal()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="edit-stock-form" onsubmit="handleSaveStockMetadata(event)" class="p-5 flex flex-col gap-4">
+        <input type="hidden" id="modal-edit-symbol">
+
+        <!-- 1. Sector -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-bold text-teal-300 flex items-center justify-between">
+            <span>Sector</span>
+            <span class="text-[10px] text-slate-500 font-normal">Broad classification</span>
+          </label>
+          <input 
+            type="text" 
+            id="modal-edit-sector" 
+            list="modal-sector-datalist" 
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-semibold text-xs focus:outline-none focus:border-teal-400"
+            placeholder="e.g. Education & Training, Consumer Services, Technology"
+            required
+          >
+          <datalist id="modal-sector-datalist">
+            <!-- Populated dynamically -->
+          </datalist>
+        </div>
+
+        <!-- 2. Industry -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-bold text-slate-300 flex items-center justify-between">
+            <span>Industry</span>
+            <span class="text-[10px] text-slate-500 font-normal">Specific business activity</span>
+          </label>
+          <input 
+            type="text" 
+            id="modal-edit-industry" 
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-sky-400"
+            placeholder="e.g. Education & Training Services, EdTech, Software"
+            required
+          >
+        </div>
+
+        <!-- 3. Official Index Category -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-bold text-amber-300 flex items-center justify-between">
+            <span>Index Category</span>
+            <span class="text-[10px] text-slate-500 font-normal">Primary benchmark index</span>
+          </label>
+          <select id="modal-edit-index-category" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:outline-none focus:border-amber-400 cursor-pointer">
+            <option value="">None / Non-Index</option>
+            <option value="Nifty 50">Nifty 50</option>
+            <option value="Nifty 100">Nifty 100</option>
+            <option value="Nifty Midcap 150">Nifty Midcap 150</option>
+            <option value="Nifty Smallcap 250">Nifty Smallcap 250</option>
+            <option value="Nifty MidSmallcap 400">Nifty MidSmallcap 400</option>
+            <option value="Nifty Microcap 250">Nifty Microcap 250</option>
+          </select>
+        </div>
+
+        <!-- 4. Index Tags -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-bold text-indigo-300 flex items-center justify-between">
+            <span>Index &amp; Technical Tags</span>
+            <span class="text-[10px] text-slate-500 font-normal">Check all that apply</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-950/70 border border-slate-800/80 text-[11px] font-mono">
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+              <input type="checkbox" id="tag-cb-nifty50" value="Nifty50i" class="rounded bg-slate-900 border-slate-700 text-sky-500">
+              <span>Nifty50i</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+              <input type="checkbox" id="tag-cb-nifty100" value="nifty100i" class="rounded bg-slate-900 border-slate-700 text-sky-500">
+              <span>nifty100i</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+              <input type="checkbox" id="tag-cb-mc150" value="MC150i" class="rounded bg-slate-900 border-slate-700 text-sky-500">
+              <span>MC150i</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+              <input type="checkbox" id="tag-cb-sc250" value="SC250i" class="rounded bg-slate-900 border-slate-700 text-sky-500">
+              <span>SC250i</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+              <input type="checkbox" id="tag-cb-midsml400" value="MIDSML400i" class="rounded bg-slate-900 border-slate-700 text-sky-500">
+              <span>MIDSML400i</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer hover:text-white">
+              <input type="checkbox" id="tag-cb-micro250" value="MiCRO250i" class="rounded bg-slate-900 border-slate-700 text-sky-500">
+              <span>MiCRO250i</span>
+            </label>
+          </div>
+          <input 
+            type="text" 
+            id="modal-edit-tags-custom" 
+            class="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 text-xs font-mono focus:outline-none focus:border-indigo-400"
+            placeholder="Additional comma-separated tags (e.g. FNO, HIGH_BETA)"
+          >
+        </div>
+
+        <div class="pt-2 border-t border-slate-800 flex items-center justify-between gap-3">
+          <div class="text-[10px] text-slate-500 flex items-center gap-1">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Syncs to RAM, Disk JSON &amp; MongoDB Atlas</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeEditStockModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" id="modal-save-btn" class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span>Save &amp; Sync Everywhere</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>

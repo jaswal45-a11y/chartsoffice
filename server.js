@@ -2048,6 +2048,115 @@ function deleteStockFromUniverse(symbol) {
 }
 
 // -------------------------------------------------------------
+// Admin Stock Metadata Update Engine (Sector, Industry, Tags, etc.)
+// Synchronizes RAM + Disk JSON + MongoDB Atlas + Company Metadata
+// -------------------------------------------------------------
+function updateStockInUniverse(symbol, updates = {}) {
+  if (!symbol) return { success: false, error: 'Symbol is required' };
+  const cleanSym = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  
+  const universe = getUniverseStocks();
+  const stock = universe.find(s => s && s.symbol && s.symbol.toUpperCase().trim() === cleanSym);
+  if (!stock) {
+    return { success: false, error: `Stock symbol "${cleanSym}" was not found in the universe` };
+  }
+
+  // 1. Sector Update
+  if (updates.sector !== undefined && typeof updates.sector === 'string' && updates.sector.trim()) {
+    stock.sector = updates.sector.trim();
+  }
+
+  // 2. Industry Update
+  if (updates.industry !== undefined && typeof updates.industry === 'string') {
+    stock.industry = updates.industry.trim();
+  }
+
+  // 3. Index Category & Tags Update
+  if (updates.indexCategory !== undefined && typeof updates.indexCategory === 'string') {
+    stock.indexCategory = updates.indexCategory.trim();
+  }
+  if (Array.isArray(updates.indexTags)) {
+    stock.indexTags = updates.indexTags.map(t => String(t).trim()).filter(Boolean);
+  } else if (typeof updates.indexTags === 'string') {
+    stock.indexTags = updates.indexTags.split(',').map(t => t.trim()).filter(Boolean);
+  }
+  if (Array.isArray(updates.indices)) {
+    stock.indices = updates.indices.map(t => String(t).trim()).filter(Boolean);
+  } else if (typeof updates.indices === 'string') {
+    stock.indices = updates.indices.split(',').map(t => t.trim()).filter(Boolean);
+  }
+
+  // Synchronize official index membership boolean flags based on indexTags, indices, indexCategory
+  if (stock.indexTags || stock.indices || stock.indexCategory) {
+    const combined = [...(stock.indexTags || []), ...(stock.indices || []), stock.indexCategory || ''].join(' ').toUpperCase();
+    stock.isNifty50 = combined.includes('NIFTY 50') || combined.includes('NIFTY50') || combined.includes('NIFTY50I');
+    stock.isNifty100 = stock.isNifty50 || combined.includes('NIFTY 100') || combined.includes('NIFTY100') || combined.includes('NIFTY100I');
+    stock.isMidcap150 = combined.includes('MIDCAP') || combined.includes('MC150');
+    stock.isSmallcap250 = combined.includes('SMALLCAP') || combined.includes('SC250');
+    stock.isMicrocap250 = combined.includes('MICROCAP') || combined.includes('MICRO250');
+    stock.isMidSmall400 = stock.isMidcap150 || stock.isSmallcap250 || combined.includes('MIDSMALL') || combined.includes('MIDSML400');
+  }
+
+  if (updates.fno !== undefined) {
+    stock.fno = Boolean(updates.fno);
+  }
+  if (updates.name !== undefined && typeof updates.name === 'string' && updates.name.trim()) {
+    stock.name = updates.name.trim();
+  }
+  if (updates.marketCap !== undefined && !isNaN(Number(updates.marketCap)) && Number(updates.marketCap) > 0) {
+    stock.marketCap = Number(updates.marketCap);
+  }
+
+  stock.lastModifiedBy = 'admin';
+  stock.lastModifiedAt = new Date().toISOString();
+
+  // Invalidate explore & screener caches so new taxonomy takes effect immediately across all screeners
+  cachedExploreData = null;
+
+  // A. Persist to local JSON files (both FNO_DATA_FILE and MASTER_UNIVERSE_FILE)
+  try {
+    fs.writeFileSync(FNO_DATA_FILE, JSON.stringify(universe, null, 2), 'utf8');
+    try { fs.writeFileSync(MASTER_UNIVERSE_FILE, JSON.stringify(universe, null, 2), 'utf8'); } catch (e) {}
+  } catch (e) {
+    console.error('[UNIVERSE] Error saving universe file on update:', e.message);
+  }
+
+  // B. Persist to MongoDB Atlas collection 'universe_stocks'
+  if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+    (async () => {
+      try {
+        const col = MONGO_CONFIG.db.collection('universe_stocks');
+        const { _id, ...cleanObj } = stock;
+        await col.updateOne({ symbol: cleanSym }, { $set: cleanObj }, { upsert: true });
+        console.log(`[MongoDB] ✅ Synchronized updated stock metadata for "${cleanSym}" to MongoDB Atlas.`);
+      } catch (err) {
+        console.error('[MongoDB] Error updating stock in universe:', err.message);
+      }
+    })();
+  }
+
+  // C. Synchronize company_metadata if present so company profile matches
+  if (stock.sector || stock.industry) {
+    try {
+      const meta = memoryCompanyMetadata.get(cleanSym);
+      if (meta) {
+        if (stock.sector) meta.sector = stock.sector;
+        if (stock.industry) meta.industry = stock.industry;
+        saveCompanyMetadata();
+        if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+          MONGO_CONFIG.db.collection('company_metadata').updateOne(
+            { ticker: cleanSym },
+            { $set: { sector: stock.sector, industry: stock.industry } }
+          ).catch(() => {});
+        }
+      }
+    } catch (_) {}
+  }
+
+  return { success: true, stock };
+}
+
+// -------------------------------------------------------------
 // Centralized Company Metadata Store (In-Memory + MongoDB + Disk)
 // -------------------------------------------------------------
 let memoryCompanyMetadata = new Map();
@@ -4373,6 +4482,36 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       };
 
       historyCache.set(cacheKey, { timestamp: Date.now(), data: responsePayload });
+
+      // Self-Healing Write-Back: update universe store with fresh chart technicals from MongoDB candles
+      persistUniverseQuotes({
+        [cleanSymUpper]: {
+          price: responsePayload.ltp,
+          changePercent: responsePayload.changePercent,
+          dayHigh: allCandles[allCandles.length - 1]?.high || responsePayload.ltp,
+          dayLow: allCandles[allCandles.length - 1]?.low || responsePayload.ltp,
+          volume: allCandles[allCandles.length - 1]?.volume || 0,
+          fiftyTwoWeekHigh: responsePayload.high52w,
+          fiftyTwoWeekLow: responsePayload.low52w,
+          ema10: responsePayload.latestEMA10,
+          ema20: responsePayload.latestEMA20,
+          ema50: responsePayload.latestEMA50,
+          ema150: responsePayload.latestEMA150,
+          ema200: responsePayload.latestEMA200,
+          ema10_weekly: responsePayload.latestEMA10Weekly,
+          ema20_weekly: responsePayload.latestEMA20Weekly,
+          rsi: responsePayload.latestRSI,
+          darvasGreen_daily: responsePayload.latestDarvasTop,
+          darvasBottom_daily: responsePayload.latestDarvasBottom,
+          darvasGreen_weekly: responsePayload.latestDarvasTopWeekly,
+          darvasBottom_weekly: responsePayload.latestDarvasBottomWeekly,
+          darvasCrossedDaysAgo: responsePayload.darvasCrossedDaysAgo,
+          darvasCrossDate: responsePayload.darvasCrossDate,
+          darvasCrossedDaysAgo_weekly: responsePayload.darvasCrossedDaysAgo_weekly,
+          darvasCrossDate_weekly: responsePayload.darvasCrossDate_weekly
+        }
+      });
+
       return responsePayload;
     }
   }
@@ -6195,6 +6334,207 @@ async function scanVcpPatterns(stageFilter = 'all', scope = 'current', stockList
     count: matches.length,
     stage: stageFilter,
     interval: scanInterval,
+    scope,
+    results: matches
+  };
+}
+
+// =============================================================
+// DARVASW: MULTI-TIMEFRAME WEEKLY DARVAS BREAKOUT + DAILY 10 EMA PULLBACK ENGINE
+// =============================================================
+async function scanDarvasW(stageFilter = 'all', scope = 'universe', stockList = []) {
+  const universe = getLocalStockUniverse();
+  const sortedUniverse = [...universe].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+
+  // Fetch Market Cap > 1000 Cr & > 2000 Cr sets
+  const { mc1000Set, mc2000Set } = await getMarketCapSets();
+
+  let targetSymbols = [];
+  const rawScopes = Array.isArray(scope) 
+    ? scope 
+    : String(scope || 'universe').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+  for (const sc of rawScopes) {
+    if (sc === 'current') {
+      if (Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols.push(...stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr }));
+      }
+    } else if (sc.startsWith('wl_') || sc === 'watchlist') {
+      if (Array.isArray(stockList) && stockList.length > 0) {
+        targetSymbols.push(...stockList.map(s => typeof s === 'string' ? { symbol: s, name: s, exchange: 'NSE' } : { symbol: s.symbol, name: s.name || s.symbol, exchange: s.exchange || 'NSE', marketCap: s.marketCap, mcOver1000Cr: s.mcOver1000Cr, mcOver2000Cr: s.mcOver2000Cr }));
+      }
+    } else if (sc === 'fno') {
+      targetSymbols.push(...sortedUniverse.filter(u => u.fno && u.symbol !== 'NIFTY' && u.symbol !== 'BANKNIFTY' && u.symbol !== 'FINNIFTY' && u.symbol !== 'MIDCPNIFTY').map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'large' || sc === 'large_cap' || sc === 'nifty100') {
+      targetSymbols.push(...sortedUniverse.slice(0, 100).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'nifty50') {
+      targetSymbols.push(...sortedUniverse.slice(0, 50).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'mid' || sc === 'mid_cap' || sc === 'mc150') {
+      targetSymbols.push(...sortedUniverse.slice(100, 250).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'small' || sc === 'small_cap' || sc === 'sc250') {
+      targetSymbols.push(...sortedUniverse.slice(250, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'micro' || sc === 'micro_cap' || sc === 'micro250') {
+      targetSymbols.push(...sortedUniverse.slice(500, 1000).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else if (sc === 'midsmall400' || sc === 'midsmall_400' || sc === 'midsml400') {
+      targetSymbols.push(...sortedUniverse.slice(100, 500).map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    } else {
+      // Full universe
+      targetSymbols.push(...sortedUniverse.map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr })));
+    }
+  }
+
+  if (targetSymbols.length === 0) {
+    targetSymbols = sortedUniverse.map(u => ({ symbol: u.symbol, name: u.name, exchange: u.exchange || 'NSE', marketCap: u.marketCap, mcOver1000Cr: u.mcOver1000Cr, mcOver2000Cr: u.mcOver2000Cr }));
+  }
+
+  // Deduplicate
+  const uniqueList = [];
+  const seen = new Set();
+  for (const item of targetSymbols) {
+    const s = (item.symbol || '').toUpperCase().trim();
+    if (s && !seen.has(s)) {
+      seen.add(s);
+      uniqueList.push({ symbol: s, name: item.name || s, exchange: item.exchange || 'NSE', marketCap: item.marketCap, mcOver1000Cr: item.mcOver1000Cr, mcOver2000Cr: item.mcOver2000Cr });
+    }
+  }
+
+  const universeStocks = getUniverseStocks();
+  const universeMap = new Map();
+  for (const u of universeStocks) {
+    if (u && u.symbol) {
+      const sKey = u.symbol.toUpperCase().trim();
+      universeMap.set(sKey, u);
+      universeMap.set(sKey.replace(/\.(NS|BO)$/, ''), u);
+    }
+  }
+
+  const matches = [];
+
+  for (const item of uniqueList) {
+    const symKey = (item.symbol || '').toUpperCase().trim().replace(/\.(NS|BO)$/, '');
+    if (failedScanSymbols.has(symKey)) continue;
+    const u = universeMap.get(symKey) || universeMap.get((item.symbol || '').toUpperCase().trim());
+    if (!u) continue;
+
+    // Check if live chart history cache is populated with verified candle EMA & Darvas metrics
+    const cachedHist = historyCache.get(`${symKey}_1y_1d`)?.data 
+      || historyCache.get(`${symKey}_2y_1d`)?.data
+      || historyCache.get(`${symKey}_1y_1wk`)?.data;
+
+    const close = Number(cachedHist?.ltp || u.price || u.ltp || item.close || item.ltp || 0);
+    const weeklyTop = Number(cachedHist?.latestDarvasTopWeekly || u.darvasGreen_weekly || 0);
+    const weeklyBottom = Number(cachedHist?.latestDarvasBottomWeekly || u.darvasBottom_weekly || 0);
+    const ema10 = Number((typeof cachedHist?.latestEMA10 === 'number') ? cachedHist.latestEMA10 : (u.ema10 || 0));
+    const ema20 = Number((typeof cachedHist?.latestEMA20 === 'number') ? cachedHist.latestEMA20 : (u.ema20 || 0));
+    const ema50 = Number((typeof cachedHist?.latestEMA50 === 'number') ? cachedHist.latestEMA50 : (u.ema50 || 0));
+    const ema200 = Number((typeof cachedHist?.latestEMA200 === 'number') ? cachedHist.latestEMA200 : (u.ema200 || 0));
+    const prevClose = Number(cachedHist ? (cachedHist.candles?.slice(-2)[0]?.close || close) : (u.prevClose || close));
+    const dayLow = Number(cachedHist ? (cachedHist.candles?.slice(-1)[0]?.low || close) : (u.dayLow || close));
+    const dayHigh = Number(cachedHist ? (cachedHist.candles?.slice(-1)[0]?.high || close) : (u.dayHigh || close));
+    const rvol = typeof u.rvol === 'number' ? Number(u.rvol.toFixed(2)) : 1.0;
+    const crossedWeeksAgo = (cachedHist && cachedHist.darvasCrossedDaysAgo_weekly !== undefined) ? cachedHist.darvasCrossedDaysAgo_weekly : u.darvasCrossedDaysAgo_weekly;
+
+    if (close <= 0 || weeklyTop <= 0 || ema10 <= 0) continue;
+
+    // 1. Weekly Darvas condition & Strict Eviction: Must be holding above Weekly Box Top (or shallow retest holding above 20 EMA)
+    const isWeeklyGreen = close >= weeklyTop;
+    const holdingWeeklyBreakout = isWeeklyGreen || (close >= weeklyTop * 0.975 && ema20 > 0 && close >= ema20 * 0.985);
+    if (!holdingWeeklyBreakout) continue; // Evict failed breakouts (e.g. price fell back below box top or broke 20 EMA)
+
+    // 2. Breakdown Eviction: Must not have sliced down through 10 or 20 EMA
+    const notBrokenDown = (close >= ema10 * 0.97) && (ema20 > 0 ? close >= ema20 * 0.975 : true);
+    if (!notBrokenDown) continue; // Evict stocks breaking down below moving averages
+
+    // 3. Freshness / Time Expiry: Must be weekly green OR crossed within last 12 weeks
+    const freshBreakout = isWeeklyGreen || (typeof crossedWeeksAgo === 'number' && crossedWeeksAgo <= 12);
+    if (!freshBreakout) continue; // Evict stale breakouts that lost momentum
+
+    // 4. Macro Stage 2 Uptrend: Close > 200 EMA & 50 EMA > 200 EMA
+    const isMacroUptrend = (ema200 > 0 ? (close > ema200 && (ema50 <= 0 || ema50 > ema200)) : true);
+    if (!isMacroUptrend) continue;
+
+    // Distance from daily 10 EMA
+    const dist10Pct = Number((((close - ema10) / ema10) * 100).toFixed(2));
+
+    // Pullback zone & reversal detection (Healthy pullback is -2.0% to +2.5% of 10 EMA)
+    const isNear10Ema = dist10Pct >= -2.0 && dist10Pct <= 2.5;
+    const tested10 = dayLow <= ema10 * 1.015;
+    const isGreenReversal = close >= prevClose;
+
+    let stage = 1;
+    let stageCode = 'weekly';
+    let stageLabel = '1. Weekly Crossed';
+    let stageBadge = '🚀 WEEKLY CROSSED';
+
+    if (isNear10Ema && isGreenReversal && tested10) {
+      stage = 3;
+      stageCode = 'ready';
+      stageLabel = '3. Ready to Buy (Reversal at 10 EMA)';
+      stageBadge = '🎯 READY TO BUY';
+    } else if (isNear10Ema) {
+      stage = 2;
+      stageCode = 'pullback';
+      stageLabel = '2. Pullback to 10 EMA';
+      stageBadge = '⏳ PULLBACK 10 EMA';
+    }
+
+    // Filter by stageFilter if specified
+    if (stageFilter === 'ready' || stageFilter === 'stage3') {
+      if (stage !== 3) continue;
+    } else if (stageFilter === 'pullback' || stageFilter === 'stage2') {
+      if (stage !== 2) continue;
+    } else if (stageFilter === 'weekly' || stageFilter === 'stage1') {
+      if (stage !== 1) continue;
+    }
+
+    const symUpper = item.symbol.toUpperCase();
+    const isOver2000 = (item.mcOver2000Cr === true) || mc2000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 2000) || (typeof u.marketCap === 'number' && u.marketCap >= 2000);
+    const isOver1000 = isOver2000 || (item.mcOver1000Cr === true) || mc1000Set.has(symUpper) || (typeof item.marketCap === 'number' && item.marketCap >= 1000) || (typeof u.marketCap === 'number' && u.marketCap >= 1000);
+
+    const stopLoss = Number((Math.min(dayLow, ema10) * 0.985).toFixed(2));
+    const riskPct = Number((((close - stopLoss) / close) * 100).toFixed(2));
+    const target3R = Number((close * (1 + (riskPct * 3) / 100)).toFixed(2));
+
+    matches.push({
+      symbol: item.symbol,
+      name: u.name || item.name || item.symbol,
+      exchange: u.exchange || item.exchange || 'NSE',
+      close: Number(close.toFixed(2)),
+      ltp: Number(close.toFixed(2)),
+      changePercent: u.changePercent ?? item.changePercent ?? 0,
+      stage,
+      stageCode,
+      stageLabel,
+      stageBadge,
+      ema10: Number(ema10.toFixed(2)),
+      ema20: Number(ema20.toFixed(2)),
+      dist10Pct,
+      weeklyTop: Number(weeklyTop.toFixed(2)),
+      weeklyBottom: !isNaN(weeklyBottom) && weeklyBottom > 0 ? Number(weeklyBottom.toFixed(2)) : null,
+      rvol,
+      volume: Number(u.volume || item.volume || 0),
+      stopLoss,
+      riskPct,
+      target3R,
+      mcOver1000Cr: Boolean(isOver1000),
+      mcOver2000Cr: Boolean(isOver2000),
+      fno: Boolean(u.fno || item.fno),
+      marketCap: u.marketCap || item.marketCap || 0
+    });
+  }
+
+  // Sort by stage descending (Stage 3 first, then Stage 2, then Stage 1), then by dist10Pct ascending
+  matches.sort((a, b) => {
+    if (b.stage !== a.stage) return b.stage - a.stage;
+    return a.dist10Pct - b.dist10Pct;
+  });
+
+  return {
+    success: true,
+    totalScanned: uniqueList.length,
+    matchesCount: matches.length,
+    count: matches.length,
+    stage: stageFilter,
     scope,
     results: matches
   };
@@ -9037,6 +9377,42 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // A9-B. PUT / POST / PATCH /api/admin/universe/:symbol - Admin Modify Stock (Sector, Industry, Index/Tags)
+      const adminUpdateUniverseStockMatch = pathname.match(/^\/api\/admin\/universe\/([a-zA-Z0-9_\-\.\^]+)(?:\/update)?$/);
+      if (adminUpdateUniverseStockMatch && (method === 'PUT' || method === 'POST' || method === 'PATCH')) {
+        const authUser = getAuthenticatedUser(req);
+        const isLocalhost = req.socket?.remoteAddress === '127.0.0.1' || req.socket?.remoteAddress === '::1' || req.socket?.remoteAddress === '::ffff:127.0.0.1';
+        if ((!authUser || authUser.role !== 'admin') && !isLocalhost) {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+
+        const targetSymbol = adminUpdateUniverseStockMatch[1];
+        if (targetSymbol.toLowerCase() === 'batch-update') {
+          const body = await parseJsonBody(req);
+          const list = Array.isArray(body) ? body : (body.stocks || []);
+          const updated = [];
+          for (const item of list) {
+            if (item && item.symbol) {
+              const resObj = updateStockInUniverse(item.symbol, item);
+              if (resObj.success) updated.push(resObj.stock.symbol);
+            }
+          }
+          return sendJson(res, 200, { success: true, count: updated.length, updated });
+        }
+
+        const body = await parseJsonBody(req);
+        const result = updateStockInUniverse(targetSymbol, body);
+        if (!result.success) {
+          return sendJson(res, 400, { success: false, error: result.error });
+        }
+
+        return sendJson(res, 200, {
+          success: true,
+          message: `Stock "${result.stock.symbol}" updated successfully across all databases`,
+          stock: result.stock
+        });
+      }
+
       // A10. GET /api/admin/guest-permissions - Get Guest Feature Access configuration
       if (pathname === '/api/admin/guest-permissions' && method === 'GET') {
         const authUser = getAuthenticatedUser(req);
@@ -9939,7 +10315,33 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 8a2. POST /api/scan/vcp - Minervini Volatility Contraction Pattern (VCP) Scanner (Registered Users Only)
+      // 8a2. POST /api/scan/darvasw - DarvasW Multi-Timeframe Weekly Breakout + Daily 10 EMA Pullback Scanner
+      if (pathname === '/api/scan/darvasw' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser) {
+          return sendJson(res, 401, { success: false, error: 'Authentication required. Please log in or register to access the DarvasW Scanner.' });
+        }
+
+        try {
+          const body = await parseJsonBody(req);
+          let { stage = 'all', scope = 'universe', scopes = [], stockList = [] } = body;
+          const targetScope = (Array.isArray(scopes) && scopes.length > 0) ? scopes : scope;
+          if (String(scope).startsWith('wl_') && (!Array.isArray(stockList) || stockList.length === 0)) {
+            const userWls = getUserWatchlists(authUser);
+            const targetWl = userWls.find(w => w.id === scope);
+            if (targetWl && Array.isArray(targetWl.stocks)) {
+              stockList = targetWl.stocks.map(s => s.symbol);
+            }
+          }
+          const scanResults = await scanDarvasW(stage, targetScope, stockList);
+          return sendJson(res, 200, scanResults);
+        } catch (scanErr) {
+          console.error('Error during DarvasW scan:', scanErr.message);
+          return sendJson(res, 500, { success: false, error: scanErr.message });
+        }
+      }
+
+      // 8a2b. POST /api/scan/vcp - Minervini Volatility Contraction Pattern (VCP) Scanner (Registered Users Only)
       if (pathname === '/api/scan/vcp' && method === 'POST') {
         const authUser = getAuthenticatedUser(req);
         if (!authUser) {
