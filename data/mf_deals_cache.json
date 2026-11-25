@@ -1,28 +1,68 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-11-24T19:18:13.646Z",
-  "latestDealId": "da32f1a0d0a2",
+  "lastUpdated": "2026-11-25T19:14:46.904Z",
+  "latestDealId": "7c5eae2a5eb8",
   "deals": [
     {
-      "id": "da32f1a0d0a2",
-      "exchange": "BSE",
-      "date": "18-Nov-26",
-      "clientName": "NIPPON INDIA MUTUAL FUND",
-      "companyName": "IIFL Finance",
+      "id": "7c5eae2a5eb8",
+      "exchange": "NSE",
+      "date": "25-Nov-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Global Health",
       "dealType": "BUY",
-      "volume": "4457050",
-      "dealPrice": "617"
+      "volume": "2863074",
+      "dealPrice": "1460"
     },
     {
-      "id": "2c81a3e45122",
+      "id": "f12fe93d185e",
+      "exchange": "BSE",
+      "date": "25-Nov-26",
+      "clientName": "ADITYA BIRLA SUN LIFE MUTUAL FUND",
+      "companyName": "Piramal Pharma",
+      "dealType": "BUY",
+      "volume": "10000000",
+      "dealPrice": "224.1"
+    },
+    {
+      "id": "bee3467cf297",
+      "exchange": "BSE",
+      "date": "25-Nov-26",
+      "clientName": "ADITYA BIRLA SUN LIFE MUTUAL FUND",
+      "companyName": "Piramal Pharma",
+      "dealType": "BUY",
+      "volume": "11210762",
+      "dealPrice": "224.1"
+    },
+    {
+      "id": "47e9c0b2e804",
+      "exchange": "BSE",
+      "date": "25-Nov-26",
+      "clientName": "AXIS MUTUAL FUND",
+      "companyName": "Piramal Pharma",
+      "dealType": "BUY",
+      "volume": "7139123",
+      "dealPrice": "224.1"
+    },
+    {
+      "id": "59b4722dd9dc",
+      "exchange": "NSE",
+      "date": "18-Nov-26",
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Greenlam Industries",
+      "dealType": "SELL",
+      "volume": "2000000",
+      "dealPrice": "215.06"
+    },
+    {
+      "id": "eb32ceb0a5aa",
       "exchange": "BSE",
       "date": "18-Nov-26",
-      "clientName": "SBI MUTUAL FUND",
-      "companyName": "IIFL Finance",
-      "dealType": "BUY",
-      "volume": "8153054",
-      "dealPrice": "617"
+      "clientName": "HDFC MUTUAL FUND",
+      "companyName": "Greenlam Industries",
+      "dealType": "SELL",
+      "volume": "3000000",
+      "dealPrice": "203.6"
     },
     {
       "id": "4558849f2cd7",
@@ -45,24 +85,24 @@
       "dealPrice": "2780.01"
     },
     {
-      "id": "59b4722dd9dc",
-      "exchange": "NSE",
-      "date": "18-Nov-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Greenlam Industries",
-      "dealType": "SELL",
-      "volume": "2000000",
-      "dealPrice": "215.06"
-    },
-    {
-      "id": "eb32ceb0a5aa",
+      "id": "da32f1a0d0a2",
       "exchange": "BSE",
       "date": "18-Nov-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Greenlam Industries",
-      "dealType": "SELL",
-      "volume": "3000000",
-      "dealPrice": "203.6"
+      "clientName": "NIPPON INDIA MUTUAL FUND",
+      "companyName": "IIFL Finance",
+      "dealType": "BUY",
+      "volume": "4457050",
+      "dealPrice": "617"
+    },
+    {
+      "id": "2c81a3e45122",
+      "exchange": "BSE",
+      "date": "18-Nov-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "IIFL Finance",
+      "dealType": "BUY",
+      "volume": "8153054",
+      "dealPrice": "617"
     },
     {
       "id": "d83e474fa913",
@@ -163,46 +203,6 @@
       "dealType": "BUY",
       "volume": "35087719",
       "dealPrice": "42.75"
-    },
-    {
-      "id": "e0dab154be24",
-      "exchange": "BSE",
-      "date": "27-Oct-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Popular Vehicles&Ser",
-      "dealType": "BUY",
-      "volume": "4927581",
-      "dealPrice": "91.5"
-    },
-    {
-      "id": "0c3a1c74230b",
-      "exchange": "BSE",
-      "date": "27-Oct-26",
-      "clientName": "HDFC MUTUAL FUND",
-      "companyName": "Popular Vehicles&Ser",
-      "dealType": "SELL",
-      "volume": "4927581",
-      "dealPrice": "91.5"
-    },
-    {
-      "id": "ad006723a37e",
-      "exchange": "NSE",
-      "date": "23-Oct-26",
-      "clientName": "INVESCO MUTUAL FUND",
-      "companyName": "Sahajanand Medical",
-      "dealType": "BUY",
-      "volume": "800000",
-      "dealPrice": "374.91"
-    },
-    {
-      "id": "bce9318b6887",
-      "exchange": "NSE",
-      "date": "23-Oct-26",
-      "clientName": "INVESCO MUTUAL FUND",
-      "companyName": "Sahajanand Medical",
-      "dealType": "BUY",
-      "volume": "2807366",
-      "dealPrice": "371.44"
     }
   ]
 }

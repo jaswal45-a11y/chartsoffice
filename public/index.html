@@ -792,16 +792,19 @@
           <!-- Minimalist Toolbar (< 45px Height) -->
           <div class="px-3 py-2 border-b border-dark-border bg-dark-card/80 flex items-center justify-between gap-2 flex-wrap text-xs">
             
-            <!-- Left: Stage Filter Dropdown -->
+            <!-- Left: Stage Filter Dropdown with Tooltip Rules -->
             <div class="flex items-center gap-1.5 shrink-0">
-              <select id="select-darvasw-stage" class="px-2.5 py-1 text-[11px] font-bold bg-dark-bg text-slate-200 border border-dark-border rounded-lg focus:outline-none focus:border-emerald-400 cursor-pointer shadow-sm hover:border-slate-600 transition-colors" title="Filter by DarvasW Lifecycle Stage">
-                <option value="all">⚡ All Stages</option>
-                <option value="ready" selected>🎯 Stage 3: All Ready to Buy</option>
-                <option value="ready_tested">&nbsp;&nbsp;↳ 🟢 Stage 3: Tested 10 EMA</option>
-                <option value="ready_shallow">&nbsp;&nbsp;↳ 🔵 Stage 3: Near 10 (Mid-Air)</option>
-                <option value="pullback">⏳ Stage 2: Pullback 10 EMA</option>
-                <option value="weekly">🚀 Stage 1: Weekly Crossed</option>
+              <select id="select-darvasw-stage" class="px-2.5 py-1 text-[11px] font-bold bg-dark-bg text-slate-200 border border-dark-border rounded-lg focus:outline-none focus:border-emerald-400 cursor-pointer shadow-sm hover:border-slate-600 transition-colors" title="DarvasW Strategy Rules &amp; Stages:&#10;• Stage 1 (Weekly Crossed): Holding weekly box top (>= 97.5% top), extended (> +3% or > +4%).&#10;• Stage 2 (Pullback): In 10 EMA zone (-2.5% to +3.0%), no green reversal yet.&#10;• Stage 3 (Ready to Buy): Green reversal (close >= prevClose). If 10 EMA tested, allowed up to +4.0% above 10 EMA. If mid-air, allowed up to +3.0%. Stop loss: min(low, 10 EMA) - 1.5%.">
+                <option value="all" title="⚡ All Stages: Displays all qualified weekly Darvas breakout stocks across Stage 1, 2, and 3 holding weekly top in macro Stage 2 uptrend.">⚡ All Stages</option>
+                <option value="ready" selected title="🎯 Stage 3 (All Ready to Buy): Bullish reversal candle (close >= prevClose) confirmed in 10 EMA zone. Reversal candle allowed up to +4.0% above 10 EMA if tested, +3.0% if mid-air. Stop loss 1.5% below support.">🎯 Stage 3: All Ready to Buy</option>
+                <option value="ready_tested" title="🟢 Stage 3 (Tested 10 EMA): Day low dipped to or below 10 EMA + 1.5% (dayLow <= 10 EMA * 1.015) and closed positive/green (close >= prevClose). Reversal candle allowed up to +4.0% above the 10 EMA line.">&nbsp;&nbsp;↳ 🟢 Stage 3: Tested 10 EMA</option>
+                <option value="ready_shallow" title="🔵 Stage 3 (Near 10 / Mid-Air): Bullish reversal candle (close >= prevClose) near 10 EMA without touching the line. Reversal candle allowed up to +3.0% above the 10 EMA line.">&nbsp;&nbsp;↳ 🔵 Stage 3: Near 10 (Mid-Air)</option>
+                <option value="pullback" title="⏳ Stage 2 (Pullback 10 EMA): Price resting in 10 EMA pullback zone (-2.5% to +3.0%), waiting for green reversal day (close < prevClose).">⏳ Stage 2: Pullback 10 EMA</option>
+                <option value="weekly" title="🚀 Stage 1 (Weekly Crossed): Price holding above Weekly Darvas Box Top, but currently extended above 10 EMA (> +3.0% or > +4.0%). Watchlist only, do not chase.">🚀 Stage 1: Weekly Crossed</option>
               </select>
+              <button type="button" class="p-1 rounded bg-dark-bg border border-dark-border text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors cursor-help" title="DarvasW Mathematical Filter Rules:&#10;• Weekly Top: Price >= Weekly Darvas Box Top * 0.975 (or holding 20 EMA)&#10;• Macro Trend: Price > 200 EMA &amp; 50 EMA > 200 EMA&#10;• Stage 1 (Weekly Crossed): Fresh weekly breakout, extended above 10 EMA (> +3% or > +4%)&#10;• Stage 2 (Pullback): In 10 EMA zone (-2.5% to +3.0%), waiting for green reversal day&#10;• Stage 3 (Ready to Buy):&#10;   1. Tested 10 EMA: Low <= 10 EMA * 1.015 &amp; Close >= PrevClose. Reversal candle allowed up to +4.0% above 10 EMA line.&#10;   2. Mid-Air Reversal: Distance within -2.5% to +3.0% &amp; Close >= PrevClose. Reversal candle allowed up to +3.0% above 10 EMA.&#10;• Stop Loss: min(dayLow, 10 EMA) * 0.985 (1.5% below support) | Target: 3R&#10;• Eviction: Evicts stocks breaking down below 10/20 EMA or breakouts older than 12 weeks.">
+                <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+              </button>
             </div>
 
             <!-- Middle: Multi-Select Scope Picker -->
@@ -828,8 +831,9 @@
               </label>
             </div>
 
-            <!-- Right: Run Button, Copy Button & Count Badge -->
+            <!-- Right: Search Filter, Run Button, Copy Button & Count Badge -->
             <div class="flex items-center gap-1.5 shrink-0">
+              <input type="text" id="input-darvasw-search" oninput="renderDarvaswTable()" placeholder="Search stock..." class="w-24 sm:w-28 px-2 py-1 text-xs bg-dark-bg border border-dark-border rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition-colors" title="Filter results by symbol or company name">
               <button id="btn-run-darvasw" onclick="runDarvaswScan()" class="px-3 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer">
                 <i data-lucide="play" class="w-3 h-3 fill-current"></i>
                 <span>RUN</span>
@@ -1325,8 +1329,11 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Description (Optional)</label>
-          <textarea id="modal-screener-desc" rows="2" placeholder="Brief note on strategy or rules..." 
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Description / Hover Tooltip</span>
+            <span class="text-[10px] text-slate-500 font-normal">Shown as tooltip text on hover</span>
+          </label>
+          <textarea id="modal-screener-desc" rows="3" placeholder="Brief note on strategy, parameters, or rules (becomes the hover tooltip for this screener)..." 
             class="w-full px-3.5 py-2 text-xs bg-dark-bg border border-dark-border rounded-xl text-slate-200 focus:outline-none focus:border-blue-500"></textarea>
         </div>
 
@@ -3491,7 +3498,7 @@
   <!-- Client-Side Progressive Candle IndexedDB Cache -->
   <script src="candle-cache.js?v=1.0.1"></script>
   <!-- Application Script -->
-  <script src="app.js?v=3.4.3"></script>
+  <script src="app.js?v=3.4.6"></script>
   <!-- Sticky Synchronized Notes Script -->
   <script src="notes.js?v=3.1.0"></script>
   <!-- Mutual Fund Deals Script -->

@@ -6456,9 +6456,10 @@ async function scanDarvasW(stageFilter = 'all', scope = 'universe', stockList = 
     // Distance from daily 10 EMA
     const dist10Pct = Number((((close - ema10) / ema10) * 100).toFixed(2));
 
-    // Pullback zone & reversal detection (Healthy pullback is -2.0% to +2.5% of 10 EMA)
-    const isNear10Ema = dist10Pct >= -2.0 && dist10Pct <= 2.5;
+    // Pullback zone & reversal detection (Allows up to +4.0% if 10 EMA tested, +3.0% if shallow)
     const tested10 = dayLow <= ema10 * 1.015;
+    const maxPullbackDist = tested10 ? 4.0 : 3.0;
+    const isNear10Ema = dist10Pct >= -2.5 && dist10Pct <= maxPullbackDist;
     const isGreenReversal = close >= prevClose;
 
     let stage = 1;

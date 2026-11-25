@@ -9269,8 +9269,30 @@ function renderDarvaswTable() {
   if (!tbody) return;
 
   const stageFilter = el.selectDarvaswStage?.value || 'all';
+  const searchFilter = (document.getElementById('input-darvasw-search')?.value || '').trim().toLowerCase();
+
+  // Dynamic Tooltip Rules on the Stage Filter Dropdown
+  if (el.selectDarvaswStage) {
+    const stageTooltips = {
+      all: "⚡ All Stages: Displays all qualified weekly Darvas breakout stocks holding weekly box top in macro Stage 2 uptrend.",
+      ready: "🎯 Stage 3 (All Ready to Buy): Bullish reversal candle (close >= prevClose) confirmed in 10 EMA zone. Reversal candle allowed up to +4.0% above 10 EMA line if tested, +3.0% if mid-air. Stop loss: min(dayLow, 10 EMA) - 1.5%.",
+      ready_tested: "🟢 Stage 3 (Tested 10 EMA): Day low dipped to or below 10 EMA + 1.5% (dayLow <= 10 EMA * 1.015) & Close >= PrevClose. Strong reversal candle allowed up to +4.0% above the 10 EMA line.",
+      ready_shallow: "🔵 Stage 3 (Near 10 / Mid-Air): Bullish reversal candle (close >= prevClose) near 10 EMA without touching line. Reversal candle allowed up to +3.0% above 10 EMA line.",
+      pullback: "⏳ Stage 2 (Pullback 10 EMA): Price resting in 10 EMA pullback zone (-2.5% to +3.0%), waiting for green reversal day (close < prevClose).",
+      weekly: "🚀 Stage 1 (Weekly Crossed): Price holding above Weekly Darvas Box Top, but currently extended above 10 EMA (> +3.0% or > +4.0%). Watchlist only, do not chase."
+    };
+    if (stageTooltips[stageFilter]) {
+      el.selectDarvaswStage.title = stageTooltips[stageFilter];
+    }
+  }
 
   const matches = [...(state.darvaswResults || [])].filter(stock => {
+    if (searchFilter) {
+      const cleanSearch = searchFilter.replace(/[\s\-_]+/g, '');
+      const cleanSym = (stock.symbol || '').toLowerCase().replace(/[\s\-_]+/g, '');
+      const cleanNm = (stock.name || '').toLowerCase().replace(/[\s\-_]+/g, '');
+      if (!cleanSym.includes(cleanSearch) && !cleanNm.includes(cleanSearch)) return false;
+    }
     if (state.darvaswFilterMc2000 && stock.mcOver2000Cr !== true) return false;
     if (state.darvaswFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
     if (stageFilter === 'ready' || stageFilter === 'stage3') {
@@ -9444,7 +9466,14 @@ function renderVcpscanTable() {
 
 function handleCopyDarvaswStocks() {
   const stageFilter = el.selectDarvaswStage?.value || 'all';
+  const searchFilter = (document.getElementById('input-darvasw-search')?.value || '').trim().toLowerCase();
   const matches = (state.darvaswResults || []).filter(stock => {
+    if (searchFilter) {
+      const cleanSearch = searchFilter.replace(/[\s\-_]+/g, '');
+      const cleanSym = (stock.symbol || '').toLowerCase().replace(/[\s\-_]+/g, '');
+      const cleanNm = (stock.name || '').toLowerCase().replace(/[\s\-_]+/g, '');
+      if (!cleanSym.includes(cleanSearch) && !cleanNm.includes(cleanSearch)) return false;
+    }
     if (state.darvaswFilterMc2000 && stock.mcOver2000Cr !== true) return false;
     if (state.darvaswFilterMc1000 && stock.mcOver1000Cr !== true && stock.mcOver2000Cr !== true) return false;
     if (stageFilter === 'ready' || stageFilter === 'stage3') {
@@ -9581,8 +9610,14 @@ function displayScreener(screener) {
   state.activeScreenerId = screener.id;
   state.isAggregatedMode = false;
   if (el.activeScreenerBadge) el.activeScreenerBadge.textContent = screener.category || 'Screener';
-  if (el.activeScreenerTitle) el.activeScreenerTitle.textContent = screener.name;
-  if (el.activeScreenerDesc) el.activeScreenerDesc.textContent = screener.description || screener.url;
+  if (el.activeScreenerTitle) {
+    el.activeScreenerTitle.textContent = screener.name;
+    el.activeScreenerTitle.title = screener.description || screener.name;
+  }
+  if (el.activeScreenerDesc) {
+    el.activeScreenerDesc.textContent = screener.description || screener.url;
+    el.activeScreenerDesc.title = screener.description || screener.url;
+  }
   if (el.lastUpdatedTime) el.lastUpdatedTime.textContent = screener.lastRun ? `Updated: ${fmt.time(screener.lastRun)}` : '';
 
   const collapsedActiveBadge = document.getElementById('deck-collapsed-active-badge');
@@ -9634,10 +9669,15 @@ function renderScreeners() {
     else if (catLower.includes('momentum')) badgeClass = 'text-indigo-300 border-indigo-500/30 bg-indigo-500/15';
     else if (catLower.includes('reversal')) badgeClass = 'text-rose-300 border-rose-500/30 bg-rose-500/15';
 
+    const descText = (screener.description || '').trim();
+    const tooltipText = descText 
+      ? `${screener.name}:\n${descText}`
+      : `${screener.name} (${screener.category || 'General'})\n${screener.url || ''}\nLast run: ${screener.lastRun ? fmt.time(screener.lastRun) : 'Not run'}`;
+
     const card = document.createElement('div');
     card.className = `screener-box group ${isActive ? 'active' : ''} ${isRunning ? 'running' : ''}`;
     card.dataset.id = screener.id;
-    card.title = `${screener.name} (${screener.category || 'General'})\n${screener.description || screener.url}\nLast run: ${screener.lastRun ? fmt.time(screener.lastRun) : 'Not run'}`;
+    card.title = tooltipText;
 
     // Screener action buttons (visible on hover for admin on all, or user on custom screeners)
     const actionsHtml = canEditOrDelete ? `
@@ -9653,7 +9693,7 @@ function renderScreeners() {
 
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px;">
-        <span class="sc-name" title="${screener.name}">${screener.name}</span>
+        <span class="sc-name" title="${escapeHtml(tooltipText)}">${screener.name}</span>
         ${isRunning ? `
           <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" title="Scanning in progress..."></span>
         ` : actionsHtml}
@@ -9702,8 +9742,14 @@ async function runScreener(id) {
   renderScreeners();
 
   if (el.activeScreenerBadge) el.activeScreenerBadge.textContent = screener.category || 'Screener';
-  if (el.activeScreenerTitle) el.activeScreenerTitle.textContent = screener.name;
-  if (el.activeScreenerDesc) el.activeScreenerDesc.textContent = screener.description || screener.url;
+  if (el.activeScreenerTitle) {
+    el.activeScreenerTitle.textContent = screener.name;
+    el.activeScreenerTitle.title = screener.description || screener.name;
+  }
+  if (el.activeScreenerDesc) {
+    el.activeScreenerDesc.textContent = screener.description || screener.url;
+    el.activeScreenerDesc.title = screener.description || screener.url;
+  }
   if (el.lastUpdatedTime) el.lastUpdatedTime.textContent = 'Executing...';
 
   try {
