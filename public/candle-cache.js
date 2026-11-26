@@ -210,6 +210,64 @@
 
   const CandleCache = {
     /**
+     * Check whether cached dataset contains the latest required trading session
+     * @param {object} payload
+     * @param {string} interval
+     * @returns {boolean}
+     */
+    isFresh(payload, interval = '1d') {
+      if (!payload || !Array.isArray(payload.candles) || payload.candles.length === 0) return false;
+
+      const now = Date.now();
+      const cachedAt = payload._cachedAt || payload.updatedAt || 0;
+      const ageMs = now - cachedAt;
+
+      // Intraday intervals (5m, 15m, 1h, etc.) are only fresh for 30s during market hours, or 10 mins off-market
+      if (interval !== '1d' && interval !== '1wk') {
+        return ageMs < 30000;
+      }
+
+      const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const todayIST = istNow.toLocaleDateString('en-CA');
+      const istDay = istNow.getDay(); // 0 is Sun, 6 is Sat
+      const istMins = istNow.getHours() * 60 + istNow.getMinutes();
+      const isMarketSession = (istDay >= 1 && istDay <= 5) && (istMins >= 555 && istMins <= 930);
+
+      const candles = payload.candles;
+      const lastCandle = candles[candles.length - 1];
+      const lastCandleDate = String(lastCandle?.time || '').slice(0, 10);
+
+      // If the cache already has today's candle:
+      if (lastCandleDate === todayIST) {
+        if (!isMarketSession) {
+          // Market is closed, today's candle is complete and persisted
+          return true;
+        }
+        // During market hours, fresh if cached within the last 60 seconds (live quote ticks handle intraday updates)
+        return ageMs < 60000;
+      }
+
+      // If last candle date is before today:
+      // Case 1: Today is weekend (Saturday or Sunday)
+      if (istDay === 0 || istDay === 6) {
+        // Last candle should be Friday (or Thursday if Friday was a holiday)
+        const friOffset = istDay === 6 ? 1 : 2;
+        const friDate = new Date(istNow.getTime() - friOffset * 86400000).toLocaleDateString('en-CA');
+        if (lastCandleDate >= friDate) return true;
+      }
+
+      // Case 2: Weekday before market opens (before 09:15 AM IST)
+      if (istDay >= 1 && istDay <= 5 && istMins < 555) {
+        const prevOffset = istDay === 1 ? 3 : 1;
+        const prevDate = new Date(istNow.getTime() - prevOffset * 86400000).toLocaleDateString('en-CA');
+        if (lastCandleDate >= prevDate) return true;
+      }
+
+      // If we are here, the cache is missing recent completed trading session(s)
+      return false;
+    },
+
+    /**
      * Retrieve cached stock data payload
      * @param {string} symbol
      * @param {string} interval
@@ -235,6 +293,7 @@
           req.onsuccess = () => {
             const result = req.result;
             if (result && result.payload) {
+              result.payload._cachedAt = result.updatedAt || Date.now();
               memoryFallback.set(key, { payload: result.payload, updatedAt: result.updatedAt });
               resolve(result.payload);
             } else {
@@ -260,6 +319,7 @@
       const key = `${cleanSym}_${interval}`;
       const now = Date.now();
 
+      payload._cachedAt = now;
       memoryFallback.set(key, { payload, updatedAt: now });
 
       const db = await getDB();

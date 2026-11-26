@@ -258,6 +258,33 @@ function isInstrumentETF(symbol, name = '') {
   return false;
 }
 
+// -------------------------------------------------------------
+// Canonical Symbol Mapping & Anti-Duplication Safeguard
+// Resolves legacy, misspelled, or Yahoo/Chartink alias tickers to their official NSE canonical symbol.
+// -------------------------------------------------------------
+const CANONICAL_SYMBOL_MAP = {
+  'RAMKRISHNA': 'RKFORGE',       // Ramkrishna Forgings Limited (Official NSE: RKFORGE)
+  'TIPSINDLTD': 'TIPSMUSIC',     // Tips Music Limited (Renamed on NSE from TIPSINDLTD to TIPSMUSIC)
+  'RESTAURANT': 'RBA',           // Restaurant Brands Asia Limited (Official NSE: RBA)
+  'SAMVARDHANA': 'MOTHERSON',    // Samvardhana Motherson International Ltd (Official NSE: MOTHERSON)
+  'TMPV': 'TATAMOTORS',          // Tata Motors Ltd (TMPV was internal/Yahoo symbol for passenger vehicles)
+  'LTM': 'LTIM',                 // LTIMindtree Limited (LTM was old L&T Infotech ticker before Mindtree merger)
+  'MCDOWELL-N': 'UNITDSPR',      // United Spirits Limited (Old ticker McDowell-N)
+  'AMARAJABAT': 'ARE&M',         // Amara Raja Energy & Mobility Ltd (Renamed on NSE from AMARAJABAT to ARE&M)
+  'BAJAJAUTO': 'BAJAJ-AUTO',     // Bajaj Auto Limited (Official NSE ticker has hyphen: BAJAJ-AUTO)
+  'NESTLE': 'NESTLEIND',         // Nestle India Limited (Official NSE ticker: NESTLEIND)
+  'CITYUNIONB': 'CUB',           // City Union Bank Limited (Official NSE ticker: CUB)
+  'NARAYANA': 'NH',              // Narayana Hrudayalaya Limited (Official NSE ticker: NH)
+  'TV18BRDCST': 'NETWORK18',     // TV18 Broadcast Limited (Merged into Network18 Media & Investments Ltd)
+  'HPCL': 'HINDPETRO'            // Hindustan Petroleum Corporation Ltd (Official NSE ticker: HINDPETRO)
+};
+
+function resolveCanonicalSymbol(symbol) {
+  if (!symbol) return '';
+  const clean = String(symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  return CANONICAL_SYMBOL_MAP[clean] || clean;
+}
+
 function sanitizeDhanValue(val) {
   if (!val) return '';
   let clean = String(val).trim();
@@ -1864,7 +1891,8 @@ function autoIngestStocksToUniverse(stockCandidates = []) {
 
   for (const s of list) {
     if (!s || !s.symbol) continue;
-    const cleanSym = String(s.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+    let cleanSym = String(s.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+    cleanSym = resolveCanonicalSymbol(cleanSym);
     if (!cleanSym || symSet.has(cleanSym) || cleanSym.startsWith('^') || /^\d{5,}$/.test(cleanSym) || cleanSym.startsWith('0P') || isInstrumentETF(cleanSym, s.name || '')) {
       continue; // Duplicate or invalid symbol -> skip in ~15 nanoseconds
     }
@@ -1929,7 +1957,8 @@ function autoIngestStocksToUniverse(stockCandidates = []) {
 
 function addStockToUniverse(stockData) {
   if (!stockData || !stockData.symbol) return { success: false, error: 'Symbol is required' };
-  const cleanSym = String(stockData.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  let cleanSym = String(stockData.symbol).toUpperCase().replace(/\.(NS|BO)$/, '').trim();
+  cleanSym = resolveCanonicalSymbol(cleanSym);
   if (!cleanSym || !/^[A-Z0-9_\-\^]+$/.test(cleanSym)) {
     return { success: false, error: 'Invalid stock symbol format' };
   }
@@ -4226,16 +4255,29 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       const lastCompletedDate = getLastCompletedTradingDateIST();
       const lastSavedDate = allCandles[allCandles.length - 1]?.time;
 
-      // Self-Healing: If database is missing the latest completed market session, catch up from Yahoo
-      if (lastSavedDate && lastSavedDate < lastCompletedDate) {
+      // Detect any unexpected interior trading gap (>= 5 calendar days) in the last 25 bars
+      let hasRecentInteriorGap = false;
+      const recentCheckSlice = allCandles.slice(-25);
+      for (let gIdx = 1; gIdx < recentCheckSlice.length; gIdx++) {
+        const tPrev = new Date(recentCheckSlice[gIdx - 1].time + 'T00:00:00Z').getTime();
+        const tCurr = new Date(recentCheckSlice[gIdx].time + 'T00:00:00Z').getTime();
+        if ((tCurr - tPrev) / 86400000 >= 5) {
+          hasRecentInteriorGap = true;
+          break;
+        }
+      }
+
+      // Self-Healing: If database is missing the latest completed market session OR has a recent interior gap, catch up from Yahoo
+      if ((lastSavedDate && lastSavedDate < lastCompletedDate) || hasRecentInteriorGap) {
         try {
           const candidates = typeof getCandidateSymbols === 'function'
             ? getCandidateSymbols(cleanSymUpper)
             : [`${cleanSymUpper}.NS`, `${cleanSymUpper}.BO`];
 
+          const catchupRange = hasRecentInteriorGap ? '1mo' : '5d';
           let freshData = null;
           for (const cand of candidates) {
-            freshData = await fetchChartDataMultiSource(cand, '5d', '1d');
+            freshData = await fetchChartDataMultiSource(cand, catchupRange, '1d');
             if (freshData && freshData.timestamp && freshData.timestamp.length > 0) break;
           }
 
@@ -4247,7 +4289,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
               const missingBatch = [];
               for (let i = 0; i < freshData.timestamp.length; i++) {
                 const dStr = getISTDateString(freshData.timestamp[i]);
-                if (dStr > lastSavedDate && dStr <= lastCompletedDate && !existingTimes.has(dStr) && !isNSETradingHoliday(dStr)) {
+                if (dStr <= lastCompletedDate && !existingTimes.has(dStr) && !isNSETradingHoliday(dStr)) {
                   let c = q.close?.[i];
                   let o = q.open?.[i];
                   let h = q.high?.[i];
@@ -4331,7 +4373,7 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
                 isFinalized: existingCandle.isFinalized
               };
             }
-          } else if (isMarketOpen) {
+          } else if (isMarketOpen || hasMarketOpened) {
             allCandles.push({
               time: todayStr,
               open: openToUse,
@@ -4818,7 +4860,22 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
       if (candles.length > 0 && meta.regularMarketPrice && meta.regularMarketTime) {
         const metaDateStr = getISTDateString(meta.regularMarketTime);
         const lastC = candles[candles.length - 1];
-        if ((lastC.time === metaDateStr || isIntraday) && !isNSETradingHoliday(metaDateStr)) {
+        if (lastC.time < metaDateStr && !isNSETradingHoliday(metaDateStr) && interval === '1d') {
+          // If Yahoo's timestamp array is missing today's completed session, synthesize today's candle from meta!
+          const livePrice = Number(meta.regularMarketPrice.toFixed(2));
+          const openPrice = Number((meta.regularMarketOpen || meta.chartPreviousClose || livePrice).toFixed(2));
+          const highPrice = Number((meta.regularMarketDayHigh || Math.max(livePrice, openPrice)).toFixed(2));
+          const lowPrice = Number((meta.regularMarketDayLow || Math.min(livePrice, openPrice)).toFixed(2));
+          const vol = meta.regularMarketVolume || 0;
+          candles.push({
+            time: metaDateStr,
+            open: openPrice,
+            high: highPrice,
+            low: lowPrice,
+            close: livePrice,
+            volume: vol
+          });
+        } else if ((lastC.time === metaDateStr || isIntraday) && !isNSETradingHoliday(metaDateStr)) {
           const livePrice = Number(meta.regularMarketPrice.toFixed(2));
           lastC.close = livePrice;
           if (isIntraday) {
@@ -5189,13 +5246,14 @@ async function searchPredictiveStocks(query) {
 
   const add = (symbol, name, exchange = 'NSE') => {
     if (!symbol) return;
-    const s = symbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+    const raw = symbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+    const s = resolveCanonicalSymbol(raw);
     if (isInstrumentETF(s, name)) return;
     if (!seen.has(s) && s.length <= 16 && !/^0P\w+/.test(s)) {
       seen.add(s);
       results.push({
         symbol: s,
-        name: (name || s).trim(),
+        name: (name && name !== raw ? name : s).trim(),
         exchange: exchange || 'NSE'
       });
     }
@@ -9370,6 +9428,74 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // A8-B. POST /api/admin/deduplicate-universe - Admin Clean & Deduplicate Universe
+      if (pathname === '/api/admin/deduplicate-universe' && method === 'POST') {
+        const authUser = getAuthenticatedUser(req);
+        if (!authUser || authUser.role !== 'admin') {
+          return sendJson(res, 403, { success: false, error: 'Unauthorized: Admin access required' });
+        }
+        try {
+          const dupKeys = Object.keys(CANONICAL_SYMBOL_MAP);
+          const dupSet = new Set(dupKeys);
+          let universe = getUniverseStocks();
+          const beforeCount = universe.length;
+          universe = universe.filter(stk => !dupSet.has((stk.symbol || '').toUpperCase()));
+          const indoco = universe.find(stk => (stk.symbol || '').toUpperCase() === 'INDOCO');
+          if (indoco) indoco.name = 'Indoco Remedies Limited';
+
+          memoryUniverse = universe;
+          localUniverseCache = universe;
+          cachedExploreData = null;
+          searchCache.clear();
+          scheduleUniverseFlush(universe);
+
+          // Sanitize all watchlists across all users
+          let users = memoryUsers || loadFileUsers();
+          let sanitizedWlCount = 0;
+          users.forEach(u => {
+            if (!u.watchlists) return;
+            u.watchlists.forEach(wl => {
+              if (!Array.isArray(wl.stocks)) return;
+              const newStocks = [];
+              const seenSymbols = new Set();
+              wl.stocks.forEach(stk => {
+                const rawSym = (typeof stk === 'string' ? stk : stk.symbol || '').toUpperCase();
+                const canonicalSym = CANONICAL_SYMBOL_MAP[rawSym] || rawSym;
+                if (seenSymbols.has(canonicalSym)) return;
+                seenSymbols.add(canonicalSym);
+                if (typeof stk === 'string') {
+                  newStocks.push(canonicalSym);
+                } else {
+                  newStocks.push({
+                    ...stk,
+                    symbol: canonicalSym,
+                    name: stk.name ? (rawSym !== canonicalSym ? canonicalSym : stk.name) : canonicalSym
+                  });
+                }
+              });
+              if (newStocks.length !== wl.stocks.length) sanitizedWlCount++;
+              wl.stocks = newStocks;
+            });
+          });
+          saveUsers(users);
+
+          if (MONGO_CONFIG.isConnected && MONGO_CONFIG.db) {
+            await MONGO_CONFIG.db.collection('universe_stocks').deleteMany({ symbol: { $in: dupKeys } });
+            await MONGO_CONFIG.db.collection('daily_ohlcv').deleteMany({ symbol: { $in: dupKeys } });
+            await MONGO_CONFIG.db.collection('universe_stocks').updateOne({ symbol: 'INDOCO' }, { $set: { name: 'Indoco Remedies Limited' } });
+          }
+
+          return sendJson(res, 200, {
+            success: true,
+            message: 'Universe deduplication complete',
+            removedCount: beforeCount - universe.length,
+            totalRemaining: universe.length
+          });
+        } catch (dErr) {
+          return sendJson(res, 500, { success: false, error: dErr.message });
+        }
+      }
+
       // A9. DELETE /api/admin/universe/:symbol - Admin Remove Stock from Universe
       const adminDeleteUniverseStockMatch = pathname.match(/^\/api\/admin\/universe\/([a-zA-Z0-9_\-\.\^]+)$/);
       if (adminDeleteUniverseStockMatch && method === 'DELETE') {
@@ -9798,7 +9924,7 @@ const server = http.createServer(async (req, res) => {
 
         const cleanSymbols = [...new Set(
           rawSymbols
-            .map(s => String(s || '').trim().toUpperCase().replace(/\.(NS|BO)$/, ''))
+            .map(s => resolveCanonicalSymbol(s))
             .filter(Boolean)
         )];
 
@@ -10440,10 +10566,10 @@ const server = http.createServer(async (req, res) => {
       const liveCandleMatch = pathname.match(/^\/api\/stocks\/([a-zA-Z0-9_%-]+)\/live-candle$/);
       if (liveCandleMatch && method === 'GET') {
         const rawSymbol = decodeURIComponent(liveCandleMatch[1]);
-        if (isInstrumentETF(rawSymbol)) {
+        const cleanSym = resolveCanonicalSymbol(rawSymbol);
+        if (isInstrumentETF(cleanSym)) {
           return sendJson(res, 400, { success: false, isETF: true, error: 'ETFs are excluded from the platform.' });
         }
-        const cleanSym = rawSymbol.trim().toUpperCase().replace(/\.(NS|BO)$/, '');
         let liveCandle = LIVE_DAILY_CANDLES.get(cleanSym) || null;
         if (!liveCandle) {
           const q = LIVE_QUOTES_CACHE.data[cleanSym] || quotesCache.get(cleanSym)?.data;
@@ -10475,7 +10601,8 @@ const server = http.createServer(async (req, res) => {
         const queryBefore = parsedUrl.query.before || null;
 
         try {
-          const histData = await fetchStockHistory(rawSymbol, queryRange, queryInterval, queryBefore);
+          const targetSym = resolveCanonicalSymbol(rawSymbol);
+          const histData = await fetchStockHistory(targetSym, queryRange, queryInterval, queryBefore);
           if (histData && histData.symbol) {
             autoIngestStocksToUniverse({
               symbol: histData.symbol,

@@ -196,6 +196,8 @@ const state = {
   // Watchlists Table State
   watchlistSortField: 'symbol',
   watchlistSortAscending: true,
+  wlFilterMc1000: false,
+  wlFilterMc2000: false,
   // DarvasScan State
   pricescanResults: [],
   pricescanSortField: 'spreadPercent',
@@ -545,6 +547,8 @@ const el = {
   wlSlotsLeft: document.getElementById('wl-slots-left'),
   watchlistTbody: document.getElementById('watchlist-tbody'),
   btnRefreshWlQuotes: document.getElementById('btn-refresh-wl-quotes'),
+  chkWlMc1000: document.getElementById('chk-wl-mc1000'),
+  chkWlMc2000: document.getElementById('chk-wl-mc2000'),
 
   // DarvasScan (Price Position Scanner) Elements
   btnRunPricescan: document.getElementById('btn-run-pricescan'),
@@ -3075,6 +3079,33 @@ function isStockEmaAligned(stock, quote = null) {
   return false;
 }
 
+function isStockOver2000Cr(stock, quote = null) {
+  if (!stock) return false;
+  const sym = (stock.symbol || '').toUpperCase().trim();
+  const q = quote || state.watchlistQuotes?.[sym] || {};
+  const u = (Array.isArray(state.universeStocks) ? state.universeStocks.find(s => s && s.symbol && s.symbol.toUpperCase() === sym) : null) || {};
+
+  if (stock.mcOver2000Cr === true || q.mcOver2000Cr === true || u.mcOver2000Cr === true) return true;
+  if ((typeof stock.marketCap === 'number' && stock.marketCap >= 2000) ||
+      (typeof q.marketCap === 'number' && q.marketCap >= 2000) ||
+      (typeof u.marketCap === 'number' && u.marketCap >= 2000)) return true;
+  return false;
+}
+
+function isStockOver1000Cr(stock, quote = null) {
+  if (!stock) return false;
+  if (isStockOver2000Cr(stock, quote)) return true;
+  const sym = (stock.symbol || '').toUpperCase().trim();
+  const q = quote || state.watchlistQuotes?.[sym] || {};
+  const u = (Array.isArray(state.universeStocks) ? state.universeStocks.find(s => s && s.symbol && s.symbol.toUpperCase() === sym) : null) || {};
+
+  if (stock.mcOver1000Cr === true || q.mcOver1000Cr === true || u.mcOver1000Cr === true) return true;
+  if ((typeof stock.marketCap === 'number' && stock.marketCap >= 1000) ||
+      (typeof q.marketCap === 'number' && q.marketCap >= 1000) ||
+      (typeof u.marketCap === 'number' && u.marketCap >= 1000)) return true;
+  return false;
+}
+
 function setWatchlistFilter(filterKey) {
   state.watchlistFilter = filterKey || 'all';
   document.querySelectorAll('#wl-filter-pills-bar .rec-pill').forEach(btn => {
@@ -3134,18 +3165,29 @@ function renderWatchlistStocks() {
     return;
   }
 
-  // Filter stocks according to active watchlist filter (e.g. EMAs Aligned)
+  // Filter stocks according to active watchlist filter (e.g. EMAs Aligned, Market Cap > 1k/2k)
   let stocksToRender = [...activeWl.stocks];
   if (state.watchlistFilter === 'emas-aligned') {
     stocksToRender = stocksToRender.filter(stock => isStockEmaAligned(stock, state.watchlistQuotes[stock.symbol]));
+  }
+  if (state.wlFilterMc2000) {
+    stocksToRender = stocksToRender.filter(stock => isStockOver2000Cr(stock, state.watchlistQuotes[stock.symbol]));
+  } else if (state.wlFilterMc1000) {
+    stocksToRender = stocksToRender.filter(stock => isStockOver1000Cr(stock, state.watchlistQuotes[stock.symbol]));
   }
 
   // Update visible count badge
   const wlVisibleCountEl = document.getElementById('wl-visible-count');
   if (wlVisibleCountEl) {
-    if (state.watchlistFilter && state.watchlistFilter !== 'all') {
+    const isFiltered = (state.watchlistFilter && state.watchlistFilter !== 'all') || state.wlFilterMc2000 || state.wlFilterMc1000;
+    if (isFiltered) {
+      const filterDescs = [];
+      if (state.watchlistFilter === 'emas-aligned') filterDescs.push('EMAs Aligned');
+      if (state.wlFilterMc2000) filterDescs.push('>₹2,000 Cr');
+      else if (state.wlFilterMc1000) filterDescs.push('>₹1,000 Cr');
+      const activeFilterName = filterDescs.join(' + ');
       wlVisibleCountEl.textContent = `${stocksToRender.length} / ${activeWl.stocks.length}`;
-      wlVisibleCountEl.title = `Showing ${stocksToRender.length} of ${activeWl.stocks.length} stocks matching EMAs Aligned`;
+      wlVisibleCountEl.title = `Showing ${stocksToRender.length} of ${activeWl.stocks.length} stocks matching ${activeFilterName}`;
     } else {
       wlVisibleCountEl.textContent = `${activeWl.stocks.length} stocks`;
       wlVisibleCountEl.title = `Total stocks in watchlist: ${activeWl.stocks.length}`;
@@ -3153,13 +3195,18 @@ function renderWatchlistStocks() {
   }
 
   if (stocksToRender.length === 0) {
+    const filterDescs = [];
+    if (state.watchlistFilter === 'emas-aligned') filterDescs.push('EMAs Aligned');
+    if (state.wlFilterMc2000) filterDescs.push('Market Cap > ₹2000 Cr');
+    else if (state.wlFilterMc1000) filterDescs.push('Market Cap > ₹1000 Cr');
+    const filterLabel = filterDescs.join(' + ') || 'Filter';
     el.watchlistTbody.innerHTML = `
       <tr>
         <td colspan="6" class="py-12 text-center text-slate-500">
           <div class="flex flex-col items-center justify-center gap-2">
             <i data-lucide="filter" class="w-6 h-6 text-slate-600"></i>
-            <p class="text-xs font-semibold text-slate-300">No stocks match "${state.watchlistFilter === 'emas-aligned' ? 'EMAs Aligned' : state.watchlistFilter}"</p>
-            <button type="button" onclick="setWatchlistFilter('all')" class="text-[11px] text-amber-400 hover:underline cursor-pointer">Show all ${activeWl.stocks.length} stocks</button>
+            <p class="text-xs font-semibold text-slate-300">No stocks match "${filterLabel}"</p>
+            <button type="button" onclick="setWatchlistFilter('all'); if (el.chkWlMc1000) el.chkWlMc1000.checked=false; if (el.chkWlMc2000) el.chkWlMc2000.checked=false; state.wlFilterMc1000=false; state.wlFilterMc2000=false; renderWatchlistStocks();" class="text-[11px] text-amber-400 hover:underline cursor-pointer">Reset filters (Show all ${activeWl.stocks.length} stocks)</button>
           </div>
         </td>
       </tr>
@@ -3218,15 +3265,23 @@ function renderWatchlistStocks() {
       ? (isBull ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20')
       : 'text-slate-500';
 
+    let mcBadgeHtml = '';
+    if (isStockOver2000Cr(stock, quote)) {
+      mcBadgeHtml = `<span class="px-1 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹2000 Cr">&gt;2k</span>`;
+    } else if (isStockOver1000Cr(stock, quote)) {
+      mcBadgeHtml = `<span class="px-1 py-0.2 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[9px] font-mono font-medium" title="Market Cap > ₹1000 Cr">&gt;1k</span>`;
+    }
+
     const tr = document.createElement('tr');
     tr.className = `wl-stock-row border-b border-dark-border/40 hover:bg-dark-accent/40 cursor-pointer transition-colors ${isSelected ? 'bg-amber-500/10 border-l-2 border-amber-500' : ''}`;
     tr.innerHTML = `
       <td class="py-2.5 px-3">
         <div class="flex flex-col">
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-mono font-bold text-slate-100 text-xs">${stock.symbol}</span>
             ${typeof getStockInfoButtonHtml === 'function' ? getStockInfoButtonHtml(stock.symbol, stock.name) : ''}
             ${getFnoBadgeHtml(stock.symbol)}
+            ${mcBadgeHtml}
             ${getCircuitBadgeHtml(stock)}
           </div>
           <span class="text-[10px] text-slate-400 truncate max-w-[130px]" title="${stock.name || stock.symbol}">${stock.name || stock.symbol}</span>
@@ -3860,6 +3915,28 @@ function setupEventListeners() {
     if (e.target === el.renameWatchlistModal) closeRenameModal();
   });
   el.btnRefreshWlQuotes?.addEventListener('click', () => refreshWatchlistQuotes(true));
+
+  // Watchlist Market Cap Toggles (>1k Cr & >2k Cr)
+  if (el.chkWlMc1000) {
+    el.chkWlMc1000.addEventListener('change', e => {
+      state.wlFilterMc1000 = e.target.checked;
+      if (state.wlFilterMc1000 && state.wlFilterMc2000) {
+        if (el.chkWlMc2000) el.chkWlMc2000.checked = false;
+        state.wlFilterMc2000 = false;
+      }
+      renderWatchlistStocks();
+    });
+  }
+  if (el.chkWlMc2000) {
+    el.chkWlMc2000.addEventListener('change', e => {
+      state.wlFilterMc2000 = e.target.checked;
+      if (state.wlFilterMc2000 && state.wlFilterMc1000) {
+        if (el.chkWlMc1000) el.chkWlMc1000.checked = false;
+        state.wlFilterMc1000 = false;
+      }
+      renderWatchlistStocks();
+    });
+  }
 
   // Quick Add Stock to Watchlist
   el.btnWlQuickAdd?.addEventListener('click', () => {
@@ -7762,17 +7839,22 @@ async function loadStockChart(rawSymbol) {
 
   // 1. Instant Cache Check (<15ms)
   let renderedFromCache = false;
+  let cachedPayload = null;
   if (window.CandleCache) {
     try {
       const cached = await CandleCache.get(cleanSymbol, state.activeInterval);
       if (cached && cached.candles && cached.candles.length > 0) {
+        cachedPayload = cached;
         applyChartPayload(cached, cleanSymbol);
         renderedFromCache = true;
         pollActiveStockLiveQuote();
 
-        // If we already have the full dataset in cache (>= 450 candles for 1d, or intraday),
-        // we already rendered instantly from cache! Do not overwrite with truncated 1y data!
-        if (state.activeInterval !== '1d' || cached.candles.length >= 450) {
+        const isFresh = typeof CandleCache.isFresh === 'function'
+          ? CandleCache.isFresh(cached, state.activeInterval)
+          : false;
+
+        // If the cache is already fully fresh AND has complete history, no network fetch needed!
+        if (isFresh && (state.activeInterval !== '1d' || cached.candles.length >= 450)) {
           if (el.chartLoadingOverlay) {
             el.chartLoadingOverlay.classList.remove('flex');
             el.chartLoadingOverlay.classList.add('hidden');
@@ -7811,19 +7893,32 @@ async function loadStockChart(rawSymbol) {
       return;
     }
 
-    applyChartPayload(data, cleanSymbol);
+    let fullPayload = data;
+    // If we already rendered from cache with more historical bars (e.g. 2y history), merge with fresh server data
+    // so we keep the older historical depth while seamlessly adding the latest trading days!
+    if (cachedPayload && Array.isArray(cachedPayload.candles) && cachedPayload.candles.length > data.candles.length && window.CandleCache) {
+      const mergedCandles = CandleCache.mergeCandles(data.candles, cachedPayload.candles);
+      const indicators = CandleCache.computeIndicators(mergedCandles);
+      fullPayload = {
+        ...data,
+        candles: mergedCandles,
+        ...indicators
+      };
+    }
+
+    applyChartPayload(fullPayload, cleanSymbol);
 
     // Persist to browser IndexedDB for instant sub-10ms cache retrieval
     if (window.CandleCache) {
-      CandleCache.set(cleanSymbol, state.activeInterval, data);
+      CandleCache.set(cleanSymbol, state.activeInterval, fullPayload);
     }
 
     // Trigger immediate live quote verification for the chart
     pollActiveStockLiveQuote();
 
     // 3. Progressive Background History: fetch preceding 2 years without blocking
-    if (state.activeInterval === '1d' && data.candles && data.candles.length < 450 && data.candles.length > 0) {
-      triggerBackgroundHistoryLoading(cleanSymbol, data, signal);
+    if (state.activeInterval === '1d' && fullPayload.candles && fullPayload.candles.length < 450 && fullPayload.candles.length > 0) {
+      triggerBackgroundHistoryLoading(cleanSymbol, fullPayload, signal);
     }
 
   } catch (err) {

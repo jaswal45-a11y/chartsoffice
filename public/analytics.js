@@ -5614,17 +5614,20 @@ async function loadStockChart(rawSymbol) {
 
   // 1. Instant Cache Check (<15ms)
   let renderedFromCache = false;
+  let cachedPayload = null;
   if (window.CandleCache) {
     try {
       const cached = await CandleCache.get(cleanSymbol, state.activeInterval);
       if (cached && cached.candles && cached.candles.length > 0) {
+        cachedPayload = cached;
         applyChartPayload(cached, cleanSymbol);
         renderedFromCache = true;
         pollActiveStockLiveQuote();
 
         // If we already have the full dataset in cache (>= 450 candles for 1d, or intraday),
         // we already rendered instantly from cache! Do not overwrite with truncated 1y data!
-        if (state.activeInterval !== '1d' || cached.candles.length >= 450) {
+        const isFresh = typeof CandleCache.isFresh === 'function' ? CandleCache.isFresh(cached, state.activeInterval) : false;
+        if (isFresh && (state.activeInterval !== '1d' || cached.candles.length >= 450)) {
           const loadingOverlay = document.getElementById('chart-loading-overlay');
           if (loadingOverlay) {
             loadingOverlay.classList.remove('flex');
@@ -5657,19 +5660,29 @@ async function loadStockChart(rawSymbol) {
       return;
     }
 
-    applyChartPayload(data, cleanSymbol);
+    let fullPayload = data;
+    if (cachedPayload && Array.isArray(cachedPayload.candles) && cachedPayload.candles.length > data.candles.length && window.CandleCache) {
+      const mergedCandles = CandleCache.mergeCandles(data.candles, cachedPayload.candles);
+      const indicators = CandleCache.computeIndicators(mergedCandles);
+      fullPayload = {
+        ...data,
+        candles: mergedCandles,
+        ...indicators
+      };
+    }
 
-    // Only cache directly if not daily (daily will be cached with full 3-year data once merged)
-    if (window.CandleCache && state.activeInterval !== '1d') {
-      CandleCache.set(cleanSymbol, state.activeInterval, data);
+    applyChartPayload(fullPayload, cleanSymbol);
+
+    if (window.CandleCache) {
+      CandleCache.set(cleanSymbol, state.activeInterval, fullPayload);
     }
 
     // Trigger immediate live quote verification for the chart
     pollActiveStockLiveQuote();
 
     // 3. Progressive Background History: fetch preceding 2 years without blocking
-    if (state.activeInterval === '1d' && data.candles && data.candles.length > 0) {
-      triggerBackgroundHistoryLoading(cleanSymbol, data, signal);
+    if (state.activeInterval === '1d' && fullPayload.candles && fullPayload.candles.length < 450 && fullPayload.candles.length > 0) {
+      triggerBackgroundHistoryLoading(cleanSymbol, fullPayload, signal);
     }
 
   } catch (err) {

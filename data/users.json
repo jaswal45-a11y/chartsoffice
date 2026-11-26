@@ -8898,6 +8898,36 @@
             "name": "ATHERENERG Limited",
             "addedAt": "2026-11-23T09:11:31.654Z",
             "addedPrice": 1967.8
+          },
+          {
+            "symbol": "GABRIEL",
+            "name": "Gabriel India Limited",
+            "addedAt": "2026-11-01T18:50:47.738Z",
+            "addedPrice": 1429
+          },
+          {
+            "symbol": "ACE",
+            "name": "Action Construction Equipment Limited",
+            "addedAt": "2026-11-26T09:02:54.340Z",
+            "addedPrice": 1262.25
+          },
+          {
+            "symbol": "CDSL",
+            "name": "Central Depository Services (India)",
+            "addedAt": "2026-11-26T09:03:03.663Z",
+            "addedPrice": 1444
+          },
+          {
+            "symbol": "ANGELONE",
+            "name": "Angel One Limited",
+            "addedAt": "2026-11-26T09:07:03.914Z",
+            "addedPrice": 359.65
+          },
+          {
+            "symbol": "MINDACORP",
+            "name": "Minda Corporation Limited",
+            "addedAt": "2026-11-26T09:21:56.485Z",
+            "addedPrice": 709.6
           }
         ],
         "stockHistory": {
@@ -9000,6 +9030,22 @@
           "KPRMILL": {
             "addedAt": "2026-11-23T09:57:08.169Z",
             "addedPrice": 1203.7
+          },
+          "ACE": {
+            "addedAt": "2026-11-26T09:02:54.340Z",
+            "addedPrice": 1262.25
+          },
+          "CDSL": {
+            "addedAt": "2026-11-26T09:03:03.663Z",
+            "addedPrice": 1444
+          },
+          "ANGELONE": {
+            "addedAt": "2026-11-26T09:07:03.914Z",
+            "addedPrice": 359.65
+          },
+          "MINDACORP": {
+            "addedAt": "2026-11-26T09:21:56.485Z",
+            "addedPrice": 709.6
           }
         }
       },
@@ -9524,16 +9570,10 @@
             "addedPrice": 159.12
           },
           {
-            "symbol": "TIPSINDLTD",
-            "name": "Tips Industries Limited",
+            "symbol": "TIPSMUSIC",
+            "name": "TIPSMUSIC",
             "addedAt": "2026-11-25T02:18:20.108Z",
             "addedPrice": 811.7
-          },
-          {
-            "symbol": "TIPSMUSIC",
-            "name": "Tips Music Ltd",
-            "addedAt": "2026-11-25T02:18:20.108Z",
-            "addedPrice": 805.2
           },
           {
             "symbol": "LAURUSLABS",
@@ -9554,14 +9594,8 @@
             "addedPrice": 679.15
           },
           {
-            "symbol": "RAMKRISHNA",
-            "name": "Ramkrishna Forgings Limited",
-            "addedAt": "2026-11-25T02:18:20.110Z",
-            "addedPrice": 753.55
-          },
-          {
             "symbol": "RKFORGE",
-            "name": "Ramkrishna Forgings Limited",
+            "name": "RKFORGE",
             "addedAt": "2026-11-25T02:18:20.110Z",
             "addedPrice": 753.55
           },
@@ -9667,10 +9701,6 @@
             "addedAt": "2026-11-25T02:18:20.107Z",
             "addedPrice": 159.12
           },
-          "TIPSINDLTD": {
-            "addedAt": "2026-11-25T02:18:20.108Z",
-            "addedPrice": 811.7
-          },
           "TIPSMUSIC": {
             "addedAt": "2026-11-25T02:18:20.108Z",
             "addedPrice": 805.2
@@ -9686,10 +9716,6 @@
           "TANLA": {
             "addedAt": "2026-11-25T02:18:20.109Z",
             "addedPrice": 679.15
-          },
-          "RAMKRISHNA": {
-            "addedAt": "2026-11-25T02:18:20.110Z",
-            "addedPrice": 753.55
           },
           "RKFORGE": {
             "addedAt": "2026-11-25T02:18:20.110Z",
@@ -9762,8 +9788,8 @@
         }
       }
     ],
-    "notes": "\nmarketcap  filter in watchlist too: teste 10 ema and after that make a reversal bullish candle and atleast closed or trading above the mid of the candle which dipped below 10 ema\nremove duplicate like rkforge and tips\n\npetronet hasnt touched 10ema yet and still showing in ready to but and touched 10 ema??\n\nwhy aurobino pahrma not in darvasw\ndivislab still showing 11296 not updated day data but in hourly it is correct wtf\n\n\neach chartlink screenr shall have tool tip text\nshake out entries:\neg crosses 20 or 50 or 150 ema closed belowe but wihtin next 3 days again above that MA.\n\ncosnidoldiaetd near10 or 20 ema linke ankur scan\ncheck whether eod synch is happending auto or not\nsmc indiactor on chart\nhttps://www.ankurpatel.info/resources/\n\n\nwhy oreint hot not shown in darvas croos on 16 oct\nkeep above 50 ma stocks filter \nhttps://marketstrength.pages.dev/?utm_source=twitter#india\n\nhttps://tradewithtech.in/#features  interface\nhttps://pivchart.com/\nRsi setting 50 23 \nAlgo testing \noption to mark crossover of 10/20 etc\n\nresolve pivots issue on chart and analytics\nhttps://chartink.com/dashboard/160633 \n\nscreenshots feature--collection\n\nwork on breadth: \n\nStandard & Sectoral Indices--indice data not correct fetching\n\n\ncheck alert feature when some price corss such and then that stock gets added into alertrigg watchlist\n\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern\n\nV shape recoery onlywhle crash not durring correction---during such correction a W is formed generally",
-    "notesUpdatedAt": "2026-11-25T12:18:14.364Z",
+    "notes": "if stock k saath uska sector/index rs or mkt breadth b aa jaye to jyada condifende hga trade lete ty\n\nalway chek first indiecies and keep their inpf on tab in homescree  so to see which index is getting brekout or near:\n\nbroke darvas top with rvol>2 or 3 :\n\ncup and handle type search..\n4 bases down manas----color to heading and bold etc feature in this notes window\n\nmarketcap  filter in watchlist too: teste 10 ema and after that make a reversal bullish candle and atleast closed or trading above the mid of the candle which dipped below 10 ema\nremove duplicate like rkforge and tips\n\npetronet hasnt touched 10ema yet and still showing in ready to but and touched 10 ema??\n\nwhy aurobino pahrma not in darvasw\ndivislab still showing 11296 not updated day data but in hourly it is correct wtf\n\n\neach chartlink screenr shall have tool tip text\nshake out entries:\neg crosses 20 or 50 or 150 ema closed belowe but wihtin next 3 days again above that MA.\n\ncosnidoldiaetd near10 or 20 ema linke ankur scan\ncheck whether eod synch is happending auto or not\nsmc indiactor on chart\nhttps://www.ankurpatel.info/resources/\n\n\nwhy oreint hot not shown in darvas croos on 16 oct\nkeep above 50 ma stocks filter \nhttps://marketstrength.pages.dev/?utm_source=twitter#india\n\nhttps://tradewithtech.in/#features  interface\nhttps://pivchart.com/\nRsi setting 50 23 \nAlgo testing \noption to mark crossover of 10/20 etc\n\nresolve pivots issue on chart and analytics\nhttps://chartink.com/dashboard/160633 \n\nscreenshots feature--collection\n\nwork on breadth: \n\nStandard & Sectoral Indices--indice data not correct fetching\n\n\ncheck alert feature when some price corss such and then that stock gets added into alertrigg watchlist\n\n\nsort SS wathlist(or make a new watlit for such test algo rvol) by RVOL and SS as per rvol nithin indicator---i ll get daily feedback of my added patterns stocks in tis wathlost whteht it worked or not---later can automate such entries with Sl=little below entry or manual\n\nwhenever a stock is opened a storng start symbol shall be diaplyed along with wathclist icon--to show that today it opened higher than last day close and rvol is greater---or a new symbol can be placed for last 1 onth chart on all candles for such SS view\n\n\nMrket breadth:\nmidsmall400,universe....\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=420381734#gid=420381734\n400 stocks.\nhttps://docs.google.com/spreadsheets/d/1jAs3zY8S7iAVxk3isJNjrdb2YARKGkeb65Yl8ATy8ss/edit?gid=1578601491#gid=1578601491\n\n\n\n\nEM/XP===52wh wl and 4.5r\navoid etf,indice checkbox in analystics like fno\n\n\nsaved TV indicator for script of uc and lc:\n\n1st chek how many databse u r refeering and how the site is using dual mode etc?\nscreenrs to make:\np near to darvas Green line\nP closed between darvas green line and 10 or 20 ema\nP just crossed green line =P<102% of Green && P>Green\n\nconsildating near darvas red line or green line narrwo range\n\np just crossed green and back inside.\n\n\ncan fetch from baananip forming bases\n\nSmallcap n midcap add optimum time search as per rsi or 20ma low rsi in weekly\n\n\n\nrules:\nCANSLIM\n\nstrong start resaerch manas araosa\n\nwhen having cheat entry or entry...marking pivot--consider tehe rcent high which was tried ealriler for break but didnt break.--abhi rpci grp\n\n\nhttps://www.tradingview.com/script/MIJWdjCX-G-O-A-T-v2-by-SEN/\n\nassociate earning days in chart..with nithin volume chart\n\n\n\nnew strat:\np inside darvas and stock near +-2 of 10 ema---\nseparte pt--gather all stocks wathlist apply darvas--then put that into RVOL of nithin for morning\n\ntrade contraqctions above vwap only--\n\nadd to darvas scan a filter--just crossed green line in last 10-15 min\n\nbig base breakot\nrvol in volume pan...along with nithing simple volume \n\n9ema+vwap brhamstra\n*****************\n\nLook for valid Darvas setups.\nAlways analyze W + D\nW = Weekly\nD = Daily\nAlways check the weekly structure together with the daily setup.\nSort and finalize the watchlist\nCombine results from all scans + Darvas Scan.\nSort/rank them.\nFinalize the actionable watchlist.\nRVOL stage\nTake the finalized watchlist into RVOL.\nStart/use RVOL in TradingView (TV).\nNext-morning observation\nObserve how the shortlisted stocks react the next morning.\nLook for the reaction/confirmation before considering an entry.\n\n\nVWAP scanner idea\nMaintain a scanner for stocks where VWAP was crossed within the last 7 days.\nUse this as another source of candidates for the watchlist.\nAlerts\n\n\n\n\nAdd a button along with watchlist to see desc abt company --try chatgpt prompt or g search simple small window for such \n\n\n\nScanner Darvas green in weekly just crossed by price or we say P is 2% abo e then darvas green type filter \n\nwatchlist and alert in them ---typ3d Big abd3 breakout small base bo vcp etc--chel if self develop such filter or copy from banan ip \n\n\nkey point:\nAll Markets work on the same principles\nConsolidation - Expansion\nIt is important to identify both.\nAnd after that, there are 5 types of entries for LTF Traders.\n\n1. Anticipation of Expansion\n2. During the Expansion\n3. Confirmation of Expansion\n4. Post-Expansion Pullback\n5. HTF Pullback LTF Expansion Confirmation\n6. Range play(Ping Pong)\n\nMaster 2-3 of them, and you are set.\nMy Favs are 2, 3, and 4.\n1, 5 & 6 are also great, but it is not practically possible to master every kind of entry.\n\nA lot of times, it is also important to understand exactly what type of entry style is working best in a market, or, more importantly, what isn't working that well, and stop doing that until the market favors that entry style again.\n\nmommy\n2025-26 stcg=84000,2026-27 stcg=150000\n\nrpci:\n2-3 week tight closing pattern\n\nV shape recoery onlywhle crash not durring correction---during such correction a W is formed generally",
+    "notesUpdatedAt": "2026-11-26T16:48:05.160Z",
     "customScreeners": [
       {
         "id": "scr_usr_mtqwvqzy_rx4",

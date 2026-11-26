@@ -487,11 +487,25 @@
               <span id="wl-slots-left" class="text-amber-400 font-semibold">1000 slots free</span>
             </div>
 
-            <!-- Watchlist Quick Filter Pills (All Stocks / EMAs Aligned) -->
+            <!-- Watchlist Quick Filter Pills (All Stocks / EMAs Aligned) & Market Cap Toggles -->
             <div class="flex items-center justify-between gap-2 pt-2 border-t border-dark-border/40">
-              <div class="rec-filter-strip" id="wl-filter-pills-bar">
-                <button data-wlfilter="all" class="rec-pill active" onclick="setWatchlistFilter('all')">All Stocks</button>
-                <button data-wlfilter="emas-aligned" class="rec-pill" onclick="setWatchlistFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="rec-filter-strip" id="wl-filter-pills-bar">
+                  <button data-wlfilter="all" class="rec-pill active" onclick="setWatchlistFilter('all')">All Stocks</button>
+                  <button data-wlfilter="emas-aligned" class="rec-pill" onclick="setWatchlistFilter('emas-aligned')" title="Price > 10 > 20 > 50 > 150 EMA">EMAs Aligned</button>
+                </div>
+                <!-- Market Cap 1k & 2k Toggles -->
+                <div class="flex items-center gap-1.5 px-2 py-0.5 bg-dark-bg border border-dark-border rounded-lg shrink-0">
+                  <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-wl-mc1000" title="Market Cap > ₹1000 Cr">
+                    <input type="checkbox" id="chk-wl-mc1000" class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                    <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">1k</span>
+                  </label>
+                  <span class="text-slate-600 text-[10px] select-none">|</span>
+                  <label class="flex items-center gap-1 cursor-pointer select-none group" id="lbl-wl-mc2000" title="Market Cap > ₹2000 Cr">
+                    <input type="checkbox" id="chk-wl-mc2000" class="rounded border-slate-700 text-amber-500 focus:ring-0 bg-dark-card w-3.5 h-3.5 cursor-pointer">
+                    <span class="text-slate-400 group-hover:text-slate-200 text-xs font-mono font-medium transition-colors">2k</span>
+                  </label>
+                </div>
               </div>
               <span id="wl-visible-count" class="text-[10px] text-amber-400/90 font-mono font-semibold" title="Visible Stocks in Watchlist"></span>
             </div>
@@ -3496,7 +3510,7 @@
   <!-- Global Reusable Company Info Component -->
   <script src="company-info.js?v=1.0.0"></script>
   <!-- Client-Side Progressive Candle IndexedDB Cache -->
-  <script src="candle-cache.js?v=1.0.1"></script>
+  <script src="candle-cache.js?v=1.0.2"></script>
   <!-- Application Script -->
   <script src="app.js?v=3.4.6"></script>
   <!-- Sticky Synchronized Notes Script -->

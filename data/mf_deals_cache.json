@@ -1,9 +1,39 @@
 {
   "success": true,
   "count": 20,
-  "lastUpdated": "2026-11-25T19:14:46.904Z",
-  "latestDealId": "7c5eae2a5eb8",
+  "lastUpdated": "2026-11-26T18:39:43.082Z",
+  "latestDealId": "87f067f62fe2",
   "deals": [
+    {
+      "id": "87f067f62fe2",
+      "exchange": "NSE",
+      "date": "26-Nov-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Carborundum Univers.",
+      "dealType": "BUY",
+      "volume": "3344472",
+      "dealPrice": "975"
+    },
+    {
+      "id": "ea47a3480ab8",
+      "exchange": "NSE",
+      "date": "26-Nov-26",
+      "clientName": "SBI MUTUAL FUND",
+      "companyName": "Carborundum Univers.",
+      "dealType": "SELL",
+      "volume": "2793669",
+      "dealPrice": "975"
+    },
+    {
+      "id": "d5ba2a440a9f",
+      "exchange": "NSE",
+      "date": "26-Nov-26",
+      "clientName": "ADITYA BIRLA SUN LIFE MUTUAL FUND",
+      "companyName": "Amagi Media Labs",
+      "dealType": "BUY",
+      "volume": "3327204",
+      "dealPrice": "554"
+    },
     {
       "id": "7c5eae2a5eb8",
       "exchange": "NSE",
@@ -173,36 +203,6 @@
       "dealType": "BUY",
       "volume": "806167",
       "dealPrice": "1679.75"
-    },
-    {
-      "id": "628cb968bd6a",
-      "exchange": "NSE",
-      "date": "02-Nov-26",
-      "clientName": "FRANKLIN TEMPLETON MUTUAL FUND",
-      "companyName": "Go Fashion (India)",
-      "dealType": "SELL",
-      "volume": "1333125",
-      "dealPrice": "245.54"
-    },
-    {
-      "id": "5fe8cb134ec1",
-      "exchange": "NSE",
-      "date": "30-Oct-26",
-      "clientName": "GOLDMAN SACHS FUNDS - GOLDMAN SACHS INDIA EQUITY PORTFOLIO",
-      "companyName": "Sagility",
-      "dealType": "BUY",
-      "volume": "27267148",
-      "dealPrice": "42.62"
-    },
-    {
-      "id": "bf662579012a",
-      "exchange": "NSE",
-      "date": "30-Oct-26",
-      "clientName": "ICICI PRUDENTIAL MUTUAL FUND",
-      "companyName": "Sagility",
-      "dealType": "BUY",
-      "volume": "35087719",
-      "dealPrice": "42.75"
     }
   ]
 }
