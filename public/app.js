@@ -4915,7 +4915,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.ema10 || 1.5),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4924,7 +4924,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.ema20 || 1.5),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4933,7 +4933,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.ema50 || 1.5),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4942,7 +4942,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.ema150 || 2),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4951,7 +4951,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.ema200 || 2),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4961,7 +4961,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.vwap || 1.8),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4971,7 +4971,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.darvasTop || 2.5),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -4981,7 +4981,7 @@ function initNativeCharts() {
     lineWidth: Number(state.lineWidths?.darvasBottom || 2.5),
     title: '',
     priceLineVisible: false,
-    lastValueVisible: false,
+    lastValueVisible: true,
     crosshairMarkerVisible: false
   });
 
@@ -9772,7 +9772,7 @@ function renderScreeners() {
     const card = document.createElement('div');
     card.className = `screener-box group ${isActive ? 'active' : ''} ${isRunning ? 'running' : ''}`;
     card.dataset.id = screener.id;
-    card.title = tooltipText;
+    card.setAttribute('data-tooltip', tooltipText);
 
     // Screener action buttons (visible on hover for admin on all, or user on custom screeners)
     const actionsHtml = canEditOrDelete ? `
@@ -9788,7 +9788,7 @@ function renderScreeners() {
 
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px;">
-        <span class="sc-name" title="${escapeHtml(tooltipText)}">${screener.name}</span>
+        <span class="sc-name">${screener.name}</span>
         ${isRunning ? `
           <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" title="Scanning in progress..."></span>
         ` : actionsHtml}

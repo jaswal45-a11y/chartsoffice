@@ -4267,8 +4267,11 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
         }
       }
 
-      // Self-Healing: If database is missing the latest completed market session OR has a recent interior gap, catch up from Yahoo
-      if ((lastSavedDate && lastSavedDate < lastCompletedDate) || hasRecentInteriorGap) {
+      // Check if any of the last 5 completed bars in MongoDB were saved as unfinalized mid-day snapshots
+      const hasUnfinalizedRecent = allCandles.slice(-5).some(c => c && c.time <= lastCompletedDate && !c.isFinalized);
+
+      // Self-Healing: If database is missing the latest completed market session, has a recent interior gap, or has unfinalized recent bars, catch up from Yahoo
+      if ((lastSavedDate && lastSavedDate < lastCompletedDate) || hasRecentInteriorGap || hasUnfinalizedRecent) {
         try {
           const candidates = typeof getCandidateSymbols === 'function'
             ? getCandidateSymbols(cleanSymUpper)
@@ -4283,34 +4286,51 @@ async function fetchStockHistory(rawSymbol, customRange = null, customInterval =
 
           if (freshData && freshData.timestamp && freshData.timestamp.length > 0) {
             const meta = freshData.meta || {};
+            const metaDateStr = meta.regularMarketTime ? getISTDateString(meta.regularMarketTime) : '';
             const q = freshData.indicators?.quote?.[0];
             if (q) {
-              const existingTimes = new Set(allCandles.map(c => c.time));
+              const existingMap = new Map(allCandles.map((c, idx) => [c.time, idx]));
               const missingBatch = [];
               for (let i = 0; i < freshData.timestamp.length; i++) {
                 const dStr = getISTDateString(freshData.timestamp[i]);
-                if (dStr <= lastCompletedDate && !existingTimes.has(dStr) && !isNSETradingHoliday(dStr)) {
-                  let c = q.close?.[i];
-                  let o = q.open?.[i];
-                  let h = q.high?.[i];
-                  let l = q.low?.[i];
-                  let v = q.volume?.[i] || 0;
-                  if (c === null || c === undefined) c = meta.regularMarketPrice;
-                  if (o === null || o === undefined) o = meta.regularMarketOpen || c;
-                  if (h === null || h === undefined) h = meta.regularMarketDayHigh || c;
-                  if (l === null || l === undefined) l = meta.regularMarketDayLow || c;
-                  if (c != null && o != null) {
-                    const newCandle = {
-                      time: dStr,
-                      open: Number(Number(o).toFixed(2)),
-                      high: Number(Number(h).toFixed(2)),
-                      low: Number(Number(l).toFixed(2)),
-                      close: Number(Number(c).toFixed(2)),
-                      volume: v || meta.regularMarketVolume || 0
-                    };
-                    allCandles.push(newCandle);
-                    missingBatch.push(newCandle);
-                    existingTimes.add(dStr);
+                if (dStr <= lastCompletedDate && !isNSETradingHoliday(dStr)) {
+                  const existingIdx = existingMap.get(dStr);
+                  const existingCandle = existingIdx !== undefined ? allCandles[existingIdx] : null;
+                  if (!existingCandle || !existingCandle.isFinalized) {
+                    let c = q.close?.[i];
+                    let o = q.open?.[i];
+                    let h = q.high?.[i];
+                    let l = q.low?.[i];
+                    let v = q.volume?.[i] || 0;
+                    if (dStr === metaDateStr && meta.regularMarketPrice) {
+                      if (c === null || c === undefined) c = meta.regularMarketPrice;
+                      if (o === null || o === undefined) o = meta.regularMarketOpen || c;
+                      if (meta.regularMarketDayHigh) h = Math.max(h || 0, meta.regularMarketDayHigh);
+                      if (meta.regularMarketDayLow) l = l != null ? Math.min(l, meta.regularMarketDayLow) : meta.regularMarketDayLow;
+                      if (meta.regularMarketVolume) v = Math.max(v, meta.regularMarketVolume);
+                    }
+                    if (c === null || c === undefined) c = meta.regularMarketPrice;
+                    if (o === null || o === undefined) o = meta.regularMarketOpen || c;
+                    if (h === null || h === undefined) h = meta.regularMarketDayHigh || c;
+                    if (l === null || l === undefined) l = meta.regularMarketDayLow || c;
+                    if (c != null && o != null) {
+                      const newCandle = {
+                        time: dStr,
+                        open: Number(Number(o).toFixed(2)),
+                        high: Number(Number(h).toFixed(2)),
+                        low: Number(Number(l).toFixed(2)),
+                        close: Number(Number(c).toFixed(2)),
+                        volume: v || meta.regularMarketVolume || 0,
+                        isFinalized: true
+                      };
+                      if (existingIdx !== undefined) {
+                        allCandles[existingIdx] = newCandle;
+                      } else {
+                        allCandles.push(newCandle);
+                        existingMap.set(dStr, allCandles.length - 1);
+                      }
+                      missingBatch.push(newCandle);
+                    }
                   }
                 }
               }
@@ -11780,18 +11800,27 @@ async function verifyAndCatchUpLatestEOD() {
   const lastCompletedDate = getLastCompletedTradingDateIST();
   if (!lastCompletedDate) return;
 
+  // Wait until at least 4:30 PM IST (990 mins) on today's trading day so NSE/Yahoo EOD closing prices & volumes have settled
+  const nowIST = new Date(Date.now() + 5.5 * 3600 * 1000);
+  const todayIST = nowIST.toISOString().slice(0, 10);
+  const istMins = nowIST.getUTCHours() * 60 + nowIST.getUTCMinutes();
+  if (lastCompletedDate === todayIST && istMins < 990) {
+    return;
+  }
+
   try {
     const col = MONGO_CONFIG.db.collection('daily_ohlcv');
-    const countForLatest = await col.countDocuments({ date: lastCompletedDate });
+    // Strictly count FINALIZED EOD candles so mid-day snapshots (isFinalized: false) never skip the EOD sync
+    const countForLatest = await col.countDocuments({ date: lastCompletedDate, isFinalized: true });
     const universeCount = getUniverseStocks().length || 3000;
 
-    // Check if database is missing candles for the latest completed trading day
+    // Check if database is missing finalized EOD candles for the latest completed trading day
     if (countForLatest < Math.min(universeCount * 0.7, 2000)) {
-      console.log(`[EOD-VERIFY] ⚠️ Market is off/completed for ${lastCompletedDate}, but database has only ${countForLatest}/${universeCount} candles. Triggering automated EOD catch-up sync...`);
+      console.log(`[EOD-VERIFY] ⚠️ Market completed for ${lastCompletedDate}, but database has only ${countForLatest}/${universeCount} finalized EOD candles. Triggering automated EOD catch-up sync...`);
       runDailyEodBaselineSync();
     } else {
       latestVerifiedDbDate = lastCompletedDate;
-      console.log(`[EOD-VERIFY] ✅ Database verified: ${countForLatest} candles present for latest completed day (${lastCompletedDate}).`);
+      console.log(`[EOD-VERIFY] ✅ Database verified: ${countForLatest} finalized EOD candles present for latest completed day (${lastCompletedDate}).`);
     }
   } catch (err) {
     console.warn('[EOD-VERIFY] Verification check notice:', err.message);
